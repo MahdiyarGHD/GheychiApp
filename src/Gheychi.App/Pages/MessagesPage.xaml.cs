@@ -49,6 +49,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             HorizontalOptions = LayoutOptions.Fill
         };
         chat.BackRequested += CloseChatAsync;
+        chat.ZIndex = OverlayZIndex;
         RootGrid.Children.Add(chat);
         return chat;
     }
@@ -65,6 +66,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         };
         search.BackRequested += OnCloseSearchRequested;
         search.SearchResultTapped += OnSearchResultTapped;
+        search.ZIndex = OverlayZIndex;
         RootGrid.Children.Add(search);
         return search;
     }
@@ -84,8 +86,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         if (Vm != null)
             archive.Initialize(Vm);
 
-        // Under the chat and search overlays, which open on top of it.
-        RootGrid.Children.Insert(1, archive);
+        // Explicit z-order: above the inbox, under the chat and search overlays that open on top of it.
+        archive.ZIndex = ArchiveZIndex;
+        RootGrid.Children.Add(archive);
         return archive;
     }
 
@@ -596,6 +599,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         OpenChatSafely(thread);
     }
 
+    private const int ArchiveZIndex = 1;
+    private const int OverlayZIndex = 2;
     private const double OffscreenDistance = 3000;
     private const double InboxParallax = 0.25;
     private const double FlingVelocity = 700;
