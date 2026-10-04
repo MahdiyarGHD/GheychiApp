@@ -723,7 +723,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             var threadId = smsService is null ? 0 : await smsService.GetOrCreateThreadIdAsync(address);
             if (threadId <= 0)
             {
-                await DisplayAlert(string.Empty, Localization.LocalizationManager.Instance["Compose_OpenFailed"], "OK");
+                await DisplayAlertAsync(string.Empty, Localization.LocalizationManager.Instance["Compose_OpenFailed"], "OK");
                 return;
             }
 

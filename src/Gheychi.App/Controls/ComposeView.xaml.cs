@@ -67,6 +67,16 @@ public partial class ComposeView : ContentView
         _lastJumpLetter = null;
     }
 
+    // Returns true when it consumed the back press.
+    public bool HandleBack()
+    {
+        if (!RecipientEntry.IsFocused)
+            return false;
+
+        RecipientEntry.Unfocus();
+        return true;
+    }
+
     private async Task LoadSimsAsync()
     {
         try
