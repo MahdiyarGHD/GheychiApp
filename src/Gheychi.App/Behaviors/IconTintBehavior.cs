@@ -18,6 +18,7 @@ public sealed class IconTintBehavior : Behavior<Image>
 
     private Image? _image;
     private int? _lastAppliedColor;
+    private ImageView? _lastImageView;
 
     public Color TintColor
     {
@@ -45,6 +46,7 @@ public sealed class IconTintBehavior : Behavior<Image>
         bindable.PropertyChanged -= OnPropertyChanged;
         _image = null;
         _lastAppliedColor = null;
+        _lastImageView = null;
         base.OnDetachingFrom(bindable);
     }
 
@@ -96,7 +98,13 @@ public sealed class IconTintBehavior : Behavior<Image>
             var b = (int)(tint.Blue * 255);
             var argb = (a << 24) | (r << 16) | (g << 8) | b;
 
+            // Rows are re-bound constantly while scrolling; re-allocating a filter and posting a
+            // runnable for an unchanged tint on the same native view is pure overhead.
+            if (_lastAppliedColor == argb && ReferenceEquals(_lastImageView, imageView))
+                return;
+
             _lastAppliedColor = argb;
+            _lastImageView = imageView;
             var color = Android.Graphics.Color.Argb(a, r, g, b);
             imageView.SetColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SrcIn!));
             imageView.Post(() =>
@@ -111,6 +119,7 @@ public sealed class IconTintBehavior : Behavior<Image>
                 return;
 
             _lastAppliedColor = null;
+            _lastImageView = null;
             imageView.ClearColorFilter();
         }
     }

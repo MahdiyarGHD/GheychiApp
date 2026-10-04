@@ -633,6 +633,11 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     private int _simSubId;
 
+    private string SendAddress => PhoneNumberNormalizer.ToSendAddress(Thread.Phone);
+
+    private int ResolveSubId(int messageSubId) =>
+        SimResolver.ResolveSendSubId(messageSubId, _simSubId, _simSlot, _simSlotMap);
+
     public void ToggleSim()
     {
         var sims = ActiveSims;
@@ -692,17 +697,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             RecentCache.Remove(Thread.ThreadId);
         }
 
-        var targetSubId = _simSubId;
-        if (targetSubId <= 0 && _simSlotMap != null)
-        {
-            targetSubId = _simSlotMap.FirstOrDefault(kvp => kvp.Value == _simSlot).Key;
-        }
-        if (targetSubId <= 0)
-        {
-            targetSubId = _simSlot;
-        }
-
-        var success = await _smsService.SendSmsAsync(Thread.Phone, text, targetSubId);
+        var success = await _smsService.SendSmsAsync(SendAddress, text, ResolveSubId(0));
         if (success)
         {
             outgoingMsg.IsDelivered = true;
@@ -718,16 +713,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         message.HasFailed = false;
         message.IsDelivered = false;
         var text = string.IsNullOrEmpty(message.Link) ? message.BodyBeforeLink : $"{message.BodyBeforeLink}{message.Link}";
-        var targetSubId = _simSubId;
-        if (targetSubId <= 0 && _simSlotMap != null)
-        {
-            targetSubId = _simSlotMap.FirstOrDefault(kvp => kvp.Value == _simSlot).Key;
-        }
-        if (targetSubId <= 0)
-        {
-            targetSubId = _simSlot;
-        }
-        var success = await _smsService.SendSmsAsync(Thread.Phone, text, targetSubId);
+        var success = await _smsService.SendSmsAsync(SendAddress, text, ResolveSubId(0));
         if (success)
         {
             message.IsDelivered = true;
@@ -867,26 +853,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             // no other SMS app recognizes any other template.
             var reactionText = ReactionHelper.FormatReactionSms(newEmoji, message.FullBody);
 
-            int targetSubId = 0;
-            if (message.SubId > 0)
-            {
-                targetSubId = message.SubId;
-            }
-            else if (message.SimSlot > 0 && _simSlotMap != null)
-            {
-                targetSubId = _simSlotMap.FirstOrDefault(kvp => kvp.Value == message.SimSlot).Key;
-            }
-
-            if (targetSubId <= 0)
-            {
-                targetSubId = _simSubId > 0 ? _simSubId : _simSlot;
-            }
+            var targetSubId = ResolveSubId(message.SubId);
+            var address = SendAddress;
 
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    var success = await _smsService.SendSmsAsync(Thread.Phone, reactionText, targetSubId);
+                    var success = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         message.IsReactionSending = false;
@@ -932,26 +906,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         message.HasReactionFailed = false;
         message.IsReactionSending = true;
 
-        int targetSubId = 0;
-        if (message.SubId > 0)
-        {
-            targetSubId = message.SubId;
-        }
-        else if (message.SimSlot > 0 && _simSlotMap != null)
-        {
-            targetSubId = _simSlotMap.FirstOrDefault(kvp => kvp.Value == message.SimSlot).Key;
-        }
-
-        if (targetSubId <= 0)
-        {
-            targetSubId = _simSubId > 0 ? _simSubId : _simSlot;
-        }
+        var targetSubId = ResolveSubId(message.SubId);
+        var address = SendAddress;
 
         _ = Task.Run(async () =>
         {
             try
             {
-                var success = await _smsService.SendSmsAsync(Thread.Phone, reactionText, targetSubId);
+                var success = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     message.IsReactionSending = false;

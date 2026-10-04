@@ -125,7 +125,7 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
 
     public string FontFamily => IsSelected
         ? ThreadItem.FontFamilyBold
-        : "NunitoSans";
+        : ThreadItem.FontFamilyRegular;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -296,10 +296,9 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         PopulateDefaultFilterPills();
     }
 
-    public async Task InitializeAsync()
-    {
-        await LoadSimFiltersAsync();
-    }
+    private Task? _initializeTask;
+
+    public Task InitializeAsync() => _initializeTask ??= LoadSimFiltersAsync();
 
     public void AddRecentSearch(string query)
     {
@@ -416,8 +415,16 @@ public sealed class SearchViewModel : INotifyPropertyChanged
 
     private void TriggerDebouncedSearch()
     {
-        _searchCts?.Cancel();
-        _searchCts?.Dispose();
+        // Cancel() on an already-disposed source throws ObjectDisposedException, so the field
+        // must never keep pointing at a disposed instance (clearing a filter, then picking
+        // another one, used to crash here).
+        var previous = _searchCts;
+        _searchCts = null;
+        if (previous != null)
+        {
+            try { previous.Cancel(); } catch (ObjectDisposedException) { }
+            previous.Dispose();
+        }
 
         if (!IsInSearchResultsMode)
         {
@@ -430,23 +437,29 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             return;
         }
 
-        _searchCts = new CancellationTokenSource();
-        var token = _searchCts.Token;
+        // Flag the search as pending immediately so the "no results" state does not flash
+        // during the debounce window.
+        IsSearching = true;
+
+        var cts = new CancellationTokenSource();
+        _searchCts = cts;
+        var token = cts.Token;
 
         _ = Task.Run(async () =>
         {
             try
             {
                 await Task.Delay(200, token);
-                if (token.IsCancellationRequested)
-                    return;
-
                 await ExecuteSearchAsync(token);
             }
             catch (OperationCanceledException)
             {
             }
-        }, token);
+            catch
+            {
+                MainThread.BeginInvokeOnMainThread(() => IsSearching = false);
+            }
+        });
     }
 
     public async Task ExecuteSearchAsync(CancellationToken cancellationToken = default)
@@ -454,10 +467,12 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         if (_smsService == null)
             return;
 
-        MainThread.BeginInvokeOnMainThread(() => IsSearching = true);
-
         try
         {
+            // SIM slots are needed to label results; do not race the first search against the SIM load.
+            await InitializeAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+
             var text = SearchText?.Trim();
             var filterKind = ActiveFilter?.FilterKind ?? SearchFilterKind.None;
             var simSlot = ActiveFilter?.SimSlot;
@@ -515,42 +530,57 @@ public sealed class SearchViewModel : INotifyPropertyChanged
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                _allSearchResults.Clear();
-                _allSearchResults.AddRange(items);
+                // An unhandled exception on the UI thread kills the app; a stale or failed
+                // result must never do that.
+                if (cancellationToken.IsCancellationRequested)
+                    return;
 
-                // Update category tabs
-                UpdateCategoryTabs(items.Count);
-
-                var targetKind = ActiveFilter?.FilterKind switch
+                try
                 {
-                    SearchFilterKind.Unread => CategoryFilterKind.Unread,
-                    SearchFilterKind.Starred => CategoryFilterKind.Starred,
-                    SearchFilterKind.Known => CategoryFilterKind.Known,
-                    SearchFilterKind.Unknown => CategoryFilterKind.Unknown,
-                    SearchFilterKind.Sim => CategoryFilterKind.Sim,
-                    _ => (CategoryTabs.FirstOrDefault(t => t.IsSelected)?.Kind ?? CategoryFilterKind.All)
-                };
-                var targetSlot = ActiveFilter?.SimSlot;
+                    _allSearchResults.Clear();
+                    _allSearchResults.AddRange(items);
 
-                var activeTab = CategoryTabs.FirstOrDefault(t =>
-                    t.Kind == targetKind && (!targetSlot.HasValue || t.SimSlot == targetSlot.Value))
-                    ?? CategoryTabs.FirstOrDefault();
-                if (activeTab != null)
-                {
-                    foreach (var t in CategoryTabs)
-                        t.IsSelected = (t == activeTab);
-                    ApplyCategoryFilter(activeTab);
+                    // Update category tabs
+                    UpdateCategoryTabs(items.Count);
+
+                    var targetKind = ActiveFilter?.FilterKind switch
+                    {
+                        SearchFilterKind.Unread => CategoryFilterKind.Unread,
+                        SearchFilterKind.Starred => CategoryFilterKind.Starred,
+                        SearchFilterKind.Known => CategoryFilterKind.Known,
+                        SearchFilterKind.Unknown => CategoryFilterKind.Unknown,
+                        SearchFilterKind.Sim => CategoryFilterKind.Sim,
+                        _ => (CategoryTabs.FirstOrDefault(t => t.IsSelected)?.Kind ?? CategoryFilterKind.All)
+                    };
+                    var targetSlot = ActiveFilter?.SimSlot;
+
+                    var activeTab = CategoryTabs.FirstOrDefault(t =>
+                        t.Kind == targetKind && (!targetSlot.HasValue || t.SimSlot == targetSlot.Value))
+                        ?? CategoryTabs.FirstOrDefault();
+                    if (activeTab != null)
+                    {
+                        foreach (var t in CategoryTabs)
+                            t.IsSelected = (t == activeTab);
+                        ApplyCategoryFilter(activeTab);
+                    }
+                    else
+                    {
+                        SearchResultItems.Reset(items);
+                        FoundCountText = string.Format(loc["Search_Found"] ?? "{0} found", items.Count);
+                    }
+
+                    NoResultsText = loc["Search_NoResults"] ?? "No messages found";
                 }
-                else
+                catch (Exception)
                 {
-                    SearchResultItems.Reset(items);
-                    FoundCountText = string.Format(loc["Search_Found"] ?? "{0} found", items.Count);
+                    SearchResultItems.Reset(Enumerable.Empty<SearchResultItem>());
                 }
-
-                NoResultsText = string.Format(loc["Search_NoResults"] ?? "No messages found");
-                IsSearching = false;
-                OnPropertyChanged(nameof(HasResults));
-                OnPropertyChanged(nameof(HasNoResults));
+                finally
+                {
+                    IsSearching = false;
+                    OnPropertyChanged(nameof(HasResults));
+                    OnPropertyChanged(nameof(HasNoResults));
+                }
             });
         }
         catch (OperationCanceledException)
@@ -881,14 +911,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         RecentSearches.Clear();
 
         var json = Preferences.Default.Get<string?>(RecentSearchesKey, null);
-        if (json is null)
-        {
-            RecentSearches.Add(new RecentSearchItem("Marcus floorplan"));
-            RecentSearches.Add(new RecentSearchItem("Clause 7.2 contract"));
-            RecentSearches.Add(new RecentSearchItem("verification code 2FA"));
-            SaveRecentSearches();
-        }
-        else
+        if (json is not null)
         {
             try
             {

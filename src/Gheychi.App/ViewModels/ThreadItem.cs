@@ -22,9 +22,15 @@ public sealed class ThreadItem : INotifyPropertyChanged
             ? "VazirmatnSemiBold"
             : "PlusJakartaSansSemiBold";
 
+    private static readonly string CachedFontFamilyRegular =
+        CultureInfo.CurrentUICulture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
+            ? "Vazirmatn"
+            : "PlusJakartaSans";
+
     private static bool IsDarkTheme => Application.Current?.RequestedTheme == AppTheme.Dark;
 
     public static string FontFamilyBold => CachedFontFamilyBold;
+    public static string FontFamilyRegular => CachedFontFamilyRegular;
     public static Color IconTintColor => IsDarkTheme ? IconTintDark : IconTintLight;
 
     public long ThreadId { get; init; }
@@ -90,6 +96,20 @@ public sealed class ThreadItem : INotifyPropertyChanged
         ? Color.FromArgb("#2E6B4C")
         : (IsDarkTheme ? AvatarBgDarkColor : AvatarBgLightColor);
     public Color AvatarTextColor => IsDarkTheme ? AvatarTextDarkColor : AvatarTextLightColor;
+
+    public bool HasSameContent(ThreadItem other) =>
+        ThreadId == other.ThreadId &&
+        SubId == other.SubId &&
+        Name == other.Name &&
+        Initials == other.Initials &&
+        IconFile == other.IconFile &&
+        Time == other.Time &&
+        Preview == other.Preview &&
+        Phone == other.Phone &&
+        HasFailed == other.HasFailed &&
+        TotalCount == other.TotalCount &&
+        Count == other.Count &&
+        IsUnread == other.IsUnread;
 
     public void MarkAsRead()
     {

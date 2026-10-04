@@ -9,6 +9,8 @@ public static class ReactionHelper
 {
     private const int MaxSnippetLength = 100;
 
+    private static readonly TimeSpan ClockSkewTolerance = TimeSpan.FromMinutes(2);
+
     private const char CurlyOpen = '“';
     private const char CurlyClose = '”';
 
@@ -197,6 +199,7 @@ public static class ReactionHelper
 
         SmsMessage? bestExact = null;
         SmsMessage? bestPrefix = null;
+        SmsMessage? skewedExact = null;
 
         foreach (var candidate in messages)
         {
@@ -204,7 +207,7 @@ public static class ReactionHelper
                 continue;
             if (candidate.IsOutgoing == reactionMessage.IsOutgoing)
                 continue;
-            if (candidate.Timestamp > reactionMessage.Timestamp)
+            if (candidate.Timestamp > reactionMessage.Timestamp + ClockSkewTolerance)
                 continue;
             if (TryParseReaction(candidate.Body).IsReaction)
                 continue;
@@ -212,6 +215,18 @@ public static class ReactionHelper
             var normalizedBody = NormalizeForMatch(candidate.Body);
             if (normalizedBody.Length == 0)
                 continue;
+
+            // Outgoing rows are stamped with this phone's clock once the send finishes; incoming
+            // rows carry the sender's SMSC clock. A reaction answered within seconds can therefore
+            // look slightly older than its target, so a small skew is tolerated — but only used
+            // when no target at or before the reaction exists.
+            if (candidate.Timestamp > reactionMessage.Timestamp)
+            {
+                if (normalizedBody.Equals(normalizedSnippet, StringComparison.OrdinalIgnoreCase) &&
+                    (skewedExact == null || candidate.Timestamp < skewedExact.Timestamp))
+                    skewedExact = candidate;
+                continue;
+            }
 
             if (normalizedBody.Equals(normalizedSnippet, StringComparison.OrdinalIgnoreCase))
             {
@@ -225,7 +240,7 @@ public static class ReactionHelper
             }
         }
 
-        return bestExact ?? bestPrefix;
+        return bestExact ?? bestPrefix ?? skewedExact;
     }
 
     private static bool IsPrefixMatch(string normalizedBody, string normalizedSnippet)

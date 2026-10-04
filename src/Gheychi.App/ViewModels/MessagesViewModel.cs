@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Gheychi.App.Platforms.Android.Receivers;
+using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
@@ -13,13 +14,20 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private bool _isLoading;
     private bool _hasPermission = true;
     private bool _initialized;
+    private bool _reloadPending;
+    private readonly Task<List<ThreadItem>> _snapshotTask;
 
     private const string ArchivedKey = "archived_threads_v1";
+
+    private static string SnapshotPath => Path.Combine(FileSystem.AppDataDirectory, "threads_snapshot.json");
 
     public MessagesViewModel(ISmsService? smsService = null, IDateFormattingService? dateFormatter = null)
     {
         _smsService = smsService ?? IPlatformApplication.Current?.Services.GetService<ISmsService>() ?? throw new InvalidOperationException("ISmsService not resolved");
         _dateFormatter = dateFormatter ?? IPlatformApplication.Current?.Services.GetService<IDateFormattingService>() ?? new DateFormattingService();
+
+        var snapshotPath = SnapshotPath;
+        _snapshotTask = Task.Run(() => BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath)));
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
     }
@@ -201,6 +209,15 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             return;
 
         _initialized = true;
+
+        // Paint the last known inbox right away; the real query below refreshes it.
+        if (Threads.Count == 0)
+        {
+            var cached = await _snapshotTask;
+            if (cached.Count > 0 && Threads.Count == 0)
+                Threads.Reset(cached);
+        }
+
         await _smsService.EnsureDefaultSmsAppAsync();
         var granted = await _smsService.EnsurePermissionsAsync();
         HasPermission = granted;
@@ -210,60 +227,93 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     public async Task LoadThreadsAsync()
     {
         if (IsLoading)
+        {
+            _reloadPending = true;
             return;
+        }
 
         IsLoading = true;
         try
         {
             var rawThreads = await _smsService.GetThreadsAsync();
-            var archivedIds = GetArchivedThreadIds();
-            var now = DateTime.Now;
-            var culture = CultureInfo.CurrentUICulture;
+            var items = BuildItems(rawThreads);
 
-            var items = new List<ThreadItem>(rawThreads.Count);
-            foreach (var t in rawThreads)
-            {
-                if (archivedIds.Contains(t.ThreadId))
-                    continue;
+            MainThread.BeginInvokeOnMainThread(() => ApplyThreads(items));
 
-                var name = !string.IsNullOrWhiteSpace(t.ContactName)
-                    ? t.ContactName
-                    : PhoneNumberNormalizer.IsAlphanumeric(t.Address)
-                        ? t.Address
-                        : PhoneNumberNormalizer.FormatDisplay(t.Address);
-
-                items.Add(new ThreadItem
-                {
-                    ThreadId = t.ThreadId,
-                    SubId = t.SubId,
-                    Name = name,
-                    Phone = PhoneNumberNormalizer.FormatDisplay(t.Address),
-                    Initials = ThreadItem.GenerateInitials(name),
-                    IconFile = ThreadItem.DetectIcon(name, t.Address),
-                    Count = t.UnreadCount,
-                    TotalCount = t.TotalCount,
-                    Time = _dateFormatter.FormatThreadTime(t.Timestamp, now, culture),
-                    Preview = t.Snippet,
-                    IsUnread = t.UnreadCount > 0,
-                    HasFailed = t.HasFailed
-                });
-            }
-
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                Threads.Reset(items);
-            });
+            if (HasPermission)
+                _ = Task.Run(() => ThreadSnapshotStore.Save(SnapshotPath, rawThreads));
 
             _ = Task.Run(async () =>
             {
-                await Task.Delay(200);
+                await Task.Delay(800);
                 ChatViewModel.PreloadVisibleThreads(items.Take(12), _smsService, _dateFormatter);
             });
         }
         finally
         {
             IsLoading = false;
+            if (_reloadPending)
+            {
+                _reloadPending = false;
+                _ = LoadThreadsAsync();
+            }
         }
+    }
+
+    private List<ThreadItem> BuildItems(IReadOnlyList<SmsThread> rawThreads)
+    {
+        var archivedIds = GetArchivedThreadIds();
+        var now = DateTime.Now;
+        var culture = CultureInfo.CurrentUICulture;
+
+        var items = new List<ThreadItem>(rawThreads.Count);
+        foreach (var t in rawThreads)
+        {
+            if (archivedIds.Contains(t.ThreadId))
+                continue;
+
+            var name = !string.IsNullOrWhiteSpace(t.ContactName)
+                ? t.ContactName
+                : PhoneNumberNormalizer.IsAlphanumeric(t.Address)
+                    ? t.Address
+                    : PhoneNumberNormalizer.FormatDisplay(t.Address);
+
+            items.Add(new ThreadItem
+            {
+                ThreadId = t.ThreadId,
+                SubId = t.SubId,
+                Name = name,
+                Phone = PhoneNumberNormalizer.FormatDisplay(t.Address),
+                Initials = ThreadItem.GenerateInitials(name),
+                IconFile = ThreadItem.DetectIcon(name, t.Address),
+                Count = t.UnreadCount,
+                TotalCount = t.TotalCount,
+                Time = _dateFormatter.FormatThreadTime(t.Timestamp, now, culture),
+                Preview = t.Snippet,
+                IsUnread = t.UnreadCount > 0,
+                HasFailed = t.HasFailed
+            });
+        }
+
+        return items;
+    }
+
+    // A full Reset drops the scroll position and rebinds every visible row, so refreshes
+    // after the first paint only touch the rows that actually changed.
+    private void ApplyThreads(List<ThreadItem> items)
+    {
+        if (Threads.Count == 0)
+        {
+            Threads.Reset(items);
+            return;
+        }
+
+        ListSynchronizer.Sync(
+            Threads,
+            items,
+            t => t.ThreadId,
+            (a, b) => a.HasSameContent(b),
+            (old, replacement) => replacement.IsSelected = old.IsSelected);
     }
 
     private void OnSmsReceived()

@@ -37,9 +37,23 @@ public partial class SearchView : ContentView
         }
     }
 
+    // These run as async-void callbacks; an exception escaping one terminates the process.
+    private static void PostSafe(Func<Task> work) =>
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            try
+            {
+                await work();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SearchView action failed: {ex}");
+            }
+        });
+
     public void FocusSearchInput()
     {
-        MainThread.BeginInvokeOnMainThread(async () =>
+        PostSafe(async () =>
         {
             await Task.Delay(100);
             SearchEntry.Focus();
@@ -113,7 +127,7 @@ public partial class SearchView : ContentView
     private void OnClearActiveFilterTapped(object? sender, EventArgs e)
     {
         Vm?.ClearActiveFilter();
-        MainThread.BeginInvokeOnMainThread(async () =>
+        PostSafe(async () =>
         {
             await Task.Delay(50);
             SearchEntry.Focus();
@@ -158,7 +172,7 @@ public partial class SearchView : ContentView
         if (pill == null)
             return;
 
-        MainThread.BeginInvokeOnMainThread(async () =>
+        PostSafe(async () =>
         {
             await Task.Yield();
             Vm?.ApplyFilter(pill);
@@ -178,7 +192,7 @@ public partial class SearchView : ContentView
             return;
 
         var query = item.Query.Trim();
-        MainThread.BeginInvokeOnMainThread(async () =>
+        PostSafe(async () =>
         {
             await Task.Yield();
             if (Vm != null)
@@ -194,7 +208,7 @@ public partial class SearchView : ContentView
         var item = (e.Parameter as RecentSearchItem) ?? (sender as Element)?.BindingContext as RecentSearchItem;
         if (item != null)
         {
-            MainThread.BeginInvokeOnMainThread(async () =>
+            PostSafe(async () =>
             {
                 await Task.Yield();
                 Vm?.RemoveRecentSearch(item);

@@ -8,7 +8,7 @@
              x:Class="Gheychi.App.Pages.MessagesPage"
              Shell.NavBarIsVisible="False">
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid RowDefinitions="Auto,*">
 
         <!-- Top Header Area: Normal Search Header or Selection Contextual Header -->
@@ -403,19 +403,7 @@
             </Border>
         </Grid>
 
-        <controls:SearchView x:Name="SearchOverlay"
-                             IsVisible="True"
-                             InputTransparent="True"
-                             TranslationY="3000"
-                             VerticalOptions="Fill"
-                             HorizontalOptions="Fill" />
-
-        <controls:ChatView x:Name="ChatOverlay"
-                           IsVisible="True"
-                           InputTransparent="True"
-                           TranslationY="3000"
-                           VerticalOptions="Fill"
-                           HorizontalOptions="Fill" />
+        <!-- SearchView and ChatView are created lazily by MessagesPage.xaml.cs so the inbox paints first. -->
 
     </Grid>
 </ContentPage>

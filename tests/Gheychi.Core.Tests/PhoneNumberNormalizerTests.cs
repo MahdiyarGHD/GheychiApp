@@ -27,4 +27,22 @@ public class PhoneNumberNormalizerTests
         var result = PhoneNumberNormalizer.FormatDisplay(input);
         Assert.Equal(expected, result);
     }
+
+    [Theory]
+    [InlineData("+98 912 000 0001", "+989120000001")]
+    [InlineData("0912-000-0001", "09120000001")]
+    [InlineData("(021) 555 1234", "0215551234")]
+    [InlineData("IRANCELL", "IRANCELL")]
+    [InlineData("", "")]
+    public void ToSendAddress_StripsSeparators(string input, string expected)
+    {
+        Assert.Equal(expected, PhoneNumberNormalizer.ToSendAddress(input));
+    }
+
+    [Fact]
+    public void ToSendAddress_UndoesFormatDisplay()
+    {
+        var display = PhoneNumberNormalizer.FormatDisplay("09120000001");
+        Assert.Equal("+989120000001", PhoneNumberNormalizer.ToSendAddress(display));
+    }
 }

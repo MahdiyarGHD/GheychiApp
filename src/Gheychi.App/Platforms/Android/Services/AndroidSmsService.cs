@@ -81,8 +81,9 @@ public sealed class AndroidSmsService : ISmsService
         Task.Run<IReadOnlyList<SmsThread>>(() =>
         {
             var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
-            var contactMap = LoadContacts(context);
+            var contactsTask = Task.Run(() => LoadContacts(context), cancellationToken);
             var canonicalAddresses = LoadCanonicalAddresses(context);
+            var contactMap = contactsTask.GetAwaiter().GetResult();
 
             var convUri = global::Android.Net.Uri.Parse("content://mms-sms/conversations?simple=true");
             if (convUri != null)
@@ -268,335 +269,325 @@ public sealed class AndroidSmsService : ISmsService
         return list;
     }
 
+    private const int MaxSearchResults = 200;
+    private const int MaxSearchMessageRows = 5000;
+
+    private readonly record struct MessageRow(long Id, long ThreadId, string Address, string Body, long DateMs, bool IsRead, int SubId);
+
+    private sealed class SearchMatch
+    {
+        public required MessageRow Newest { get; init; }
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// Searches conversations. Text is matched with a plain LIKE over the SMS table (the
+    /// provider's FTS search URI only matches whole-word prefixes and is missing on many devices);
+    /// contact name / number matches are added on top. The active filter combines with the text
+    /// instead of replacing it.
+    /// </summary>
     public Task<IReadOnlyList<SearchResultChat>> SearchChatsAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<SearchResultChat>>(async () =>
         {
             var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
-            var contactMap = LoadContacts(context);
-            var results = new Dictionary<long, SearchResultBuilder>();
             var archivedIds = GetArchivedThreadIds();
+            var variants = SearchTextHelper.BuildVariants(query.Text);
+            var hasText = variants.Count > 0;
+            var kind = query.FilterKind;
 
-            HashSet<long>? allStarredIds = null;
-            if (_metadataRepo != null)
+            var threads = new Dictionary<long, SmsThread>();
+            foreach (var t in await GetThreadsAsync(cancellationToken).ConfigureAwait(false))
+                threads[t.ThreadId] = t;
+
+            var starredIds = await GetStarredMessageIdsAsync().ConfigureAwait(false);
+            var starredThreadIds = starredIds.Count > 0
+                ? QueryThreadIds(context, starredIds, cancellationToken)
+                : [];
+
+            var simSubIds = new HashSet<int>();
+            if (kind == SearchFilterKind.Sim)
             {
-                try
+                var slotMap = await GetSimSlotMapAsync().ConfigureAwait(false);
+                foreach (var (subId, slot) in slotMap)
                 {
-                    var sIds = await _metadataRepo.GetAllStarredMessageIdsAsync();
-                    if (sIds != null && sIds.Count > 0)
-                        allStarredIds = new HashSet<long>(sIds);
+                    if (query.SimSlot.HasValue && slot == query.SimSlot.Value)
+                        simSubIds.Add(subId);
                 }
-                catch { }
+
+                if (simSubIds.Count == 0)
+                    return [];
             }
 
-            var cleanText = query.Text?.Trim() ?? string.Empty;
-            var hasText = !string.IsNullOrWhiteSpace(cleanText);
+            if (kind == SearchFilterKind.Starred && starredIds.Count == 0)
+                return [];
 
-            // 1. Text search: use Android native FTS search URI: content://mms-sms/search?pattern=...
-            if (hasText)
+            var matches = new Dictionary<long, SearchMatch>();
+            var messageLevel = hasText || kind is SearchFilterKind.Unread or SearchFilterKind.Starred or SearchFilterKind.Sim;
+            if (messageLevel)
             {
-                try
+                var conditions = new List<string>();
+                var args = new List<string>();
+
+                if (hasText)
                 {
-                    var searchUri = global::Android.Net.Uri.Parse("content://mms-sms/search?pattern=" + global::Android.Net.Uri.Encode(cleanText));
-                    if (searchUri != null)
-                    {
-                        using var cursor = context.ContentResolver?.Query(
-                            searchUri,
-                            ["_id", "thread_id", "body", "date"],
-                            null,
-                            null,
-                            null);
-
-                        if (cursor != null)
-                        {
-                            var idCol = cursor.GetColumnIndex("_id");
-                            var threadCol = cursor.GetColumnIndex("thread_id");
-                            var bodyCol = cursor.GetColumnIndex("body");
-                            var dateCol = cursor.GetColumnIndex("date");
-
-                            while (cursor.MoveToNext())
-                            {
-                                cancellationToken.ThrowIfCancellationRequested();
-                                var threadId = threadCol >= 0 ? cursor.GetLong(threadCol) : 0;
-                                if (threadId <= 0) continue;
-
-                                var isArchived = archivedIds.Contains(threadId);
-                                if (isArchived && !query.IncludeArchivedAndSpam)
-                                    continue;
-
-                                if (results.Count >= 60 && !results.ContainsKey(threadId))
-                                    continue;
-
-                                var msgId = idCol >= 0 ? cursor.GetLong(idCol) : 0;
-                                var dateMs = dateCol >= 0 ? cursor.GetLong(dateCol) : 0;
-                                var body = bodyCol >= 0 ? cursor.GetString(bodyCol) ?? string.Empty : string.Empty;
-
-                                if (!results.TryGetValue(threadId, out var builder))
-                                {
-                                    results[threadId] = new SearchResultBuilder
-                                    {
-                                        ThreadId = threadId,
-                                        MessageId = msgId,
-                                        Snippet = body,
-                                        Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(dateMs).LocalDateTime,
-                                        TotalMatches = 1,
-                                        IsArchived = isArchived,
-                                        IsStarred = allStarredIds != null && allStarredIds.Contains(msgId)
-                                    };
-                                }
-                                else
-                                {
-                                    builder.TotalMatches++;
-                                }
-                            }
-                        }
-                    }
+                    conditions.Add("(" + string.Join(" OR ", variants.Select(_ => $"{Telephony.Sms.InterfaceConsts.Body} LIKE ?")) + ")");
+                    args.AddRange(variants.Select(v => $"%{v}%"));
                 }
-                catch (System.OperationCanceledException)
-                {
-                    throw;
-                }
-                catch { }
 
-                // 2. Also match by Contact Name or Phone number from active threads
-                try
-                {
-                    var allThreads = await GetThreadsAsync(cancellationToken);
-                    foreach (var t in allThreads)
-                    {
-                        if (results.ContainsKey(t.ThreadId))
-                            continue;
+                if (kind == SearchFilterKind.Unread)
+                    conditions.Add($"{Telephony.Sms.InterfaceConsts.Read} = 0 AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox}");
 
-                        var nameMatches = !string.IsNullOrEmpty(t.ContactName) && t.ContactName.Contains(cleanText, StringComparison.OrdinalIgnoreCase);
-                        var phoneMatches = !string.IsNullOrEmpty(t.Address) && t.Address.Contains(cleanText, StringComparison.OrdinalIgnoreCase);
+                if (kind == SearchFilterKind.Sim)
+                    conditions.Add($"sub_id IN ({string.Join(",", simSubIds)})");
 
-                        if (nameMatches || phoneMatches)
-                        {
-                            var isArchived = archivedIds.Contains(t.ThreadId);
-                            if (isArchived && !query.IncludeArchivedAndSpam)
-                                continue;
-
-                            results[t.ThreadId] = new SearchResultBuilder
-                            {
-                                ThreadId = t.ThreadId,
-                                MessageId = 0,
-                                Address = t.Address,
-                                ContactName = t.ContactName,
-                                Snippet = t.Snippet,
-                                Timestamp = t.Timestamp,
-                                SubId = t.SubId,
-                                IsRead = t.UnreadCount == 0,
-                                TotalMatches = 1,
-                                IsArchived = isArchived,
-                                IsKnown = !string.IsNullOrWhiteSpace(t.ContactName)
-                            };
-
-                            if (results.Count >= 60)
-                                break;
-                        }
-                    }
-                }
-                catch { }
-
-                // 3. Fallback: if 0 results found, try fast LIKE search on content://sms:
-                if (results.Count == 0)
-                {
-                    try
-                    {
-                        var smsUri = Telephony.Sms.ContentUri;
-                        if (smsUri != null)
-                        {
-                            using var cursor = context.ContentResolver?.Query(
-                                smsUri,
-                                SmsProjection,
-                                $"{Telephony.Sms.InterfaceConsts.Body} LIKE ?",
-                                [$"%{cleanText}%"],
-                                "date DESC LIMIT 150");
-
-                            if (cursor != null)
-                            {
-                                PopulateResultsFromCursor(cursor, results, archivedIds, query.IncludeArchivedAndSpam, allStarredIds, cancellationToken);
-                            }
-                        }
-                    }
-                    catch { }
-                }
-            }
-            else
-            {
-                // NO TEXT query - filter by specific FilterKind:
-                if (query.FilterKind == SearchFilterKind.Starred && allStarredIds != null && allStarredIds.Count > 0)
-                {
-                    try
-                    {
-                        var idList = allStarredIds.Take(200).ToList();
-                        var placeholders = string.Join(",", idList);
-                        var smsUri = Telephony.Sms.ContentUri;
-                        if (smsUri != null)
-                        {
-                            using var cursor = context.ContentResolver?.Query(
-                                smsUri,
-                                SmsProjection,
-                                $"{Telephony.Sms.InterfaceConsts.Id} IN ({placeholders})",
-                                null,
-                                "date DESC LIMIT 150");
-
-                            if (cursor != null)
-                            {
-                                PopulateResultsFromCursor(cursor, results, archivedIds, query.IncludeArchivedAndSpam, allStarredIds, cancellationToken);
-                            }
-                        }
-                    }
-                    catch { }
-                }
-                else if (query.FilterKind == SearchFilterKind.Unread)
-                {
-                    try
-                    {
-                        var smsUri = Telephony.Sms.ContentUri;
-                        if (smsUri != null)
-                        {
-                            using var cursor = context.ContentResolver?.Query(
-                                smsUri,
-                                SmsProjection,
-                                $"{Telephony.Sms.InterfaceConsts.Read} = 0 AND {Telephony.Sms.InterfaceConsts.Type} = 1",
-                                null,
-                                "date DESC LIMIT 150");
-
-                            if (cursor != null)
-                            {
-                                PopulateResultsFromCursor(cursor, results, archivedIds, query.IncludeArchivedAndSpam, allStarredIds, cancellationToken);
-                            }
-                        }
-                    }
-                    catch { }
-                }
-                else if (query.FilterKind == SearchFilterKind.Sim && query.SimSlot.HasValue)
-                {
-                    try
-                    {
-                        var slotMap = await GetSimSlotMapAsync();
-                        var matchingSubIds = slotMap.Where(kv => kv.Value == query.SimSlot.Value).Select(kv => kv.Key).ToList();
-                        if (matchingSubIds.Count > 0)
-                        {
-                            var subList = string.Join(",", matchingSubIds);
-                            var smsUri = Telephony.Sms.ContentUri;
-                            if (smsUri != null)
-                            {
-                                using var cursor = context.ContentResolver?.Query(
-                                    smsUri,
-                                    SmsProjection,
-                                    $"sub_id IN ({subList})",
-                                    null,
-                                    "date DESC LIMIT 150");
-
-                                if (cursor != null)
-                                {
-                                    PopulateResultsFromCursor(cursor, results, archivedIds, query.IncludeArchivedAndSpam, allStarredIds, cancellationToken);
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-                }
+                var idChunks = new List<string?>();
+                if (kind == SearchFilterKind.Starred)
+                    idChunks.AddRange(starredIds.Chunk(400).Select(c => (string?)$"{Telephony.Sms.InterfaceConsts.Id} IN ({string.Join(",", c)})"));
                 else
+                    idChunks.Add(null);
+
+                foreach (var idClause in idChunks)
                 {
-                    // Known, Unknown, or All: get from threads directly
-                    try
+                    var all = new List<string>(conditions);
+                    if (idClause is not null)
+                        all.Add(idClause);
+                    var selection = all.Count == 0 ? null : string.Join(" AND ", all.Select(c => $"({c})"));
+
+                    ForEachMessage(context, selection, args.Count == 0 ? null : args.ToArray(), MaxSearchMessageRows, cancellationToken, row =>
                     {
-                        var allThreads = await GetThreadsAsync(cancellationToken);
-                        foreach (var t in allThreads)
+                        if (archivedIds.Contains(row.ThreadId) && !query.IncludeArchivedAndSpam)
+                            return true;
+
+                        // LIKE treats % and _ as wildcards; confirm the real substring.
+                        if (hasText && !SearchTextHelper.ContainsAny(row.Body, variants))
+                            return true;
+
+                        if (matches.TryGetValue(row.ThreadId, out var match))
                         {
-                            var isArchived = archivedIds.Contains(t.ThreadId);
-                            if (isArchived && !query.IncludeArchivedAndSpam)
-                                continue;
-
-                            var isKnown = !string.IsNullOrWhiteSpace(t.ContactName);
-                            if (query.FilterKind == SearchFilterKind.Known && !isKnown)
-                                continue;
-                            if (query.FilterKind == SearchFilterKind.Unknown && isKnown)
-                                continue;
-
-                            results[t.ThreadId] = new SearchResultBuilder
-                            {
-                                ThreadId = t.ThreadId,
-                                MessageId = 0,
-                                Address = t.Address,
-                                ContactName = t.ContactName,
-                                Snippet = t.Snippet,
-                                Timestamp = t.Timestamp,
-                                SubId = t.SubId,
-                                IsRead = t.UnreadCount == 0,
-                                TotalMatches = 1,
-                                IsArchived = isArchived,
-                                IsKnown = isKnown
-                            };
-
-                            if (results.Count >= 50)
-                                break;
+                            match.Count++;
+                            if (row.DateMs > match.Newest.DateMs)
+                                matches[row.ThreadId] = new SearchMatch { Newest = row, Count = match.Count };
                         }
-                    }
-                    catch { }
+                        else
+                        {
+                            matches[row.ThreadId] = new SearchMatch { Newest = row, Count = 1 };
+                        }
+                        return true;
+                    });
                 }
             }
 
-            // Fill in missing address/contactName for any result
-            foreach (var b in results.Values)
+            var contactMap = LoadContacts(context);
+            var candidates = new Dictionary<long, SmsThread>();
+
+            foreach (var (threadId, match) in matches)
             {
-                if (string.IsNullOrEmpty(b.Address))
-                {
-                    var threadUri = global::Android.Net.Uri.Parse($"content://mms-sms/conversations/{b.ThreadId}");
-                    if (threadUri != null)
-                    {
-                        try
-                        {
-                            using var threadCursor = context.ContentResolver?.Query(threadUri, ["address", "read", "sub_id"], null, null, "date DESC LIMIT 1");
-                            if (threadCursor?.MoveToNext() == true)
-                            {
-                                var addrCol = threadCursor.GetColumnIndex("address");
-                                if (addrCol >= 0)
-                                    b.Address = threadCursor.GetString(addrCol) ?? string.Empty;
-                                var rCol = threadCursor.GetColumnIndex("read");
-                                if (rCol >= 0)
-                                    b.IsRead = threadCursor.GetInt(rCol) != 0;
-                                var sCol = threadCursor.GetColumnIndex("sub_id");
-                                if (sCol >= 0 && !threadCursor.IsNull(sCol))
-                                    b.SubId = threadCursor.GetInt(sCol);
-                            }
-                        }
-                        catch { }
-                    }
-                }
-
-                if (string.IsNullOrEmpty(b.ContactName) && !string.IsNullOrEmpty(b.Address))
-                {
-                    var key = PhoneNumberNormalizer.ToLookupKey(b.Address);
-                    if (contactMap.TryGetValue(key, out var foundName))
-                        b.ContactName = foundName;
-                    else if (PhoneNumberNormalizer.IsAlphanumeric(b.Address))
-                        b.ContactName = b.Address;
-                }
-
-                b.IsKnown = !string.IsNullOrWhiteSpace(b.ContactName);
+                if (!threads.TryGetValue(threadId, out var thread))
+                    thread = ThreadFromMessage(match.Newest, contactMap);
+                candidates[threadId] = thread;
             }
 
-            return results.Values
+            if (hasText && kind != SearchFilterKind.Starred)
+            {
+                foreach (var thread in threads.Values)
+                {
+                    if (candidates.ContainsKey(thread.ThreadId))
+                        continue;
+                    if (archivedIds.Contains(thread.ThreadId) && !query.IncludeArchivedAndSpam)
+                        continue;
+                    if (!SearchTextHelper.ContainsAny(thread.ContactName, variants) && !AddressMatches(thread.Address, variants))
+                        continue;
+                    if (kind == SearchFilterKind.Unread && thread.UnreadCount == 0)
+                        continue;
+                    if (kind == SearchFilterKind.Sim && !simSubIds.Contains(thread.SubId))
+                        continue;
+
+                    candidates[thread.ThreadId] = thread;
+                }
+            }
+            else if (!messageLevel)
+            {
+                foreach (var thread in threads.Values)
+                {
+                    if (archivedIds.Contains(thread.ThreadId) && !query.IncludeArchivedAndSpam)
+                        continue;
+                    candidates[thread.ThreadId] = thread;
+                }
+            }
+
+            var results = new List<SearchResultChat>(candidates.Count);
+            foreach (var (threadId, thread) in candidates)
+            {
+                var isKnown = !string.IsNullOrWhiteSpace(thread.ContactName);
+                if (kind == SearchFilterKind.Known && !isKnown)
+                    continue;
+                if (kind == SearchFilterKind.Unknown && isKnown)
+                    continue;
+
+                var hasMatch = matches.TryGetValue(threadId, out var match);
+                var newest = match?.Newest;
+                var timestamp = hasMatch ? DateTimeOffset.FromUnixTimeMilliseconds(newest!.Value.DateMs).LocalDateTime : thread.Timestamp;
+
+                results.Add(new SearchResultChat(
+                    threadId,
+                    hasMatch ? newest!.Value.Id : 0,
+                    thread.Address,
+                    thread.ContactName,
+                    hasMatch ? newest!.Value.Body : thread.Snippet,
+                    timestamp,
+                    hasMatch && newest!.Value.SubId > 0 ? newest.Value.SubId : thread.SubId,
+                    hasMatch ? match!.Count : 1,
+                    thread.UnreadCount == 0,
+                    archivedIds.Contains(threadId),
+                    false,
+                    starredThreadIds.Contains(threadId),
+                    isKnown));
+            }
+
+            return results
                 .OrderByDescending(r => r.Timestamp)
-                .Select(b => new SearchResultChat(
-                    b.ThreadId,
-                    b.MessageId,
-                    b.Address,
-                    b.ContactName,
-                    b.Snippet,
-                    b.Timestamp,
-                    b.SubId,
-                    b.TotalMatches,
-                    b.IsRead,
-                    b.IsArchived,
-                    b.IsSpam,
-                    b.IsStarred,
-                    b.IsKnown))
+                .Take(MaxSearchResults)
                 .ToList();
         }, cancellationToken);
+
+    private async Task<IReadOnlyList<long>> GetStarredMessageIdsAsync()
+    {
+        if (_metadataRepo == null)
+            return [];
+
+        try
+        {
+            return await _metadataRepo.GetAllStarredMessageIdsAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static SmsThread ThreadFromMessage(MessageRow row, Dictionary<string, string> contactMap)
+    {
+        string? contactName = null;
+        var key = PhoneNumberNormalizer.ToLookupKey(row.Address);
+        if (contactMap.TryGetValue(key, out var found))
+            contactName = found;
+        else if (PhoneNumberNormalizer.IsAlphanumeric(row.Address))
+            contactName = row.Address;
+
+        return new SmsThread(
+            row.ThreadId,
+            row.Address,
+            contactName,
+            row.Body,
+            DateTimeOffset.FromUnixTimeMilliseconds(row.DateMs).LocalDateTime,
+            1,
+            row.IsRead ? 0 : 1,
+            false,
+            row.SubId);
+    }
+
+    private static bool AddressMatches(string address, IReadOnlyList<string> variants)
+    {
+        if (string.IsNullOrEmpty(address))
+            return false;
+
+        if (SearchTextHelper.ContainsAny(address, variants))
+            return true;
+
+        var addressDigits = new string(address.Where(char.IsAsciiDigit).ToArray());
+        foreach (var variant in variants)
+        {
+            var queryDigits = new string(variant.Where(char.IsAsciiDigit).ToArray());
+            if (queryDigits.Length < 3)
+                continue;
+
+            // 0912... typed locally must match +98912... stored internationally.
+            if (addressDigits.Contains(queryDigits, StringComparison.Ordinal) ||
+                (queryDigits.StartsWith('0') && addressDigits.Contains(queryDigits[1..], StringComparison.Ordinal)))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static HashSet<long> QueryThreadIds(Context context, IReadOnlyList<long> messageIds, CancellationToken cancellationToken)
+    {
+        var threadIds = new HashSet<long>();
+        foreach (var chunk in messageIds.Chunk(400))
+        {
+            try
+            {
+                ForEachMessage(
+                    context,
+                    $"{Telephony.Sms.InterfaceConsts.Id} IN ({string.Join(",", chunk)})",
+                    null,
+                    chunk.Length,
+                    cancellationToken,
+                    row =>
+                    {
+                        threadIds.Add(row.ThreadId);
+                        return true;
+                    });
+            }
+            catch (System.OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+            }
+        }
+        return threadIds;
+    }
+
+    private static void ForEachMessage(
+        Context context,
+        string? selection,
+        string[]? selectionArgs,
+        int maxRows,
+        CancellationToken cancellationToken,
+        Func<MessageRow, bool> visit)
+    {
+        var smsUri = Telephony.Sms.ContentUri;
+        if (smsUri == null)
+            return;
+
+        using var cursor = context.ContentResolver?.Query(smsUri, SmsProjection, selection, selectionArgs, "date DESC");
+        if (cursor == null)
+            return;
+
+        var idCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Id);
+        var threadCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.ThreadId);
+        var addressCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Address);
+        var bodyCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Body);
+        var dateCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Date);
+        var readCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Read);
+        var subIdCol = cursor.GetColumnIndex("sub_id");
+
+        var rows = 0;
+        while (cursor.MoveToNext())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (rows++ >= maxRows)
+                break;
+
+            var threadId = threadCol >= 0 ? cursor.GetLong(threadCol) : 0;
+            if (threadId <= 0)
+                continue;
+
+            var row = new MessageRow(
+                idCol >= 0 ? cursor.GetLong(idCol) : 0,
+                threadId,
+                addressCol >= 0 ? cursor.GetString(addressCol) ?? string.Empty : string.Empty,
+                bodyCol >= 0 ? cursor.GetString(bodyCol) ?? string.Empty : string.Empty,
+                dateCol >= 0 ? cursor.GetLong(dateCol) : 0,
+                readCol < 0 || cursor.GetInt(readCol) != 0,
+                subIdCol >= 0 && !cursor.IsNull(subIdCol) ? cursor.GetInt(subIdCol) : 0);
+
+            if (!visit(row))
+                break;
+        }
+    }
 
     public Task<IReadOnlyList<SmsMessage>> GetMessagesAsync(long threadId, int? limit = null, int offset = 0, CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<SmsMessage>>(() =>
@@ -1267,65 +1258,6 @@ public sealed class AndroidSmsService : ISmsService
         return map;
     }
 
-    private static void PopulateResultsFromCursor(
-        ICursor cursor,
-        Dictionary<long, SearchResultBuilder> results,
-        HashSet<long> archivedIds,
-        bool includeArchivedAndSpam,
-        HashSet<long>? allStarredIds,
-        CancellationToken cancellationToken)
-    {
-        var idCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Id);
-        var threadIdCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.ThreadId);
-        var addressCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Address);
-        var bodyCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Body);
-        var dateCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Date);
-        var readCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Read);
-        var subIdCol = cursor.GetColumnIndex("sub_id");
-
-        while (cursor.MoveToNext())
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var threadId = threadIdCol >= 0 ? cursor.GetLong(threadIdCol) : 0;
-            if (threadId <= 0) continue;
-
-            var isArchived = archivedIds.Contains(threadId);
-            if (isArchived && !includeArchivedAndSpam)
-                continue;
-
-            if (results.Count >= 60 && !results.ContainsKey(threadId))
-                continue;
-
-            var msgId = idCol >= 0 ? cursor.GetLong(idCol) : 0;
-            var dateMs = dateCol >= 0 ? cursor.GetLong(dateCol) : 0;
-            var read = readCol >= 0 ? cursor.GetInt(readCol) : 1;
-            var subId = subIdCol >= 0 && !cursor.IsNull(subIdCol) ? cursor.GetInt(subIdCol) : 1;
-            var address = addressCol >= 0 ? cursor.GetString(addressCol) ?? string.Empty : string.Empty;
-            var body = bodyCol >= 0 ? cursor.GetString(bodyCol) ?? string.Empty : string.Empty;
-
-            if (!results.TryGetValue(threadId, out var builder))
-            {
-                results[threadId] = new SearchResultBuilder
-                {
-                    ThreadId = threadId,
-                    MessageId = msgId,
-                    Address = address,
-                    Snippet = body,
-                    Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(dateMs).LocalDateTime,
-                    SubId = subId,
-                    IsRead = read != 0,
-                    TotalMatches = 1,
-                    IsArchived = isArchived,
-                    IsStarred = allStarredIds != null && allStarredIds.Contains(msgId)
-                };
-            }
-            else
-            {
-                builder.TotalMatches++;
-            }
-        }
-    }
-
     private static HashSet<long> GetArchivedThreadIds()
     {
         try
@@ -1343,23 +1275,6 @@ public sealed class AndroidSmsService : ISmsService
         {
             return [];
         }
-    }
-
-    private sealed class SearchResultBuilder
-    {
-        public long ThreadId { get; set; }
-        public long MessageId { get; set; }
-        public string Address { get; set; } = string.Empty;
-        public string? ContactName { get; set; }
-        public string Snippet { get; set; } = string.Empty;
-        public DateTime Timestamp { get; set; }
-        public int SubId { get; set; }
-        public bool IsRead { get; set; }
-        public int TotalMatches { get; set; }
-        public bool IsArchived { get; set; }
-        public bool IsSpam { get; set; }
-        public bool IsStarred { get; set; }
-        public bool IsKnown { get; set; }
     }
 
     private sealed class ThreadBuilder

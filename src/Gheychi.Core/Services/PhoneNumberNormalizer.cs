@@ -38,4 +38,19 @@ public static class PhoneNumberNormalizer
 
         return address;
     }
+
+    /// <summary>
+    /// Strips the separators <see cref="FormatDisplay"/> adds ("+98 912 000 0001" -> "+989120000001").
+    /// The telephony provider treats an address that still contains spaces as a different
+    /// recipient, which files the sent message in a new thread instead of the open one.
+    /// </summary>
+    public static string ToSendAddress(string address)
+    {
+        if (string.IsNullOrWhiteSpace(address) || IsAlphanumeric(address))
+            return address?.Trim() ?? string.Empty;
+
+        var trimmed = address.Trim();
+        var digits = NonDigitRegex.Replace(trimmed, string.Empty);
+        return trimmed.StartsWith('+') ? "+" + digits : digits;
+    }
 }

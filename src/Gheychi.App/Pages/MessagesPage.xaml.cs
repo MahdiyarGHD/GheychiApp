@@ -1,3 +1,4 @@
+using Gheychi.App.Controls;
 using Gheychi.App.ViewModels;
 
 namespace Gheychi.App.Pages;
@@ -11,15 +12,56 @@ public partial class MessagesPage : ContentPage
     private bool _timerRunning;
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
+    private bool _overlaysWarmedUp;
+    private ChatView? _chatOverlay;
+    private SearchView? _searchOverlay;
     private MessagesViewModel? Vm => BindingContext as MessagesViewModel;
+
+    // ChatView (1000+ lines of XAML) and SearchView are only needed once the user opens them;
+    // building them in the constructor delayed the first inbox frame.
+    private ChatView ChatOverlay => _chatOverlay ??= CreateChatOverlay();
+    private SearchView SearchOverlay => _searchOverlay ??= CreateSearchOverlay();
+    private bool IsChatClosed => _chatOverlay is null || _chatOverlay.InputTransparent;
+    private bool IsSearchClosed => _searchOverlay is null || _searchOverlay.InputTransparent;
 
     public MessagesPage(MessagesViewModel? vm = null)
     {
+        // Resolve the view model first: it starts loading the cached inbox on a worker thread
+        // while the XAML below is inflated.
+        var viewModel = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
         InitializeComponent();
-        BindingContext = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
-        ChatOverlay.BackRequested += CloseChatAsync;
-        SearchOverlay.BackRequested += OnCloseSearchRequested;
-        SearchOverlay.SearchResultTapped += OnSearchResultTapped;
+        BindingContext = viewModel;
+    }
+
+    private ChatView CreateChatOverlay()
+    {
+        var chat = new ChatView
+        {
+            IsVisible = true,
+            InputTransparent = true,
+            TranslationY = 3000,
+            VerticalOptions = LayoutOptions.Fill,
+            HorizontalOptions = LayoutOptions.Fill
+        };
+        chat.BackRequested += CloseChatAsync;
+        RootGrid.Children.Add(chat);
+        return chat;
+    }
+
+    private SearchView CreateSearchOverlay()
+    {
+        var search = new SearchView
+        {
+            IsVisible = true,
+            InputTransparent = true,
+            TranslationY = 3000,
+            VerticalOptions = LayoutOptions.Fill,
+            HorizontalOptions = LayoutOptions.Fill
+        };
+        search.BackRequested += OnCloseSearchRequested;
+        search.SearchResultTapped += OnSearchResultTapped;
+        RootGrid.Children.Add(search);
+        return search;
     }
 
     protected override async void OnAppearing()
@@ -27,6 +69,37 @@ public partial class MessagesPage : ContentPage
         base.OnAppearing();
         if (Vm != null)
             await Vm.InitializeAsync();
+
+        if (!_overlaysWarmedUp)
+        {
+            _overlaysWarmedUp = true;
+            _ = WarmUpOverlaysAsync();
+        }
+    }
+
+    // Build the overlays once the inbox is on screen and the user is not scrolling, so the first
+    // chat/search open does not pay the XAML inflation cost.
+    private async Task WarmUpOverlaysAsync()
+    {
+        try
+        {
+            await Task.Delay(1500);
+            await WaitForScrollIdleAsync();
+            _ = ChatOverlay;
+
+            await Task.Delay(400);
+            await WaitForScrollIdleAsync();
+            _ = SearchOverlay;
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task WaitForScrollIdleAsync()
+    {
+        while (Environment.TickCount64 - _lastScrollTime < 500)
+            await Task.Delay(250);
     }
 
     private void OnThreadsScrolled(object? sender, ItemsViewScrolledEventArgs e)
@@ -37,6 +110,9 @@ public partial class MessagesPage : ContentPage
 
         if (!_timerRunning)
         {
+            // Background chat warm-up reads SMS/SQLite and allocates heavily; keep it off the
+            // CPU for the duration of a scroll burst.
+            ChatViewModel.CancelPreload();
             _timerRunning = true;
             _ = CheckScrollIdleAsync();
         }
@@ -79,7 +155,7 @@ public partial class MessagesPage : ContentPage
 
     private void OnThreadRowTapped(object? sender, EventArgs e)
     {
-        if (_animating || !ChatOverlay.InputTransparent)
+        if (_animating || !IsChatClosed)
             return;
 
         if ((sender as View)?.BindingContext is ThreadItem thread)
@@ -97,7 +173,7 @@ public partial class MessagesPage : ContentPage
 
     public void OnThreadRowTappedDirect(ThreadItem thread)
     {
-        if (_animating || !ChatOverlay.InputTransparent)
+        if (_animating || !IsChatClosed)
             return;
 
         if (Vm?.IsSelectionMode == true)
@@ -112,7 +188,7 @@ public partial class MessagesPage : ContentPage
 
     public void OnThreadRowHeldDirect(ThreadItem thread)
     {
-        if (_animating || !ChatOverlay.InputTransparent || Vm == null)
+        if (_animating || !IsChatClosed || Vm == null)
             return;
 
         if (!Vm.IsSelectionMode)
@@ -226,6 +302,24 @@ public partial class MessagesPage : ContentPage
         await Vm.MarkSelectedAsUnreadAsync();
     }
 
+    private static async Task EnsureOverlayReadyAsync(View overlay)
+    {
+        if (overlay.IsLoaded && overlay.Handler?.PlatformView is not null)
+            return;
+
+        var loaded = new TaskCompletionSource();
+        void OnLoaded(object? sender, EventArgs e) => loaded.TrySetResult();
+        overlay.Loaded += OnLoaded;
+        try
+        {
+            await Task.WhenAny(loaded.Task, Task.Delay(500));
+        }
+        finally
+        {
+            overlay.Loaded -= OnLoaded;
+        }
+    }
+
     private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false)
     {
         if (_animating)
@@ -233,6 +327,9 @@ public partial class MessagesPage : ContentPage
         _animating = true;
         try
         {
+            if (_chatOverlay is null)
+                await EnsureOverlayReadyAsync(ChatOverlay);
+
             // Yield SQLite to the opening chat immediately: stop list warm-up
             // queries so page 1 + its history prefetch run uncontended.
             ChatViewModel.CancelPreload();
@@ -322,7 +419,7 @@ public partial class MessagesPage : ContentPage
 
     private async void OnSearchBarTapped(object? sender, EventArgs e)
     {
-        if (_animating || !ChatOverlay.InputTransparent || Vm?.IsSelectionMode == true)
+        if (_animating || !IsChatClosed || Vm?.IsSelectionMode == true)
             return;
 
         await OpenSearchAsync();
@@ -335,6 +432,9 @@ public partial class MessagesPage : ContentPage
         _animating = true;
         try
         {
+            if (_searchOverlay is null)
+                await EnsureOverlayReadyAsync(SearchOverlay);
+
             var searchVm = IPlatformApplication.Current?.Services.GetService<SearchViewModel>() ?? new SearchViewModel();
             SearchOverlay.Initialize(searchVm);
             var offscreenY = Height > 0 ? Height : GetFallbackHeight();
@@ -399,7 +499,7 @@ public partial class MessagesPage : ContentPage
 
     private async void OnSearchResultTapped(object? sender, SearchResultItem item)
     {
-        if (_animating || !ChatOverlay.InputTransparent)
+        if (_animating || !IsChatClosed)
             return;
 
         var thread = Vm?.Threads.FirstOrDefault(t => t.ThreadId == item.ThreadId);
@@ -435,7 +535,7 @@ public partial class MessagesPage : ContentPage
             return true;
         }
 
-        if (!ChatOverlay.InputTransparent)
+        if (!IsChatClosed)
         {
             if (ChatOverlay.HandleBack())
                 return true;
@@ -444,7 +544,7 @@ public partial class MessagesPage : ContentPage
             return true;
         }
 
-        if (!SearchOverlay.InputTransparent)
+        if (!IsSearchClosed)
         {
             if (SearchOverlay.Vm?.IsInSearchResultsMode == true)
             {

@@ -22,23 +22,38 @@ public class SmsDeliverReceiver : BroadcastReceiver
         if (messages is null || messages.Length == 0)
             return;
 
-        foreach (var msg in messages)
-        {
-            if (msg is null)
-                continue;
+        var first = messages.FirstOrDefault(m => m is not null);
+        if (first is null)
+            return;
 
-            var values = new ContentValues();
-            values.Put(Telephony.Sms.InterfaceConsts.Address, msg.DisplayOriginatingAddress);
-            values.Put(Telephony.Sms.InterfaceConsts.Body, msg.DisplayMessageBody);
-            values.Put(Telephony.Sms.InterfaceConsts.Date, msg.TimestampMillis);
-            values.Put(Telephony.Sms.InterfaceConsts.Read, 0);
-            values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Inbox);
+        // A long SMS arrives as several PDUs in one intent; they are one message.
+        var body = string.Concat(messages.Where(m => m is not null).Select(m => m.DisplayMessageBody));
 
-            var inboxUri = Telephony.Sms.Inbox.ContentUri;
-            if (inboxUri != null)
-                context.ContentResolver?.Insert(inboxUri, values);
-        }
+        var values = new ContentValues();
+        values.Put(Telephony.Sms.InterfaceConsts.Address, first.DisplayOriginatingAddress);
+        values.Put(Telephony.Sms.InterfaceConsts.Body, body);
+        values.Put(Telephony.Sms.InterfaceConsts.Date, first.TimestampMillis);
+        values.Put(Telephony.Sms.InterfaceConsts.Read, 0);
+        values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Inbox);
+
+        // Without sub_id the message is stored with no SIM, and replying/reacting to it later
+        // falls back to SIM 1 — on a dual-SIM phone that sends from the wrong number.
+        var subId = ReadSubscriptionId(intent);
+        if (subId > 0)
+            values.Put("sub_id", subId);
+
+        var inboxUri = Telephony.Sms.Inbox.ContentUri;
+        if (inboxUri != null)
+            context.ContentResolver?.Insert(inboxUri, values);
 
         SmsReceived?.Invoke();
+    }
+
+    private static int ReadSubscriptionId(Intent intent)
+    {
+        var subId = intent.GetIntExtra("subscription", -1);
+        if (subId <= 0)
+            subId = intent.GetIntExtra("android.telephony.extra.SUBSCRIPTION_INDEX", -1);
+        return subId;
     }
 }

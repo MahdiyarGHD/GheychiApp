@@ -88,9 +88,6 @@
                                 Margin="8,0,0,-8"
                                 VerticalOptions="End"
                                 HorizontalOptions="Start">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,1" Radius="3" Opacity="0.18" />
-                            </Border.Shadow>
                             <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
                                 <Label Text="{Binding ReactionEmoji}" FontSize="12" VerticalOptions="Center" />
                                 <ActivityIndicator IsRunning="{Binding IsReactionSending}"
@@ -230,9 +227,6 @@
                                 Margin="0,0,8,-8"
                                 VerticalOptions="End"
                                 HorizontalOptions="End">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,1" Radius="3" Opacity="0.18" />
-                            </Border.Shadow>
                             <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
                                 <Label Text="{Binding ReactionEmoji}" FontSize="12" VerticalOptions="Center" />
                                 <ActivityIndicator IsRunning="{Binding IsReactionSending}"
