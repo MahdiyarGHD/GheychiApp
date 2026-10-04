@@ -677,10 +677,22 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         return Math.Clamp(offsetDp * OpenSwipeSign / width, 0, 1);
     }
 
+    // The archive overlay's native view ignored later TranslationX updates from the MAUI property
+    // (stayed at its initial offscreen offset), so the native translation is written directly too.
+    private void SetArchiveX(double x)
+    {
+        var archive = ArchiveOverlay;
+        archive.TranslationX = x;
+#if ANDROID
+        if (archive.Handler?.PlatformView is Android.Views.View native)
+            native.TranslationX = (float)(x * DeviceDisplay.Current.MainDisplayInfo.Density);
+#endif
+    }
+
     private void SetArchiveProgress(double progress)
     {
         var width = PageWidth;
-        ArchiveOverlay.TranslationX = -OpenSwipeSign * width * (1 - progress);
+        SetArchiveX(-OpenSwipeSign * width * (1 - progress));
         InboxLayer.TranslationX = OpenSwipeSign * width * InboxParallax * progress;
     }
 
@@ -696,15 +708,15 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             var remainingDp = Math.Abs(targetProgress - fromProgress) * width;
             var duration = (uint)Math.Clamp(remainingDp / Math.Max(velocity, 900) * 1000, 140, 300);
 
-            var archiveX = -OpenSwipeSign * width * (1 - targetProgress);
-            var inboxX = OpenSwipeSign * width * InboxParallax * targetProgress;
-
             if (!open)
                 ArchiveOverlay.InputTransparent = true;
 
-            await Task.WhenAll(
-                ArchiveOverlay.TranslateToAsync(archiveX, 0, duration, Easing.CubicOut),
-                InboxLayer.TranslateToAsync(inboxX, 0, duration, Easing.CubicOut));
+            // Drives both pages through SetArchiveProgress, the same path the finger drag uses.
+            var finished = new TaskCompletionSource();
+            new Animation(SetArchiveProgress, fromProgress, targetProgress, Easing.CubicOut)
+                .Commit(this, "ArchiveSettle", 16, duration, finished: (_, _) => finished.TrySetResult());
+            await finished.Task;
+            SetArchiveProgress(targetProgress);
 
             _archiveOpen = open;
             if (open)
@@ -716,7 +728,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             }
             else
             {
-                ArchiveOverlay.TranslationX = -OpenSwipeSign * OffscreenDistance;
+                SetArchiveX(-OpenSwipeSign * OffscreenDistance);
                 ArchiveOverlay.ResetState();
             }
         }
