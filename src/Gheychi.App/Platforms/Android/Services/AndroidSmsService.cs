@@ -1012,7 +1012,7 @@ public sealed class AndroidSmsService : ISmsService
 
                 return new SmsMessagePage(messages, rawCount);
             }
-            catch (OperationCanceledException)
+            catch (System.OperationCanceledException)
             {
                 throw;
             }
