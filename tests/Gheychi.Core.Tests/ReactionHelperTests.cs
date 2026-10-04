@@ -19,14 +19,29 @@ public sealed class ReactionHelperTests
         Assert.Equal("Loved “Happy birthday!”", result);
     }
 
-    [Fact]
-    public void FormatReactionSms_CustomEmoji_FallsBackToReactedWithCurlyQuotes()
+    [Theory]
+    [InlineData("👍", "Hello!", "Liked “Hello!”")]
+    [InlineData("❤️", "Hello!", "Loved “Hello!”")]
+    [InlineData("😂", "lililili", "Laughed at “lililili”")]
+    [InlineData("👎", "Hello!", "Disliked “Hello!”")]
+    [InlineData("‼️", "Hello!", "Emphasized “Hello!”")]
+    [InlineData("❓", "Hello!", "Questioned “Hello!”")]
+    public void FormatReactionSms_AllSixDockEmoji_UseVerbTemplate(string emoji, string body, string expected)
     {
-        // No Tapback verb exists for ✂️/🙏/etc. This fallback is NOT our
-        // invention: iPhones themselves send exactly this for non-verb emoji
-        // (observed on-device: Reacted 🙏 to “حله ممنونم”). Curly quotes required.
-        var result = ReactionHelper.FormatReactionSms("✂️", "سلام وقت بخیر");
-        Assert.Equal("Reacted ✂️ to “سلام وقت بخیر”", result);
+        // Exactly the 6 emoji the dock offers — all must produce the verb template.
+        Assert.Equal(expected, ReactionHelper.FormatReactionSms(emoji, body));
+    }
+
+    [Theory]
+    [InlineData("✂️")]
+    [InlineData("🙏")]
+    [InlineData("😮")]
+    [InlineData("😢")]
+    public void FormatReactionSms_UnmappedEmoji_Throws(string emoji)
+    {
+        // No Tapback verb exists for these, so no template renders as a reaction
+        // on other SMS apps. The dock no longer offers them; fail fast instead.
+        Assert.Throws<ArgumentException>(() => ReactionHelper.FormatReactionSms(emoji, "hello"));
     }
 
     [Fact]

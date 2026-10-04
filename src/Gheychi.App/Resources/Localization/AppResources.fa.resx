@@ -183,7 +183,4 @@
   <data name="Chat_Copied" xml:space="preserve">
     <value>در حافظه کپی شد</value>
   </data>
-  <data name="Chat_ReactionsMore" xml:space="preserve">
-    <value>واکنش‌های بیشتر</value>
-  </data>
 </root>

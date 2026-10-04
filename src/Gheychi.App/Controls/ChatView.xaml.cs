@@ -905,12 +905,14 @@ public partial class ChatView : ContentView
         }
     }
 
+    // The dock offers exactly the 6 emoji with Tapback verbs — the only ones
+    // iPhone/Google Messages can link to the original message (see MapEmojiToVerb).
     private void OnReactionThumbTapped(object? sender, EventArgs e) => ApplyReaction("👍");
     private void OnReactionHeartTapped(object? sender, EventArgs e) => ApplyReaction("❤️");
     private void OnReactionJoyTapped(object? sender, EventArgs e) => ApplyReaction("😂");
-    private void OnReactionWowTapped(object? sender, EventArgs e) => ApplyReaction("😮");
-    private void OnReactionSadTapped(object? sender, EventArgs e) => ApplyReaction("😢");
-    private void OnReactionGheychiTapped(object? sender, EventArgs e) => ApplyReaction("✂️");
+    private void OnReactionDislikeTapped(object? sender, EventArgs e) => ApplyReaction("👎");
+    private void OnReactionEmphasizeTapped(object? sender, EventArgs e) => ApplyReaction("‼️");
+    private void OnReactionQuestionTapped(object? sender, EventArgs e) => ApplyReaction("❓");
 
     private async void ApplyReaction(string emoji)
     {
@@ -920,34 +922,6 @@ public partial class ChatView : ContentView
             await Vm.SetReactionAsync(_targetMessage, emoji);
         }
         await DismissSelectionOverlayAsync();
-    }
-
-    private void OnMoreReactionsTapped(object? sender, EventArgs e)
-    {
-        CuratedEmojiModal.IsVisible = true;
-        CuratedEmojiModal.Opacity = 0;
-        _ = CuratedEmojiModal.FadeToAsync(1, 150);
-    }
-
-    private async Task CloseEmojiModalAsync()
-    {
-        try { await CuratedEmojiModal.FadeToAsync(0, 150); } catch { }
-        CuratedEmojiModal.IsVisible = false;
-    }
-
-    private async void OnCloseEmojiModalTapped(object? sender, EventArgs e)
-    {
-        await CloseEmojiModalAsync();
-    }
-
-    private async void OnCuratedEmojiTapped(object? sender, TappedEventArgs e)
-    {
-        var emoji = e.Parameter as string;
-        if (!string.IsNullOrEmpty(emoji))
-        {
-            await CloseEmojiModalAsync();
-            ApplyReaction(emoji);
-        }
     }
 
     private async void OnCopyUrlTapped(object? sender, EventArgs e)
@@ -1100,12 +1074,6 @@ public partial class ChatView : ContentView
 
     public bool HandleBack()
     {
-        if (CuratedEmojiModal.IsVisible)
-        {
-            _ = CloseEmojiModalAsync();
-            return true;
-        }
-
         if (MessageInfoModal.IsVisible)
         {
             _ = CloseInfoModalAsync();

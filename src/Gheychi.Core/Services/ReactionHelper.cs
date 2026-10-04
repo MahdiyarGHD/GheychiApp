@@ -14,25 +14,23 @@ public static class ReactionHelper
     private static readonly Regex WhitespaceRuns = new(@"\s+", RegexOptions.Compiled);
 
     /// <summary>
-    /// Formats an outgoing reaction SMS using Apple's Tapback fallback template so that
+    /// Formats an outgoing reaction SMS using Apple's Tapback template so that
     /// iPhone Messages and Google Messages can link it to the original message.
-    /// Known emojis map to verbs (Liked/Loved/Laughed at/...); anything else falls back
-    /// to <c>Reacted {emoji} to “snippet”</c> with curly quotes, exactly as observed
-    /// on-device (<c>Reacted 🙏 to “سلام صبح بخیر.… ”</c>).
+    /// Only the 6 emoji with Tapback verbs are supported (see <see cref="MapEmojiToVerb"/>);
+    /// anything else throws, because no other template renders as a reaction on
+    /// other SMS apps. The reaction dock offers exactly these 6, so this is unreachable
+    /// from the UI and exists to fail fast on programming errors.
     /// Always the English template — even for Persian snippets — because neither
     /// iPhone nor Google Messages recognizes any other template.
     /// </summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="emoji"/> has no Tapback verb.</exception>
     public static string FormatReactionSms(string emoji, string messageBody)
     {
+        var verb = MapEmojiToVerb(emoji);
+        if (string.IsNullOrEmpty(verb))
+            throw new ArgumentException($"Unsupported reaction emoji: '{emoji}'. Only Tapback-verb emoji can be sent.", nameof(emoji));
         var snippet = GetSnippet(messageBody);
-        return FormatWithVerb(MapEmojiToVerb(emoji), emoji, snippet);
-    }
-
-    private static string FormatWithVerb(string? verb, string emoji, string snippet)
-    {
-        if (!string.IsNullOrEmpty(verb))
-            return $"{verb} {CurlyOpen}{snippet}{CurlyClose}";
-        return $"Reacted {emoji} to {CurlyOpen}{snippet}{CurlyClose}";
+        return $"{verb} {CurlyOpen}{snippet}{CurlyClose}";
     }
 
     /// <summary>Maps a reaction emoji to its Apple Tapback verb, or null for the generic fallback.</summary>

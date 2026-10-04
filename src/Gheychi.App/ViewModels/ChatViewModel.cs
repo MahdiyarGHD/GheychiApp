@@ -845,6 +845,11 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public async Task SetReactionAsync(ChatMessage message, string emoji)
     {
+        // Fail fast on unmapped emoji (the dock only offers the 6 mapped ones):
+        // don't touch local state at all.
+        if (ReactionHelper.MapEmojiToVerb(emoji) is null)
+            return;
+
         var isToggleOff = message.ReactionEmoji == emoji;
         var newEmoji = isToggleOff ? null : emoji;
         message.ReactionEmoji = newEmoji;
@@ -857,7 +862,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             message.HasReactionFailed = false;
 
             // Always the iPhone-compatible English template (verbs + curly quotes):
-            // no other SMS app recognizes the Persian template.
+            // no other SMS app recognizes any other template.
             var reactionText = ReactionHelper.FormatReactionSms(newEmoji, message.FullBody);
 
             int targetSubId = 0;
@@ -908,10 +913,22 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         if (string.IsNullOrEmpty(message.ReactionEmoji))
             return;
 
+        string reactionText;
+        try
+        {
+            reactionText = ReactionHelper.FormatReactionSms(message.ReactionEmoji, message.FullBody);
+        }
+        catch (ArgumentException)
+        {
+            // Stale unmapped emoji from before the dock was restricted: mark failed
+            // and bail instead of throwing on a background tap handler.
+            message.IsReactionSending = false;
+            message.HasReactionFailed = true;
+            return;
+        }
+
         message.HasReactionFailed = false;
         message.IsReactionSending = true;
-
-        var reactionText = ReactionHelper.FormatReactionSms(message.ReactionEmoji, message.FullBody);
 
         int targetSubId = 0;
         if (message.SubId > 0)

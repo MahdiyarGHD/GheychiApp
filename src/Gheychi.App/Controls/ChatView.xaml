@@ -778,32 +778,21 @@
                                     <TapGestureRecognizer Tapped="OnReactionJoyTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <Label Text="😮" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                            <Label Text="👎" FontSize="20" Padding="5,2" VerticalOptions="Center">
                                 <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnReactionWowTapped" />
+                                    <TapGestureRecognizer Tapped="OnReactionDislikeTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <Label Text="😢" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                            <Label Text="‼️" FontSize="20" Padding="5,2" VerticalOptions="Center">
                                 <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnReactionSadTapped" />
+                                    <TapGestureRecognizer Tapped="OnReactionEmphasizeTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <Label Text="✂️" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                            <Label Text="❓" FontSize="20" Padding="5,2" VerticalOptions="Center">
                                 <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnReactionGheychiTapped" />
+                                    <TapGestureRecognizer Tapped="OnReactionQuestionTapped" />
                                 </Label.GestureRecognizers>
                             </Label>
-                            <BoxView WidthRequest="1" HeightRequest="16" BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}" VerticalOptions="Center" Margin="2,0" />
-                            <Grid WidthRequest="28" HeightRequest="28" VerticalOptions="Center">
-                                <Image Source="plus.png" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
-                                    </Image.Behaviors>
-                                </Image>
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnMoreReactionsTapped" />
-                                </Grid.GestureRecognizers>
-                            </Grid>
                         </HorizontalStackLayout>
                     </Border>
 
@@ -1018,106 +1007,6 @@
                     </Border>
                 </VerticalStackLayout>
             </ScrollView>
-        </Grid>
-
-        <!-- ================= CURATED EMOJI PICKER SHEET ================= -->
-        <Grid x:Name="CuratedEmojiModal"
-              IsVisible="False"
-              Opacity="0"
-              HorizontalOptions="Fill"
-              VerticalOptions="Fill">
-            <BoxView BackgroundColor="{AppThemeBinding Light=#60000000, Dark=#90000000}">
-                <BoxView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnCloseEmojiModalTapped" />
-                </BoxView.GestureRecognizers>
-            </BoxView>
-            <Border Margin="16,0,16,24"
-                    StrokeThickness="1"
-                    Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
-                    StrokeShape="RoundRectangle 24"
-                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
-                    VerticalOptions="End"
-                    HorizontalOptions="Fill"
-                    Padding="16,14">
-                <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,10" Radius="24" Opacity="0.35" />
-                </Border.Shadow>
-                <VerticalStackLayout Spacing="12">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="{loc:Translate Chat_ReactionsMore}"
-                               FontSize="14"
-                               FontFamily="{DynamicResource AppFontFamilyBold}"
-                               TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
-                               VerticalOptions="Center" />
-                        <Grid Grid.Column="1" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
-                            <Image Source="close.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
-                                <Image.Behaviors>
-                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
-                                </Image.Behaviors>
-                            </Image>
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnCloseEmojiModalTapped" />
-                            </Grid.GestureRecognizers>
-                        </Grid>
-                    </Grid>
-                    <FlexLayout Wrap="Wrap" JustifyContent="SpaceBetween" AlignItems="Center">
-                        <Label Text="🔥" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🔥" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🎉" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🎉" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🙏" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🙏" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="👏" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="👏" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="💯" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💯" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🤔" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🤔" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="💩" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💩" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="✨" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="✨" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🚀" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🚀" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="😍" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="😍" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🥳" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🥳" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="👀" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="👀" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="💪" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💪" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🤝" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🤝" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="💡" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💡" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🎯" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🎯" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🙌" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🙌" /></Label.GestureRecognizers>
-                        </Label>
-                        <Label Text="🤩" FontSize="26" Padding="6,4">
-                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🤩" /></Label.GestureRecognizers>
-                        </Label>
-                    </FlexLayout>
-                </VerticalStackLayout>
-            </Border>
         </Grid>
 
         <!-- ================= MESSAGE INFO SHEET ================= -->

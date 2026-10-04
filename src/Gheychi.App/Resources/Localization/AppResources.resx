@@ -183,7 +183,4 @@
   <data name="Chat_Copied" xml:space="preserve">
     <value>Copied to clipboard</value>
   </data>
-  <data name="Chat_ReactionsMore" xml:space="preserve">
-    <value>More reactions</value>
-  </data>
 </root>
