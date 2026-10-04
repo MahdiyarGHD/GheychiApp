@@ -5,19 +5,23 @@
              xmlns:loc="clr-namespace:Gheychi.App.Localization"
              xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
              x:Class="Gheychi.App.Controls.ComposeView"
+             behaviors:TouchShield.IsEnabled="True"
              BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
 
     <ContentView.Resources>
+        <!-- Section title: a letter or "Recent" -->
         <DataTemplate x:Key="HeaderTemplate" x:DataType="vm:ComposeRow">
             <Label Text="{Binding Letter}"
-                   Padding="20,12,16,2"
+                   Padding="22,16,16,4"
                    FontSize="12"
+                   CharacterSpacing="0.8"
                    FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                   TextColor="{StaticResource Primary}" />
+                   TextColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}" />
         </DataTemplate>
 
+        <!-- A person: avatar, name, "Mobile · number" -->
         <DataTemplate x:Key="ContactTemplate" x:DataType="vm:ComposeRow">
-            <Grid Padding="16,8"
+            <Grid Padding="16,7"
                   ColumnDefinitions="Auto,*"
                   ColumnSpacing="14"
                   BackgroundColor="Transparent">
@@ -25,19 +29,79 @@
                     <TapGestureRecognizer Tapped="OnRowTapped" />
                 </Grid.GestureRecognizers>
                 <Border Grid.Column="0"
-                        WidthRequest="46"
-                        HeightRequest="46"
+                        WidthRequest="44"
+                        HeightRequest="44"
                         StrokeThickness="0"
-                        StrokeShape="RoundRectangle 23"
+                        StrokeShape="RoundRectangle 22"
                         BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#35423C}"
                         InputTransparent="True">
-                    <Label Text="{Binding Initials}"
-                           FontSize="14"
+                    <Grid InputTransparent="True" CascadeInputTransparent="True">
+                        <Label Text="{Binding Initials}"
+                               IsVisible="{Binding HasInitials}"
+                               FontSize="14"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                        <Image Source="person.png"
+                               IsVisible="{Binding HasNoInitials}"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                </Border>
+                <VerticalStackLayout Grid.Column="1"
+                                     Spacing="2"
+                                     VerticalOptions="Center"
+                                     InputTransparent="True"
+                                     CascadeInputTransparent="True">
+                    <Label Text="{Binding Name}"
+                           FontSize="15"
                            FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                           TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1"
+                           TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}" />
+                    <Label Text="{Binding Subtitle}"
+                           IsVisible="{Binding HasSubtitle}"
+                           FontSize="12"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1"
+                           TextColor="{AppThemeBinding Light=#646C65, Dark=#9AA0AB}" />
+                </VerticalStackLayout>
+            </Grid>
+        </DataTemplate>
+
+        <!-- "Send to 0903…": the number typed in the To field -->
+        <DataTemplate x:Key="TypedTemplate" x:DataType="vm:ComposeRow">
+            <Grid Padding="16,7"
+                  ColumnDefinitions="Auto,*"
+                  ColumnSpacing="14"
+                  BackgroundColor="Transparent">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnRowTapped" />
+                </Grid.GestureRecognizers>
+                <Border Grid.Column="0"
+                        WidthRequest="44"
+                        HeightRequest="44"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 22"
+                        BackgroundColor="{StaticResource Primary}"
+                        InputTransparent="True">
+                    <Image Source="send.png"
+                           WidthRequest="19"
+                           HeightRequest="19"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"
-                           InputTransparent="True" />
+                           InputTransparent="True">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="White" />
+                        </Image.Behaviors>
+                    </Image>
                 </Border>
                 <VerticalStackLayout Grid.Column="1"
                                      Spacing="2"
@@ -54,46 +118,8 @@
                            FontSize="12"
                            LineBreakMode="TailTruncation"
                            MaxLines="1"
-                           TextColor="{AppThemeBinding Light=#727970, Dark=#9AA0AB}" />
+                           TextColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}" />
                 </VerticalStackLayout>
-            </Grid>
-        </DataTemplate>
-
-        <DataTemplate x:Key="TypedTemplate" x:DataType="vm:ComposeRow">
-            <Grid Padding="16,8"
-                  ColumnDefinitions="Auto,*"
-                  ColumnSpacing="14"
-                  BackgroundColor="Transparent">
-                <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnRowTapped" />
-                </Grid.GestureRecognizers>
-                <Border Grid.Column="0"
-                        WidthRequest="46"
-                        HeightRequest="46"
-                        StrokeThickness="0"
-                        StrokeShape="RoundRectangle 23"
-                        BackgroundColor="{StaticResource Primary}"
-                        InputTransparent="True">
-                    <Image Source="send.png"
-                           WidthRequest="20"
-                           HeightRequest="20"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"
-                           InputTransparent="True">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="White" />
-                        </Image.Behaviors>
-                    </Image>
-                </Border>
-                <Label Grid.Column="1"
-                       Text="{Binding Name}"
-                       FontSize="15"
-                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                       LineBreakMode="TailTruncation"
-                       MaxLines="1"
-                       VerticalOptions="Center"
-                       TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}"
-                       InputTransparent="True" />
             </Grid>
         </DataTemplate>
 
@@ -107,15 +133,15 @@
 
         <!-- Header -->
         <Grid Grid.Row="0"
-              HeightRequest="60"
-              Padding="12,0,16,0"
+              HeightRequest="56"
+              Padding="12,0,12,0"
               ColumnDefinitions="Auto,*,Auto"
-              ColumnSpacing="8">
+              ColumnSpacing="6">
             <Border Grid.Column="0"
-                    WidthRequest="40"
-                    HeightRequest="40"
+                    WidthRequest="44"
+                    HeightRequest="44"
                     StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20"
+                    StrokeShape="RoundRectangle 22"
                     BackgroundColor="Transparent"
                     VerticalOptions="Center"
                     SemanticProperties.Description="{loc:Translate Chat_Back}">
@@ -140,10 +166,10 @@
                    VerticalOptions="Center" />
             <Border x:Name="DialpadButton"
                     Grid.Column="2"
-                    WidthRequest="40"
-                    HeightRequest="40"
+                    WidthRequest="44"
+                    HeightRequest="44"
                     StrokeThickness="0"
-                    StrokeShape="RoundRectangle 20"
+                    StrokeShape="RoundRectangle 22"
                     BackgroundColor="Transparent"
                     VerticalOptions="Center"
                     SemanticProperties.Description="{loc:Translate Compose_Dialpad}">
@@ -156,111 +182,167 @@
                        HorizontalOptions="Center"
                        VerticalOptions="Center">
                     <Image.Behaviors>
-                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#4A544C, Dark=#B7BEB9}" />
                     </Image.Behaviors>
                 </Image>
             </Border>
         </Grid>
 
         <!-- Recipient field -->
-        <Grid Grid.Row="1"
-              Padding="16,2,16,10">
-            <Border Padding="14,0,10,0"
-                    HeightRequest="48"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 24"
-                    BackgroundColor="{AppThemeBinding Light=#F0F5EE, Dark=#1E2320}">
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalOptions="Center">
-                    <Label Grid.Column="0"
-                           Text="{loc:Translate Compose_To}"
-                           FontSize="12"
-                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                           TextColor="{StaticResource Primary}"
-                           VerticalOptions="Center" />
-                    <Entry x:Name="RecipientEntry"
-                           Grid.Column="1"
-                           Placeholder="{loc:Translate Compose_Hint}"
-                           PlaceholderColor="{AppThemeBinding Light=#747D75, Dark=#8A8F98}"
-                           TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}"
-                           BackgroundColor="Transparent"
-                           FontSize="14"
-                           FontFamily="{DynamicResource AppFontFamily}"
-                           ClearButtonVisibility="Never"
-                           ReturnType="Done"
-                           VerticalOptions="Center"
-                           TextChanged="OnRecipientTextChanged"
-                           Completed="OnRecipientCompleted" />
-                    <Image x:Name="ClearButton"
-                           Grid.Column="2"
-                           IsVisible="False"
-                           Source="close.png"
+        <Border x:Name="RecipientCard"
+                Grid.Row="1"
+                Margin="16,4,16,8"
+                Padding="18,0,8,0"
+                HeightRequest="52"
+                StrokeThickness="1.5"
+                Stroke="Transparent"
+                StrokeShape="RoundRectangle 26"
+                BackgroundColor="{AppThemeBinding Light=#EAF0E8, Dark=#1E2320}">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" VerticalOptions="Center">
+                <Label Grid.Column="0"
+                       Text="{loc:Translate Compose_To}"
+                       FontSize="14"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}"
+                       VerticalOptions="Center" />
+                <Entry x:Name="RecipientEntry"
+                       Grid.Column="1"
+                       Placeholder="{loc:Translate Compose_Hint}"
+                       PlaceholderColor="{AppThemeBinding Light=#7C857D, Dark=#7F8791}"
+                       TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}"
+                       BackgroundColor="Transparent"
+                       FontSize="15"
+                       FontFamily="{DynamicResource AppFontFamily}"
+                       ClearButtonVisibility="Never"
+                       ReturnType="Go"
+                       VerticalOptions="Center"
+                       TextChanged="OnRecipientTextChanged"
+                       Completed="OnRecipientCompleted"
+                       Focused="OnRecipientFocusChanged"
+                       Unfocused="OnRecipientFocusChanged" />
+                <Border x:Name="ClearButton"
+                        Grid.Column="2"
+                        IsVisible="False"
+                        WidthRequest="34"
+                        HeightRequest="34"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 17"
+                        BackgroundColor="Transparent"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Chat_Cancel}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnClearTapped" />
+                    </Border.GestureRecognizers>
+                    <Image Source="close.png"
                            WidthRequest="16"
                            HeightRequest="16"
+                           HorizontalOptions="Center"
                            VerticalOptions="Center"
-                           SemanticProperties.Description="{loc:Translate Chat_Cancel}">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnClearTapped" />
-                        </Image.GestureRecognizers>
+                           InputTransparent="True">
                         <Image.Behaviors>
                             <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
                         </Image.Behaviors>
                     </Image>
-                    <Border x:Name="SimChip"
-                            Grid.Column="3"
-                            IsVisible="False"
-                            Padding="10,4"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 14"
-                            BackgroundColor="{AppThemeBinding Light=#E3EAE2, Dark=#2A302C}"
-                            VerticalOptions="Center"
-                            SemanticProperties.Description="{loc:Translate Compose_Sim}">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnSimChipTapped" />
-                        </Border.GestureRecognizers>
-                        <HorizontalStackLayout Spacing="5">
-                            <Image Source="sim_card.png"
-                                   WidthRequest="13"
-                                   HeightRequest="13"
-                                   VerticalOptions="Center">
-                                <Image.Behaviors>
-                                    <behaviors:IconTintBehavior TintColor="{StaticResource Primary}" />
-                                </Image.Behaviors>
-                            </Image>
-                            <Label x:Name="SimLabel"
-                                   FontSize="11"
-                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                   TextColor="{AppThemeBinding Light=#59615A, Dark=#C9CFCB}"
-                                   VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                    </Border>
-                </Grid>
-            </Border>
-        </Grid>
+                </Border>
+                <Border x:Name="SimChip"
+                        Grid.Column="3"
+                        IsVisible="False"
+                        Padding="10,0"
+                        HeightRequest="32"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{AppThemeBinding Light=#D9E4D7, Dark=#2A332D}"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Compose_Sim}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSimChipTapped" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                        <Image Source="sim_card.png"
+                               WidthRequest="14"
+                               HeightRequest="14"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Label x:Name="SimLabel"
+                               FontSize="12"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#34443A, Dark=#CFE5D8}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
+        </Border>
 
-        <!-- Contacts -->
+        <!-- Suggestions and contacts -->
         <Grid Grid.Row="2">
             <CollectionView x:Name="ContactList"
-                            Margin="0,0,22,0"
                             ItemTemplate="{StaticResource RowSelector}"
                             SelectionMode="None"
-                            VerticalScrollBarVisibility="Never" />
+                            VerticalScrollBarVisibility="Never">
+                <CollectionView.Footer>
+                    <Grid HeightRequest="24" />
+                </CollectionView.Footer>
+            </CollectionView>
 
-            <Label x:Name="EmptyLabel"
-                   IsVisible="False"
-                   Margin="32,0"
-                   FontSize="13"
-                   HorizontalTextAlignment="Center"
-                   VerticalOptions="Center"
-                   HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+            <ActivityIndicator x:Name="LoadingIndicator"
+                               IsVisible="False"
+                               IsRunning="False"
+                               Margin="0,56,0,0"
+                               VerticalOptions="Start"
+                               HorizontalOptions="Center" />
 
-            <!-- Alphabet fast scroll -->
-            <VerticalStackLayout x:Name="LetterStrip"
-                                 WidthRequest="22"
-                                 Margin="0,8,2,8"
-                                 Spacing="1"
-                                 HorizontalOptions="End"
-                                 VerticalOptions="Center" />
+            <VerticalStackLayout x:Name="EmptyState"
+                                 IsVisible="False"
+                                 Spacing="8"
+                                 Margin="36,48,36,0"
+                                 VerticalOptions="Start"
+                                 HorizontalOptions="Center">
+                <Border WidthRequest="64"
+                        HeightRequest="64"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 32"
+                        BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#1E2320}"
+                        HorizontalOptions="Center">
+                    <Image Source="person.png"
+                           WidthRequest="26"
+                           HeightRequest="26"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}" />
+                        </Image.Behaviors>
+                    </Image>
+                </Border>
+                <Label x:Name="EmptyTitle"
+                       FontSize="16"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}" />
+                <Label x:Name="EmptyHint"
+                       FontSize="13"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light=#646C65, Dark=#9AA0AB}" />
+                <Border x:Name="EmptyAction"
+                        IsVisible="False"
+                        Margin="0,10,0,0"
+                        Padding="22,11"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 22"
+                        BackgroundColor="{StaticResource Primary}"
+                        HorizontalOptions="Center">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnEmptyActionTapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="{loc:Translate Compose_OpenSettings}"
+                           FontSize="14"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="White"
+                           InputTransparent="True" />
+                </Border>
+            </VerticalStackLayout>
         </Grid>
     </Grid>
 </ContentView>

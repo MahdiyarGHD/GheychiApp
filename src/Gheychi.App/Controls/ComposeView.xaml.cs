@@ -8,18 +8,22 @@ namespace Gheychi.App.Controls;
 public partial class ComposeView : ContentView
 {
     private const long ContactsMaxAgeMs = 60_000;
+    private const double ParkedDistance = 3000;
+
+    // Everything about the address book that does not change between keystrokes, built off the UI thread.
+    private sealed record BuiltContacts(ContactIndex Index, ComposeRow[] Rows, Dictionary<string, ComposeRow> Headers);
 
     private readonly FastObservableCollection<ComposeRow> _rows = [];
-    private readonly List<string> _letters = [];
-    private readonly Dictionary<string, int> _letterRows = [];
-    private List<ContactEntry> _contacts = [];
+    private BuiltContacts? _contacts;
+    private IReadOnlyList<ComposeRow> _recent = [];
+    private string _recentKey = string.Empty;
     private IReadOnlyList<SimCardInfo> _sims = [];
     private int _simIndex;
     private bool _numericKeyboard;
     private bool _hasContactsPermission = true;
     private long _contactsLoadedTick;
+    private long _lastChosenTick;
     private Task? _contactsTask;
-    private string? _lastJumpLetter;
 
     public event EventHandler? BackRequested;
     public event EventHandler<ComposeRecipient>? RecipientChosen;
@@ -28,43 +32,60 @@ public partial class ComposeView : ContentView
     {
         InitializeComponent();
         ContactList.ItemsSource = _rows;
-        LetterStrip.IsVisible = false;
-#if ANDROID
-        LetterStrip.HandlerChanged += (_, _) => AttachStripTouch();
-#endif
+        UpdateStates(filtering: false, rowCount: 0);
+        Loaded += OnViewLoaded;
     }
 
+    /// <summary>The SIM picked in the To field; null on a single-SIM phone (the chat then uses its default).</summary>
     public SimCardInfo? SelectedSim => _sims.Count > 1 && _simIndex < _sims.Count ? _sims[_simIndex] : null;
 
-    /// <summary>Loads (or refreshes) the contacts and SIM list; call when the screen opens.</summary>
-    public Task PrepareAsync()
+    /// <summary>Reads the address book ahead of the first open so the list is there when the screen slides in.</summary>
+    public Task PreloadContactsAsync() => EnsureContactsAsync(force: false);
+
+    /// <summary>Cheap work before the slide-in: suggestions, scroll to the top, start offscreen.</summary>
+    public void PrepareForOpen(IReadOnlyList<ComposeRow> recent, double distanceDp)
     {
+        SetTranslationY(distanceDp);
+
+        var key = string.Join('|', recent.Select(r => r.Address + r.Name));
+        if (key != _recentKey)
+        {
+            _recentKey = key;
+            _recent = recent;
+            Rebuild();
+        }
+
+        ScrollToTop();
         _ = LoadSimsAsync();
-        return EnsureContactsAsync();
     }
 
-    public void FocusInput()
+    /// <summary>After the slide-in: the keyboard and any contact refresh must not compete with the animation.</summary>
+    public void OnOpened()
     {
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
-            try
-            {
-                await Task.Delay(100);
-                RecipientEntry.Focus();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Compose focus failed: {ex}");
-            }
-        });
+        FocusInput();
+        _ = EnsureContactsAsync(force: false);
+    }
+
+    public void PrepareForClose() => RecipientEntry.Unfocus();
+
+    /// <summary>Moves the finished screen out of the way and forgets what the user did in it.</summary>
+    public void Park()
+    {
+        InputTransparent = true;
+        SetTranslationY(ParkedDistance);
+        ResetState();
     }
 
     public void ResetState()
     {
         RecipientEntry.Unfocus();
-        RecipientEntry.Text = string.Empty;
+        if (!string.IsNullOrEmpty(RecipientEntry.Text))
+            RecipientEntry.Text = string.Empty;
         SetNumericKeyboard(false);
-        _lastJumpLetter = null;
+        _simIndex = 0;
+        UpdateSimChip();
+        UpdateCardFocus(false);
+        ScrollToTop();
     }
 
     // Returns true when it consumed the back press.
@@ -75,6 +96,121 @@ public partial class ComposeView : ContentView
 
         RecipientEntry.Unfocus();
         return true;
+    }
+
+    public async Task SlideAsync(bool open, double distanceDp)
+    {
+        var from = open ? distanceDp : 0;
+        var to = open ? 0 : distanceDp;
+        var duration = open ? 280u : 220u;
+
+        var animated = false;
+#if ANDROID
+        animated = await TryNativeSlideAsync(from, to, duration, open);
+#endif
+        if (!animated)
+        {
+            SetTranslationY(from);
+            await this.TranslateToAsync(0, to, duration, open ? Easing.CubicOut : Easing.CubicIn);
+        }
+
+        SetTranslationY(to);
+    }
+
+    public void SetTranslationY(double dp)
+    {
+        TranslationY = dp;
+#if ANDROID
+        if (Handler?.PlatformView is Android.Views.View native)
+            native.TranslationY = (float)(dp * (native.Resources?.DisplayMetrics?.Density ?? 1f));
+#endif
+    }
+
+#if ANDROID
+    // A platform animator runs on the render thread, so layout work during the slide (the tab bar
+    // hiding, the keyboard) cannot make it stutter the way a per-frame managed animation does.
+    private async Task<bool> TryNativeSlideAsync(double fromDp, double toDp, uint duration, bool open)
+    {
+        if (Handler?.PlatformView is not Android.Views.View native || !native.IsAttachedToWindow)
+            return false;
+
+        var animator = native.Animate();
+        if (animator is null)
+            return false;
+
+        var density = native.Resources?.DisplayMetrics?.Density ?? 1f;
+        var finished = new TaskCompletionSource();
+
+        animator.Cancel();
+        native.TranslationY = (float)(fromDp * density);
+        animator.SetDuration(duration);
+        if (open)
+            animator.SetInterpolator(new Android.Views.Animations.DecelerateInterpolator(2f));
+        else
+            animator.SetInterpolator(new Android.Views.Animations.AccelerateInterpolator(1.4f));
+        animator.TranslationY((float)(toDp * density));
+        animator.WithEndAction(new Java.Lang.Runnable(() => finished.TrySetResult()));
+        animator.Start();
+
+        // The end action is skipped when the animation is cancelled; never wait on it forever.
+        await Task.WhenAny(finished.Task, Task.Delay((int)duration + 400));
+        return true;
+    }
+#endif
+
+    public void FocusInput()
+    {
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            try
+            {
+                await Task.Delay(30);
+                RecipientEntry.Focus();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Compose focus failed: {ex}");
+            }
+        });
+    }
+
+    public void ScrollToTop()
+    {
+        try
+        {
+#if ANDROID
+            if (ContactList.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recycler)
+            {
+                recycler.StopScroll();
+                recycler.ScrollToPosition(0);
+                return;
+            }
+#endif
+            if (_rows.Count > 0)
+                ContactList.ScrollTo(0, position: ScrollToPosition.Start, animate: false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Compose scroll failed: {ex.Message}");
+        }
+    }
+
+    // ---- Data -----------------------------------------------------------------------------------
+
+    private void OnViewLoaded(object? sender, EventArgs e)
+    {
+        if (Window is { } window)
+        {
+            window.Resumed -= OnWindowResumed;
+            window.Resumed += OnWindowResumed;
+        }
+    }
+
+    // Back from the system settings after allowing contacts access.
+    private void OnWindowResumed(object? sender, EventArgs e)
+    {
+        if (!_hasContactsPermission)
+            _ = EnsureContactsAsync(force: true);
     }
 
     private async Task LoadSimsAsync()
@@ -88,16 +224,9 @@ public partial class ComposeView : ContentView
             var sims = await smsService.GetActiveSimsAsync();
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                var previous = SelectedSim?.SubId;
                 _sims = sims;
-                _simIndex = 0;
-                if (previous is int subId)
-                {
-                    var index = sims.ToList().FindIndex(s => s.SubId == subId);
-                    if (index >= 0)
-                        _simIndex = index;
-                }
-
+                if (_simIndex >= sims.Count)
+                    _simIndex = 0;
                 UpdateSimChip();
             });
         }
@@ -107,12 +236,14 @@ public partial class ComposeView : ContentView
         }
     }
 
-    private Task EnsureContactsAsync()
+    private Task EnsureContactsAsync(bool force)
     {
         if (_contactsTask is { IsCompleted: false })
             return _contactsTask;
 
-        if (_contactsLoadedTick != 0 && Environment.TickCount64 - _contactsLoadedTick < ContactsMaxAgeMs)
+        var fresh = _contacts is not null && _hasContactsPermission &&
+                    Environment.TickCount64 - _contactsLoadedTick < ContactsMaxAgeMs;
+        if (!force && fresh)
             return Task.CompletedTask;
 
         return _contactsTask = LoadContactsAsync();
@@ -128,16 +259,23 @@ public partial class ComposeView : ContentView
 
             var granted = true;
 #if ANDROID
-            granted = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<Gheychi.App.Platforms.Android.Permissions.ContactsPermission>() == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
+            granted = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<Gheychi.App.Platforms.Android.Permissions.ContactsPermission>()
+                      == Microsoft.Maui.ApplicationModel.PermissionStatus.Granted;
 #endif
-            IReadOnlyList<ContactEntry> contacts = granted ? await smsService.GetContactsAsync() : Array.Empty<ContactEntry>();
+            IReadOnlyList<ContactEntry> entries = granted ? await smsService.GetContactsAsync() : Array.Empty<ContactEntry>();
+            var built = await Task.Run(() => BuildContacts(entries));
             _contactsLoadedTick = Environment.TickCount64;
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                _hasContactsPermission = granted;
-                _contacts = [.. contacts];
-                Rebuild();
+                try
+                {
+                    ApplyContacts(built, granted);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Compose contacts apply failed: {ex}");
+                }
             });
         }
         catch (Exception ex)
@@ -146,14 +284,56 @@ public partial class ComposeView : ContentView
         }
     }
 
+    private static BuiltContacts BuildContacts(IReadOnlyList<ContactEntry> entries)
+    {
+        var index = new ContactIndex(entries);
+        var rows = new ComposeRow[index.Count];
+        var headers = new Dictionary<string, ComposeRow>();
+
+        for (var i = 0; i < rows.Length; i++)
+        {
+            var contact = index[i];
+            var letter = index.LetterAt(i);
+            if (!headers.ContainsKey(letter))
+                headers[letter] = new ComposeRow { Kind = ComposeRowKind.Header, Letter = letter };
+
+            rows[i] = new ComposeRow
+            {
+                Kind = ComposeRowKind.Contact,
+                Name = contact.Name,
+                ContactName = contact.Name,
+                Address = contact.Number,
+                Initials = letter == ContactListBuilder.OtherLetter ? string.Empty : ThreadItem.GenerateInitials(contact.Name),
+                Subtitle = $"{contact.Label} · {PhoneNumberNormalizer.FormatDisplay(contact.Number)}"
+            };
+        }
+
+        return new BuiltContacts(index, rows, headers);
+    }
+
+    private void ApplyContacts(BuiltContacts built, bool granted)
+    {
+        // An unchanged address book must not touch the list: that would reset what the user scrolled to.
+        var changed = _contacts is null ||
+                      _contacts.Index.Signature != built.Index.Signature ||
+                      granted != _hasContactsPermission;
+        _hasContactsPermission = granted;
+        if (!changed)
+            return;
+
+        _contacts = built;
+        Rebuild();
+    }
+
     private void Rebuild()
     {
         var query = RecipientEntry.Text ?? string.Empty;
         var filtering = !string.IsNullOrWhiteSpace(query);
         var loc = LocalizationManager.Instance;
-        var sections = ContactListBuilder.Build(_contacts, query);
+        var contacts = _contacts;
 
-        var rows = new List<ComposeRow>(_contacts.Count + sections.Count + 1);
+        var rows = new List<ComposeRow>((contacts?.Rows.Length ?? 0) + _recent.Count + 32);
+
         var typed = ContactListBuilder.TypedAddress(query);
         if (typed.Length > 0)
         {
@@ -161,119 +341,69 @@ public partial class ComposeView : ContentView
             {
                 Kind = ComposeRowKind.Typed,
                 Address = typed,
-                Name = string.Format(loc["Compose_SendTo"], PhoneNumberNormalizer.FormatDisplay(typed))
+                Name = string.Format(loc["Compose_SendTo"], PhoneNumberNormalizer.FormatDisplay(typed)),
+                Subtitle = loc["Compose_NewNumber"]
             });
         }
 
-        _letters.Clear();
-        _letterRows.Clear();
-        foreach (var section in sections)
+        if (!filtering && _recent.Count > 0)
         {
-            _letters.Add(section.Letter);
-            _letterRows[section.Letter] = rows.Count;
-            rows.Add(new ComposeRow { Kind = ComposeRowKind.Header, Letter = section.Letter });
+            rows.Add(new ComposeRow { Kind = ComposeRowKind.Header, Letter = loc["Compose_Recent"] });
+            rows.AddRange(_recent);
+        }
 
-            foreach (var contact in section.Contacts)
+        if (contacts is not null && contacts.Rows.Length > 0)
+        {
+            // Filtered results are ranked by relevance, so section titles only make sense unfiltered.
+            string? section = null;
+            foreach (var i in contacts.Index.Match(query))
             {
-                rows.Add(new ComposeRow
+                if (!filtering)
                 {
-                    Kind = ComposeRowKind.Contact,
-                    Name = contact.Name,
-                    ContactName = contact.Name,
-                    Address = contact.Number,
-                    Initials = ThreadItem.GenerateInitials(contact.Name),
-                    Subtitle = $"{contact.Label} · {PhoneNumberNormalizer.FormatDisplay(contact.Number)}"
-                });
+                    var letter = contacts.Index.LetterAt(i);
+                    if (letter != section)
+                    {
+                        section = letter;
+                        rows.Add(contacts.Headers[letter]);
+                    }
+                }
+
+                rows.Add(contacts.Rows[i]);
             }
         }
 
         _rows.Reset(rows);
+        UpdateStates(filtering, rows.Count);
+    }
 
-        RebuildLetterStrip(!filtering && _letters.Count > 1);
+    private void UpdateStates(bool filtering, int rowCount)
+    {
+        var empty = rowCount == 0;
+        var loading = empty && _contacts is null;
+        var showEmpty = empty && !loading;
 
-        var empty = rows.Count == 0;
-        EmptyLabel.IsVisible = empty;
+        LoadingIndicator.IsVisible = loading;
+        LoadingIndicator.IsRunning = loading;
         ContactList.IsVisible = !empty;
-        if (empty)
-        {
-            EmptyLabel.Text = filtering
-                ? loc["Compose_NoMatches"]
-                : loc[_hasContactsPermission ? "Compose_NoContacts" : "Compose_NoPermission"];
-        }
-    }
-
-    private void RebuildLetterStrip(bool visible)
-    {
-        LetterStrip.Children.Clear();
-        LetterStrip.IsVisible = visible;
-        if (!visible)
+        EmptyState.IsVisible = showEmpty;
+        if (!showEmpty)
             return;
 
-        foreach (var letter in _letters)
-        {
-            LetterStrip.Children.Add(new Label
-            {
-                Text = letter,
-                FontSize = 10,
-                HorizontalTextAlignment = TextAlignment.Center,
-                FontFamily = ThreadItem.FontFamilyBold,
-                TextColor = Color.FromArgb("#2E6B4C"),
-                InputTransparent = true
-            });
-        }
+        var loc = LocalizationManager.Instance;
+        string prefix;
+        if (filtering)
+            prefix = "Compose_NoMatches";
+        else if (!_hasContactsPermission)
+            prefix = "Compose_NoPermission";
+        else
+            prefix = "Compose_NoContacts";
+
+        EmptyTitle.Text = loc[prefix];
+        EmptyHint.Text = loc[prefix + "Hint"];
+        EmptyAction.IsVisible = !filtering && !_hasContactsPermission;
     }
 
-    private void JumpToLetter(string letter)
-    {
-        if (letter == _lastJumpLetter || !_letterRows.TryGetValue(letter, out var index))
-            return;
-
-        _lastJumpLetter = letter;
-        try
-        {
-            ContactList.ScrollTo(index, position: ScrollToPosition.Start, animate: false);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Compose scroll failed: {ex.Message}");
-        }
-    }
-
-#if ANDROID
-    private void AttachStripTouch()
-    {
-        if (LetterStrip.Handler?.PlatformView is not Android.Views.View native)
-            return;
-
-        native.Clickable = true;
-        native.Touch -= OnStripTouch;
-        native.Touch += OnStripTouch;
-    }
-
-    private void OnStripTouch(object? sender, Android.Views.View.TouchEventArgs e)
-    {
-        e.Handled = false;
-        if (sender is not Android.Views.View view || e.Event is not { } motion || _letters.Count == 0)
-            return;
-
-        switch (motion.ActionMasked)
-        {
-            case Android.Views.MotionEventActions.Down:
-            case Android.Views.MotionEventActions.Move:
-                view.Parent?.RequestDisallowInterceptTouchEvent(true);
-                var fraction = Math.Clamp(motion.GetY() / Math.Max(1, view.Height), 0, 0.999);
-                JumpToLetter(_letters[(int)(fraction * _letters.Count)]);
-                e.Handled = true;
-                break;
-
-            case Android.Views.MotionEventActions.Up:
-            case Android.Views.MotionEventActions.Cancel:
-                _lastJumpLetter = null;
-                e.Handled = true;
-                break;
-        }
-    }
-#endif
+    // ---- Recipient field --------------------------------------------------------------------------
 
     private void UpdateSimChip()
     {
@@ -283,12 +413,19 @@ public partial class ComposeView : ContentView
             SimLabel.Text = $"SIM {sim.SlotIndex}";
     }
 
+    private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
+
+    private void UpdateCardFocus(bool focused) =>
+        RecipientCard.Stroke = focused
+            ? new SolidColorBrush(IsDark ? Color.FromArgb("#8FE0BE") : Color.FromArgb("#2E6B4C"))
+            : Brush.Transparent;
+
     private void SetNumericKeyboard(bool numeric)
     {
         _numericKeyboard = numeric;
         RecipientEntry.Keyboard = numeric ? Keyboard.Telephone : Keyboard.Default;
         DialpadButton.BackgroundColor = numeric
-            ? (Application.Current?.RequestedTheme == AppTheme.Dark ? Color.FromArgb("#2A302C") : Color.FromArgb("#E3EAE2"))
+            ? (IsDark ? Color.FromArgb("#2A332D") : Color.FromArgb("#D9E4D7"))
             : Colors.Transparent;
     }
 
@@ -296,6 +433,12 @@ public partial class ComposeView : ContentView
     {
         if (string.IsNullOrWhiteSpace(row.Address))
             return;
+
+        // The row reports taps through two paths on some devices; one conversation is enough.
+        var now = Environment.TickCount64;
+        if (now - _lastChosenTick < 500)
+            return;
+        _lastChosenTick = now;
 
         RecipientChosen?.Invoke(this, new ComposeRecipient(row.Address, row.ContactName, SelectedSim));
     }
@@ -309,11 +452,12 @@ public partial class ComposeView : ContentView
     private void OnRecipientTextChanged(object? sender, TextChangedEventArgs e)
     {
         ClearButton.IsVisible = !string.IsNullOrEmpty(e.NewTextValue);
-        _lastJumpLetter = null;
         Rebuild();
     }
 
-    // Enter sends to the typed number, or to the only contact still matching the text.
+    private void OnRecipientFocusChanged(object? sender, FocusEventArgs e) => UpdateCardFocus(e.IsFocused);
+
+    // Go sends to the typed number, or to the only contact still matching the text.
     private void OnRecipientCompleted(object? sender, EventArgs e)
     {
         var typed = _rows.FirstOrDefault(r => r.Kind == ComposeRowKind.Typed);
@@ -356,5 +500,17 @@ public partial class ComposeView : ContentView
     {
         RecipientEntry.Unfocus();
         BackRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnEmptyActionTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            AppInfo.Current.ShowSettingsUI();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open settings failed: {ex.Message}");
+        }
     }
 }

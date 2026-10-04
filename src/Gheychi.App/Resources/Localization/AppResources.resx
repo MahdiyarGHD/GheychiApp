@@ -210,6 +210,24 @@
   <data name="Messages_Unarchive" xml:space="preserve">
     <value>Unarchive</value>
   </data>
+  <data name="Compose_NewNumber" xml:space="preserve">
+    <value>New conversation</value>
+  </data>
+  <data name="Compose_Recent" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="Compose_OpenSettings" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="Compose_NoMatchesHint" xml:space="preserve">
+    <value>Try another name, or type a full phone number.</value>
+  </data>
+  <data name="Compose_NoPermissionHint" xml:space="preserve">
+    <value>Allow access to pick people from your contacts, or just type a number above.</value>
+  </data>
+  <data name="Compose_NoContactsHint" xml:space="preserve">
+    <value>Type a phone number above to start a conversation.</value>
+  </data>
   <data name="Compose_Title" xml:space="preserve">
     <value>New message</value>
   </data>
@@ -223,10 +241,10 @@
     <value>Send to {0}</value>
   </data>
   <data name="Compose_NoContacts" xml:space="preserve">
-    <value>No contacts found</value>
+    <value>No contacts yet</value>
   </data>
   <data name="Compose_NoPermission" xml:space="preserve">
-    <value>Allow contacts access in Settings to see your contacts. You can still type a number above.</value>
+    <value>Contacts access is off</value>
   </data>
   <data name="Compose_NoMatches" xml:space="preserve">
     <value>No matching contacts</value>

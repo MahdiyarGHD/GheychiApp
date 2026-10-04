@@ -156,7 +156,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
             await Task.Delay(400);
             await WaitForScrollIdleAsync();
-            _ = ComposeOverlay.PrepareAsync();
+            _ = ComposeOverlay.PreloadContactsAsync();
         }
         catch
         {
@@ -654,18 +654,18 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (_composeOverlay is null)
                 await EnsureOverlayReadyAsync(ComposeOverlay);
 
-            _ = ComposeOverlay.PrepareAsync();
-            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
-            ComposeOverlay.TranslationY = offscreenY;
-            ComposeOverlay.InputTransparent = false;
+            var compose = ComposeOverlay;
+            var distance = GetFallbackHeight();
+            compose.PrepareForOpen(BuildRecentRows(), distance);
+            compose.InputTransparent = false;
             Shell.SetTabBarIsVisible(this, false);
 
-            await ComposeOverlay.TranslateToAsync(0, 0, 220, Easing.CubicOut);
-            ComposeOverlay.FocusInput();
+            await compose.SlideAsync(open: true, distance);
+            compose.OnOpened();
         }
         catch (InvalidOperationException)
         {
-            ComposeOverlay.TranslationY = 0;
+            ComposeOverlay.SetTranslationY(0);
             Shell.SetTabBarIsVisible(this, false);
         }
         finally
@@ -681,22 +681,16 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         _animating = true;
         try
         {
-            ComposeOverlay.ResetState();
-            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
-            var slideTask = ComposeOverlay.TranslateToAsync(0, offscreenY, 220, Easing.CubicIn);
+            var compose = ComposeOverlay;
+            compose.PrepareForClose();
+            _ = RestoreTabBarSoonAsync();
 
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(60);
-                MainThread.BeginInvokeOnMainThread(() => Shell.SetTabBarIsVisible(this, true));
-            });
-
-            await slideTask;
-            HideComposeInstantly();
+            await compose.SlideAsync(open: false, GetFallbackHeight());
+            compose.Park();
         }
         catch (InvalidOperationException)
         {
-            HideComposeInstantly();
+            ComposeOverlay.Park();
             Shell.SetTabBarIsVisible(this, true);
         }
         finally
@@ -705,10 +699,45 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
     }
 
-    private void HideComposeInstantly()
+    // The tab bar coming back resizes the page; waiting a moment keeps that out of the first frames of the slide.
+    private async Task RestoreTabBarSoonAsync()
     {
-        ComposeOverlay.InputTransparent = true;
-        ComposeOverlay.TranslationY = OffscreenDistance;
+        await Task.Delay(60);
+        Shell.SetTabBarIsVisible(this, true);
+    }
+
+    private const int RecentSuggestionCount = 5;
+
+    // The newest conversations with real phone numbers (not banks, not operator shortcodes): the people
+    // most likely to be messaged again, offered above the address book.
+    private List<ComposeRow> BuildRecentRows()
+    {
+        var rows = new List<ComposeRow>(RecentSuggestionCount);
+        if (Vm is null)
+            return rows;
+
+        foreach (var thread in Vm.Threads)
+        {
+            var address = Gheychi.Core.Services.PhoneNumberNormalizer.ToSendAddress(thread.Phone);
+            if (!Gheychi.Core.Services.ContactListBuilder.IsPersonalNumber(address) || rows.Any(r => r.Address == address))
+                continue;
+
+            var named = !string.Equals(thread.Name, thread.Phone, StringComparison.Ordinal);
+            rows.Add(new ComposeRow
+            {
+                Kind = ComposeRowKind.Contact,
+                Name = thread.Name,
+                ContactName = named ? thread.Name : null,
+                Address = address,
+                Initials = named ? thread.Initials : string.Empty,
+                Subtitle = named ? thread.Phone : string.Empty
+            });
+
+            if (rows.Count == RecentSuggestionCount)
+                break;
+        }
+
+        return rows;
     }
 
     private async void OnComposeRecipientChosen(object? sender, ComposeRecipient recipient)
@@ -718,6 +747,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         _composeBusy = true;
         try
         {
+            // The keyboard starts hiding while the conversation is looked up.
+            ComposeOverlay.PrepareForClose();
+
             var smsService = IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Services.ISmsService>();
             var address = Gheychi.Core.Services.PhoneNumberNormalizer.ToSendAddress(recipient.Address);
             var threadId = smsService is null ? 0 : await smsService.GetOrCreateThreadIdAsync(address);
@@ -740,8 +772,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             await OpenChatAsync(thread, wasUnread, unreadCount, recipient.Sim);
 
             // The chat now covers the compose screen; closing it returns to the inbox.
-            ComposeOverlay.ResetState();
-            HideComposeInstantly();
+            ComposeOverlay.Park();
         }
         catch (Exception ex)
         {

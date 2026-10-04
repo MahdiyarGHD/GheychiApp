@@ -5,6 +5,7 @@
              xmlns:loc="clr-namespace:Gheychi.App.Localization"
              xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
              x:Class="Gheychi.App.Controls.ArchiveView"
+             behaviors:TouchShield.IsEnabled="True"
              BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
 
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="0">

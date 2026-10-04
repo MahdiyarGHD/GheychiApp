@@ -210,6 +210,24 @@
   <data name="Messages_Unarchive" xml:space="preserve">
     <value>خروج از بایگانی</value>
   </data>
+  <data name="Compose_NewNumber" xml:space="preserve">
+    <value>گفتگوی جدید</value>
+  </data>
+  <data name="Compose_Recent" xml:space="preserve">
+    <value>اخیر</value>
+  </data>
+  <data name="Compose_OpenSettings" xml:space="preserve">
+    <value>باز کردن تنظیمات</value>
+  </data>
+  <data name="Compose_NoMatchesHint" xml:space="preserve">
+    <value>نام دیگری را امتحان کنید یا شمارهٔ کامل را بنویسید.</value>
+  </data>
+  <data name="Compose_NoPermissionHint" xml:space="preserve">
+    <value>برای انتخاب از مخاطبان دسترسی بدهید، یا فقط شماره را در بالا بنویسید.</value>
+  </data>
+  <data name="Compose_NoContactsHint" xml:space="preserve">
+    <value>برای شروع گفتگو، شماره را در بالا بنویسید.</value>
+  </data>
   <data name="Compose_Title" xml:space="preserve">
     <value>پیام جدید</value>
   </data>
@@ -223,10 +241,10 @@
     <value>ارسال به {0}</value>
   </data>
   <data name="Compose_NoContacts" xml:space="preserve">
-    <value>مخاطبی پیدا نشد</value>
+    <value>هنوز مخاطبی ندارید</value>
   </data>
   <data name="Compose_NoPermission" xml:space="preserve">
-    <value>برای دیدن مخاطبان، در تنظیمات اجازهٔ دسترسی به مخاطبان را بدهید. هنوز می‌توانید شماره را در بالا بنویسید.</value>
+    <value>دسترسی به مخاطبان خاموش است</value>
   </data>
   <data name="Compose_NoMatches" xml:space="preserve">
     <value>مخاطب مطابقی پیدا نشد</value>
