@@ -710,6 +710,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (open)
             {
                 ArchiveOverlay.InputTransparent = false;
+#if DEBUG
+                _ = ShowArchiveDiagnosticsAsync();
+#endif
             }
             else
             {
@@ -727,6 +730,30 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             _animating = false;
         }
     }
+
+#if DEBUG
+    // Temporary: reports what the archive overlay looks like after it opens.
+    private async Task ShowArchiveDiagnosticsAsync()
+    {
+        try
+        {
+            await Task.Delay(400);
+            var a = ArchiveOverlay;
+            var info = $"idx={RootGrid.Children.IndexOf(a)}/{RootGrid.Children.Count} z={a.ZIndex} vis={a.IsVisible} op={a.Opacity} tx={a.TranslationX:F0}\n"
+                + $"bounds={a.Bounds} pageW={Width:F0} h={Height:F0}\n"
+                + $"handler={a.Handler?.GetType().Name ?? "null"} loaded={a.IsLoaded} content={a.Content?.GetType().Name ?? "null"}";
+#if ANDROID
+            if (a.Handler?.PlatformView is Android.Views.View v)
+                info += $"\nnative vis={v.Visibility} alpha={v.Alpha} size={v.Width}x{v.Height} left={v.Left} tx={v.TranslationX} attached={v.IsAttachedToWindow} parent={v.Parent?.GetType().Name}";
+#endif
+            await DisplayAlert("Archive debug", info, "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Archive debug failed", ex.ToString(), "OK");
+        }
+    }
+#endif
 
     private async Task CloseArchiveAsync()
     {
