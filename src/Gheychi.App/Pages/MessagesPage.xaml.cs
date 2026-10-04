@@ -603,7 +603,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private const int OverlayZIndex = 2;
     private const double OffscreenDistance = 3000;
     private const double InboxParallax = 0.25;
-    private const double FlingVelocity = 700;
+    private const double FlingVelocity = 250;
+    private const double CommitProgress = 0.22;
 
     // Finger direction that opens the archive: toward the leading edge's opposite side, so the
     // archive page sits past the trailing edge and mirrors in right-to-left languages.
@@ -660,9 +661,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         if (cancelled)
             open = wasOpen;
         else if (!wasOpen)
-            open = toward > FlingVelocity || (toward > -FlingVelocity && progress > 0.4);
+            open = toward > FlingVelocity || (toward > -FlingVelocity && progress > CommitProgress);
         else
-            open = !(toward > FlingVelocity || (toward > -FlingVelocity && progress < 0.6));
+            open = !(toward > FlingVelocity || (toward > -FlingVelocity && progress < 1 - CommitProgress));
 
         _ = SettleArchiveAsync(open, progress, Math.Abs(velocityDpPerSecond));
     }
