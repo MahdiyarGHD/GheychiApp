@@ -754,7 +754,8 @@
             </VerticalStackLayout>
         </Grid>
 
-        <!-- 4. Loading skeleton: shown while a search is running and there is nothing to show yet -->
+        <!-- 4. Loading skeleton: shown while a search is running and there is nothing to show yet.
+             Bars are Borders: the app-wide BoxView style paints a square background behind its Color. -->
         <Grid x:Name="SkeletonOverlay"
               Grid.Row="1"
               IsVisible="{Binding ShowSkeleton}"
@@ -769,22 +770,25 @@
                             <Grid Padding="16,14"
                                   ColumnDefinitions="Auto,*"
                                   ColumnSpacing="14">
-                                <BoxView WidthRequest="48"
-                                         HeightRequest="48"
-                                         CornerRadius="24"
-                                         Color="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
+                                <Border WidthRequest="48"
+                                        HeightRequest="48"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 24"
+                                        BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
                                 <VerticalStackLayout Grid.Column="1"
                                                      Spacing="10"
                                                      VerticalOptions="Center">
-                                    <BoxView HeightRequest="14"
-                                             WidthRequest="150"
-                                             HorizontalOptions="Start"
-                                             CornerRadius="7"
-                                             Color="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
-                                    <BoxView HeightRequest="12"
-                                             HorizontalOptions="Fill"
-                                             CornerRadius="6"
-                                             Color="{AppThemeBinding Light=#ECF0EC, Dark=#1D221E}" />
+                                    <Border HeightRequest="14"
+                                            WidthRequest="150"
+                                            HorizontalOptions="Start"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 7"
+                                            BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
+                                    <Border HeightRequest="12"
+                                            HorizontalOptions="Fill"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 6"
+                                            BackgroundColor="{AppThemeBinding Light=#ECF0EC, Dark=#1D221E}" />
                                 </VerticalStackLayout>
                             </Grid>
                         </DataTemplate>
@@ -801,27 +805,31 @@
                                   ColumnSpacing="12">
                                 <VerticalStackLayout Spacing="8"
                                                      VerticalOptions="Center">
-                                    <BoxView HeightRequest="14"
-                                             HorizontalOptions="Fill"
-                                             CornerRadius="7"
-                                             Color="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
-                                    <BoxView HeightRequest="11"
-                                             WidthRequest="110"
-                                             HorizontalOptions="Start"
-                                             CornerRadius="5"
-                                             Color="{AppThemeBinding Light=#ECF0EC, Dark=#1D221E}" />
-                                    <BoxView HeightRequest="11"
-                                             WidthRequest="170"
-                                             HorizontalOptions="Start"
-                                             CornerRadius="5"
-                                             Color="{AppThemeBinding Light=#ECF0EC, Dark=#1D221E}" />
+                                    <Border HeightRequest="14"
+                                            HorizontalOptions="Fill"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 7"
+                                            BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
+                                    <Border HeightRequest="11"
+                                            WidthRequest="110"
+                                            HorizontalOptions="Start"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 5"
+                                            BackgroundColor="{AppThemeBinding Light=#ECF0EC, Dark=#1D221E}" />
+                                    <Border HeightRequest="11"
+                                            WidthRequest="170"
+                                            HorizontalOptions="Start"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 5"
+                                            BackgroundColor="{AppThemeBinding Light=#ECF0EC, Dark=#1D221E}" />
                                 </VerticalStackLayout>
-                                <BoxView Grid.Column="1"
-                                         WidthRequest="40"
-                                         HeightRequest="40"
-                                         CornerRadius="20"
-                                         VerticalOptions="Center"
-                                         Color="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
+                                <Border Grid.Column="1"
+                                        WidthRequest="40"
+                                        HeightRequest="40"
+                                        VerticalOptions="Center"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 20"
+                                        BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#252A26}" />
                             </Grid>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
