@@ -349,7 +349,7 @@
         <Grid Grid.Row="1"
               RowDefinitions="Auto,*"
               RowSpacing="0"
-              IsVisible="{Binding IsInSearchResultsMode}">
+              IsVisible="{Binding IsChatResultsMode}">
 
             <!-- Category Tabs Bar + Results Count -->
             <Grid Grid.Row="0"
@@ -616,6 +616,143 @@
             </VerticalStackLayout>
         </Grid>
 
+
+        <!-- 3. Links / Places results: one row per link (or place) found in a message -->
+        <Grid Grid.Row="1"
+              RowDefinitions="Auto,*"
+              RowSpacing="0"
+              IsVisible="{Binding IsLinkResultsMode}">
+
+            <Grid Grid.Row="0"
+                  Padding="16,10"
+                  BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
+                <Label Text="{Binding FoundCountText}"
+                       FontSize="12"
+                       FontFamily="{DynamicResource AppFontFamily}"
+                       TextColor="{AppThemeBinding Light=#747D75, Dark=#8A8F98}"
+                       HorizontalOptions="End"
+                       VerticalOptions="Center" />
+            </Grid>
+
+            <BoxView Grid.Row="0"
+                     HeightRequest="1"
+                     VerticalOptions="End"
+                     BackgroundColor="{AppThemeBinding Light=#EAEFE8, Dark=#1E2220}" />
+
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding SearchLinkItems}"
+                            SelectionMode="None"
+                            ItemSizingStrategy="MeasureFirstItem"
+                            IsVisible="{Binding HasLinkResults}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LinkResultItem">
+                        <Grid Padding="16,12"
+                              ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12"
+                              BackgroundColor="Transparent">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnLinkRowTapped" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+
+                            <VerticalStackLayout Grid.Column="0"
+                                                 Spacing="2"
+                                                 VerticalOptions="Center">
+                                <Label Text="{Binding Title}"
+                                       FontSize="15"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{Binding TitleColor}"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="1" />
+                                <Label Text="{Binding HostText}"
+                                       FontSize="12"
+                                       FontFamily="{DynamicResource AppFontFamily}"
+                                       TextColor="{Binding MutedColor}"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="1" />
+                                <Label Text="{Binding ChatLine}"
+                                       Margin="0,4,0,0"
+                                       FontSize="12"
+                                       FontFamily="{DynamicResource AppFontFamily}"
+                                       TextColor="{Binding MutedColor}"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="1" />
+                            </VerticalStackLayout>
+
+                            <!-- Tapping the icon opens the link; tapping the row opens the chat -->
+                            <Border Grid.Column="1"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 20"
+                                    BackgroundColor="{Binding IconBgColor}"
+                                    VerticalOptions="Center">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnLinkIconTapped" CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Image Source="{Binding IconSource}"
+                                       WidthRequest="18"
+                                       HeightRequest="18"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{Binding TitleColor}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.Footer>
+                    <VerticalStackLayout Margin="0,16,0,32" HorizontalOptions="Center">
+                        <Border StrokeThickness="0"
+                                StrokeShape="RoundRectangle 20"
+                                BackgroundColor="{AppThemeBinding Light=#F0F5EE, Dark=#1E2320}"
+                                Padding="16,8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDeepSearchTapped" />
+                            </Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                <Image Source="manage_search.png"
+                                       WidthRequest="18"
+                                       HeightRequest="18"
+                                       VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#386948, Dark=#34D399}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Text="{loc:Translate Search_DeepSearch}"
+                                       FontSize="12"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{AppThemeBinding Light=#386948, Dark=#34D399}"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </CollectionView.Footer>
+            </CollectionView>
+
+            <VerticalStackLayout Grid.Row="1"
+                                 Spacing="14"
+                                 Padding="32,80,32,32"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 IsVisible="{Binding HasNoLinkResults}">
+                <Image Source="{Binding ActiveFilter.IconSource}"
+                       WidthRequest="48"
+                       HeightRequest="48"
+                       HorizontalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#ABB4AC, Dark=#6E766F}" />
+                    </Image.Behaviors>
+                </Image>
+                <Label Text="{Binding NoLinksText}"
+                       FontSize="15"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#59615A, Dark=#8A8F98}"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
     </Grid>
 
 </ContentView>

@@ -18,4 +18,5 @@ public interface ISmsService
     Task<IReadOnlyDictionary<int, string>> GetSimCarrierMapAsync();
     Task<bool> IsDualSimAsync();
     Task<IReadOnlyList<SearchResultChat>> SearchChatsAsync(SearchQuery query, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SearchResultLink>> SearchLinksAsync(SearchQuery query, CancellationToken cancellationToken = default);
 }

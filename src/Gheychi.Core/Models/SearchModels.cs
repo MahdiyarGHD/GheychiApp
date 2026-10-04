@@ -7,7 +7,9 @@ public enum SearchFilterKind
     Starred,
     Known,
     Unknown,
-    Sim
+    Sim,
+    Links,
+    Places
 }
 
 public sealed record SearchQuery(
@@ -31,4 +33,17 @@ public sealed record SearchResultChat(
     bool IsSpam = false,
     bool IsStarred = false,
     bool IsKnown = false
+);
+
+public sealed record SearchResultLink(
+    long ThreadId,
+    long MessageId,
+    string Address,
+    string? ContactName,
+    string Title,
+    string Host,
+    string OpenUrl,
+    DateTime Timestamp,
+    int SubId,
+    bool IsArchived = false
 );

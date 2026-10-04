@@ -80,4 +80,40 @@ public sealed class ListSynchronizerTests
         Sync(list, new Row(1, "a"), new Row(2, "b"));
         Assert.Equal([1, 2], list.Select(r => r.Id));
     }
+
+    [Fact]
+    public void ExceedsChangeLimit_FewChanges_IsFalse()
+    {
+        var list = new List<Row> { new(1, "a"), new(2, "b"), new(3, "c") };
+        var source = new[] { new Row(1, "a"), new Row(2, "B"), new Row(4, "d") };
+
+        Assert.False(ListSynchronizer.ExceedsChangeLimit(list, source, r => r.Id, (a, b) => a.Text == b.Text, limit: 3));
+    }
+
+    [Fact]
+    public void ExceedsChangeLimit_ManyChanges_IsTrue()
+    {
+        var list = Enumerable.Range(1, 100).Select(i => new Row(i, "old")).ToList();
+        var source = Enumerable.Range(1, 100).Select(i => new Row(i, "new")).ToArray();
+
+        Assert.True(ListSynchronizer.ExceedsChangeLimit(list, source, r => r.Id, (a, b) => a.Text == b.Text, limit: 40));
+    }
+
+    [Fact]
+    public void ExceedsChangeLimit_IdenticalLists_IsFalse()
+    {
+        var list = Enumerable.Range(1, 100).Select(i => new Row(i, "same")).ToList();
+        var source = list.ToArray();
+
+        Assert.False(ListSynchronizer.ExceedsChangeLimit(list, source, r => r.Id, (a, b) => a.Text == b.Text, limit: 0));
+    }
+
+    [Fact]
+    public void ExceedsChangeLimit_CountsRemovedRows()
+    {
+        var list = Enumerable.Range(1, 50).Select(i => new Row(i, "x")).ToList();
+        var source = new[] { new Row(1, "x") };
+
+        Assert.True(ListSynchronizer.ExceedsChangeLimit(list, source, r => r.Id, (a, b) => a.Text == b.Text, limit: 40));
+    }
 }

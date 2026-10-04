@@ -267,6 +267,15 @@
   <data name="Search_NoResults" xml:space="preserve">
     <value>پیامی یافت نشد</value>
   </data>
+  <data name="Search_Coordinates" xml:space="preserve">
+    <value>مختصات</value>
+  </data>
+  <data name="Search_NoLinks" xml:space="preserve">
+    <value>پیوندی یافت نشد</value>
+  </data>
+  <data name="Search_NoPlaces" xml:space="preserve">
+    <value>مکانی یافت نشد</value>
+  </data>
   <data name="Search_Tag_Spam" xml:space="preserve">
     <value>هرزنامه</value>
   </data>

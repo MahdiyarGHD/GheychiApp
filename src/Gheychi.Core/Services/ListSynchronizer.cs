@@ -64,4 +64,45 @@ public static class ListSynchronizer
             }
         }
     }
+
+    /// <summary>
+    /// True when syncing would need more than <paramref name="limit"/> insert/remove/replace operations.
+    /// Each operation is a separate change notification for the bound list, so past a few dozen a
+    /// single reset is cheaper than replaying them one by one.
+    /// </summary>
+    public static bool ExceedsChangeLimit<T, TKey>(
+        IList<T> target,
+        IReadOnlyList<T> source,
+        Func<T, TKey> keyOf,
+        Func<T, T, bool> sameContent,
+        int limit)
+        where TKey : notnull
+    {
+        var existing = new Dictionary<TKey, T>(target.Count);
+        foreach (var item in target)
+            existing[keyOf(item)] = item;
+
+        var sourceKeys = new HashSet<TKey>(source.Count);
+        var changes = 0;
+
+        foreach (var item in source)
+        {
+            var key = keyOf(item);
+            sourceKeys.Add(key);
+
+            if (!existing.TryGetValue(key, out var current) || !sameContent(current, item))
+            {
+                if (++changes > limit)
+                    return true;
+            }
+        }
+
+        foreach (var key in existing.Keys)
+        {
+            if (!sourceKeys.Contains(key) && ++changes > limit)
+                return true;
+        }
+
+        return false;
+    }
 }

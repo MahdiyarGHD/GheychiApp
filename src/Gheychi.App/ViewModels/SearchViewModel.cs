@@ -187,7 +187,12 @@ public sealed class SearchResultItem
     public string MatchCountDescription =>
         string.Format((_matchesFormat ??= Localization.LocalizationManager.Instance["Search_MatchesPlural"]).Replace("• ", string.Empty), TotalMatches);
 
-    public FormattedString FormattedSnippet { get; init; } = new();
+    public string Snippet { get; init; } = string.Empty;
+    public string? QueryText { get; init; }
+
+    // Built on first bind, so only the rows that are actually shown pay for it.
+    private FormattedString? _formattedSnippet;
+    public FormattedString FormattedSnippet => _formattedSnippet ??= SearchViewModel.BuildFormattedSnippet(Snippet, QueryText);
     public string SnippetKey { get; init; } = string.Empty;
     public bool IsArchived { get; init; }
     public bool IsSpam { get; init; }
@@ -226,6 +231,46 @@ public sealed class SearchResultItem
         SnippetKey == other.SnippetKey;
 }
 
+/// <summary>One link or place found in a message (Links / Places search results).</summary>
+public sealed class LinkResultItem
+{
+    private static readonly Color TitleLight = Color.FromArgb("#1B5E43");
+    private static readonly Color TitleDark = Color.FromArgb("#8FE0BE");
+    private static readonly Color MutedLight = Color.FromArgb("#747D75");
+    private static readonly Color MutedDark = Color.FromArgb("#8A8F98");
+    private static readonly Color IconBgLight = Color.FromArgb("#E3E9E4");
+    private static readonly Color IconBgDark = Color.FromArgb("#35423C");
+
+    public long ThreadId { get; init; }
+    public long MessageId { get; init; }
+    public string Address { get; init; } = string.Empty;
+    public string ChatName { get; init; } = string.Empty;
+    public string Initials { get; init; } = string.Empty;
+    public int SubId { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string HostText { get; init; } = string.Empty;
+    public string OpenUrl { get; init; } = string.Empty;
+    public string Time { get; init; } = string.Empty;
+    public bool IsPlace { get; init; }
+    public bool IsArchived { get; init; }
+
+    public string ChatLine => $"{ChatName} - {Time}";
+    public string IconSource => IsPlace ? "location_on.png" : "link.png";
+
+    private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
+
+    public Color TitleColor => IsDark ? TitleDark : TitleLight;
+    public Color MutedColor => IsDark ? MutedDark : MutedLight;
+    public Color IconBgColor => IsDark ? IconBgDark : IconBgLight;
+
+    public bool HasSameContent(LinkResultItem other) =>
+        ThreadId == other.ThreadId &&
+        MessageId == other.MessageId &&
+        Title == other.Title &&
+        ChatLine == other.ChatLine &&
+        HostText == other.HostText;
+}
+
 public sealed class SearchViewModel : INotifyPropertyChanged
 {
     private const string RecentSearchesKey = "search_recent_queries_v1";
@@ -244,12 +289,19 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         get => _searchText;
         set
         {
+            var wasInResults = IsInSearchResultsMode;
             if (SetField(ref _searchText, value))
             {
                 OnPropertyChanged(nameof(HasSearchText));
                 OnPropertyChanged(nameof(IsSearchTextEmpty));
-                OnPropertyChanged(nameof(IsInSearchResultsMode));
-                OnPropertyChanged(nameof(IsInitialSearchMode));
+                // Only the first/last character flips the page; every other keystroke leaves the
+                // visibility bindings alone.
+                if (wasInResults != IsInSearchResultsMode)
+                {
+                    OnPropertyChanged(nameof(IsInSearchResultsMode));
+                    OnPropertyChanged(nameof(IsInitialSearchMode));
+                    NotifyResultModesChanged();
+                }
                 TriggerDebouncedSearch();
             }
         }
@@ -270,6 +322,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(HasNoActiveFilter));
                 OnPropertyChanged(nameof(IsInSearchResultsMode));
                 OnPropertyChanged(nameof(IsInitialSearchMode));
+                NotifyResultModesChanged();
                 TriggerDebouncedSearch();
             }
         }
@@ -281,6 +334,20 @@ public sealed class SearchViewModel : INotifyPropertyChanged
     public bool IsInSearchResultsMode => HasActiveFilter || HasSearchText;
     public bool IsInitialSearchMode => !IsInSearchResultsMode;
 
+    // Links and Places list individual links, not chats, so they get their own results layout.
+    public bool IsLinkMode => ActiveFilter?.FilterKind is SearchFilterKind.Links or SearchFilterKind.Places;
+    public bool IsChatResultsMode => IsInSearchResultsMode && !IsLinkMode;
+    public bool IsLinkResultsMode => IsInSearchResultsMode && IsLinkMode;
+
+    private void NotifyResultModesChanged()
+    {
+        OnPropertyChanged(nameof(IsLinkMode));
+        OnPropertyChanged(nameof(IsChatResultsMode));
+        OnPropertyChanged(nameof(IsLinkResultsMode));
+        OnPropertyChanged(nameof(HasNoResults));
+        OnPropertyChanged(nameof(HasNoLinkResults));
+    }
+
     private bool _isSearching;
     public bool IsSearching
     {
@@ -290,6 +357,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             if (SetField(ref _isSearching, value))
             {
                 OnPropertyChanged(nameof(HasNoResults));
+                OnPropertyChanged(nameof(HasNoLinkResults));
             }
         }
     }
@@ -329,7 +397,18 @@ public sealed class SearchViewModel : INotifyPropertyChanged
     public bool HasRecentSearches => RecentSearches.Count > 0;
     public bool HasNoRecentSearches => RecentSearches.Count == 0;
     public bool HasResults => SearchResultItems.Count > 0;
-    public bool HasNoResults => IsInSearchResultsMode && !IsSearching && SearchResultItems.Count == 0;
+    public bool HasNoResults => IsChatResultsMode && !IsSearching && SearchResultItems.Count == 0;
+
+    public FastObservableCollection<LinkResultItem> SearchLinkItems { get; } = [];
+    public bool HasLinkResults => SearchLinkItems.Count > 0;
+    public bool HasNoLinkResults => IsLinkResultsMode && !IsSearching && SearchLinkItems.Count == 0;
+
+    private string _noLinksText = string.Empty;
+    public string NoLinksText
+    {
+        get => _noLinksText;
+        private set => SetField(ref _noLinksText, value);
+    }
 
     public SearchViewModel(ISmsService? smsService = null, IDateFormattingService? dateFormatter = null)
     {
@@ -406,14 +485,6 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         if (pill == null)
             return;
 
-        // "this layout is only for normal search, and filters which are not Link, Location. for others."
-        if (pill.FilterKind == SearchFilterKind.None && (pill.QueryPrefix == "is:links" || pill.QueryPrefix == "is:places"))
-        {
-            // Do not switch to this results layout for Links and Location
-            SearchText = pill.QueryPrefix;
-            return;
-        }
-
         ActiveFilter = pill;
     }
 
@@ -437,9 +508,13 @@ public sealed class SearchViewModel : INotifyPropertyChanged
 
     // Typing one more character mostly keeps the same rows; a Reset would rebind the whole list
     // (the visible lag after each search), so only changed rows are touched.
+    // Each insert/remove/replace is its own list notification; past this many a reset is cheaper.
+    private const int MaxIncrementalChanges = 40;
+
     private void ReplaceResults(List<SearchResultItem> items)
     {
-        if (SearchResultItems.Count == 0 || items.Count == 0)
+        if (SearchResultItems.Count == 0 || items.Count == 0 ||
+            ListSynchronizer.ExceedsChangeLimit(SearchResultItems, items, r => (r.ThreadId, r.MessageId), (a, b) => a.HasSameContent(b), MaxIncrementalChanges))
         {
             SearchResultItems.Reset(items);
             return;
@@ -490,11 +565,13 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         if (!IsInSearchResultsMode)
         {
             SearchResultItems.Reset(Enumerable.Empty<SearchResultItem>());
+            SearchLinkItems.Reset(Enumerable.Empty<LinkResultItem>());
             _allSearchResults.Clear();
             CategoryTabs.Clear();
             IsSearching = false;
             OnPropertyChanged(nameof(HasResults));
-            OnPropertyChanged(nameof(HasNoResults));
+            OnPropertyChanged(nameof(HasLinkResults));
+            NotifyResultModesChanged();
             return;
         }
 
@@ -545,6 +622,12 @@ public sealed class SearchViewModel : INotifyPropertyChanged
                 IncludeArchivedAndSpam: IsDeepSearchActive
             );
 
+            if (filterKind is SearchFilterKind.Links or SearchFilterKind.Places)
+            {
+                await ExecuteLinkSearchAsync(_smsService, query, cancellationToken);
+                return;
+            }
+
             var rawResults = await _smsService.SearchChatsAsync(query, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -564,7 +647,6 @@ public sealed class SearchViewModel : INotifyPropertyChanged
                 var initials = ThreadItem.GenerateInitials(displayName);
                 var slot = _simSlotMap.TryGetValue(r.SubId, out var mappedSlot) ? mappedSlot : 1;
 
-                var formattedSnippet = BuildFormattedSnippet(r.Snippet, text);
 
                 items.Add(new SearchResultItem
                 {
@@ -581,7 +663,8 @@ public sealed class SearchViewModel : INotifyPropertyChanged
                     IsStarred = r.IsStarred,
                     IsKnown = r.IsKnown,
                     TotalMatches = r.TotalMatches,
-                    FormattedSnippet = formattedSnippet,
+                    Snippet = r.Snippet,
+                    QueryText = text,
                     SnippetKey = r.Snippet + "|" + text,
                     IsArchived = r.IsArchived,
                     IsSpam = r.IsSpam
@@ -597,6 +680,9 @@ public sealed class SearchViewModel : INotifyPropertyChanged
 
                 try
                 {
+                    if (SearchLinkItems.Count > 0)
+                        SearchLinkItems.Reset(Enumerable.Empty<LinkResultItem>());
+
                     _allSearchResults.Clear();
                     _allSearchResults.AddRange(items);
 
@@ -650,6 +736,85 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         {
             MainThread.BeginInvokeOnMainThread(() => IsSearching = false);
         }
+    }
+
+    private async Task ExecuteLinkSearchAsync(ISmsService smsService, SearchQuery query, CancellationToken cancellationToken)
+    {
+        var raw = await smsService.SearchLinksAsync(query, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var now = DateTime.Now;
+        var culture = CultureInfo.CurrentUICulture;
+        var loc = Localization.LocalizationManager.Instance;
+        var isPlaces = query.FilterKind == SearchFilterKind.Places;
+        var coordinatesLabel = loc["Search_Coordinates"];
+
+        var items = new List<LinkResultItem>(raw.Count);
+        foreach (var r in raw)
+        {
+            var chatName = !string.IsNullOrWhiteSpace(r.ContactName)
+                ? r.ContactName
+                : PhoneNumberNormalizer.IsAlphanumeric(r.Address)
+                    ? r.Address
+                    : PhoneNumberNormalizer.FormatDisplay(r.Address);
+
+            items.Add(new LinkResultItem
+            {
+                ThreadId = r.ThreadId,
+                MessageId = r.MessageId,
+                Address = r.Address,
+                ChatName = chatName,
+                Initials = ThreadItem.GenerateInitials(chatName),
+                SubId = r.SubId,
+                Title = r.Title,
+                HostText = r.Host.Length > 0 ? r.Host : coordinatesLabel,
+                OpenUrl = r.OpenUrl,
+                Time = _dateFormatter.FormatThreadTime(r.Timestamp, now, culture),
+                IsPlace = isPlaces,
+                IsArchived = r.IsArchived
+            });
+        }
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
+            try
+            {
+                _allSearchResults.Clear();
+                CategoryTabs.Clear();
+                SearchResultItems.Reset(Enumerable.Empty<SearchResultItem>());
+
+                if (SearchLinkItems.Count == 0 || items.Count == 0 ||
+                    ListSynchronizer.ExceedsChangeLimit(SearchLinkItems, items, i => (i.ThreadId, i.MessageId, i.Title), (a, b) => a.HasSameContent(b), MaxIncrementalChanges))
+                {
+                    SearchLinkItems.Reset(items);
+                }
+                else
+                {
+                    ListSynchronizer.Sync(
+                        SearchLinkItems,
+                        items,
+                        i => (i.ThreadId, i.MessageId, i.Title),
+                        (a, b) => a.HasSameContent(b));
+                }
+
+                FoundCountText = string.Format(loc["Search_Found"], items.Count);
+                NoLinksText = loc[isPlaces ? "Search_NoPlaces" : "Search_NoLinks"];
+            }
+            catch (Exception)
+            {
+                SearchLinkItems.Reset(Enumerable.Empty<LinkResultItem>());
+            }
+            finally
+            {
+                IsSearching = false;
+                OnPropertyChanged(nameof(HasResults));
+                OnPropertyChanged(nameof(HasLinkResults));
+                NotifyResultModesChanged();
+            }
+        });
     }
 
     private void UpdateCategoryTabs(int totalChatsCount)
@@ -863,7 +1028,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         {
             Title = loc["Search_Filter_Links"] ?? "Links",
             QueryPrefix = "is:links",
-            FilterKind = SearchFilterKind.None,
+            FilterKind = SearchFilterKind.Links,
             IconSource = "link.png",
             IconTint = secondaryColor
         });
@@ -872,7 +1037,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         {
             Title = loc["Search_Filter_Places"] ?? "Places",
             QueryPrefix = "is:places",
-            FilterKind = SearchFilterKind.None,
+            FilterKind = SearchFilterKind.Places,
             IconSource = "location_on.png",
             IconTint = secondaryColor
         });

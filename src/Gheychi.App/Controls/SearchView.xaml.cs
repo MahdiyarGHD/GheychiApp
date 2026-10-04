@@ -176,10 +176,6 @@ public partial class SearchView : ContentView
         {
             await Task.Yield();
             Vm?.ApplyFilter(pill);
-            if (pill.FilterKind == Gheychi.Core.Models.SearchFilterKind.None)
-            {
-                SearchEntry.Text = pill.QueryPrefix;
-            }
             await Task.Delay(80);
             SearchEntry.Focus();
         });
@@ -239,6 +235,48 @@ public partial class SearchView : ContentView
                 Vm.AddRecentSearch(Vm.SearchText);
             SearchResultTapped?.Invoke(this, item);
         }
+    }
+
+    private void OnLinkRowTapped(object? sender, TappedEventArgs e)
+    {
+        var link = (e.Parameter as LinkResultItem) ?? (sender as Element)?.BindingContext as LinkResultItem;
+        if (link == null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(Vm?.SearchText))
+            Vm.AddRecentSearch(Vm.SearchText);
+
+        // Same hand-off as a chat result: the page only needs the thread to open.
+        SearchResultTapped?.Invoke(this, new SearchResultItem
+        {
+            ThreadId = link.ThreadId,
+            MessageId = link.MessageId,
+            Address = link.Address,
+            DisplayName = link.ChatName,
+            Initials = link.Initials,
+            SubId = link.SubId,
+            Time = link.Time
+        });
+    }
+
+    private void OnLinkIconTapped(object? sender, TappedEventArgs e)
+    {
+        var link = (e.Parameter as LinkResultItem) ?? (sender as Element)?.BindingContext as LinkResultItem;
+        if (link == null || string.IsNullOrWhiteSpace(link.OpenUrl))
+            return;
+
+        PostSafe(async () =>
+        {
+            try
+            {
+                await Launcher.Default.OpenAsync(link.OpenUrl);
+            }
+            catch (Exception ex)
+            {
+                // No app can handle this link (e.g. no maps app for a geo: URI).
+                System.Diagnostics.Debug.WriteLine($"Open link failed: {ex.Message}");
+            }
+        });
     }
 
     private void OnDeepSearchTapped(object? sender, EventArgs e)

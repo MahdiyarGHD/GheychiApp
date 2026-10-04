@@ -23,6 +23,7 @@ public sealed class AndroidSmsService : ISmsService
     public AndroidSmsService(IMessageMetadataRepository? metadataRepo = null)
     {
         _metadataRepo = metadataRepo;
+        Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.SmsReceived += InvalidateSearchCaches;
     }
 
     private static readonly string[] SmsProjection =
@@ -294,13 +295,11 @@ public sealed class AndroidSmsService : ISmsService
             var kind = query.FilterKind;
 
             var threads = new Dictionary<long, SmsThread>();
-            foreach (var t in await GetThreadsAsync(cancellationToken).ConfigureAwait(false))
+            foreach (var t in await GetThreadsForSearchAsync(cancellationToken).ConfigureAwait(false))
                 threads[t.ThreadId] = t;
 
             var starredIds = await GetStarredMessageIdsAsync().ConfigureAwait(false);
-            var starredThreadIds = starredIds.Count > 0
-                ? QueryThreadIds(context, starredIds, cancellationToken)
-                : [];
+            var starredThreadIds = GetStarredThreadIds(context, starredIds, cancellationToken);
 
             var simSubIds = new HashSet<int>();
             if (kind == SearchFilterKind.Sim)
@@ -323,55 +322,22 @@ public sealed class AndroidSmsService : ISmsService
             var messageLevel = hasText || kind is SearchFilterKind.Unread or SearchFilterKind.Starred or SearchFilterKind.Sim;
             if (messageLevel)
             {
-                var conditions = new List<string>();
-                var args = new List<string>();
-
-                if (hasText)
+                var rows = GetMessageRows(context, query, variants, simSubIds, starredIds, cancellationToken);
+                foreach (var row in rows)
                 {
-                    conditions.Add("(" + string.Join(" OR ", variants.Select(_ => $"{Telephony.Sms.InterfaceConsts.Body} LIKE ?")) + ")");
-                    args.AddRange(variants.Select(v => $"%{v}%"));
-                }
+                    if (archivedIds.Contains(row.ThreadId) && !query.IncludeArchivedAndSpam)
+                        continue;
 
-                if (kind == SearchFilterKind.Unread)
-                    conditions.Add($"{Telephony.Sms.InterfaceConsts.Read} = 0 AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox}");
-
-                if (kind == SearchFilterKind.Sim)
-                    conditions.Add($"sub_id IN ({string.Join(",", simSubIds)})");
-
-                var idChunks = new List<string?>();
-                if (kind == SearchFilterKind.Starred)
-                    idChunks.AddRange(starredIds.Chunk(400).Select(c => (string?)$"{Telephony.Sms.InterfaceConsts.Id} IN ({string.Join(",", c)})"));
-                else
-                    idChunks.Add(null);
-
-                foreach (var idClause in idChunks)
-                {
-                    var all = new List<string>(conditions);
-                    if (idClause is not null)
-                        all.Add(idClause);
-                    var selection = all.Count == 0 ? null : string.Join(" AND ", all.Select(c => $"({c})"));
-
-                    ForEachMessage(context, selection, args.Count == 0 ? null : args.ToArray(), int.MaxValue, cancellationToken, row =>
+                    if (matches.TryGetValue(row.ThreadId, out var match))
                     {
-                        if (archivedIds.Contains(row.ThreadId) && !query.IncludeArchivedAndSpam)
-                            return true;
-
-                        // LIKE treats % and _ as wildcards; confirm the real substring.
-                        if (hasText && !SearchTextHelper.ContainsAny(row.Body, variants))
-                            return true;
-
-                        if (matches.TryGetValue(row.ThreadId, out var match))
-                        {
-                            match.Count++;
-                            if (row.DateMs > match.Newest.DateMs)
-                                matches[row.ThreadId] = new SearchMatch { Newest = row, Count = match.Count };
-                        }
-                        else
-                        {
-                            matches[row.ThreadId] = new SearchMatch { Newest = row, Count = 1 };
-                        }
-                        return true;
-                    });
+                        match.Count++;
+                        if (row.DateMs > match.Newest.DateMs)
+                            matches[row.ThreadId] = new SearchMatch { Newest = row, Count = match.Count };
+                    }
+                    else
+                    {
+                        matches[row.ThreadId] = new SearchMatch { Newest = row, Count = 1 };
+                    }
                 }
             }
 
@@ -446,6 +412,266 @@ public sealed class AndroidSmsService : ISmsService
                 .OrderByDescending(r => r.Timestamp)
                 .ToList();
         }, cancellationToken);
+
+    /// <summary>
+    /// Lists every link (or place) found in message bodies, newest first, one row per occurrence.
+    /// The provider query only narrows the candidate rows; detection and the optional text filter
+    /// run in code so the rules stay testable.
+    /// </summary>
+    public Task<IReadOnlyList<SearchResultLink>> SearchLinksAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
+        Task.Run<IReadOnlyList<SearchResultLink>>(async () =>
+        {
+            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var archivedIds = GetArchivedThreadIds();
+            var variants = SearchTextHelper.BuildVariants(query.Text);
+            var places = query.FilterKind == SearchFilterKind.Places;
+
+            var threads = new Dictionary<long, SmsThread>();
+            foreach (var t in await GetThreadsForSearchAsync(cancellationToken).ConfigureAwait(false))
+                threads[t.ThreadId] = t;
+
+            var contactMap = LoadContacts(context);
+            var linkRows = GetLinkRows(context, places, cancellationToken);
+            var chatByThread = new Dictionary<long, SmsThread>();
+            var results = new List<SearchResultLink>();
+
+            foreach (var linkRow in linkRows)
+            {
+                var row = linkRow.Row;
+                var archived = archivedIds.Contains(row.ThreadId);
+                if (archived && !query.IncludeArchivedAndSpam)
+                    continue;
+
+                if (!chatByThread.TryGetValue(row.ThreadId, out var chat))
+                {
+                    chat = threads.TryGetValue(row.ThreadId, out var known) ? known : ThreadFromMessage(row, contactMap);
+                    chatByThread[row.ThreadId] = chat;
+                }
+
+                var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(row.DateMs).LocalDateTime;
+                foreach (var item in linkRow.Items)
+                {
+                    if (variants.Count > 0 &&
+                        !SearchTextHelper.ContainsAny(item.Title, variants) &&
+                        !SearchTextHelper.ContainsAny(item.Host, variants) &&
+                        !SearchTextHelper.ContainsAny(chat.ContactName, variants) &&
+                        !AddressMatches(chat.Address, variants))
+                        continue;
+
+                    results.Add(new SearchResultLink(
+                        row.ThreadId,
+                        row.Id,
+                        chat.Address,
+                        chat.ContactName,
+                        item.Title,
+                        item.Host,
+                        item.OpenUrl,
+                        timestamp,
+                        row.SubId > 0 ? row.SubId : chat.SubId,
+                        archived));
+                }
+            }
+
+            return results;
+        }, cancellationToken);
+
+    // ---- Search caches -------------------------------------------------------------------------
+    // Every keystroke used to re-scan the whole SMS table and reload the thread list. Typing "hel"
+    // then "hell" can only narrow the earlier matches, so those rows are kept and filtered in memory.
+    // Anything that changes messages drops the caches (InvalidateSearchCaches).
+
+    private const long SearchCacheTtlMs = 120_000;
+    private const long ThreadsCacheTtlMs = 30_000;
+
+    private sealed class SearchRowCache
+    {
+        public required string Key { get; init; }
+        public required string Text { get; init; }
+        public required List<MessageRow> Rows { get; init; }
+        public long Tick { get; init; }
+    }
+
+    private sealed record LinkRow(MessageRow Row, IReadOnlyList<DetectedItem> Items);
+
+    private static readonly object SearchCacheLock = new();
+    private static SearchRowCache? _rowCache;
+    private static List<LinkRow>? _linkRows;
+    private static bool _linkRowsArePlaces;
+    private static long _linkRowsTick;
+    private static IReadOnlyList<SmsThread>? _threadsCache;
+    private static long _threadsCacheTick;
+    private static (string Signature, HashSet<long> ThreadIds)? _starredThreadsCache;
+
+    private static void InvalidateSearchCaches()
+    {
+        lock (SearchCacheLock)
+        {
+            _rowCache = null;
+            _linkRows = null;
+            _threadsCache = null;
+            _starredThreadsCache = null;
+        }
+    }
+
+    private async Task<IReadOnlyList<SmsThread>> GetThreadsForSearchAsync(CancellationToken cancellationToken)
+    {
+        lock (SearchCacheLock)
+        {
+            if (_threadsCache != null && System.Environment.TickCount64 - _threadsCacheTick < ThreadsCacheTtlMs)
+                return _threadsCache;
+        }
+
+        var threads = await GetThreadsAsync(cancellationToken).ConfigureAwait(false);
+        lock (SearchCacheLock)
+        {
+            _threadsCache = threads;
+            _threadsCacheTick = System.Environment.TickCount64;
+        }
+        return threads;
+    }
+
+    private static HashSet<long> GetStarredThreadIds(Context context, IReadOnlyList<long> starredIds, CancellationToken cancellationToken)
+    {
+        if (starredIds.Count == 0)
+            return [];
+
+        var signature = $"{starredIds.Count}:{starredIds.Sum()}";
+        lock (SearchCacheLock)
+        {
+            if (_starredThreadsCache is { } cached && cached.Signature == signature)
+                return cached.ThreadIds;
+        }
+
+        var threadIds = QueryThreadIds(context, starredIds, cancellationToken);
+        lock (SearchCacheLock)
+        {
+            _starredThreadsCache = (signature, threadIds);
+        }
+        return threadIds;
+    }
+
+    private static List<MessageRow> GetMessageRows(
+        Context context,
+        SearchQuery query,
+        IReadOnlyList<string> variants,
+        HashSet<int> simSubIds,
+        IReadOnlyList<long> starredIds,
+        CancellationToken cancellationToken)
+    {
+        var kind = query.FilterKind;
+        var hasText = variants.Count > 0;
+        var text = query.Text?.Trim() ?? string.Empty;
+        var key = $"{kind}|{query.SimSlot}";
+
+        if (hasText)
+        {
+            SearchRowCache? cached;
+            lock (SearchCacheLock)
+            {
+                cached = _rowCache;
+            }
+
+            if (cached != null &&
+                cached.Key == key &&
+                System.Environment.TickCount64 - cached.Tick < SearchCacheTtlMs &&
+                text.Contains(cached.Text, StringComparison.OrdinalIgnoreCase))
+            {
+                var narrowed = text.Equals(cached.Text, StringComparison.OrdinalIgnoreCase)
+                    ? cached.Rows
+                    : cached.Rows.Where(r => SearchTextHelper.ContainsAny(r.Body, variants)).ToList();
+
+                lock (SearchCacheLock)
+                {
+                    _rowCache = new SearchRowCache { Key = key, Text = text, Rows = narrowed, Tick = System.Environment.TickCount64 };
+                }
+                return narrowed;
+            }
+        }
+
+        var conditions = new List<string>();
+        var args = new List<string>();
+
+        if (hasText)
+        {
+            conditions.Add("(" + string.Join(" OR ", variants.Select(_ => $"{Telephony.Sms.InterfaceConsts.Body} LIKE ?")) + ")");
+            args.AddRange(variants.Select(v => $"%{v}%"));
+        }
+
+        if (kind == SearchFilterKind.Unread)
+            conditions.Add($"{Telephony.Sms.InterfaceConsts.Read} = 0 AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox}");
+
+        if (kind == SearchFilterKind.Sim)
+            conditions.Add($"sub_id IN ({string.Join(",", simSubIds)})");
+
+        var idChunks = new List<string?>();
+        if (kind == SearchFilterKind.Starred)
+            idChunks.AddRange(starredIds.Chunk(400).Select(c => (string?)$"{Telephony.Sms.InterfaceConsts.Id} IN ({string.Join(",", c)})"));
+        else
+            idChunks.Add(null);
+
+        var rows = new List<MessageRow>();
+        foreach (var idClause in idChunks)
+        {
+            var all = new List<string>(conditions);
+            if (idClause is not null)
+                all.Add(idClause);
+            var selection = all.Count == 0 ? null : string.Join(" AND ", all.Select(c => $"({c})"));
+
+            ForEachMessage(context, selection, args.Count == 0 ? null : args.ToArray(), int.MaxValue, cancellationToken, row =>
+            {
+                // LIKE treats % and _ as wildcards; confirm the real substring.
+                if (!hasText || SearchTextHelper.ContainsAny(row.Body, variants))
+                    rows.Add(row);
+                return true;
+            });
+        }
+
+        if (hasText)
+        {
+            lock (SearchCacheLock)
+            {
+                _rowCache = new SearchRowCache { Key = key, Text = text, Rows = rows, Tick = System.Environment.TickCount64 };
+            }
+        }
+
+        return rows;
+    }
+
+    private static List<LinkRow> GetLinkRows(Context context, bool places, CancellationToken cancellationToken)
+    {
+        lock (SearchCacheLock)
+        {
+            if (_linkRows != null && _linkRowsArePlaces == places && System.Environment.TickCount64 - _linkRowsTick < SearchCacheTtlMs)
+                return _linkRows;
+        }
+
+        var body = Telephony.Sms.InterfaceConsts.Body;
+
+        // Places also cover geo: URIs and bare coordinates ("35.7219, 51.3347").
+        var selection = places
+            ? $"({body} LIKE ? OR {body} LIKE ? OR {body} LIKE ? OR ({body} LIKE ? AND {body} LIKE ?))"
+            : $"({body} LIKE ? OR {body} LIKE ?)";
+        string[] args = places
+            ? ["%http%", "%www.%", "%geo:%", "%.%", "%,%"]
+            : ["%http%", "%www.%"];
+
+        var rows = new List<LinkRow>();
+        ForEachMessage(context, selection, args, int.MaxValue, cancellationToken, row =>
+        {
+            var found = places ? PlaceDetector.Find(row.Body) : LinkExtractor.Find(row.Body);
+            if (found.Count > 0)
+                rows.Add(new LinkRow(row, found));
+            return true;
+        });
+
+        lock (SearchCacheLock)
+        {
+            _linkRows = rows;
+            _linkRowsArePlaces = places;
+            _linkRowsTick = System.Environment.TickCount64;
+        }
+        return rows;
+    }
 
     private async Task<IReadOnlyList<long>> GetStarredMessageIdsAsync()
     {
@@ -776,6 +1002,7 @@ public sealed class AndroidSmsService : ISmsService
             var sentUri = Telephony.Sms.Sent.ContentUri;
             if (sentUri != null)
                 context.ContentResolver?.Insert(sentUri, values);
+            InvalidateSearchCaches();
             return sentOk;
         }, cancellationToken);
 
@@ -799,6 +1026,7 @@ public sealed class AndroidSmsService : ISmsService
                     $"{Telephony.Sms.InterfaceConsts.ThreadId} = ? AND {Telephony.Sms.InterfaceConsts.Read} = 0",
                     [threadId.ToString()]);
 
+                InvalidateSearchCaches();
                 return rows > 0;
             }
             catch (Exception)
@@ -827,6 +1055,7 @@ public sealed class AndroidSmsService : ISmsService
                     $"{Telephony.Sms.InterfaceConsts.ThreadId} = ?",
                     [threadId.ToString()]);
 
+                InvalidateSearchCaches();
                 return (rows ?? 0) > 0;
             }
             catch (Exception)
@@ -860,6 +1089,7 @@ public sealed class AndroidSmsService : ISmsService
                     await _metadataRepo.DeleteForThreadsAsync(threadIds);
                 }
 
+                InvalidateSearchCaches();
                 return deleted > 0;
             }
             catch (Exception)
@@ -893,6 +1123,7 @@ public sealed class AndroidSmsService : ISmsService
                     await _metadataRepo.DeleteAsync(messageIds);
                 }
 
+                InvalidateSearchCaches();
                 return deleted > 0;
             }
             catch (Exception)

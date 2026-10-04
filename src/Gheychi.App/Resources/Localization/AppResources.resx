@@ -267,6 +267,15 @@
   <data name="Search_NoResults" xml:space="preserve">
     <value>No messages found</value>
   </data>
+  <data name="Search_Coordinates" xml:space="preserve">
+    <value>Coordinates</value>
+  </data>
+  <data name="Search_NoLinks" xml:space="preserve">
+    <value>No links found</value>
+  </data>
+  <data name="Search_NoPlaces" xml:space="preserve">
+    <value>No places found</value>
+  </data>
   <data name="Search_Tag_Spam" xml:space="preserve">
     <value>Spam</value>
   </data>
