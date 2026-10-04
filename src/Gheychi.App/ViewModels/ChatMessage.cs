@@ -70,7 +70,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public static Color MessageTextColor => IsDarkTheme ? TextDark : TextLight;
     public static Color MessageTimeColor => TimeColorNormal;
 
-    public long Id { get; init; }
+    public long Id { get; set; }
     public DateTime Timestamp { get; init; }
 
     public required string BodyBeforeLink { get; init; }
@@ -82,7 +82,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public bool HasMedia { get; init; }
     public bool HasLink => !string.IsNullOrEmpty(Link);
     public bool HasNoLink => string.IsNullOrEmpty(Link);
-    public bool IsUnread { get; init; }
+    public bool IsUnread { get; set; }
 
     private bool _isStarred;
     public bool IsStarred

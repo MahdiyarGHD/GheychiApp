@@ -18,6 +18,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private readonly Task<List<ThreadItem>> _snapshotTask;
 
     private const string ArchivedKey = "archived_threads_v1";
+    private const int MaxIncrementalChanges = 40;
 
     private static string SnapshotPath => Path.Combine(FileSystem.AppDataDirectory, "threads_snapshot.json");
 
@@ -98,14 +99,22 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var threadIds = selected.Select(t => t.ThreadId).ToList();
         var success = await _smsService.DeleteThreadsAsync(threadIds);
 
+        // A failed delete (not the default SMS app, provider error) must not look like it worked:
+        // the threads would vanish here and come back on the next reload.
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            foreach (var t in selected)
+            if (success)
             {
-                Threads.Remove(t);
+                foreach (var t in selected)
+                {
+                    Threads.Remove(t);
+                }
             }
             ExitSelectionMode();
         });
+
+        // Rewrites the snapshot too, so a cold start does not paint the deleted threads first.
+        _ = LoadThreadsAsync();
 
         return success;
     }
@@ -205,8 +214,15 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
     public async Task InitializeAsync()
     {
-        if (_initialized && Threads.Count > 0)
+        if (_initialized)
+        {
+            // Back on the inbox (tab switch, chat closed, app resumed): the list is only refreshed
+            // by incoming SMS otherwise, so sent replies, read state and "Yesterday" labels go stale.
+            // Prompts are not repeated; they ran once and re-launching the role dialog on every
+            // return to the tab is worse than an empty list.
+            _ = LoadThreadsAsync();
             return;
+        }
 
         _initialized = true;
 
@@ -236,7 +252,13 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         try
         {
             var rawThreads = await _smsService.GetThreadsAsync();
-            var items = BuildItems(rawThreads);
+
+            // The provider errors are swallowed into an empty list. Applying it would wipe a
+            // populated inbox row by row and overwrite the snapshot with nothing.
+            if (rawThreads.Count == 0 && Threads.Count > 0)
+                return;
+
+            var items = await Task.Run(() => BuildItems(rawThreads));
 
             MainThread.BeginInvokeOnMainThread(() => ApplyThreads(items));
 
@@ -304,6 +326,16 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     {
         if (Threads.Count == 0)
         {
+            Threads.Reset(items);
+            return;
+        }
+
+        // Individual notifications are cheaper than a Reset only while few rows change.
+        if (ListSynchronizer.ExceedsChangeLimit(Threads, items, t => t.ThreadId, (a, b) => a.HasSameContent(b), MaxIncrementalChanges))
+        {
+            var selectedIds = Threads.Where(t => t.IsSelected).Select(t => t.ThreadId).ToHashSet();
+            foreach (var item in items)
+                item.IsSelected = selectedIds.Contains(item.ThreadId);
             Threads.Reset(items);
             return;
         }

@@ -520,14 +520,34 @@ public sealed class AndroidSmsService : ISmsService
     private static long _threadsCacheTick;
     private static (string Signature, HashSet<long> ThreadIds)? _starredThreadsCache;
 
+    // Bumped on every invalidation. A scan that started before the bump must not store its result:
+    // it was read from messages that have since changed.
+    private static int _cacheVersion;
+
     private static void InvalidateSearchCaches()
     {
         lock (SearchCacheLock)
         {
+            _cacheVersion++;
             _rowCache = null;
             _linkRows = null;
             _threadsCache = null;
             _starredThreadsCache = null;
+        }
+
+        // A message from a number with no thread yet adds a canonical-address row; the 60 s cache
+        // would leave that thread with an empty address.
+        lock (CanonicalAddressesLock)
+        {
+            _cachedCanonicalAddresses = null;
+        }
+    }
+
+    private static int CurrentCacheVersion()
+    {
+        lock (SearchCacheLock)
+        {
+            return _cacheVersion;
         }
     }
 
@@ -539,11 +559,15 @@ public sealed class AndroidSmsService : ISmsService
                 return _threadsCache;
         }
 
+        var version = CurrentCacheVersion();
         var threads = await GetThreadsAsync(cancellationToken).ConfigureAwait(false);
         lock (SearchCacheLock)
         {
-            _threadsCache = threads;
-            _threadsCacheTick = System.Environment.TickCount64;
+            if (version == _cacheVersion)
+            {
+                _threadsCache = threads;
+                _threadsCacheTick = System.Environment.TickCount64;
+            }
         }
         return threads;
     }
@@ -553,19 +577,34 @@ public sealed class AndroidSmsService : ISmsService
         if (starredIds.Count == 0)
             return [];
 
-        var signature = $"{starredIds.Count}:{starredIds.Sum()}";
+        var signature = StarredSignature(starredIds);
+        int version;
         lock (SearchCacheLock)
         {
             if (_starredThreadsCache is { } cached && cached.Signature == signature)
                 return cached.ThreadIds;
+            version = _cacheVersion;
         }
 
         var threadIds = QueryThreadIds(context, starredIds, cancellationToken);
         lock (SearchCacheLock)
         {
-            _starredThreadsCache = (signature, threadIds);
+            if (version == _cacheVersion)
+                _starredThreadsCache = (signature, threadIds);
         }
         return threadIds;
+    }
+
+    // Count and sum alone collide ({2,3} vs {1,4}); the sum of squares tells those apart.
+    private static string StarredSignature(IReadOnlyList<long> starredIds)
+    {
+        long sum = 0, squares = 0;
+        foreach (var id in starredIds)
+        {
+            sum += id;
+            squares = unchecked(squares + id * id);
+        }
+        return $"{starredIds.Count}:{sum}:{squares}";
     }
 
     private static List<MessageRow> GetMessageRows(
@@ -579,7 +618,11 @@ public sealed class AndroidSmsService : ISmsService
         var kind = query.FilterKind;
         var hasText = variants.Count > 0;
         var text = query.Text?.Trim() ?? string.Empty;
-        var key = $"{kind}|{query.SimSlot}";
+        // Starring a message never touches the SMS provider, so the starred set is part of the key.
+        var key = kind == SearchFilterKind.Starred
+            ? $"{kind}|{query.SimSlot}|{StarredSignature(starredIds)}"
+            : $"{kind}|{query.SimSlot}";
+        var version = CurrentCacheVersion();
 
         if (hasText)
         {
@@ -648,7 +691,8 @@ public sealed class AndroidSmsService : ISmsService
         {
             lock (SearchCacheLock)
             {
-                _rowCache = new SearchRowCache { Key = key, Text = text, Rows = rows, Tick = System.Environment.TickCount64 };
+                if (version == _cacheVersion)
+                    _rowCache = new SearchRowCache { Key = key, Text = text, Rows = rows, Tick = System.Environment.TickCount64 };
             }
         }
 
@@ -663,6 +707,7 @@ public sealed class AndroidSmsService : ISmsService
                 return _linkRows;
         }
 
+        var version = CurrentCacheVersion();
         var body = Telephony.Sms.InterfaceConsts.Body;
 
         // Places also cover geo: URIs and bare coordinates ("35.7219, 51.3347").
@@ -684,9 +729,12 @@ public sealed class AndroidSmsService : ISmsService
 
         lock (SearchCacheLock)
         {
-            _linkRows = rows;
-            _linkRowsArePlaces = places;
-            _linkRowsTick = System.Environment.TickCount64;
+            if (version == _cacheVersion)
+            {
+                _linkRows = rows;
+                _linkRowsArePlaces = places;
+                _linkRowsTick = System.Environment.TickCount64;
+            }
         }
         return rows;
     }
@@ -864,9 +912,11 @@ public sealed class AndroidSmsService : ISmsService
                 var subIdCol = cursor.GetColumnIndex("sub_id");
 
                 var messages = new List<SmsMessage>(cursor.Count);
+                var rawCount = 0;
                 while (cursor.MoveToNext())
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    rawCount++;
 
                     var id = cursor.GetLong(idCol);
                     var address = cursor.GetString(addressCol) ?? string.Empty;
@@ -879,8 +929,13 @@ public sealed class AndroidSmsService : ISmsService
 
                     var isOutgoing = SmsStatusHelper.IsOutgoingType(type);
 
-                    var hasFailed = SmsStatusHelper.HasFailed(type, status);
-                    var isDelivered = SmsStatusHelper.IsDelivered(type, status);
+                    // An Outbox row nobody reported on for this long was lost with its process (the
+                    // result broadcast never arrived); show it as failed so it can be retried
+                    // instead of spinning forever.
+                    var staleOutbox = type == SmsStatusHelper.TypeOutbox &&
+                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - dateMs > StaleOutboxMs;
+                    var hasFailed = staleOutbox || SmsStatusHelper.HasFailed(type, status);
+                    var isDelivered = !staleOutbox && SmsStatusHelper.IsDelivered(type, status);
                     var isRead = read != 0 || isOutgoing;
 
                     messages.Add(new SmsMessage(
@@ -931,7 +986,10 @@ public sealed class AndroidSmsService : ISmsService
                         {
                             var targetIdx = messages.IndexOf(target);
                             messages[targetIdx] = target with { Reaction = parsed.Emoji };
-                            if (_metadataRepo != null)
+
+                            // Already stored: re-writing on every load costs a SQLite write per
+                            // reaction (12 chats are pre-warmed on each list refresh).
+                            if (_metadataRepo != null && target.Reaction != parsed.Emoji)
                             {
                                 _ = Task.Run(async () =>
                                 {
@@ -952,7 +1010,11 @@ public sealed class AndroidSmsService : ISmsService
                 if (limit.HasValue)
                     messages.Reverse();
 
-                return (IReadOnlyList<SmsMessage>)messages;
+                return new SmsMessagePage(messages, rawCount);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception)
             {
@@ -960,7 +1022,103 @@ public sealed class AndroidSmsService : ISmsService
             }
         }, cancellationToken);
 
-    public Task<bool> SendSmsAsync(string address, string text, int subId, CancellationToken cancellationToken = default) =>
+    // How long a caller waits for the radio before showing the message as still sending. The
+    // send itself is not cancelled: it can still go out, and the stored row follows the real result.
+    private static readonly TimeSpan SendWaitLimit = TimeSpan.FromSeconds(60);
+    private const long StaleOutboxMs = 10 * 60 * 1000;
+
+    public Task<long> QueueOutgoingAsync(string address, string text, int subId, CancellationToken cancellationToken = default) =>
+        Task.Run(() =>
+        {
+            var id = InsertOutgoing(Microsoft.Maui.ApplicationModel.Platform.AppContext, address, text, subId, finalOk: null);
+            if (id > 0)
+                InvalidateSearchCaches();
+            return id;
+        }, cancellationToken);
+
+    /// <summary>Inserts an outgoing row: Outbox when <paramref name="finalOk"/> is null, otherwise already Sent/Failed. Returns 0 on failure.</summary>
+    private static long InsertOutgoing(Context context, string address, string text, int subId, bool? finalOk)
+    {
+        // Called from async-void handlers: a provider failure (e.g. default-SMS role lost) must
+        // not escape and kill the process.
+        try
+        {
+            var values = new ContentValues();
+            values.Put(Telephony.Sms.InterfaceConsts.Address, address);
+            values.Put(Telephony.Sms.InterfaceConsts.Body, text);
+            values.Put(Telephony.Sms.InterfaceConsts.Date, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
+            if (finalOk is { } ok)
+            {
+                values.Put(Telephony.Sms.InterfaceConsts.Type, ok ? (int)SmsMessageType.Sent : (int)SmsMessageType.Failed);
+                values.Put(Telephony.Sms.InterfaceConsts.Status, ok ? 0 : 64);
+            }
+            else
+            {
+                values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusPending);
+            }
+            if (subId > 0)
+                values.Put("sub_id", subId);
+
+            var target = finalOk.HasValue ? Telephony.Sms.Sent.ContentUri : Telephony.Sms.Outbox.ContentUri;
+            var inserted = target == null ? null : context.ContentResolver?.Insert(target, values);
+            return inserted == null ? 0 : ContentUris.ParseId(inserted);
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>Moves a stored outgoing row to its final state. <paramref name="onlyIfPending"/> leaves rows that already failed alone.</summary>
+    internal static void UpdateOutgoingState(Context context, long rowId, bool ok, bool onlyIfPending = false)
+    {
+        try
+        {
+            var smsUri = Telephony.Sms.ContentUri;
+            if (smsUri == null)
+                return;
+
+            var values = new ContentValues();
+            values.Put(Telephony.Sms.InterfaceConsts.Type, ok ? (int)SmsMessageType.Sent : (int)SmsMessageType.Failed);
+            values.Put(Telephony.Sms.InterfaceConsts.Status, ok ? 0 : 64);
+
+            var where = onlyIfPending
+                ? $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Outbox}"
+                : $"{Telephony.Sms.InterfaceConsts.Id} = ?";
+            context.ContentResolver?.Update(smsUri, values, where, [rowId.ToString()]);
+        }
+        catch (Exception)
+        {
+        }
+
+        InvalidateSearchCaches();
+        SmsSendTracker.RaiseOutgoingUpdated(rowId, ok);
+    }
+
+    private static void SetOutgoingPending(Context context, long rowId)
+    {
+        try
+        {
+            var smsUri = Telephony.Sms.ContentUri;
+            if (smsUri == null)
+                return;
+
+            var values = new ContentValues();
+            values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Outbox);
+            values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusPending);
+            // Resent now; also keeps the stale-Outbox check from flagging the retry straight away.
+            values.Put(Telephony.Sms.InterfaceConsts.Date, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            context.ContentResolver?.Update(smsUri, values, $"{Telephony.Sms.InterfaceConsts.Id} = ?", [rowId.ToString()]);
+        }
+        catch (Exception)
+        {
+        }
+
+        InvalidateSearchCaches();
+    }
+
+    public Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default) =>
         Task.Run(async () =>
         {
             var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
@@ -989,39 +1147,50 @@ public sealed class AndroidSmsService : ISmsService
 
             smsManager ??= SmsManager.Default;
 #pragma warning restore CA1422
-            if (smsManager == null)
-                return false;
 
-            SmsSendTracker.EnsureRegistered(context);
+            // Store first: if the process dies mid-send the message is still in the history.
+            if (messageId <= 0)
+                messageId = InsertOutgoing(context, address, text, subId, finalOk: null);
+            else
+                SetOutgoingPending(context, messageId);
+            InvalidateSearchCaches();
 
-            bool sentOk;
+            Task<bool> outcome;
             try
             {
-                var parts = smsManager.DivideMessage(text);
-                sentOk = parts != null && parts.Count > 1
-                    ? await SmsSendTracker.SendMultipartAsync(smsManager, address, parts, context, cancellationToken).ConfigureAwait(false)
-                    : await SmsSendTracker.SendSingleAsync(smsManager, address, text, context, cancellationToken).ConfigureAwait(false);
+                var parts = smsManager?.DivideMessage(text);
+                outcome = smsManager == null
+                    ? Task.FromResult(false)
+                    : SmsSendTracker.SendAsync(smsManager, address, text, parts, context, messageId);
             }
             catch
             {
-                sentOk = false;
+                outcome = Task.FromResult(false);
             }
 
-            var values = new ContentValues();
-            values.Put(Telephony.Sms.InterfaceConsts.Address, address);
-            values.Put(Telephony.Sms.InterfaceConsts.Body, text);
-            values.Put(Telephony.Sms.InterfaceConsts.Date, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-            values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
-            values.Put(Telephony.Sms.InterfaceConsts.Type, sentOk ? (int)SmsMessageType.Sent : (int)SmsMessageType.Failed);
-            values.Put(Telephony.Sms.InterfaceConsts.Status, sentOk ? 0 : 64);
-            if (subId > 0)
-                values.Put("sub_id", subId);
+            // Runs whether or not the caller is still waiting, so a slow send that does go out
+            // still turns the row into Sent (and a real failure into Failed).
+            var rowId = messageId;
+            _ = outcome.ContinueWith(t =>
+            {
+                var ok = t.Status == TaskStatus.RanToCompletion && t.Result;
+                if (rowId > 0)
+                {
+                    UpdateOutgoingState(context, rowId, ok);
+                }
+                else
+                {
+                    // Could not be stored up front; record the outcome now.
+                    InsertOutgoing(context, address, text, subId, ok);
+                    InvalidateSearchCaches();
+                }
+            }, TaskScheduler.Default);
 
-            var sentUri = Telephony.Sms.Sent.ContentUri;
-            if (sentUri != null)
-                context.ContentResolver?.Insert(sentUri, values);
-            InvalidateSearchCaches();
-            return sentOk;
+            var finished = await Task.WhenAny(outcome, Task.Delay(SendWaitLimit, cancellationToken)).ConfigureAwait(false);
+            if (finished != outcome)
+                return SmsSendResult.Pending;
+
+            return outcome.Result ? SmsSendResult.Sent : SmsSendResult.Failed;
         }, cancellationToken);
 
     public Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default) =>
@@ -1063,6 +1232,23 @@ public sealed class AndroidSmsService : ISmsService
 
             try
             {
+                // Only the newest incoming message: flagging the whole thread would show a badge
+                // of "every message in the chat" and put the unread divider at its very top.
+                long newestInboxId = 0;
+                using (var cursor = context.ContentResolver?.Query(
+                    smsUri,
+                    [Telephony.Sms.InterfaceConsts.Id],
+                    $"{Telephony.Sms.InterfaceConsts.ThreadId} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox}",
+                    [threadId.ToString()],
+                    "date DESC LIMIT 1"))
+                {
+                    if (cursor != null && cursor.MoveToFirst())
+                        newestInboxId = cursor.GetLong(0);
+                }
+
+                if (newestInboxId <= 0)
+                    return false;
+
                 var values = new ContentValues();
                 values.Put(Telephony.Sms.InterfaceConsts.Read, 0);
                 values.Put(Telephony.Sms.InterfaceConsts.Seen, 0);
@@ -1070,8 +1256,8 @@ public sealed class AndroidSmsService : ISmsService
                 var rows = context.ContentResolver?.Update(
                     smsUri,
                     values,
-                    $"{Telephony.Sms.InterfaceConsts.ThreadId} = ?",
-                    [threadId.ToString()]);
+                    $"{Telephony.Sms.InterfaceConsts.Id} = ?",
+                    [newestInboxId.ToString()]);
 
                 InvalidateSearchCaches();
                 return (rows ?? 0) > 0;

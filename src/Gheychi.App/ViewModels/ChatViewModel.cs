@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Gheychi.App.Platforms.Android.Receivers;
+using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
@@ -12,7 +14,8 @@ public sealed record PreparedChatData(
     List<(int Index, string Text)> Separators,
     string StickyDate,
     int SimSlot,
-    int? FirstUnreadIndex = null
+    int? FirstUnreadIndex = null,
+    int RawCount = 0
 );
 
 public sealed class ChatViewModel : INotifyPropertyChanged
@@ -172,9 +175,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
                 try
                 {
+                    var generation = CurrentCacheGeneration();
                     var loader = new ChatViewModel(null, smsService, dateFormatter);
                     var data = await loader.FetchMessagesAsync(thread, RecentPageSize, cancellationToken: ct);
-                    if (!ct.IsCancellationRequested)
+
+                    // Empty means the provider failed (a thread always has messages); caching it
+                    // would open that chat blank. A bumped generation means a message arrived
+                    // while this was being read, so the page is already stale.
+                    if (!ct.IsCancellationRequested && data.RawCount > 0 && generation == CurrentCacheGeneration())
                     {
                         AddToCache(thread.ThreadId, data);
                     }
@@ -200,12 +208,33 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
     }
 
+    private static int _cacheGeneration;
+
+    private static int CurrentCacheGeneration()
+    {
+        lock (CacheLock)
+        {
+            return _cacheGeneration;
+        }
+    }
+
     public static void InvalidateCache()
     {
         lock (CacheLock)
         {
+            _cacheGeneration++;
             RecentCache.Clear();
             CacheOrder.Clear();
+        }
+    }
+
+    /// <summary>Drops one thread's cached page (e.g. after it was marked read, so the unread divider is not replayed).</summary>
+    public static void EvictCache(long threadId)
+    {
+        lock (CacheLock)
+        {
+            RecentCache.Remove(threadId);
+            CacheOrder.Remove(threadId);
         }
     }
 
@@ -225,17 +254,20 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         return result;
     }
 
-    public async Task<PreparedChatData> FetchMessagesAsync(ThreadItem thread, int? limit = RecentPageSize, int offset = 0, CancellationToken cancellationToken = default)
+    public async Task<PreparedChatData> FetchMessagesAsync(ThreadItem thread, int? limit = RecentPageSize, int offset = 0, CancellationToken cancellationToken = default, int unreadHint = 0)
     {
         await EnsureSimInfoLoadedAsync();
         var isDual = _isDualSim ?? false;
         var slotMap = _simSlotMap;
         var carrierMap = _simCarrierMap;
 
+        // The inbox row is marked read before the fetch runs, so the unread count it had when
+        // tapped comes in as a hint.
+        var unread = Math.Max(unreadHint, thread.IsUnread ? thread.Count : 0);
         var fetchLimit = limit;
-        if (offset == 0 && thread.IsUnread && thread.Count > (limit ?? RecentPageSize))
+        if (offset == 0 && unread > (limit ?? RecentPageSize))
         {
-            fetchLimit = Math.Min(thread.Count + 10, 100);
+            fetchLimit = Math.Min(unread + 10, 100);
         }
 
         var rawMessages = await _smsService.GetMessagesAsync(thread.ThreadId, fetchLimit, offset, cancellationToken);
@@ -307,7 +339,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         var sticky = lastSep?.Text ?? _dateFormatter.FormatStickyDate(now, now, culture);
         var threadSlot = (thread.SubId > 0 && slotMap != null && slotMap.TryGetValue(thread.SubId, out var s)) ? s : 1;
 
-        return new PreparedChatData(newItems, newMessages, seps, sticky, threadSlot, firstUnreadIndex);
+        // Reaction SMS are folded away, so paging has to count the provider rows that were read.
+        return new PreparedChatData(newItems, newMessages, seps, sticky, threadSlot, firstUnreadIndex, SmsMessagePage.RawCountOf(rawMessages));
     }
 
     private Task<PreparedChatData?>? _prefetchTask;
@@ -516,12 +549,12 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         if (TryGetCached(thread.ThreadId, out var cached) && cached is not null)
         {
-            ApplyMessages(cached, cached.Messages.Count);
+            ApplyMessages(cached, cached.RawCount);
             return;
         }
 
         var data = await FetchMessagesAsync(thread);
-        ApplyMessages(data, data.Messages.Count);
+        ApplyMessages(data, data.RawCount);
     }
 
     public async Task<bool> LoadOlderAsync()
@@ -557,13 +590,13 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
             page ??= await FetchMessagesAsync(Thread, RecentPageSize, _loadedCount);
 
-            if (page == null || page.Messages.Count == 0)
+            if (page == null || page.RawCount == 0)
             {
                 _hasMore = false;
                 return false;
             }
 
-            var count = page.Messages.Count;
+            var count = page.RawCount;
             // Guard runs INSIDE the main-thread lambda: Thread is only ever
             // reassigned on the main thread too, so this check is race-free.
             // A stale page can never land in a newly opened chat's list.
@@ -600,35 +633,30 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         if (rawCount < RecentPageSize)
             _hasMore = false;
 
-        var pageItems = page.Items;
-        if (pageItems.Count > 0 && Items.Count > 0 &&
-            pageItems[^1] is DateSeparatorItem tail &&
-            Items[0] is DateSeparatorItem head &&
-            tail.Text == head.Text)
-        {
-            pageItems = pageItems.Take(pageItems.Count - 1).ToList();
-        }
+        // A day split across two pages: the page ends with that day's messages and the list
+        // already starts with the same day's separator. Keep the page's (it sits above the day's
+        // first message) and drop the list's, otherwise the day shows two headers.
+        var dropHead = page.Separators.Count > 0 && _dateSeparators.Count > 0 &&
+            Items.Count > 0 && Items[0] is DateSeparatorItem head &&
+            page.Separators[^1].Text == head.Text;
+        if (dropHead)
+            Items.RemoveAt(0);
 
         // Incremental prepend: single range-insert notification so the
         // RecyclerView shifts existing rows instead of rebinding everything.
-        Items.PrependRange(pageItems);
+        Items.PrependRange(page.Items);
         Messages.PrependRange(page.Messages);
 
-        var trimmedSepCount = pageItems.Count < page.Items.Count ? 1 : 0;
-        var shift = pageItems.Count;
-        var pageSeps = trimmedSepCount > 0 ? page.Separators.Take(page.Separators.Count - 1) : page.Separators;
+        var shift = page.Items.Count - (dropHead ? 1 : 0);
         var mergedSeps = new List<(int Index, string Text)>(page.Separators.Count + _dateSeparators.Count);
-        mergedSeps.AddRange(pageSeps);
-        foreach (var (index, text) in _dateSeparators)
-            mergedSeps.Add((index + shift, text));
+        mergedSeps.AddRange(page.Separators);
+        for (var i = dropHead ? 1 : 0; i < _dateSeparators.Count; i++)
+            mergedSeps.Add((_dateSeparators[i].Index + shift, _dateSeparators[i].Text));
 
         _dateSeparators.Clear();
         _dateSeparators.AddRange(mergedSeps);
 
-        lock (CacheLock)
-        {
-            RecentCache.Remove(Thread.ThreadId);
-        }
+        EvictCache(Thread.ThreadId);
     }
 
     private int _simSubId;
@@ -686,26 +714,16 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             IsDelivered = false,
             Time = timeStr,
             SimSlot = _simSlot,
-            IsDualSim = _isDualSim ?? false
+            IsDualSim = _isDualSim ?? false,
+            Timestamp = DateTime.Now
         };
 
         Items.Add(outgoingMsg);
         Messages.Add(outgoingMsg);
 
-        lock (CacheLock)
-        {
-            RecentCache.Remove(Thread.ThreadId);
-        }
+        EvictCache(Thread.ThreadId);
 
-        var success = await _smsService.SendSmsAsync(SendAddress, text, ResolveSubId(0));
-        if (success)
-        {
-            outgoingMsg.IsDelivered = true;
-        }
-        else
-        {
-            outgoingMsg.HasFailed = true;
-        }
+        await DeliverAsync(outgoingMsg, text, ResolveSubId(0), storeFirst: true);
     }
 
     public async void Retry(ChatMessage message)
@@ -713,15 +731,216 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         message.HasFailed = false;
         message.IsDelivered = false;
         var text = string.IsNullOrEmpty(message.Link) ? message.BodyBeforeLink : $"{message.BodyBeforeLink}{message.Link}";
-        var success = await _smsService.SendSmsAsync(SendAddress, text, ResolveSubId(0));
-        if (success)
+
+        // The message's own SIM, not whichever SIM is selected now.
+        await DeliverAsync(message, text, ResolveSubId(message.SubId), storeFirst: message.Id <= 0);
+    }
+
+    // Shared by Send and Retry. The message is stored as outgoing before it is sent, so a killed
+    // process or a slow radio leaves it in the history instead of losing it; a retry reuses the
+    // stored row instead of adding a second one.
+    private async Task DeliverAsync(ChatMessage message, string text, int subId, bool storeFirst)
+    {
+        // async void callers: an exception escaping here would kill the process.
+        var result = SmsSendResult.Failed;
+        try
         {
-            message.IsDelivered = true;
+            var address = SendAddress;
+            if (storeFirst)
+            {
+                var rowId = await _smsService.QueueOutgoingAsync(address, text, subId);
+                if (rowId > 0)
+                {
+                    message.Id = rowId;
+                    // A new newest row: every later page offset moves down by one.
+                    ShiftLoadedCount(1);
+                }
+            }
+
+            result = await _smsService.SendSmsAsync(address, text, subId, message.Id);
         }
-        else
+        catch (Exception)
         {
-            message.HasFailed = true;
         }
+
+        EvictCache(Thread.ThreadId);
+
+        // Pending: no answer yet, the bubble stays "sending" and the final result arrives through
+        // OutgoingUpdated when the radio reports (or the stored state is picked up on reopen).
+        switch (result)
+        {
+            case SmsSendResult.Sent:
+                message.IsDelivered = true;
+                break;
+            case SmsSendResult.Failed:
+                message.HasFailed = true;
+                break;
+        }
+    }
+
+    private void OnOutgoingUpdated(long rowId, bool ok)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var message in Messages)
+            {
+                if (message.Id != rowId)
+                    continue;
+
+                message.IsDelivered = ok;
+                message.HasFailed = !ok;
+                break;
+            }
+        });
+    }
+
+    // ---- Live updates while the chat is open --------------------------------------------------
+
+    private bool _live;
+    private bool _refreshing;
+    private bool _refreshAgain;
+
+    /// <summary>Raised after messages were appended to the open chat (so the view can follow them).</summary>
+    public event Action? MessagesAppended;
+
+    public void StartLiveUpdates()
+    {
+        if (_live)
+            return;
+
+        _live = true;
+        SmsDeliverReceiver.SmsReceived += OnIncomingSms;
+        SmsSendTracker.OutgoingUpdated += OnOutgoingUpdated;
+    }
+
+    public void StopLiveUpdates()
+    {
+        if (!_live)
+            return;
+
+        _live = false;
+        SmsDeliverReceiver.SmsReceived -= OnIncomingSms;
+        SmsSendTracker.OutgoingUpdated -= OnOutgoingUpdated;
+    }
+
+    private void OnIncomingSms() => _ = RefreshNewestAsync();
+
+    private async Task RefreshNewestAsync()
+    {
+        if (_refreshing)
+        {
+            _refreshAgain = true;
+            return;
+        }
+
+        _refreshing = true;
+        try
+        {
+            do
+            {
+                _refreshAgain = false;
+                var thread = Thread;
+                if (thread.ThreadId <= 0)
+                    return;
+
+                var data = await FetchMessagesAsync(thread, RecentPageSize, 0);
+                await MainThread.InvokeOnMainThreadAsync(() => AppendNew(thread.ThreadId, data));
+            }
+            while (_refreshAgain);
+        }
+        catch (Exception)
+        {
+            // Best effort: the next incoming message or reopening the chat catches up.
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private void AppendNew(long threadId, PreparedChatData data)
+    {
+        // Another chat was opened while this was being read, or the first page is still loading.
+        if (Thread.ThreadId != threadId || Messages.Count == 0)
+            return;
+
+        var known = new Dictionary<long, ChatMessage>();
+        foreach (var existing in Messages)
+        {
+            if (existing.Id > 0)
+                known[existing.Id] = existing;
+        }
+
+        // A send whose row is not stored yet (Id 0) would show up here as a "new" outgoing message.
+        var sendInFlight = Messages.Any(m => m.Id == 0 && m.IsOutgoing);
+
+        DateSeparatorItem? pendingSeparator = null;
+        var appended = 0;
+        ChatMessage? lastIncoming = null;
+
+        foreach (var item in data.Items)
+        {
+            if (item is DateSeparatorItem separator)
+            {
+                pendingSeparator = separator;
+                continue;
+            }
+
+            if (item is not ChatMessage fetched)
+                continue;
+
+            if (known.TryGetValue(fetched.Id, out var current))
+            {
+                pendingSeparator = null;
+                if (current.ReactionEmoji != fetched.ReactionEmoji && !current.IsReactionSending)
+                    current.ReactionEmoji = fetched.ReactionEmoji;
+                continue;
+            }
+
+            if (sendInFlight && fetched.IsOutgoing)
+                continue;
+
+            if (pendingSeparator != null)
+            {
+                Items.Add(pendingSeparator);
+                _dateSeparators.Add((Items.Count - 1, pendingSeparator.Text));
+                pendingSeparator = null;
+            }
+
+            // The chat is open and on screen: what arrives is read.
+            fetched.IsUnread = false;
+            Items.Add(fetched);
+            Messages.Add(fetched);
+            appended++;
+            if (!fetched.IsOutgoing)
+                lastIncoming = fetched;
+        }
+
+        if (appended == 0)
+            return;
+
+        if (lastIncoming != null)
+        {
+            foreach (var message in Messages)
+                message.IsLastMessage = false;
+            lastIncoming.IsLastMessage = true;
+        }
+
+        ShiftLoadedCount(appended);
+        EvictCache(threadId);
+        MessagesAppended?.Invoke();
+        _ = _smsService.MarkThreadAsReadAsync(threadId);
+    }
+
+    // Rows stored or deleted behind the paging cursor shift every later OFFSET. Without this the
+    // next older page repeats a message (insert) or skips some (delete), and a page fetched ahead
+    // for the old offset is wrong.
+    private void ShiftLoadedCount(int delta)
+    {
+        _loadedCount = Math.Max(0, _loadedCount + delta);
+        try { _prefetchCts?.Cancel(); } catch { }
+        _prefetchTask = null;
+        _prefetchOffset = -1;
     }
 
     private bool _isSelectionMode;
@@ -860,11 +1079,12 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             {
                 try
                 {
-                    var success = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
+                    var result = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
+                    ShiftLoadedCount(1);
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         message.IsReactionSending = false;
-                        message.HasReactionFailed = !success;
+                        message.HasReactionFailed = result == SmsSendResult.Failed;
                     });
                 }
                 catch
@@ -913,11 +1133,12 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         {
             try
             {
-                var success = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
+                var result = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
+                ShiftLoadedCount(1);
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     message.IsReactionSending = false;
-                    message.HasReactionFailed = !success;
+                    message.HasReactionFailed = result == SmsSendResult.Failed;
                 });
             }
             catch
@@ -938,10 +1159,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         {
             Items.Remove(message);
             Messages.Remove(message);
-            lock (CacheLock)
-            {
-                RecentCache.Remove(Thread.ThreadId);
-            }
+            ShiftLoadedCount(-1);
+            EvictCache(Thread.ThreadId);
         }
         return success;
     }
@@ -962,10 +1181,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 Messages.Remove(msg);
             }
             ExitSelectionMode();
-            lock (CacheLock)
-            {
-                RecentCache.Remove(Thread.ThreadId);
-            }
+            ShiftLoadedCount(-selected.Count);
+            EvictCache(Thread.ThreadId);
         }
         return success;
     }

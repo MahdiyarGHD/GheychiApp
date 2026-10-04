@@ -9,6 +9,10 @@ namespace Gheychi.App.Controls;
 public partial class ChatView : ContentView
 {
     private bool _scrolledToEnd;
+    // True while the newest message is on screen; decides if an arriving message is followed or
+    // only announced by the scroll-to-bottom button.
+    private bool _followTail = true;
+    private ChatViewModel? _liveVm;
     private bool _initialLayoutSettled;
     internal ChatViewModel? Vm => BindingContext as ChatViewModel;
     private CancellationTokenSource? _skeletonCts;
@@ -330,6 +334,52 @@ public partial class ChatView : ContentView
 
     public bool PrepareForTransition(ThreadItem thread)
     {
+        var cacheHit = PrepareForTransitionCore(thread);
+        AttachLiveUpdates();
+        return cacheHit;
+    }
+
+    private void AttachLiveUpdates()
+    {
+        if (Vm is null)
+            return;
+
+        if (!ReferenceEquals(_liveVm, Vm))
+        {
+            DetachLiveUpdates();
+            _liveVm = Vm;
+            _liveVm.MessagesAppended += OnMessagesAppended;
+        }
+
+        _liveVm.StartLiveUpdates();
+    }
+
+    private void DetachLiveUpdates()
+    {
+        if (_liveVm is null)
+            return;
+
+        _liveVm.MessagesAppended -= OnMessagesAppended;
+        _liveVm.StopLiveUpdates();
+        _liveVm = null;
+    }
+
+    private void OnMessagesAppended()
+    {
+        if (_followTail)
+        {
+            _scrolledToEnd = false;
+            ScrollToEnd(true);
+        }
+        else
+        {
+            ShowScrollToBottomButton();
+        }
+    }
+
+    private bool PrepareForTransitionCore(ThreadItem thread)
+    {
+        _followTail = true;
         _initialLayoutSettled = false;
         _scrolledToEnd = false;
         _lastFirstVisibleIndex = -1;
@@ -357,7 +407,7 @@ public partial class ChatView : ContentView
             HideSkeleton();
             Vm.Thread = thread;
             Vm.SafeDispatcher = SafePrependItems;
-            Vm.ApplyMessages(cached, cached.Messages.Count);
+            Vm.ApplyMessages(cached, cached.RawCount);
 
             ScrollToInitialPosition(cached.FirstUnreadIndex);
             return true;
@@ -372,7 +422,7 @@ public partial class ChatView : ContentView
         return false;
     }
 
-    public async Task<PreparedChatData?> FetchMessagesAsync(ThreadItem thread, CancellationToken ct = default)
+    public async Task<PreparedChatData?> FetchMessagesAsync(ThreadItem thread, CancellationToken ct = default, int unreadHint = 0)
     {
         if (ChatViewModel.TryGetCached(thread.ThreadId, out var cached) && cached is not null)
             return cached;
@@ -380,7 +430,7 @@ public partial class ChatView : ContentView
         if (Vm is null)
             return null;
 
-        return await Vm.FetchMessagesAsync(thread, cancellationToken: ct);
+        return await Vm.FetchMessagesAsync(thread, cancellationToken: ct, unreadHint: unreadHint);
     }
 
     public void ApplyMessages(PreparedChatData data)
@@ -390,7 +440,7 @@ public partial class ChatView : ContentView
             return;
 
         Vm.SafeDispatcher = SafePrependItems;
-        Vm.ApplyMessages(data, data.Messages.Count);
+        Vm.ApplyMessages(data, data.RawCount);
         _scrolledToEnd = false;
 
         ScrollToInitialPosition(data.FirstUnreadIndex);
@@ -439,6 +489,7 @@ public partial class ChatView : ContentView
 
     public Task Close()
     {
+        DetachLiveUpdates();
         HideSkeleton();
         MessageEntry.Unfocus();
         ResetInputPadding();
@@ -583,6 +634,7 @@ public partial class ChatView : ContentView
 
         if (e.LastVisibleItemIndex >= Vm.Items.Count - 2)
         {
+            _followTail = true;
             HideScrollToBottomButton();
         }
         else if (e.LastVisibleItemIndex >= 0)
@@ -590,13 +642,16 @@ public partial class ChatView : ContentView
 #if ANDROID
             if (MessagesList.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView rv && !rv.CanScrollVertically(1))
             {
+                _followTail = true;
                 HideScrollToBottomButton();
             }
             else
             {
+                _followTail = false;
                 ShowScrollToBottomButton();
             }
 #else
+            _followTail = false;
             ShowScrollToBottomButton();
 #endif
         }
@@ -625,8 +680,7 @@ public partial class ChatView : ContentView
                 e.FirstVisibleItemIndex < oldFirst &&
                 e.FirstVisibleItemIndex <= _olderTriggerIndex &&
                 Vm.HasMore &&
-                !_loadingOlder &&
-                Vm.Messages.Count >= ChatViewModel.PageSize)
+                !_loadingOlder)
             {
                 if (now - _lastOlderLoadTime >= 350)
                 {
@@ -679,6 +733,7 @@ public partial class ChatView : ContentView
         Vm.Send();
         if (Vm.Items.Count > count)
         {
+            _followTail = true;
             _scrolledToEnd = false;
             ScrollToEnd(true);
         }

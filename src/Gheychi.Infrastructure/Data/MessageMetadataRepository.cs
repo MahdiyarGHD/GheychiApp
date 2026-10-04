@@ -199,9 +199,11 @@ public sealed class MessageMetadataRepository : IMessageMetadataRepository
             if (idList.Count == 0)
                 return;
 
-            foreach (var id in idList)
+            // One statement per chunk instead of one transaction (and fsync) per id.
+            foreach (var chunk in idList.Chunk(400))
             {
-                await _db.DeleteAsync<MessageMetadataEntity>(id);
+                var placeholders = string.Join(",", chunk.Select(_ => "?"));
+                await _db.ExecuteAsync($"DELETE FROM MessageMetadata WHERE MessageId IN ({placeholders})", chunk.Cast<object>().ToArray());
             }
         }
         catch

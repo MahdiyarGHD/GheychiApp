@@ -67,8 +67,16 @@ public partial class MessagesPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (Vm != null)
-            await Vm.InitializeAsync();
+        try
+        {
+            if (Vm != null)
+                await Vm.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            // async void: a failed permission request or snapshot read must not terminate the app.
+            System.Diagnostics.Debug.WriteLine($"Inbox initialize failed: {ex}");
+        }
 
         if (!_overlaysWarmedUp)
         {
@@ -223,11 +231,14 @@ public partial class MessagesPage : ContentPage
         _lastTappedThreadId = thread.ThreadId;
 
         var wasUnread = thread.IsUnread;
+        // Captured before MarkAsRead zeroes it: the fetch widens its first page to cover every
+        // unread message so the divider lands before the first one.
+        var unreadCount = thread.Count;
         if (wasUnread)
         {
             thread.MarkAsRead();
         }
-        _ = OpenChatAsync(thread, wasUnread);
+        _ = OpenChatAsync(thread, wasUnread, unreadCount);
     }
 
     private void OnExitSelectionModeTapped(object? sender, EventArgs e)
@@ -320,7 +331,7 @@ public partial class MessagesPage : ContentPage
         }
     }
 
-    private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false)
+    private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false, int unreadCount = 0)
     {
         if (_animating)
             return;
@@ -341,7 +352,7 @@ public partial class MessagesPage : ContentPage
 
             Task<PreparedChatData?>? fetchTask = null;
             if (!cacheHit)
-                fetchTask = Task.Run(() => ChatOverlay.FetchMessagesAsync(thread));
+                fetchTask = Task.Run(() => ChatOverlay.FetchMessagesAsync(thread, unreadHint: unreadCount));
 
             await ChatOverlay.TranslateToAsync(0, 0, 220, Easing.CubicOut);
 
@@ -359,7 +370,14 @@ public partial class MessagesPage : ContentPage
             if (wasUnread)
             {
                 var smsService = IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Services.ISmsService>();
-                _ = Task.Run(() => smsService?.MarkThreadAsReadAsync(thread.ThreadId));
+                _ = Task.Run(async () =>
+                {
+                    if (smsService != null)
+                        await smsService.MarkThreadAsReadAsync(thread.ThreadId);
+
+                    // The cached page still carries the unread divider; reopening must not replay it.
+                    ChatViewModel.EvictCache(thread.ThreadId);
+                });
             }
         }
         catch (InvalidOperationException)
@@ -396,6 +414,10 @@ public partial class MessagesPage : ContentPage
             await slideTask;
             ChatOverlay.InputTransparent = true;
             ChatOverlay.TranslationY = 3000;
+
+            // Replies sent, messages read or deleted inside the chat are not in the list yet.
+            if (Vm != null)
+                _ = Vm.LoadThreadsAsync();
         }
         catch (InvalidOperationException)
         {

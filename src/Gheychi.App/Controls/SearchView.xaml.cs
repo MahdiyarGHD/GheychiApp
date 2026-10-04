@@ -199,16 +199,42 @@ public partial class SearchView : ContentView
     private void StartVoiceSearch()
     {
 #if ANDROID
+        // The recogniser is a system screen; its text comes back through MainActivity.OnActivityResult.
+        void OnResult(string? text)
+        {
+            MainActivity.VoiceSearchCompleted -= OnResult;
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                var query = text.Trim();
+                SearchEntry.Text = query;
+                if (Vm != null)
+                    Vm.SearchText = query;
+                UpdateTrailingButtons(query);
+                SearchEntry.Focus();
+            });
+        }
+
         try
         {
+            var activity = Platform.CurrentActivity;
+            if (activity is null)
+                return;
+
             var intent = new Android.Content.Intent(Android.Speech.RecognizerIntent.ActionRecognizeSpeech);
             intent.PutExtra(Android.Speech.RecognizerIntent.ExtraLanguageModel, Android.Speech.RecognizerIntent.LanguageModelFreeForm);
+            intent.PutExtra(Android.Speech.RecognizerIntent.ExtraLanguage, System.Globalization.CultureInfo.CurrentUICulture.Name);
             intent.PutExtra(Android.Speech.RecognizerIntent.ExtraPrompt, Localization.LocalizationManager.Instance["Search_VoiceSearch"] ?? "Speak to search");
-            Platform.CurrentActivity?.StartActivity(intent);
+
+            MainActivity.VoiceSearchCompleted += OnResult;
+            activity.StartActivityForResult(intent, MainActivity.VoiceSearchRequestCode);
         }
         catch
         {
-            // Voice search not available on device/emulator
+            // No speech recogniser on this device/emulator.
+            MainActivity.VoiceSearchCompleted -= OnResult;
         }
 #endif
     }

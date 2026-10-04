@@ -42,11 +42,26 @@ public class SmsDeliverReceiver : BroadcastReceiver
         if (subId > 0)
             values.Put("sub_id", subId);
 
-        var inboxUri = Telephony.Sms.Inbox.ContentUri;
-        if (inboxUri != null)
-            context.ContentResolver?.Insert(inboxUri, values);
+        // OnReceive runs on the main thread: a provider or subscriber exception here kills the app.
+        try
+        {
+            var inboxUri = Telephony.Sms.Inbox.ContentUri;
+            if (inboxUri != null)
+                context.ContentResolver?.Insert(inboxUri, values);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SMS insert failed: {ex}");
+        }
 
-        SmsReceived?.Invoke();
+        try
+        {
+            SmsReceived?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SmsReceived handler failed: {ex}");
+        }
     }
 
     private static int ReadSubscriptionId(Intent intent)

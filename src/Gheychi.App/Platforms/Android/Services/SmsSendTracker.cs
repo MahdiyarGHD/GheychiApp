@@ -1,20 +1,23 @@
 using Android.App;
 using Android.Content;
 using Android.Telephony;
-using Gheychi.App.Platforms.Android.Receivers;
 
 namespace Gheychi.App.Platforms.Android.Services;
 
+/// <summary>
+/// Hands messages to the radio and reports when every part has been accepted. The result is a task
+/// that is never abandoned on a timer: a slow send can still go out after the caller stops
+/// waiting, and the row has to follow what really happened.
+/// </summary>
 internal static class SmsSendTracker
 {
     public const string ActionSmsSent = "com.evergreen.gheychiapp.SMS_SENT";
     public const string ExtraToken = "com.evergreen.gheychiapp.SMS_TOKEN";
+    public const string ExtraRowId = "com.evergreen.gheychiapp.SMS_ROW_ID";
 
-    private static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(60);
+    /// <summary>Raised when a stored outgoing message reaches its final state (rowId, success).</summary>
+    public static event Action<long, bool>? OutgoingUpdated;
 
-    private static readonly SmsSentReceiver Receiver = new();
-    private static bool _registered;
-    private static readonly object RegLock = new();
     private static int _requestCodeSeed = Random.Shared.Next(1 << 20, 1 << 30);
 
     private sealed class PendingSend
@@ -28,38 +31,26 @@ internal static class SmsSendTracker
     private static readonly Dictionary<string, PendingSend> Pending = [];
     private static readonly object PendingLock = new();
 
-    public static void EnsureRegistered(Context context)
+    public static void RaiseOutgoingUpdated(long rowId, bool ok)
     {
-        lock (RegLock)
+        try
         {
-            if (_registered)
-                return;
-
-            var filter = new IntentFilter(ActionSmsSent);
-            if (OperatingSystem.IsAndroidVersionAtLeast(33))
-            {
-#pragma warning disable CA1422
-                context.RegisterReceiver(Receiver, filter, ReceiverFlags.NotExported);
-#pragma warning restore CA1422
-            }
-            else
-            {
-#pragma warning disable CS0618
-                context.RegisterReceiver(Receiver, filter);
-#pragma warning restore CS0618
-            }
-
-            _registered = true;
+            OutgoingUpdated?.Invoke(rowId, ok);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"OutgoingUpdated handler failed: {ex}");
         }
     }
 
-    public static PendingIntent? CreateSentIntent(Context context, string token)
+    public static PendingIntent? CreateSentIntent(Context context, string token, long rowId)
     {
         try
         {
             var intent = new Intent(ActionSmsSent);
             intent.SetPackage(context.PackageName);
             intent.PutExtra(ExtraToken, token);
+            intent.PutExtra(ExtraRowId, rowId);
             var requestCode = Interlocked.Increment(ref _requestCodeSeed);
             return PendingIntent.GetBroadcast(
                 context,
@@ -73,57 +64,53 @@ internal static class SmsSendTracker
         }
     }
 
-    public static async Task<bool> SendSingleAsync(
-        SmsManager smsManager, string address, string text, Context context, CancellationToken cancellationToken)
+    /// <summary>Completes when the radio has reported every part; false if any part failed or could not be queued.</summary>
+    public static Task<bool> SendAsync(
+        SmsManager smsManager, string address, string text, IList<string>? parts, Context context, long rowId)
     {
-        var token = Register(parts: 1);
-        var sentIntent = CreateSentIntent(context, token);
-        if (sentIntent == null)
-        {
-            Abandon(token);
-            return false;
-        }
+        var multipart = parts != null && parts.Count > 1;
+        var token = Register(multipart ? parts!.Count : 1);
 
         try
         {
-            smsManager.SendTextMessage(address, null, text, sentIntent, null);
-        }
-        catch
-        {
-            Abandon(token);
-            return false;
-        }
-
-        return await WaitAsync(token, cancellationToken).ConfigureAwait(false);
-    }
-
-    public static async Task<bool> SendMultipartAsync(
-        SmsManager smsManager, string address, IList<string> parts, Context context, CancellationToken cancellationToken)
-    {
-        var token = Register(parts.Count);
-        var sentIntents = new List<PendingIntent>(parts.Count);
-        foreach (var _ in parts)
-        {
-            var sentIntent = CreateSentIntent(context, token);
-            if (sentIntent == null)
+            if (multipart)
             {
-                Abandon(token);
-                return false;
-            }
-            sentIntents.Add(sentIntent);
-        }
+                var sentIntents = new List<PendingIntent>(parts!.Count);
+                foreach (var _ in parts)
+                {
+                    var sentIntent = CreateSentIntent(context, token, rowId);
+                    if (sentIntent == null)
+                    {
+                        Abandon(token);
+                        return Task.FromResult(false);
+                    }
+                    sentIntents.Add(sentIntent);
+                }
 
-        try
-        {
-            smsManager.SendMultipartTextMessage(address, null, parts, sentIntents, null);
+                smsManager.SendMultipartTextMessage(address, null, parts, sentIntents, null);
+            }
+            else
+            {
+                var sentIntent = CreateSentIntent(context, token, rowId);
+                if (sentIntent == null)
+                {
+                    Abandon(token);
+                    return Task.FromResult(false);
+                }
+
+                smsManager.SendTextMessage(address, null, text, sentIntent, null);
+            }
         }
         catch
         {
             Abandon(token);
-            return false;
+            return Task.FromResult(false);
         }
 
-        return await WaitAsync(token, cancellationToken).ConfigureAwait(false);
+        lock (PendingLock)
+        {
+            return Pending.TryGetValue(token, out var send) ? send.Tcs.Task : Task.FromResult(false);
+        }
     }
 
     private static string Register(int parts)
@@ -136,12 +123,13 @@ internal static class SmsSendTracker
         return token;
     }
 
-    public static void CompletePart(string token, bool ok)
+    /// <summary>Returns false when nothing in this process is waiting for the token (the app was restarted since the send).</summary>
+    public static bool CompletePart(string token, bool ok)
     {
         lock (PendingLock)
         {
             if (!Pending.TryGetValue(token, out var send))
-                return;
+                return false;
 
             send.Received++;
             send.AllOk &= ok;
@@ -150,6 +138,8 @@ internal static class SmsSendTracker
                 Pending.Remove(token);
                 send.Tcs.TrySetResult(send.AllOk);
             }
+
+            return true;
         }
     }
 
@@ -159,31 +149,6 @@ internal static class SmsSendTracker
         {
             if (Pending.Remove(token, out var send))
                 send.Tcs.TrySetResult(false);
-        }
-    }
-
-    private static async Task<bool> WaitAsync(string token, CancellationToken cancellationToken)
-    {
-        PendingSend? send;
-        lock (PendingLock)
-        {
-            Pending.TryGetValue(token, out send);
-        }
-
-        if (send == null)
-            return false;
-
-        using var timeoutCts = new CancellationTokenSource(SendTimeout);
-        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-        try
-        {
-            await send.Tcs.Task.WaitAsync(linked.Token).ConfigureAwait(false);
-            return send.Tcs.Task.Result;
-        }
-        catch (OperationCanceledException)
-        {
-            Abandon(token);
-            return false;
         }
     }
 }
