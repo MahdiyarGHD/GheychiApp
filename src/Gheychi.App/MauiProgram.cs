@@ -29,6 +29,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISmsService, AndroidSmsService>();
         builder.Services.AddSingleton<MessagesViewModel>();
         builder.Services.AddTransient<ChatViewModel>();
+        builder.Services.AddTransient<SearchViewModel>();
 
 #if ANDROID
         Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("NoUnderline", static (handler, _) =>

@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+             x:Class="Gheychi.App.Controls.SearchView"
+             x:DataType="vm:SearchViewModel"
+             BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="0">
+
+        <!-- Top Header Bar -->
+        <Grid Grid.Row="0"
+              Padding="12,10,16,10"
+              ColumnDefinitions="Auto,*"
+              ColumnSpacing="10"
+              BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
+
+            <!-- Back Button -->
+            <Border Grid.Column="0"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20"
+                    BackgroundColor="Transparent"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    SemanticProperties.Description="{loc:Translate Chat_Back}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <Image Source="back.png"
+                       WidthRequest="22"
+                       HeightRequest="22"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                    </Image.Behaviors>
+                </Image>
+            </Border>
+
+            <!-- Search Pill Box -->
+            <Border Grid.Column="1"
+                    HeightRequest="44"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 22"
+                    BackgroundColor="{AppThemeBinding Light=#F0F5EE, Dark=#1E2320}"
+                    Padding="10,0,8,0"
+                    VerticalOptions="Center">
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6" VerticalOptions="Center">
+
+                    <!-- Search Icon (visible when no active filter chip) -->
+                    <Image Grid.Column="0"
+                           Source="search.png"
+                           WidthRequest="18"
+                           HeightRequest="18"
+                           VerticalOptions="Center"
+                           IsVisible="{Binding HasNoActiveFilter}"
+                           SemanticProperties.Description="{loc:Translate Search}">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#747D75, Dark=#9AA0AB}" />
+                        </Image.Behaviors>
+                    </Image>
+
+                    <!-- Active Filter Chip inside Search Pill -->
+                    <Border Grid.Column="1"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 13"
+                            BackgroundColor="{AppThemeBinding Light=#1F386948, Dark=#2634D399}"
+                            Padding="8,4,4,4"
+                            VerticalOptions="Center"
+                            IsVisible="{Binding HasActiveFilter}">
+                        <HorizontalStackLayout Spacing="5" VerticalOptions="Center">
+                            <Image Source="{Binding ActiveFilter.IconSource}"
+                                   WidthRequest="14"
+                                   HeightRequest="14"
+                                   VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{Binding ActiveFilter.IconTint}" />
+                                </Image.Behaviors>
+                            </Image>
+                            <Label Text="{Binding ActiveFilter.Title}"
+                                   FontSize="11"
+                                   TextColor="{Binding ActiveFilter.IconTint}"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   VerticalOptions="Center" />
+                            <Border WidthRequest="18"
+                                    HeightRequest="18"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 9"
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnClearActiveFilterTapped" />
+                                </Border.GestureRecognizers>
+                                <Image Source="close.png"
+                                       WidthRequest="11"
+                                       HeightRequest="11"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#386948, Dark=#34D399}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- Search Entry -->
+                    <Entry Grid.Column="2"
+                           x:Name="SearchEntry"
+                           Text="{Binding SearchText, Mode=TwoWay}"
+                           Placeholder="{loc:Translate Search_MessagesNumbers}"
+                           PlaceholderColor="{AppThemeBinding Light=#59615A, Dark=#8A8F98}"
+                           TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
+                           FontSize="14"
+                           FontFamily="{DynamicResource AppFontFamily}"
+                           BackgroundColor="Transparent"
+                           VerticalOptions="Center"
+                           ClearButtonVisibility="Never"
+                           ReturnType="Search"
+                           TextChanged="OnSearchEntryTextChanged"
+                           Completed="OnSearchCompleted" />
+
+                    <!-- Voice search button (Mic) - visible only when search text is empty -->
+                    <Border Grid.Column="3"
+                            x:Name="MicButton"
+                            WidthRequest="32"
+                            HeightRequest="32"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="Transparent"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"
+                            IsVisible="True"
+                            SemanticProperties.Description="{loc:Translate Search_VoiceSearch}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnVoiceSearchTapped" />
+                        </Border.GestureRecognizers>
+                        <Image Source="mic.png"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Border>
+
+                    <!-- Clear input button ('X') - visible only when search text has content -->
+                    <Border Grid.Column="3"
+                            x:Name="ClearButton"
+                            WidthRequest="32"
+                            HeightRequest="32"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="Transparent"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"
+                            IsVisible="False"
+                            SemanticProperties.Description="{loc:Translate Search_Clear}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnClearSearchTapped" />
+                        </Border.GestureRecognizers>
+                        <Image Source="close.png"
+                               WidthRequest="18"
+                               HeightRequest="18"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Divider Line below header -->
+        <BoxView Grid.Row="0"
+                 HeightRequest="1"
+                 VerticalOptions="End"
+                 BackgroundColor="{AppThemeBinding Light=#EAEFE8, Dark=#1E2220}" />
+
+        <!-- 1. Initial State: Quick Filters & Recent Searches -->
+        <ScrollView Grid.Row="1"
+                    Padding="20,18,20,32"
+                    VerticalScrollBarVisibility="Never"
+                    IsVisible="{Binding IsInitialSearchMode}">
+            <VerticalStackLayout Spacing="28">
+
+                <!-- Quick Filters Section -->
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{loc:Translate Search_Filters}"
+                           TextTransform="Uppercase"
+                           FontSize="12"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="{AppThemeBinding Light=#59615A, Dark=#8A8F98}"
+                           CharacterSpacing="1.2" />
+
+                    <!-- Wrap chips -->
+                    <Grid HorizontalOptions="Fill">
+                        <FlexLayout Wrap="Wrap"
+                                    Direction="Row"
+                                    JustifyContent="Start"
+                                    AlignItems="Center"
+                                    AlignContent="Start"
+                                    HorizontalOptions="Fill"
+                                    BindableLayout.ItemsSource="{Binding FilterPills}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FilterPillItem">
+                                    <Border Margin="0,0,8,8"
+                                            Padding="14,9"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 18"
+                                            BackgroundColor="{AppThemeBinding Light=#F0F5EE, Dark=#1E2320}"
+                                            IsVisible="{Binding IsVisible}">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnFilterPillTapped" CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                            <Image Source="{Binding IconSource}"
+                                                   WidthRequest="17"
+                                                   HeightRequest="17"
+                                                   VerticalOptions="Center">
+                                                <Image.Behaviors>
+                                                    <behaviors:IconTintBehavior TintColor="{Binding IconTint}" />
+                                                </Image.Behaviors>
+                                            </Image>
+                                            <Label Text="{Binding Title}"
+                                                   FontSize="12"
+                                                   FontFamily="{DynamicResource AppFontFamily}"
+                                                   TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
+                                                   VerticalOptions="Center" />
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <!-- Recent Searches Section -->
+                <VerticalStackLayout Spacing="10">
+
+                    <!-- Section Header with "Clear all" button -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{loc:Translate Search_Recent}"
+                               TextTransform="Uppercase"
+                               FontSize="12"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#59615A, Dark=#8A8F98}"
+                               CharacterSpacing="1.2"
+                               VerticalOptions="Center" />
+
+                        <Label Grid.Column="1"
+                               Text="{loc:Translate Search_ClearAll}"
+                               FontSize="12"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{StaticResource Primary}"
+                               VerticalOptions="Center"
+                               IsVisible="{Binding HasRecentSearches}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnClearAllRecentTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+
+                    <!-- Recent Searches List -->
+                    <VerticalStackLayout Spacing="2"
+                                         BindableLayout.ItemsSource="{Binding RecentSearches}"
+                                         IsVisible="{Binding HasRecentSearches}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RecentSearchItem">
+                                <Grid Padding="4,8"
+                                      ColumnDefinitions="Auto,*,Auto"
+                                      ColumnSpacing="12"
+                                      BackgroundColor="Transparent">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnRecentItemTapped" CommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
+
+                                    <!-- History Clock Icon -->
+                                    <Image Grid.Column="0"
+                                           Source="history.png"
+                                           WidthRequest="18"
+                                           HeightRequest="18"
+                                           VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#747D75, Dark=#9AA0AB}" />
+                                        </Image.Behaviors>
+                                    </Image>
+
+                                    <!-- Query Text -->
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Query}"
+                                           FontSize="13"
+                                           FontFamily="{DynamicResource AppFontFamily}"
+                                           TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
+                                           LineBreakMode="TailTruncation"
+                                           VerticalOptions="Center" />
+
+                                    <!-- Delete Item Button -->
+                                    <Border Grid.Column="2"
+                                            WidthRequest="32"
+                                            HeightRequest="32"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 16"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center"
+                                            HorizontalOptions="Center"
+                                            SemanticProperties.Description="{loc:Translate Chat_Delete}">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnRemoveRecentItemTapped" CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <Image Source="close.png"
+                                               WidthRequest="16"
+                                               HeightRequest="16"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center">
+                                            <Image.Behaviors>
+                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#ABB4AC, Dark=#6E766F}" />
+                                            </Image.Behaviors>
+                                        </Image>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <!-- Empty state -->
+                    <Label Text="{loc:Translate Search_NoRecent}"
+                           FontAttributes="Italic"
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
+                           Padding="4,8"
+                           IsVisible="{Binding HasNoRecentSearches}" />
+
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- 2. Active Search Results View (Category Tabs, Found Count, Chat Results with 1 message, Deep Search) -->
+        <Grid Grid.Row="1"
+              RowDefinitions="Auto,*"
+              RowSpacing="0"
+              IsVisible="{Binding IsInSearchResultsMode}">
+
+            <!-- Category Tabs Bar + Results Count -->
+            <Grid Grid.Row="0"
+                  Padding="16,8,16,10"
+                  ColumnDefinitions="*,Auto"
+                  VerticalOptions="Center"
+                  BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
+
+                <!-- Category Horizontal Tabs -->
+                <ScrollView Grid.Column="0"
+                            Orientation="Horizontal"
+                            HorizontalScrollBarVisibility="Never"
+                            VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="8"
+                                           VerticalOptions="Center"
+                                           BindableLayout.ItemsSource="{Binding CategoryTabs}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CategoryTabItem">
+                                <Border Padding="12,6"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 16"
+                                        BackgroundColor="{Binding BackgroundColor}"
+                                        VerticalOptions="Center">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCategoryTabTapped" CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                                        <Label Text="{Binding Title}"
+                                               FontSize="12"
+                                               FontFamily="{Binding FontFamily}"
+                                               TextColor="{Binding TextColor}"
+                                               VerticalOptions="Center" />
+                                        <Border IsVisible="{Binding ShowBadge}"
+                                                MinimumWidthRequest="22"
+                                                HeightRequest="20"
+                                                Padding="6,0"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 10"
+                                                BackgroundColor="{Binding BadgeBgColor}"
+                                                VerticalOptions="Center"
+                                                HorizontalOptions="Center">
+                                            <Label Text="{Binding CountText}"
+                                                   FontSize="10"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{Binding BadgeTextColor}"
+                                                   HorizontalTextAlignment="Center"
+                                                   VerticalTextAlignment="Center" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </ScrollView>
+
+                <!-- Right Side: Found Count -->
+                <Label Grid.Column="1"
+                       Text="{Binding FoundCountText}"
+                       FontSize="11"
+                       FontFamily="{DynamicResource AppFontFamily}"
+                       TextColor="{AppThemeBinding Light=#747D75, Dark=#8A8F98}"
+                       VerticalOptions="Center"
+                       Margin="8,0,0,0" />
+            </Grid>
+
+            <!-- Divider Line below tabs -->
+            <BoxView Grid.Row="0"
+                     HeightRequest="1"
+                     VerticalOptions="End"
+                     BackgroundColor="{AppThemeBinding Light=#EAEFE8, Dark=#1E2220}" />
+
+            <!-- Results List -->
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding SearchResultItems}"
+                            SelectionMode="None"
+                            ItemSizingStrategy="MeasureFirstItem"
+                            IsVisible="{Binding HasResults}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SearchResultItem">
+                        <Grid Padding="16,14"
+                              ColumnDefinitions="Auto,*"
+                              ColumnSpacing="14"
+                              BackgroundColor="Transparent">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSearchResultRowTapped" CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+
+                            <!-- Avatar with SIM badge -->
+                            <Grid Grid.Column="0"
+                                  WidthRequest="48"
+                                  HeightRequest="48"
+                                  VerticalOptions="Center">
+                                <Border WidthRequest="48"
+                                        HeightRequest="48"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 24"
+                                        BackgroundColor="{Binding AvatarBgColor}">
+                                    <Label Text="{Binding Initials}"
+                                           FontSize="16"
+                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                           TextColor="{Binding AvatarTextColor}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                </Border>
+
+                                <Border WidthRequest="18"
+                                        HeightRequest="18"
+                                        StrokeShape="RoundRectangle 9"
+                                        StrokeThickness="2"
+                                        Stroke="{AppThemeBinding Light=#F7FAF4, Dark=#121413}"
+                                        BackgroundColor="{Binding SimBadgeColor}"
+                                        HorizontalOptions="End"
+                                        VerticalOptions="End"
+                                        TranslationX="2"
+                                        TranslationY="2"
+                                        IsVisible="{Binding ShowSimBadge}">
+                                    <Label Text="{Binding SimSlotText}"
+                                           FontSize="9"
+                                           FontAttributes="Bold"
+                                           TextColor="#FFFFFF"
+                                           HorizontalTextAlignment="Center"
+                                           VerticalTextAlignment="Center" />
+                                </Border>
+                            </Grid>
+
+                            <!-- Info Column -->
+                            <Grid Grid.Column="1"
+                                  RowDefinitions="Auto,Auto"
+                                  RowSpacing="4"
+                                  VerticalOptions="Center">
+
+                                <!-- Sender Name, Match Count, Time -->
+                                <Grid Grid.Row="0"
+                                      ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="8">
+                                    <HorizontalStackLayout Grid.Column="0"
+                                                           Spacing="6"
+                                                           VerticalOptions="Center">
+                                        <Label Text="{Binding DisplayName}"
+                                               FontSize="15"
+                                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                               TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+
+                                        <Label Text="{Binding MatchCountText}"
+                                               FontSize="11"
+                                               TextColor="{AppThemeBinding Light=#745C27, Dark=#EBCB8B}"
+                                               FontFamily="{DynamicResource AppFontFamily}"
+                                               VerticalOptions="Center"
+                                               IsVisible="{Binding HasMultipleMatches}" />
+
+                                        <Border IsVisible="{Binding IsArchivedOrSpam}"
+                                                Padding="6,1"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 4"
+                                                BackgroundColor="{AppThemeBinding Light=#ECE1D3, Dark=#332E27}"
+                                                VerticalOptions="Center">
+                                            <Label Text="{Binding DeepSearchTag}"
+                                                   FontSize="10"
+                                                   TextColor="{AppThemeBinding Light=#665E53, Dark=#DED3C5}"
+                                                   FontAttributes="Bold" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Time}"
+                                           FontSize="12"
+                                           TextColor="{Binding TimeColor}"
+                                           FontFamily="{DynamicResource AppFontFamily}"
+                                           VerticalOptions="Center" />
+                                </Grid>
+
+                                <!-- Snippet with match highlighting & Unread indicator -->
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="8"
+                                      VerticalOptions="Center">
+                                    <Label Grid.Column="0"
+                                           FormattedText="{Binding FormattedSnippet}"
+                                           FontSize="13"
+                                           LineBreakMode="NoWrap"
+                                           VerticalOptions="Center" />
+
+                                    <Border Grid.Column="1"
+                                            WidthRequest="8"
+                                            HeightRequest="8"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 4"
+                                            BackgroundColor="{StaticResource Primary}"
+                                            VerticalOptions="Center"
+                                            IsVisible="{Binding IsUnread}" />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <!-- Footer: Deep Search Button -->
+                <CollectionView.Footer>
+                    <VerticalStackLayout Margin="0,16,0,32" HorizontalOptions="Center">
+                        <Border StrokeThickness="0"
+                                StrokeShape="RoundRectangle 20"
+                                BackgroundColor="{AppThemeBinding Light=#F0F5EE, Dark=#1E2320}"
+                                Padding="16,8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDeepSearchTapped" />
+                            </Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                <Image Source="manage_search.png"
+                                       WidthRequest="18"
+                                       HeightRequest="18"
+                                       VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#386948, Dark=#34D399}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Text="{loc:Translate Search_DeepSearch}"
+                                       FontSize="12"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{AppThemeBinding Light=#386948, Dark=#34D399}"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </CollectionView.Footer>
+            </CollectionView>
+
+            <!-- Empty State (Placed as sibling to prevent RecyclerView layout manager adapter position crash) -->
+            <VerticalStackLayout Grid.Row="1"
+                                 Spacing="14"
+                                 Padding="32,80,32,32"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 IsVisible="{Binding HasNoResults}">
+                <Image Source="search.png"
+                       WidthRequest="48"
+                       HeightRequest="48"
+                       HorizontalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#ABB4AC, Dark=#6E766F}" />
+                    </Image.Behaviors>
+                </Image>
+                <Label Text="{Binding NoResultsText}"
+                       FontSize="15"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#59615A, Dark=#8A8F98}"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
+    </Grid>
+
+</ContentView>

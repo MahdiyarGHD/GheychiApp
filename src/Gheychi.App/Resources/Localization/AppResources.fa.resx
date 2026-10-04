@@ -168,6 +168,12 @@
   <data name="Chat_InfoDelivered" xml:space="preserve">
     <value>تحویل شده</value>
   </data>
+  <data name="Chat_InfoFailed" xml:space="preserve">
+    <value>ناموفق</value>
+  </data>
+  <data name="Chat_InfoSending" xml:space="preserve">
+    <value>در حال ارسال…</value>
+  </data>
   <data name="Chat_InfoSim" xml:space="preserve">
     <value>سیم‌کارت</value>
   </data>
@@ -182,5 +188,89 @@
   </data>
   <data name="Chat_Copied" xml:space="preserve">
     <value>در حافظه کپی شد</value>
+  </data>
+  <data name="Messages_Archive" xml:space="preserve">
+    <value>بایگانی</value>
+  </data>
+  <data name="Messages_MarkAsUnread" xml:space="preserve">
+    <value>علامت‌گذاری به‌عنوان خوانده‌نشده</value>
+  </data>
+  <data name="Messages_MarkAsRead" xml:space="preserve">
+    <value>علامت‌گذاری به‌عنوان خوانده‌شده</value>
+  </data>
+  <data name="Messages_DeleteSingleConfirmTitle" xml:space="preserve">
+    <value>حذف گفتگو؟</value>
+  </data>
+  <data name="Messages_DeleteSingleConfirmMessage" xml:space="preserve">
+    <value>این گفتگو به‌طور دائم از گوشی شما حذف خواهد شد.</value>
+  </data>
+  <data name="Messages_DeleteMultipleConfirmTitle" xml:space="preserve">
+    <value>حذف {0} گفتگو؟</value>
+  </data>
+  <data name="Messages_DeleteMultipleConfirmMessage" xml:space="preserve">
+    <value>این گفتگوها به‌طور دائم از گوشی شما حذف خواهند شد.</value>
+  </data>
+  <data name="Search_MessagesNumbers" xml:space="preserve">
+    <value>جستجوی پیام‌ها، شماره‌ها...</value>
+  </data>
+  <data name="Search_Filters" xml:space="preserve">
+    <value>فیلترها</value>
+  </data>
+  <data name="Search_Filter_Unread" xml:space="preserve">
+    <value>خوانده‌نشده</value>
+  </data>
+  <data name="Search_Filter_Starred" xml:space="preserve">
+    <value>ستاره‌دار</value>
+  </data>
+  <data name="Search_Filter_Known" xml:space="preserve">
+    <value>شناس</value>
+  </data>
+  <data name="Search_Filter_Unknown" xml:space="preserve">
+    <value>ناشناس</value>
+  </data>
+  <data name="Search_Filter_Links" xml:space="preserve">
+    <value>لینک‌ها</value>
+  </data>
+  <data name="Search_Filter_Places" xml:space="preserve">
+    <value>مکان‌ها</value>
+  </data>
+  <data name="Search_Recent" xml:space="preserve">
+    <value>اخیر</value>
+  </data>
+  <data name="Search_ClearAll" xml:space="preserve">
+    <value>پاک کردن همه</value>
+  </data>
+  <data name="Search_NoRecent" xml:space="preserve">
+    <value>جستجوی اخیری وجود ندارد</value>
+  </data>
+  <data name="Search_VoiceSearch" xml:space="preserve">
+    <value>جستجوی صوتی</value>
+  </data>
+  <data name="Search_Clear" xml:space="preserve">
+    <value>پاک کردن</value>
+  </data>
+  <data name="Search_Chats" xml:space="preserve">
+    <value>گفتگوها</value>
+  </data>
+  <data name="Search_Found" xml:space="preserve">
+    <value>{0} مورد یافت شد</value>
+  </data>
+  <data name="Search_MatchesSingular" xml:space="preserve">
+    <value>• {0} مورد</value>
+  </data>
+  <data name="Search_MatchesPlural" xml:space="preserve">
+    <value>• {0} مورد</value>
+  </data>
+  <data name="Search_DeepSearch" xml:space="preserve">
+    <value>جستجوی عمیق در پیام‌های بایگانی و هرزنامه</value>
+  </data>
+  <data name="Search_NoResults" xml:space="preserve">
+    <value>پیامی یافت نشد</value>
+  </data>
+  <data name="Search_Tag_Spam" xml:space="preserve">
+    <value>هرزنامه</value>
+  </data>
+  <data name="Search_Tag_Archived" xml:space="preserve">
+    <value>بایگانی</value>
   </data>
 </root>

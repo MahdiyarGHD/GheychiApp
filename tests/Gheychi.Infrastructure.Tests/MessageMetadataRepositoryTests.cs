@@ -81,4 +81,22 @@ public sealed class MessageMetadataRepositoryTests : IDisposable
         var item = await _repository.GetAsync(401);
         Assert.Null(item);
     }
+
+    [Fact]
+    public async Task DeleteForThreadsAsync_RemovesMetadataForThread()
+    {
+        await _repository.SetStarredAsync(501, 5, true);
+        await _repository.SetStarredAsync(502, 5, true);
+        await _repository.SetStarredAsync(601, 6, true);
+
+        await _repository.DeleteForThreadsAsync([5]);
+
+        var item501 = await _repository.GetAsync(501);
+        var item502 = await _repository.GetAsync(502);
+        var item601 = await _repository.GetAsync(601);
+
+        Assert.Null(item501);
+        Assert.Null(item502);
+        Assert.NotNull(item601);
+    }
 }

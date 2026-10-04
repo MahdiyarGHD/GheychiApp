@@ -195,9 +195,9 @@ public sealed class ChatMessage : INotifyPropertyChanged
         }
     }
 
-    public bool SimTagVisible => !IsOutgoing && IsDualSim && !string.IsNullOrWhiteSpace(CarrierName) && (_isLastMessage || _isTagRevealed);
+    public bool SimTagVisible => !IsOutgoing && (_isTagRevealed || (_isLastMessage && IsDualSim && !string.IsNullOrWhiteSpace(CarrierName)));
 
-    public string SimTagText => CarrierName ?? string.Empty;
+    public string SimTagText => !string.IsNullOrWhiteSpace(CarrierName) ? CarrierName : $"SIM {SimSlot}";
 
     public Color SimTagBgColor => (IsDarkTheme ? DarkBgColors : LightBgColors)[Math.Max(0, (SimSlot - 1) % LightBgColors.Length)];
 
@@ -205,8 +205,6 @@ public sealed class ChatMessage : INotifyPropertyChanged
 
     public void ToggleRevealed()
     {
-        if (IsLastMessage)
-            return; // Last message is always on
         IsTagRevealed = !IsTagRevealed;
     }
 
@@ -216,15 +214,25 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public bool IsDelivered
     {
         get => _isDelivered;
-        set => SetField(ref _isDelivered, value);
+        set
+        {
+            if (SetField(ref _isDelivered, value))
+                OnPropertyChanged(nameof(IsSending));
+        }
     }
 
     private bool _hasFailed;
     public bool HasFailed
     {
         get => _hasFailed;
-        set => SetField(ref _hasFailed, value);
+        set
+        {
+            if (SetField(ref _hasFailed, value))
+                OnPropertyChanged(nameof(IsSending));
+        }
     }
+
+    public bool IsSending => IsOutgoing && !IsDelivered && !HasFailed;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

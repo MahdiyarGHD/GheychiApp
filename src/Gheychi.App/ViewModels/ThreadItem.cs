@@ -63,6 +63,21 @@ public sealed class ThreadItem : INotifyPropertyChanged
         }
     }
 
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected == value) return;
+            _isSelected = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsNotSelected));
+            OnPropertyChanged(nameof(AvatarBgColor));
+        }
+    }
+
+    public bool IsNotSelected => !IsSelected;
     public string CountText => Count > 0 ? Count.ToString() : string.Empty;
     public Thickness PreviewMargin => HasFailed ? new Thickness(20, 0, 0, 0) : new Thickness(0);
     public bool HasIcon => !string.IsNullOrEmpty(IconFile);
@@ -71,13 +86,22 @@ public sealed class ThreadItem : INotifyPropertyChanged
 
     public Color TimeColor => HasFailed ? DangerColor : TimeNormalColor;
     public Color PreviewColor => HasFailed ? DangerColor : (IsDarkTheme ? PreviewDarkColor : PreviewLightColor);
-    public Color AvatarBgColor => IsDarkTheme ? AvatarBgDarkColor : AvatarBgLightColor;
+    public Color AvatarBgColor => IsSelected
+        ? Color.FromArgb("#2E6B4C")
+        : (IsDarkTheme ? AvatarBgDarkColor : AvatarBgLightColor);
     public Color AvatarTextColor => IsDarkTheme ? AvatarTextDarkColor : AvatarTextLightColor;
 
     public void MarkAsRead()
     {
         IsUnread = false;
         Count = 0;
+    }
+
+    public void MarkAsUnread()
+    {
+        IsUnread = true;
+        if (Count == 0)
+            Count = 1;
     }
 
     public static ThreadItem Empty { get; } = new()

@@ -1,20 +1,20 @@
+#if ANDROID
 using Android.Views;
-using Gheychi.App.Controls;
+#endif
+using Gheychi.App.Pages;
 using Gheychi.App.ViewModels;
 using Microsoft.Maui.Controls;
 using View = Microsoft.Maui.Controls.View;
 
 namespace Gheychi.App.Behaviors;
 
-public sealed record MessageBounds(double Y, double Height, double Width = 0);
-
-public static class MessageHoldBehavior
+public static class ThreadHoldBehavior
 {
     public static readonly BindableProperty IsEnabledProperty =
         BindableProperty.CreateAttached(
             "IsEnabled",
             typeof(bool),
-            typeof(MessageHoldBehavior),
+            typeof(ThreadHoldBehavior),
             false,
             propertyChanged: OnIsEnabledChanged);
 
@@ -48,18 +48,50 @@ public static class MessageHoldBehavior
         if (view.Handler?.PlatformView is Android.Views.View nativeView)
         {
             nativeView.Clickable = true;
-            nativeView.SetOnTouchListener(new MessageTouchListener(view, nativeView));
+            nativeView.SetOnTouchListener(new ThreadTouchListener(view, nativeView));
+
+            if (nativeView is Android.Views.ViewGroup viewGroup)
+            {
+                SetChildrenNonClickable(viewGroup);
+                viewGroup.ChildViewAdded += (s, e) =>
+                {
+                    if (e.Child != null)
+                    {
+                        e.Child.Clickable = false;
+                        e.Child.LongClickable = false;
+                        if (e.Child is Android.Views.ViewGroup sub)
+                            SetChildrenNonClickable(sub);
+                    }
+                };
+            }
         }
     }
 
-    private sealed class MessageTouchListener : Java.Lang.Object, Android.Views.View.IOnTouchListener
+    private static void SetChildrenNonClickable(Android.Views.ViewGroup vg)
+    {
+        for (int i = 0; i < vg.ChildCount; i++)
+        {
+            var child = vg.GetChildAt(i);
+            if (child != null)
+            {
+                child.Clickable = false;
+                child.LongClickable = false;
+                if (child is Android.Views.ViewGroup nested)
+                {
+                    SetChildrenNonClickable(nested);
+                }
+            }
+        }
+    }
+
+    private sealed class ThreadTouchListener : Java.Lang.Object, Android.Views.View.IOnTouchListener
     {
         private readonly GestureDetector _gestureDetector;
         private bool _longPressFired;
 
-        public MessageTouchListener(View view, Android.Views.View nativeView)
+        public ThreadTouchListener(View view, Android.Views.View nativeView)
         {
-            var listener = new MessageGestureListener(view, nativeView, () => _longPressFired = true);
+            var listener = new ThreadGestureListener(view, nativeView, () => _longPressFired = true);
             _gestureDetector = new GestureDetector(nativeView.Context, listener);
         }
 
@@ -67,32 +99,33 @@ public static class MessageHoldBehavior
         {
             if (e == null)
                 return false;
+
             var action = e.ActionMasked;
             if (action == MotionEventActions.Down)
                 _longPressFired = false;
+
             _gestureDetector.OnTouchEvent(e);
+
             if (_longPressFired)
             {
-                // Consume the rest of this finger's gesture (including UP) so the
-                // view's Click — and therefore MAUI's TapGestureRecognizer — never
-                // fires for a hold. Clear the pressed visual left behind by DOWN.
                 if ((action == MotionEventActions.Up || action == MotionEventActions.Cancel) && v != null)
                 {
                     try { v.Pressed = false; } catch { }
                 }
                 return true;
             }
+
             return false;
         }
     }
 
-    private sealed class MessageGestureListener : GestureDetector.SimpleOnGestureListener
+    private sealed class ThreadGestureListener : GestureDetector.SimpleOnGestureListener
     {
         private readonly WeakReference<View> _viewRef;
         private readonly WeakReference<Android.Views.View> _nativeViewRef;
         private readonly Action _onFired;
 
-        public MessageGestureListener(View view, Android.Views.View nativeView, Action onFired)
+        public ThreadGestureListener(View view, Android.Views.View nativeView, Action onFired)
         {
             _viewRef = new WeakReference<View>(view);
             _nativeViewRef = new WeakReference<Android.Views.View>(nativeView);
@@ -107,14 +140,14 @@ public static class MessageHoldBehavior
                 return false;
 
             Element? p = view.Parent;
-            while (p != null && p is not ChatView)
+            while (p != null && p is not MessagesPage)
                 p = p.Parent;
 
-            if (p is ChatView chatView && view.BindingContext is ChatMessage msg)
+            if (p is MessagesPage page && view.BindingContext is ThreadItem thread)
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    chatView.OnBubbleTappedDirect(msg);
+                    page.OnThreadRowTappedDirect(thread);
                 });
                 return true;
             }
@@ -128,13 +161,6 @@ public static class MessageHoldBehavior
                 return;
 
             if (!nativeView.IsAttachedToWindow)
-                return;
-
-            Element? p = view.Parent;
-            while (p != null && p is not ChatView)
-                p = p.Parent;
-
-            if (p is ChatView cv && cv.Vm?.IsSelectionMode == true)
                 return;
 
             var parent = nativeView.Parent;
@@ -152,24 +178,16 @@ public static class MessageHoldBehavior
             }
             catch { }
 
-            int[] loc = new int[2];
-            nativeView.GetLocationOnScreen(loc);
-            var density = DeviceDisplay.Current.MainDisplayInfo.Density;
-            if (density <= 0) density = 1;
+            Element? p = view.Parent;
+            while (p != null && p is not MessagesPage)
+                p = p.Parent;
 
-            var y = loc[1] / density;
-            var width = nativeView.Width / density;
-            var height = nativeView.Height / density;
-
-            if (p is ChatView chatView && view.BindingContext is ChatMessage msg)
+            if (p is MessagesPage page && view.BindingContext is ThreadItem thread)
             {
-                // Mark the gesture consumed BEFORE dispatching, so this finger's
-                // UP can't also trigger MAUI's TapGestureRecognizer (tap = SIM badge
-                // toggle; hold = selection menu — never both for one touch).
                 _onFired();
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    chatView.OpenSelectionMenu(msg, new MessageBounds(y, height, width));
+                    page.OnThreadRowHeldDirect(thread);
                 });
             }
         }

@@ -198,6 +198,13 @@
                                            FontSize="11"
                                            TextColor="#BFE8D2"
                                            VerticalOptions="End" />
+                                    <ActivityIndicator IsRunning="{Binding IsSending}"
+                                                       IsVisible="{Binding IsSending}"
+                                                       WidthRequest="12"
+                                                       HeightRequest="12"
+                                                       Margin="4,0,0,0"
+                                                       Color="#BFE8D2"
+                                                       VerticalOptions="End" />
                                     <Grid IsVisible="{Binding IsDelivered}" Margin="4,0,0,0" VerticalOptions="End">
                                         <Label Text="✓"
                                                FontSize="11"

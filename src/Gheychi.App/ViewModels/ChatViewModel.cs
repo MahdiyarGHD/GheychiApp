@@ -403,8 +403,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         OnPropertyChanged(nameof(ActiveSims));
-                        if (isDual)
-                            UpdateMessageSimSlots();
+                        UpdateMessageSimSlots();
                     });
                 }
                 catch
@@ -717,6 +716,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public async void Retry(ChatMessage message)
     {
         message.HasFailed = false;
+        message.IsDelivered = false;
         var text = string.IsNullOrEmpty(message.Link) ? message.BodyBeforeLink : $"{message.BodyBeforeLink}{message.Link}";
         var targetSubId = _simSubId;
         if (targetSubId <= 0 && _simSlotMap != null)
@@ -845,6 +845,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public async Task SetReactionAsync(ChatMessage message, string emoji)
     {
+        if (message.IsOutgoing)
+            return;
         // Fail fast on unmapped emoji (the dock only offers the 6 mapped ones):
         // don't touch local state at all.
         if (ReactionHelper.MapEmojiToVerb(emoji) is null)

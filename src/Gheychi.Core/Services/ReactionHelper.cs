@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Gheychi.Core.Models;
 
 namespace Gheychi.Core.Services;
 
@@ -183,5 +184,57 @@ public static class ReactionHelper
         }
 
         return null;
+    }
+
+    public static SmsMessage? FindReactionTarget(
+        IReadOnlyList<SmsMessage> messages,
+        SmsMessage reactionMessage,
+        string snippet)
+    {
+        var normalizedSnippet = NormalizeForMatch(snippet);
+        if (normalizedSnippet.Length == 0)
+            return null;
+
+        SmsMessage? bestExact = null;
+        SmsMessage? bestPrefix = null;
+
+        foreach (var candidate in messages)
+        {
+            if (candidate.Id == reactionMessage.Id)
+                continue;
+            if (candidate.IsOutgoing == reactionMessage.IsOutgoing)
+                continue;
+            if (candidate.Timestamp > reactionMessage.Timestamp)
+                continue;
+            if (TryParseReaction(candidate.Body).IsReaction)
+                continue;
+
+            var normalizedBody = NormalizeForMatch(candidate.Body);
+            if (normalizedBody.Length == 0)
+                continue;
+
+            if (normalizedBody.Equals(normalizedSnippet, StringComparison.OrdinalIgnoreCase))
+            {
+                if (bestExact == null || candidate.Timestamp > bestExact.Timestamp)
+                    bestExact = candidate;
+            }
+            else if (IsPrefixMatch(normalizedBody, normalizedSnippet))
+            {
+                if (bestPrefix == null || candidate.Timestamp > bestPrefix.Timestamp)
+                    bestPrefix = candidate;
+            }
+        }
+
+        return bestExact ?? bestPrefix;
+    }
+
+    private static bool IsPrefixMatch(string normalizedBody, string normalizedSnippet)
+    {
+        if (normalizedBody.StartsWith(normalizedSnippet, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var truncated = NormalizeForMatch(GetSnippet(normalizedBody));
+        return truncated.Length > 0 &&
+            normalizedSnippet.StartsWith(truncated, StringComparison.OrdinalIgnoreCase);
     }
 }

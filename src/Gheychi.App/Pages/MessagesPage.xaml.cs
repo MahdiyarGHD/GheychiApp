@@ -9,6 +9,8 @@ public partial class MessagesPage : ContentPage
     private int _lastFirstVisible = -1;
     private int _lastLastVisible = -1;
     private bool _timerRunning;
+    private long _lastTappedThreadId;
+    private long _lastTappedThreadTick;
     private MessagesViewModel? Vm => BindingContext as MessagesViewModel;
 
     public MessagesPage(MessagesViewModel? vm = null)
@@ -16,6 +18,8 @@ public partial class MessagesPage : ContentPage
         InitializeComponent();
         BindingContext = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
         ChatOverlay.BackRequested += CloseChatAsync;
+        SearchOverlay.BackRequested += OnCloseSearchRequested;
+        SearchOverlay.SearchResultTapped += OnSearchResultTapped;
     }
 
     protected override async void OnAppearing()
@@ -73,27 +77,153 @@ public partial class MessagesPage : ContentPage
         }
     }
 
-    private async void OnThreadTapped(object? sender, SelectionChangedEventArgs e)
+    private void OnThreadRowTapped(object? sender, EventArgs e)
     {
-        var list = (CollectionView)sender!;
-        // While a chat is open (or animating), any tap reaching the thread list
-        // is a leak through the overlay — drop it so a second chat can never open.
         if (_animating || !ChatOverlay.InputTransparent)
-        {
-            if (list.SelectedItem != null)
-                list.SelectedItem = null;
             return;
-        }
-        if (e.CurrentSelection.FirstOrDefault() is ThreadItem thread)
+
+        if ((sender as View)?.BindingContext is ThreadItem thread)
         {
-            list.SelectedItem = null;
-            var wasUnread = thread.IsUnread;
-            if (wasUnread)
+            if (Vm?.IsSelectionMode == true)
             {
-                thread.MarkAsRead();
+                ToggleSelectionSafely(thread);
             }
-            await OpenChatAsync(thread, wasUnread);
+            else
+            {
+                OpenChatSafely(thread);
+            }
         }
+    }
+
+    public void OnThreadRowTappedDirect(ThreadItem thread)
+    {
+        if (_animating || !ChatOverlay.InputTransparent)
+            return;
+
+        if (Vm?.IsSelectionMode == true)
+        {
+            ToggleSelectionSafely(thread);
+        }
+        else
+        {
+            OpenChatSafely(thread);
+        }
+    }
+
+    public void OnThreadRowHeldDirect(ThreadItem thread)
+    {
+        if (_animating || !ChatOverlay.InputTransparent || Vm == null)
+            return;
+
+        if (!Vm.IsSelectionMode)
+        {
+            Vm.EnterSelectionMode(thread);
+        }
+        else
+        {
+            ToggleSelectionSafely(thread);
+        }
+    }
+
+    private void ToggleSelectionSafely(ThreadItem thread)
+    {
+        var now = Environment.TickCount64;
+        if (thread.ThreadId == _lastTappedThreadId && now - _lastTappedThreadTick < 250)
+            return;
+
+        _lastTappedThreadTick = now;
+        _lastTappedThreadId = thread.ThreadId;
+
+        Vm?.ToggleThreadSelection(thread);
+    }
+
+    private void OpenChatSafely(ThreadItem thread)
+    {
+        var now = Environment.TickCount64;
+        if (thread.ThreadId == _lastTappedThreadId && now - _lastTappedThreadTick < 300)
+            return;
+
+        _lastTappedThreadTick = now;
+        _lastTappedThreadId = thread.ThreadId;
+
+        var wasUnread = thread.IsUnread;
+        if (wasUnread)
+        {
+            thread.MarkAsRead();
+        }
+        _ = OpenChatAsync(thread, wasUnread);
+    }
+
+    private void OnExitSelectionModeTapped(object? sender, EventArgs e)
+    {
+        SelectBoxOverlay.IsVisible = false;
+        Vm?.ExitSelectionMode();
+    }
+
+    private async void OnDeleteSelectedThreadsTapped(object? sender, EventArgs e)
+    {
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        var loc = Localization.LocalizationManager.Instance;
+        var count = Vm.SelectedCount;
+        string title;
+        string message;
+
+        if (count == 1)
+        {
+            title = loc["Messages_DeleteSingleConfirmTitle"];
+            message = loc["Messages_DeleteSingleConfirmMessage"];
+        }
+        else
+        {
+            title = string.Format(loc["Messages_DeleteMultipleConfirmTitle"], count);
+            message = string.Format(loc["Messages_DeleteMultipleConfirmMessage"], count);
+        }
+
+        var confirmed = await DisplayAlert(
+            title,
+            message,
+            loc["Chat_DeleteConfirmButton"],
+            loc["Chat_Cancel"]);
+
+        if (confirmed)
+        {
+            await Vm.DeleteSelectedThreadsAsync();
+        }
+    }
+
+    private async void OnArchiveSelectedThreadsTapped(object? sender, EventArgs e)
+    {
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.ArchiveSelectedThreadsAsync();
+    }
+
+    private void OnThreeDotsTapped(object? sender, EventArgs e)
+    {
+        SelectBoxOverlay.IsVisible = !SelectBoxOverlay.IsVisible;
+    }
+
+    private void OnCloseSelectBoxTapped(object? sender, EventArgs e)
+    {
+        SelectBoxOverlay.IsVisible = false;
+    }
+
+    private void OnSelectBoxTapEater(object? sender, EventArgs e)
+    {
+    }
+
+    private async void OnMarkAsUnreadTapped(object? sender, EventArgs e)
+    {
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.MarkSelectedAsUnreadAsync();
     }
 
     private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false)
@@ -190,8 +320,121 @@ public partial class MessagesPage : ContentPage
         return 850;
     }
 
+    private async void OnSearchBarTapped(object? sender, EventArgs e)
+    {
+        if (_animating || !ChatOverlay.InputTransparent || Vm?.IsSelectionMode == true)
+            return;
+
+        await OpenSearchAsync();
+    }
+
+    private async Task OpenSearchAsync()
+    {
+        if (_animating)
+            return;
+        _animating = true;
+        try
+        {
+            var searchVm = IPlatformApplication.Current?.Services.GetService<SearchViewModel>() ?? new SearchViewModel();
+            SearchOverlay.Initialize(searchVm);
+            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
+            SearchOverlay.TranslationY = offscreenY;
+            SearchOverlay.InputTransparent = false;
+            Shell.SetTabBarIsVisible(this, false);
+
+            await SearchOverlay.TranslateToAsync(0, 0, 220, Easing.CubicOut);
+            SearchOverlay.FocusSearchInput();
+        }
+        catch (InvalidOperationException)
+        {
+            SearchOverlay.TranslationY = 0;
+            Shell.SetTabBarIsVisible(this, false);
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private async Task CloseSearchAsync()
+    {
+        if (_animating)
+            return;
+        _animating = true;
+        try
+        {
+            SearchOverlay.Reset();
+            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
+            var slideTask = SearchOverlay.TranslateToAsync(0, offscreenY, 220, Easing.CubicIn);
+
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(60);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Shell.SetTabBarIsVisible(this, true);
+                });
+            });
+
+            await slideTask;
+            SearchOverlay.InputTransparent = true;
+            SearchOverlay.TranslationY = 3000;
+        }
+        catch (InvalidOperationException)
+        {
+            SearchOverlay.InputTransparent = true;
+            SearchOverlay.TranslationY = 3000;
+            Shell.SetTabBarIsVisible(this, true);
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private void OnCloseSearchRequested(object? sender, EventArgs e)
+    {
+        _ = CloseSearchAsync();
+    }
+
+    private async void OnSearchResultTapped(object? sender, SearchResultItem item)
+    {
+        if (_animating || !ChatOverlay.InputTransparent)
+            return;
+
+        var thread = Vm?.Threads.FirstOrDefault(t => t.ThreadId == item.ThreadId);
+        if (thread == null)
+        {
+            var now = DateTime.Now;
+            var culture = System.Globalization.CultureInfo.CurrentUICulture;
+            thread = new ThreadItem
+            {
+                ThreadId = item.ThreadId,
+                SubId = item.SubId,
+                Name = item.DisplayName,
+                Phone = item.Address,
+                Initials = item.Initials,
+                IconFile = ThreadItem.DetectIcon(item.DisplayName, item.Address),
+                Count = item.IsUnread ? 1 : 0,
+                TotalCount = item.TotalMatches,
+                Time = item.Time,
+                Preview = item.FormattedSnippet.Spans.FirstOrDefault()?.Text ?? string.Empty,
+                IsUnread = item.IsUnread
+            };
+        }
+
+        await CloseSearchAsync();
+        OpenChatSafely(thread);
+    }
+
     protected override bool OnBackButtonPressed()
     {
+        if (SelectBoxOverlay.IsVisible)
+        {
+            SelectBoxOverlay.IsVisible = false;
+            return true;
+        }
+
         if (!ChatOverlay.InputTransparent)
         {
             if (ChatOverlay.HandleBack())
@@ -200,6 +443,25 @@ public partial class MessagesPage : ContentPage
             MainThread.BeginInvokeOnMainThread(async () => await CloseChatAsync());
             return true;
         }
+
+        if (!SearchOverlay.InputTransparent)
+        {
+            if (SearchOverlay.Vm?.IsInSearchResultsMode == true)
+            {
+                SearchOverlay.ResetSearchQueryAndFilter();
+                return true;
+            }
+
+            MainThread.BeginInvokeOnMainThread(async () => await CloseSearchAsync());
+            return true;
+        }
+
+        if (Vm?.IsSelectionMode == true)
+        {
+            Vm.ExitSelectionMode();
+            return true;
+        }
+
         return base.OnBackButtonPressed();
     }
 }

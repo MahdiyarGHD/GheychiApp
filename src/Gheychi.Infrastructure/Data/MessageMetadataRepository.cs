@@ -105,6 +105,23 @@ public sealed class MessageMetadataRepository : IMessageMetadataRepository
         }
     }
 
+    public async Task<IReadOnlyList<long>> GetAllStarredMessageIdsAsync()
+    {
+        try
+        {
+            await EnsureInitializedAsync();
+            var entities = await _db.Table<MessageMetadataEntity>()
+                .Where(x => x.IsStarred)
+                .ToListAsync();
+
+            return entities.Select(e => e.MessageId).ToList();
+        }
+        catch
+        {
+            return Array.Empty<long>();
+        }
+    }
+
     public async Task SetStarredAsync(long messageId, long threadId, bool isStarred)
     {
         try
@@ -186,6 +203,23 @@ public sealed class MessageMetadataRepository : IMessageMetadataRepository
             {
                 await _db.DeleteAsync<MessageMetadataEntity>(id);
             }
+        }
+        catch
+        {
+        }
+    }
+
+    public async Task DeleteForThreadsAsync(IEnumerable<long> threadIds)
+    {
+        try
+        {
+            await EnsureInitializedAsync();
+            var idList = threadIds.Distinct().ToList();
+            if (idList.Count == 0)
+                return;
+
+            var placeholders = string.Join(",", idList.Select(_ => "?"));
+            await _db.ExecuteAsync($"DELETE FROM MessageMetadata WHERE ThreadId IN ({placeholders})", idList.Cast<object>().ToArray());
         }
         catch
         {

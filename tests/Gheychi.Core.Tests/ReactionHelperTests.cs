@@ -1,3 +1,4 @@
+using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 using Xunit;
 
@@ -122,5 +123,76 @@ public sealed class ReactionHelperTests
         Assert.Equal(
             ReactionHelper.NormalizeForMatch("“hello”"),
             ReactionHelper.NormalizeForMatch("\"hello\""));
+    }
+
+    private static SmsMessage Msg(long id, string body, DateTime ts, bool outgoing) =>
+        new(id, 1, "+1", body, ts, outgoing, true, false, 1);
+
+    [Fact]
+    public void FindReactionTarget_DuplicateBodies_PicksNearestBeforeReaction()
+    {
+        var t0 = new DateTime(2026, 10, 2, 12, 0, 0);
+        var first = Msg(1, "Hahahaha", t0, outgoing: false);
+        var second = Msg(2, "Hahahaha", t0.AddMinutes(1), outgoing: false);
+        var third = Msg(3, "Hahahaha", t0.AddMinutes(3), outgoing: false);
+        var reaction = Msg(4, "Laughed at “Hahahaha”", t0.AddMinutes(2), outgoing: true);
+        var messages = new List<SmsMessage> { first, second, third, reaction };
+
+        Assert.Same(second, ReactionHelper.FindReactionTarget(messages, reaction, "Hahahaha"));
+    }
+
+    [Fact]
+    public void FindReactionTarget_IgnoresMessagesAfterReaction()
+    {
+        var t0 = new DateTime(2026, 10, 2, 12, 0, 0);
+        var before = Msg(1, "Hahahaha", t0, outgoing: false);
+        var after = Msg(2, "Hahahaha", t0.AddMinutes(5), outgoing: false);
+        var reaction = Msg(3, "Laughed at “Hahahaha”", t0.AddMinutes(1), outgoing: true);
+
+        Assert.Same(before, ReactionHelper.FindReactionTarget([before, after, reaction], reaction, "Hahahaha"));
+    }
+
+    [Fact]
+    public void FindReactionTarget_IgnoresSameSideBubbles()
+    {
+        var t0 = new DateTime(2026, 10, 2, 12, 0, 0);
+        var mine = Msg(1, "Hahahaha", t0, outgoing: true);
+        var theirs = Msg(2, "Hahahaha", t0.AddMinutes(1), outgoing: false);
+        var reaction = Msg(3, "Laughed at “Hahahaha”", t0.AddMinutes(2), outgoing: true);
+
+        Assert.Same(theirs, ReactionHelper.FindReactionTarget([mine, theirs, reaction], reaction, "Hahahaha"));
+    }
+
+    [Fact]
+    public void FindReactionTarget_RejectsMidStringSubstring()
+    {
+        var t0 = new DateTime(2026, 10, 2, 12, 0, 0);
+        var candidate = Msg(1, "Say Hahahaha now", t0, outgoing: false);
+        var reaction = Msg(2, "Laughed at “Hahahaha”", t0.AddMinutes(1), outgoing: true);
+
+        Assert.Null(ReactionHelper.FindReactionTarget([candidate, reaction], reaction, "Hahahaha"));
+    }
+
+    [Fact]
+    public void FindReactionTarget_AcceptsTruncatedPrefix()
+    {
+        var longBody = new string('a', 150);
+        var t0 = new DateTime(2026, 10, 2, 12, 0, 0);
+        var candidate = Msg(1, longBody, t0, outgoing: false);
+        var snippet = ReactionHelper.GetSnippet(longBody);
+        var reaction = Msg(2, $"Liked “{snippet}”", t0.AddMinutes(1), outgoing: true);
+
+        Assert.Same(candidate, ReactionHelper.FindReactionTarget([candidate, reaction], reaction, snippet));
+    }
+
+    [Fact]
+    public void FindReactionTarget_SkipsOtherReactionSms()
+    {
+        var t0 = new DateTime(2026, 10, 2, 12, 0, 0);
+        var target = Msg(1, "Hahahaha", t0, outgoing: false);
+        var otherReaction = Msg(2, "Liked “Hahahaha”", t0.AddSeconds(30), outgoing: true);
+        var reaction = Msg(3, "Laughed at “Hahahaha”", t0.AddMinutes(1), outgoing: true);
+
+        Assert.Same(target, ReactionHelper.FindReactionTarget([target, otherReaction, reaction], reaction, "Hahahaha"));
     }
 }

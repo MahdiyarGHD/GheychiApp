@@ -29,6 +29,8 @@ public sealed class IconTintBehavior : Behavior<Image>
     {
         base.OnAttachedTo(bindable);
         _image = bindable;
+        BindingContext = bindable.BindingContext;
+        bindable.BindingContextChanged += OnBindingContextChanged;
         bindable.Loaded += OnLoaded;
         bindable.HandlerChanged += OnHandlerChanged;
         bindable.PropertyChanged += OnPropertyChanged;
@@ -37,12 +39,28 @@ public sealed class IconTintBehavior : Behavior<Image>
 
     protected override void OnDetachingFrom(Image bindable)
     {
+        bindable.BindingContextChanged -= OnBindingContextChanged;
         bindable.Loaded -= OnLoaded;
         bindable.HandlerChanged -= OnHandlerChanged;
         bindable.PropertyChanged -= OnPropertyChanged;
         _image = null;
         _lastAppliedColor = null;
         base.OnDetachingFrom(bindable);
+    }
+
+    protected override void OnBindingContextChanged()
+    {
+        base.OnBindingContextChanged();
+        Apply();
+    }
+
+    private void OnBindingContextChanged(object? sender, EventArgs e)
+    {
+        if (_image != null)
+        {
+            BindingContext = _image.BindingContext;
+            Apply();
+        }
     }
 
     private void OnLoaded(object? sender, EventArgs e) => Apply();
@@ -78,12 +96,14 @@ public sealed class IconTintBehavior : Behavior<Image>
             var b = (int)(tint.Blue * 255);
             var argb = (a << 24) | (r << 16) | (g << 8) | b;
 
-            if (_lastAppliedColor == argb && imageView.ColorFilter != null)
-                return;
-
             _lastAppliedColor = argb;
             var color = Android.Graphics.Color.Argb(a, r, g, b);
             imageView.SetColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SrcIn!));
+            imageView.Post(() =>
+            {
+                if (_image?.Handler?.PlatformView is ImageView iv)
+                    iv.SetColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SrcIn!));
+            });
         }
         else
         {

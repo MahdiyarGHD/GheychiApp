@@ -14,6 +14,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private bool _hasPermission = true;
     private bool _initialized;
 
+    private const string ArchivedKey = "archived_threads_v1";
+
     public MessagesViewModel(ISmsService? smsService = null, IDateFormattingService? dateFormatter = null)
     {
         _smsService = smsService ?? IPlatformApplication.Current?.Services.GetService<ISmsService>() ?? throw new InvalidOperationException("ISmsService not resolved");
@@ -23,6 +25,163 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     }
 
     public FastObservableCollection<ThreadItem> Threads { get; } = [];
+
+    private bool _isSelectionMode;
+    public bool IsSelectionMode
+    {
+        get => _isSelectionMode;
+        private set
+        {
+            if (SetField(ref _isSelectionMode, value))
+            {
+                OnPropertyChanged(nameof(IsNotSelectionMode));
+            }
+        }
+    }
+
+    public bool IsNotSelectionMode => !IsSelectionMode;
+
+    public int SelectedCount => Threads.Count(t => t.IsSelected);
+    public string SelectedCountText => SelectedCount.ToString();
+    public IReadOnlyList<ThreadItem> SelectedThreads => Threads.Where(t => t.IsSelected).ToList();
+    public bool AllSelectedAreUnread => SelectedThreads.Count > 0 && SelectedThreads.All(t => t.IsUnread);
+
+    public void EnterSelectionMode(ThreadItem initial)
+    {
+        initial.IsSelected = true;
+        IsSelectionMode = true;
+        UpdateSelectedCount();
+    }
+
+    public void ToggleThreadSelection(ThreadItem thread)
+    {
+        thread.IsSelected = !thread.IsSelected;
+        UpdateSelectedCount();
+        if (SelectedCount == 0)
+        {
+            ExitSelectionMode();
+        }
+    }
+
+    public void ExitSelectionMode()
+    {
+        foreach (var t in Threads)
+        {
+            t.IsSelected = false;
+        }
+        IsSelectionMode = false;
+        UpdateSelectedCount();
+    }
+
+    public void UpdateSelectedCount()
+    {
+        OnPropertyChanged(nameof(SelectedCount));
+        OnPropertyChanged(nameof(SelectedCountText));
+        OnPropertyChanged(nameof(SelectedThreads));
+        OnPropertyChanged(nameof(AllSelectedAreUnread));
+    }
+
+    public async Task<bool> DeleteSelectedThreadsAsync()
+    {
+        var selected = SelectedThreads;
+        if (selected.Count == 0)
+            return false;
+
+        var threadIds = selected.Select(t => t.ThreadId).ToList();
+        var success = await _smsService.DeleteThreadsAsync(threadIds);
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var t in selected)
+            {
+                Threads.Remove(t);
+            }
+            ExitSelectionMode();
+        });
+
+        return success;
+    }
+
+    public Task<bool> ArchiveSelectedThreadsAsync()
+    {
+        var selected = SelectedThreads;
+        if (selected.Count == 0)
+            return Task.FromResult(false);
+
+        var archivedIds = GetArchivedThreadIds();
+        foreach (var t in selected)
+        {
+            archivedIds.Add(t.ThreadId);
+        }
+        SaveArchivedThreadIds(archivedIds);
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var t in selected)
+            {
+                Threads.Remove(t);
+            }
+            ExitSelectionMode();
+        });
+
+        return Task.FromResult(true);
+    }
+
+    public async Task MarkSelectedAsUnreadAsync()
+    {
+        var selected = SelectedThreads;
+        if (selected.Count == 0)
+            return;
+
+        var makeUnread = !AllSelectedAreUnread;
+
+        foreach (var t in selected)
+        {
+            if (makeUnread)
+            {
+                t.MarkAsUnread();
+                _ = Task.Run(() => _smsService.MarkThreadAsUnreadAsync(t.ThreadId));
+            }
+            else
+            {
+                t.MarkAsRead();
+                _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(t.ThreadId));
+            }
+        }
+
+        ExitSelectionMode();
+    }
+
+    private static HashSet<long> GetArchivedThreadIds()
+    {
+        try
+        {
+            var raw = Preferences.Default.Get<string>(ArchivedKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(raw))
+                return [];
+
+            return raw.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                      .Select(s => long.TryParse(s, out var id) ? id : -1)
+                      .Where(id => id > 0)
+                      .ToHashSet();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static void SaveArchivedThreadIds(HashSet<long> ids)
+    {
+        try
+        {
+            var raw = string.Join(",", ids);
+            Preferences.Default.Set(ArchivedKey, raw);
+        }
+        catch
+        {
+        }
+    }
 
     public bool IsLoading
     {
@@ -57,12 +216,16 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         try
         {
             var rawThreads = await _smsService.GetThreadsAsync();
+            var archivedIds = GetArchivedThreadIds();
             var now = DateTime.Now;
             var culture = CultureInfo.CurrentUICulture;
 
             var items = new List<ThreadItem>(rawThreads.Count);
             foreach (var t in rawThreads)
             {
+                if (archivedIds.Contains(t.ThreadId))
+                    continue;
+
                 var name = !string.IsNullOrWhiteSpace(t.ContactName)
                     ? t.ContactName
                     : PhoneNumberNormalizer.IsAlphanumeric(t.Address)
@@ -111,11 +274,15 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    private void SetField<T>(ref T field, T value, [CallerMemberName] string? name = null)
+    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? name = null)
     {
         if (Equals(field, value))
-            return;
+            return false;
         field = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        return true;
     }
 }

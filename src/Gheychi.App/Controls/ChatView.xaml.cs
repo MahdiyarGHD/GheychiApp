@@ -2,6 +2,7 @@ using System.Windows.Input;
 using Gheychi.App.Behaviors;
 using Gheychi.App.Localization;
 using Gheychi.App.ViewModels;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.Controls;
 
@@ -9,7 +10,7 @@ public partial class ChatView : ContentView
 {
     private bool _scrolledToEnd;
     private bool _initialLayoutSettled;
-    private ChatViewModel? Vm => BindingContext as ChatViewModel;
+    internal ChatViewModel? Vm => BindingContext as ChatViewModel;
     private CancellationTokenSource? _skeletonCts;
     private bool _buttonVisible;
     private bool _loadingOlder;
@@ -725,11 +726,50 @@ public partial class ChatView : ContentView
             Vm.Retry(message);
     }
 
+    private long _lastSelectionToggleTick;
+    private long _lastSelectionToggleMessageId;
+
+    private void ToggleSelectionSafely(ChatMessage msg)
+    {
+        var now = Environment.TickCount64;
+        if (msg.Id == _lastSelectionToggleMessageId && now - _lastSelectionToggleTick < 250)
+            return;
+
+        _lastSelectionToggleTick = now;
+        _lastSelectionToggleMessageId = msg.Id;
+        Vm?.ToggleMessageSelection(msg);
+    }
+
+    private long _lastSimToggleTick;
+    private long _lastSimToggleMessageId;
+
+    public void OnBubbleTappedDirect(ChatMessage msg)
+    {
+        if (Vm?.IsSelectionMode == true)
+        {
+            ToggleSelectionSafely(msg);
+            return;
+        }
+
+        ToggleSimTagSafely(msg);
+    }
+
+    private void ToggleSimTagSafely(ChatMessage msg)
+    {
+        var now = Environment.TickCount64;
+        if (msg.Id == _lastSimToggleMessageId && now - _lastSimToggleTick < 250)
+            return;
+
+        _lastSimToggleTick = now;
+        _lastSimToggleMessageId = msg.Id;
+        Vm?.ToggleSimTag(msg);
+    }
+
     private void OnMessageRowTapped(object? sender, TappedEventArgs e)
     {
         if (Vm?.IsSelectionMode == true && (sender as View)?.BindingContext is ChatMessage msg)
         {
-            Vm.ToggleMessageSelection(msg);
+            ToggleSelectionSafely(msg);
         }
     }
 
@@ -737,7 +777,7 @@ public partial class ChatView : ContentView
     {
         if (Vm?.IsSelectionMode == true && (sender as View)?.BindingContext is ChatMessage msg)
         {
-            Vm.ToggleMessageSelection(msg);
+            ToggleSelectionSafely(msg);
         }
     }
 
@@ -745,11 +785,11 @@ public partial class ChatView : ContentView
     {
         if (Vm?.IsSelectionMode == true && (sender as View)?.BindingContext is ChatMessage message)
         {
-            Vm.ToggleMessageSelection(message);
+            ToggleSelectionSafely(message);
         }
         else if (Vm is not null && (sender as View)?.BindingContext is ChatMessage normalMsg)
         {
-            Vm.ToggleSimTag(normalMsg);
+            ToggleSimTagSafely(normalMsg);
         }
     }
 
@@ -788,7 +828,7 @@ public partial class ChatView : ContentView
 
         if (Vm?.IsSelectionMode == true)
         {
-            Vm.ToggleMessageSelection(msg);
+            ToggleSelectionSafely(msg);
             return;
         }
 
@@ -870,6 +910,7 @@ public partial class ChatView : ContentView
 
         SelectionOverlay.IsVisible = true;
         SelectionOverlay.Opacity = 0;
+        ReactionDock.IsVisible = !msg.IsOutgoing;
         ReactionDock.TranslationY = 8;
         ContextActionMenu.TranslationY = -8;
         ElevatedBubbleBorder.Scale = 1.0;
@@ -975,9 +1016,14 @@ public partial class ChatView : ContentView
         var loc = LocalizationManager.Instance;
         InfoTypeLabel.Text = msg.IsOutgoing ? loc["Chat_InfoSent"] : loc["Chat_InfoReceived"];
         InfoTimeLabel.Text = msg.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
-        InfoStatusLabel.Text = msg.HasFailed
-            ? loc["Failed_Send"]
-            : (msg.IsDelivered ? loc["Chat_InfoDelivered"] : loc["Chat_InfoSent"]);
+        InfoStatusLabel.Text = SmsStatusHelper.GetInfoStatus(msg.IsOutgoing, msg.HasFailed, msg.IsDelivered, msg.IsSending) switch
+        {
+            MessageInfoStatus.Received => loc["Chat_InfoReceived"],
+            MessageInfoStatus.Delivered => loc["Chat_InfoDelivered"],
+            MessageInfoStatus.Failed => loc["Chat_InfoFailed"],
+            MessageInfoStatus.Sending => loc["Chat_InfoSending"],
+            _ => loc["Chat_InfoSent"],
+        };
         InfoSimLabel.Text = !string.IsNullOrWhiteSpace(msg.CarrierName)
             ? $"{loc["Chat_InfoSim"]} {msg.SimSlot} ({msg.CarrierName})"
             : $"{loc["Chat_InfoSim"]} {msg.SimSlot}";
