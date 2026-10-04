@@ -52,6 +52,14 @@ public sealed class ChatMessage : INotifyPropertyChanged
         Color.FromArgb("#C4B5FD"),
     ];
 
+    // Soft tint + dark text per SIM slot (light theme) or deep tint + light text (dark theme):
+    // always readable, unlike white text on a pastel fill.
+    public static Color SimTintBackground(int slot) =>
+        (IsDarkTheme ? DarkBgColors : LightBgColors)[Math.Max(0, (slot - 1) % LightBgColors.Length)];
+
+    public static Color SimTintText(int slot) =>
+        (IsDarkTheme ? DarkTextColors : LightTextColors)[Math.Max(0, (slot - 1) % LightTextColors.Length)];
+
     public static CornerRadius IncomingCorners =>
         CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? IncomingCornersRtl : IncomingCornersLtr;
 

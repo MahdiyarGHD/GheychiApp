@@ -269,8 +269,6 @@ public sealed class AndroidSmsService : ISmsService
         return list;
     }
 
-    private const int MaxSearchResults = 200;
-    private const int MaxSearchMessageRows = 5000;
 
     private readonly record struct MessageRow(long Id, long ThreadId, string Address, string Body, long DateMs, bool IsRead, int SubId);
 
@@ -353,7 +351,7 @@ public sealed class AndroidSmsService : ISmsService
                         all.Add(idClause);
                     var selection = all.Count == 0 ? null : string.Join(" AND ", all.Select(c => $"({c})"));
 
-                    ForEachMessage(context, selection, args.Count == 0 ? null : args.ToArray(), MaxSearchMessageRows, cancellationToken, row =>
+                    ForEachMessage(context, selection, args.Count == 0 ? null : args.ToArray(), int.MaxValue, cancellationToken, row =>
                     {
                         if (archivedIds.Contains(row.ThreadId) && !query.IncludeArchivedAndSpam)
                             return true;
@@ -446,7 +444,6 @@ public sealed class AndroidSmsService : ISmsService
 
             return results
                 .OrderByDescending(r => r.Timestamp)
-                .Take(MaxSearchResults)
                 .ToList();
         }, cancellationToken);
 

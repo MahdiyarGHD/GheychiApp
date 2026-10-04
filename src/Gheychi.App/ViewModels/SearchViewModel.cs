@@ -143,6 +143,29 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
 
 public sealed class SearchResultItem
 {
+    private static readonly Color NameLight = Color.FromArgb("#2C342E");
+    private static readonly Color NameDark = Color.FromArgb("#E8EAED");
+    private static readonly Color TimeUnreadLight = Color.FromArgb("#386948");
+    private static readonly Color TimeUnreadDark = Color.FromArgb("#34D399");
+    private static readonly Color TimeLight = Color.FromArgb("#747D75");
+    private static readonly Color TimeDark = Color.FromArgb("#8A8F98");
+    private static readonly Color AvatarBgLight = Color.FromArgb("#E3E9E4");
+    private static readonly Color AvatarBgDark = Color.FromArgb("#35423C");
+    private static readonly Color AvatarTextLight = Color.FromArgb("#1B5E43");
+    private static readonly Color AvatarTextDark = Color.FromArgb("#8FE0BE");
+    private static readonly Color MatchBgLight = Color.FromArgb("#ECE1D3");
+    private static readonly Color MatchBgDark = Color.FromArgb("#332E27");
+    private static readonly Color MatchTextLight = Color.FromArgb("#665E53");
+    private static readonly Color MatchTextDark = Color.FromArgb("#DED3C5");
+
+    // Same as the search page background, so the chip reads as cut out of the avatar.
+    private static readonly Color RingLight = Color.FromArgb("#F7FAF4");
+    private static readonly Color RingDark = Color.FromArgb("#121413");
+
+    private static string? _spamTag;
+    private static string? _archivedTag;
+    private static string? _matchesFormat;
+
     public long ThreadId { get; init; }
     public long MessageId { get; init; }
     public string Address { get; init; } = string.Empty;
@@ -152,34 +175,55 @@ public sealed class SearchResultItem
     public int SimSlot { get; init; } = 1;
     public string SimSlotText => SimSlot.ToString();
     public bool ShowSimBadge { get; init; }
-    public Color SimBadgeColor { get; init; } = Colors.Gray;
+    public Color SimBadgeBgColor => ChatMessage.SimTintBackground(SimSlot);
+    public Color SimBadgeTextColor => ChatMessage.SimTintText(SimSlot);
     public string Time { get; init; } = string.Empty;
     public bool IsUnread { get; init; }
     public bool IsStarred { get; init; }
     public bool IsKnown { get; init; }
     public int TotalMatches { get; init; } = 1;
     public bool HasMultipleMatches => TotalMatches > 1;
-    public string MatchCountText => TotalMatches > 1
-        ? string.Format(Localization.LocalizationManager.Instance["Search_MatchesPlural"] ?? "• {0} matches", TotalMatches)
-        : string.Empty;
+    public string MatchCountText => TotalMatches.ToString();
+    public string MatchCountDescription =>
+        string.Format((_matchesFormat ??= Localization.LocalizationManager.Instance["Search_MatchesPlural"]).Replace("• ", string.Empty), TotalMatches);
 
     public FormattedString FormattedSnippet { get; init; } = new();
+    public string SnippetKey { get; init; } = string.Empty;
     public bool IsArchived { get; init; }
     public bool IsSpam { get; init; }
     public bool IsArchivedOrSpam => IsArchived || IsSpam;
 
     public string DeepSearchTag => IsSpam
-        ? (Localization.LocalizationManager.Instance["Search_Tag_Spam"] ?? "Spam")
-        : (Localization.LocalizationManager.Instance["Search_Tag_Archived"] ?? "Archived");
+        ? (_spamTag ??= Localization.LocalizationManager.Instance["Search_Tag_Spam"])
+        : (_archivedTag ??= Localization.LocalizationManager.Instance["Search_Tag_Archived"]);
 
     private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
 
-    public Color TimeColor => IsUnread
-        ? (IsDark ? Color.FromArgb("#34D399") : Color.FromArgb("#386948"))
-        : (IsDark ? Color.FromArgb("#8A8F98") : Color.FromArgb("#747D75"));
+    public Color NameColor => IsDark ? NameDark : NameLight;
+    public Color SimBadgeRingColor => IsDark ? RingDark : RingLight;
 
-    public Color AvatarBgColor => IsDark ? Color.FromArgb("#35423C") : Color.FromArgb("#E3E9E4");
-    public Color AvatarTextColor => IsDark ? Color.FromArgb("#8FE0BE") : Color.FromArgb("#1B5E43");
+    public Color TimeColor => IsUnread
+        ? (IsDark ? TimeUnreadDark : TimeUnreadLight)
+        : (IsDark ? TimeDark : TimeLight);
+
+    public Color AvatarBgColor => IsDark ? AvatarBgDark : AvatarBgLight;
+    public Color AvatarTextColor => IsDark ? AvatarTextDark : AvatarTextLight;
+    public Color MatchBgColor => IsDark ? MatchBgDark : MatchBgLight;
+    public Color MatchTextColor => IsDark ? MatchTextDark : MatchTextLight;
+
+    public bool HasSameContent(SearchResultItem other) =>
+        ThreadId == other.ThreadId &&
+        MessageId == other.MessageId &&
+        DisplayName == other.DisplayName &&
+        Time == other.Time &&
+        TotalMatches == other.TotalMatches &&
+        IsUnread == other.IsUnread &&
+        IsStarred == other.IsStarred &&
+        SimSlot == other.SimSlot &&
+        ShowSimBadge == other.ShowSimBadge &&
+        IsArchived == other.IsArchived &&
+        IsSpam == other.IsSpam &&
+        SnippetKey == other.SnippetKey;
 }
 
 public sealed class SearchViewModel : INotifyPropertyChanged
@@ -391,6 +435,23 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         ApplyCategoryFilter(selectedTab);
     }
 
+    // Typing one more character mostly keeps the same rows; a Reset would rebind the whole list
+    // (the visible lag after each search), so only changed rows are touched.
+    private void ReplaceResults(List<SearchResultItem> items)
+    {
+        if (SearchResultItems.Count == 0 || items.Count == 0)
+        {
+            SearchResultItems.Reset(items);
+            return;
+        }
+
+        ListSynchronizer.Sync(
+            SearchResultItems,
+            items,
+            r => (r.ThreadId, r.MessageId),
+            (a, b) => a.HasSameContent(b));
+    }
+
     private void ApplyCategoryFilter(CategoryTabItem tab)
     {
         IEnumerable<SearchResultItem> filtered = tab.Kind switch
@@ -404,7 +465,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             _ => _allSearchResults
         };
 
-        SearchResultItems.Reset(filtered);
+        ReplaceResults(filtered.ToList());
 
         var loc = Localization.LocalizationManager.Instance;
         FoundCountText = string.Format(loc["Search_Found"] ?? "{0} found", SearchResultItems.Count);
@@ -502,7 +563,6 @@ public sealed class SearchViewModel : INotifyPropertyChanged
 
                 var initials = ThreadItem.GenerateInitials(displayName);
                 var slot = _simSlotMap.TryGetValue(r.SubId, out var mappedSlot) ? mappedSlot : 1;
-                var badgeColor = slot == 1 ? PrimaryColor : (slot == 2 ? SecondaryColor : TertiaryColor);
 
                 var formattedSnippet = BuildFormattedSnippet(r.Snippet, text);
 
@@ -516,13 +576,13 @@ public sealed class SearchViewModel : INotifyPropertyChanged
                     SubId = r.SubId,
                     SimSlot = slot,
                     ShowSimBadge = _isDualSim,
-                    SimBadgeColor = badgeColor,
                     Time = _dateFormatter.FormatThreadTime(r.Timestamp, now, culture),
                     IsUnread = !r.IsRead,
                     IsStarred = r.IsStarred,
                     IsKnown = r.IsKnown,
                     TotalMatches = r.TotalMatches,
                     FormattedSnippet = formattedSnippet,
+                    SnippetKey = r.Snippet + "|" + text,
                     IsArchived = r.IsArchived,
                     IsSpam = r.IsSpam
                 });
@@ -595,93 +655,64 @@ public sealed class SearchViewModel : INotifyPropertyChanged
     private void UpdateCategoryTabs(int totalChatsCount)
     {
         var loc = Localization.LocalizationManager.Instance;
-        var previousKind = CategoryTabs.FirstOrDefault(t => t.IsSelected)?.Kind ?? CategoryFilterKind.All;
-        var previousSlot = CategoryTabs.FirstOrDefault(t => t.IsSelected)?.SimSlot;
+        var selected = CategoryTabs.FirstOrDefault(t => t.IsSelected);
+        var previousKind = selected?.Kind ?? CategoryFilterKind.All;
+        var previousSlot = selected?.SimSlot;
+
+        var desired = new List<CategoryTabItem>
+        {
+            new() { Title = loc["Search_Chats"], Kind = CategoryFilterKind.All, Count = totalChatsCount },
+            new() { Title = loc["Search_Filter_Unread"], Kind = CategoryFilterKind.Unread, Count = _allSearchResults.Count(r => r.IsUnread) },
+            new() { Title = loc["Search_Filter_Starred"], Kind = CategoryFilterKind.Starred, Count = _allSearchResults.Count(r => r.IsStarred) },
+            new() { Title = loc["Search_Filter_Known"], Kind = CategoryFilterKind.Known, Count = _allSearchResults.Count(r => r.IsKnown) },
+            new() { Title = loc["Search_Filter_Unknown"], Kind = CategoryFilterKind.Unknown, Count = _allSearchResults.Count(r => !r.IsKnown) }
+        };
+
+        // Dynamic SIM tabs based on detected active SIMs (never hardcoded)
+        foreach (var sim in _activeSims)
+        {
+            var slotNumber = sim.SlotIndex;
+            var displayName = !string.IsNullOrWhiteSpace(sim.DisplayName)
+                ? (_isDualSim ? $"SIM {slotNumber}: {sim.DisplayName}" : sim.DisplayName)
+                : $"SIM {slotNumber}";
+
+            desired.Add(new CategoryTabItem
+            {
+                Title = displayName,
+                Kind = CategoryFilterKind.Sim,
+                SimSlot = slotNumber,
+                Count = _allSearchResults.Count(r => r.SimSlot == slotNumber)
+            });
+        }
+
+        foreach (var tab in desired)
+            tab.ShowBadge = true;
+
+        // Same tabs as last time (the usual case while typing): just refresh the counts instead
+        // of tearing down and rebuilding the whole tab strip.
+        var sameShape = CategoryTabs.Count == desired.Count;
+        for (var i = 0; sameShape && i < desired.Count; i++)
+            sameShape = CategoryTabs[i].Kind == desired[i].Kind && CategoryTabs[i].SimSlot == desired[i].SimSlot;
+
+        if (sameShape)
+        {
+            for (var i = 0; i < desired.Count; i++)
+            {
+                CategoryTabs[i].Count = desired[i].Count;
+                CategoryTabs[i].Title = desired[i].Title;
+            }
+            return;
+        }
 
         CategoryTabs.Clear();
-
-        // 1. Chats (All)
-        CategoryTabs.Add(new CategoryTabItem
+        foreach (var tab in desired)
         {
-            Title = loc["Search_Chats"] ?? "Chats",
-            Kind = CategoryFilterKind.All,
-            Count = totalChatsCount,
-            ShowBadge = true,
-            IsSelected = previousKind == CategoryFilterKind.All
-        });
-
-        // 2. Unread
-        var unreadCount = _allSearchResults.Count(r => r.IsUnread);
-        CategoryTabs.Add(new CategoryTabItem
-        {
-            Title = loc["Search_Filter_Unread"] ?? "Unread",
-            Kind = CategoryFilterKind.Unread,
-            Count = unreadCount,
-            ShowBadge = true,
-            IsSelected = previousKind == CategoryFilterKind.Unread
-        });
-
-        // 3. Starred
-        var starredCount = _allSearchResults.Count(r => r.IsStarred);
-        CategoryTabs.Add(new CategoryTabItem
-        {
-            Title = loc["Search_Filter_Starred"] ?? "Starred",
-            Kind = CategoryFilterKind.Starred,
-            Count = starredCount,
-            ShowBadge = true,
-            IsSelected = previousKind == CategoryFilterKind.Starred
-        });
-
-        // 4. Known
-        var knownCount = _allSearchResults.Count(r => r.IsKnown);
-        CategoryTabs.Add(new CategoryTabItem
-        {
-            Title = loc["Search_Filter_Known"] ?? "Known",
-            Kind = CategoryFilterKind.Known,
-            Count = knownCount,
-            ShowBadge = true,
-            IsSelected = previousKind == CategoryFilterKind.Known
-        });
-
-        // 5. Unknown
-        var unknownCount = _allSearchResults.Count(r => !r.IsKnown);
-        CategoryTabs.Add(new CategoryTabItem
-        {
-            Title = loc["Search_Filter_Unknown"] ?? "Unknown",
-            Kind = CategoryFilterKind.Unknown,
-            Count = unknownCount,
-            ShowBadge = true,
-            IsSelected = previousKind == CategoryFilterKind.Unknown
-        });
-
-        // 6. Dynamic SIM tabs based on detected active SIMs (never hardcoded)
-        if (_activeSims != null)
-        {
-            foreach (var sim in _activeSims)
-            {
-                var slotNumber = sim.SlotIndex;
-                var simCount = _allSearchResults.Count(r => r.SimSlot == slotNumber);
-                var displayName = !string.IsNullOrWhiteSpace(sim.DisplayName)
-                    ? (_isDualSim ? $"SIM {slotNumber}: {sim.DisplayName}" : sim.DisplayName)
-                    : $"SIM {slotNumber}";
-
-                CategoryTabs.Add(new CategoryTabItem
-                {
-                    Title = displayName,
-                    Kind = CategoryFilterKind.Sim,
-                    SimSlot = slotNumber,
-                    Count = simCount,
-                    ShowBadge = true,
-                    IsSelected = previousKind == CategoryFilterKind.Sim && previousSlot == slotNumber
-                });
-            }
+            tab.IsSelected = tab.Kind == previousKind && tab.SimSlot == previousSlot;
+            CategoryTabs.Add(tab);
         }
 
         if (!CategoryTabs.Any(t => t.IsSelected))
-        {
-            var first = CategoryTabs.FirstOrDefault();
-            if (first != null) first.IsSelected = true;
-        }
+            CategoryTabs[0].IsSelected = true;
     }
 
     public static FormattedString BuildFormattedSnippet(string snippet, string? queryText)

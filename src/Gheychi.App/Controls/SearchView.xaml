@@ -429,7 +429,7 @@
                             IsVisible="{Binding HasResults}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:SearchResultItem">
-                        <Grid Padding="16,14"
+                        <Grid Padding="16,12"
                               ColumnDefinitions="Auto,*"
                               ColumnSpacing="14"
                               BackgroundColor="Transparent">
@@ -437,13 +437,15 @@
                                 <TapGestureRecognizer Tapped="OnSearchResultRowTapped" CommandParameter="{Binding .}" />
                             </Grid.GestureRecognizers>
 
-                            <!-- Avatar with SIM badge -->
+                            <!-- Avatar; the SIM chip sits inside the holder bounds so it is never clipped -->
                             <Grid Grid.Column="0"
-                                  WidthRequest="48"
-                                  HeightRequest="48"
+                                  WidthRequest="56"
+                                  HeightRequest="54"
                                   VerticalOptions="Center">
                                 <Border WidthRequest="48"
                                         HeightRequest="48"
+                                        HorizontalOptions="Start"
+                                        VerticalOptions="Start"
                                         StrokeThickness="0"
                                         StrokeShape="RoundRectangle 24"
                                         BackgroundColor="{Binding AvatarBgColor}">
@@ -455,67 +457,59 @@
                                            VerticalOptions="Center" />
                                 </Border>
 
-                                <Border WidthRequest="18"
-                                        HeightRequest="18"
-                                        StrokeShape="RoundRectangle 9"
-                                        StrokeThickness="2"
-                                        Stroke="{AppThemeBinding Light=#F7FAF4, Dark=#121413}"
-                                        BackgroundColor="{Binding SimBadgeColor}"
+                                <Border IsVisible="{Binding ShowSimBadge}"
+                                        MinimumWidthRequest="24"
+                                        HeightRequest="24"
+                                        Padding="7,0"
+                                        StrokeShape="RoundRectangle 12"
+                                        StrokeThickness="2.5"
+                                        Stroke="{Binding SimBadgeRingColor}"
+                                        BackgroundColor="{Binding SimBadgeBgColor}"
                                         HorizontalOptions="End"
-                                        VerticalOptions="End"
-                                        TranslationX="2"
-                                        TranslationY="2"
-                                        IsVisible="{Binding ShowSimBadge}">
+                                        VerticalOptions="End">
                                     <Label Text="{Binding SimSlotText}"
-                                           FontSize="9"
+                                           FontSize="11"
                                            FontAttributes="Bold"
-                                           TextColor="#FFFFFF"
+                                           TextColor="{Binding SimBadgeTextColor}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
                                            HorizontalTextAlignment="Center"
                                            VerticalTextAlignment="Center" />
                                 </Border>
                             </Grid>
 
-                            <!-- Info Column -->
+                            <!-- Info column. The name takes the leftover width and truncates, so it can never run into the time. -->
                             <Grid Grid.Column="1"
                                   RowDefinitions="Auto,Auto"
                                   RowSpacing="4"
                                   VerticalOptions="Center">
 
-                                <!-- Sender Name, Match Count, Time -->
                                 <Grid Grid.Row="0"
-                                      ColumnDefinitions="*,Auto"
+                                      ColumnDefinitions="*,Auto,Auto"
                                       ColumnSpacing="8">
-                                    <HorizontalStackLayout Grid.Column="0"
-                                                           Spacing="6"
-                                                           VerticalOptions="Center">
-                                        <Label Text="{Binding DisplayName}"
-                                               FontSize="15"
-                                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                               TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
-                                               LineBreakMode="TailTruncation"
-                                               MaxLines="1" />
+                                    <Label Grid.Column="0"
+                                           Text="{Binding DisplayName}"
+                                           FontSize="15"
+                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                           TextColor="{Binding NameColor}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1"
+                                           VerticalOptions="Center" />
 
-                                        <Label Text="{Binding MatchCountText}"
-                                               FontSize="11"
-                                               TextColor="{AppThemeBinding Light=#745C27, Dark=#EBCB8B}"
-                                               FontFamily="{DynamicResource AppFontFamily}"
-                                               VerticalOptions="Center"
-                                               IsVisible="{Binding HasMultipleMatches}" />
+                                    <Border Grid.Column="1"
+                                            IsVisible="{Binding IsArchivedOrSpam}"
+                                            Padding="7,2"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 6"
+                                            BackgroundColor="{Binding MatchBgColor}"
+                                            VerticalOptions="Center">
+                                        <Label Text="{Binding DeepSearchTag}"
+                                               FontSize="10"
+                                               FontAttributes="Bold"
+                                               TextColor="{Binding MatchTextColor}" />
+                                    </Border>
 
-                                        <Border IsVisible="{Binding IsArchivedOrSpam}"
-                                                Padding="6,1"
-                                                StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 4"
-                                                BackgroundColor="{AppThemeBinding Light=#ECE1D3, Dark=#332E27}"
-                                                VerticalOptions="Center">
-                                            <Label Text="{Binding DeepSearchTag}"
-                                                   FontSize="10"
-                                                   TextColor="{AppThemeBinding Light=#665E53, Dark=#DED3C5}"
-                                                   FontAttributes="Bold" />
-                                        </Border>
-                                    </HorizontalStackLayout>
-
-                                    <Label Grid.Column="1"
+                                    <Label Grid.Column="2"
                                            Text="{Binding Time}"
                                            FontSize="12"
                                            TextColor="{Binding TimeColor}"
@@ -523,18 +517,39 @@
                                            VerticalOptions="Center" />
                                 </Grid>
 
-                                <!-- Snippet with match highlighting & Unread indicator -->
                                 <Grid Grid.Row="1"
-                                      ColumnDefinitions="*,Auto"
+                                      ColumnDefinitions="*,Auto,Auto"
                                       ColumnSpacing="8"
                                       VerticalOptions="Center">
                                     <Label Grid.Column="0"
                                            FormattedText="{Binding FormattedSnippet}"
                                            FontSize="13"
-                                           LineBreakMode="NoWrap"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1"
                                            VerticalOptions="Center" />
 
+                                    <!-- Match count: compact pill with just the number; the full text is the accessibility description -->
                                     <Border Grid.Column="1"
+                                            IsVisible="{Binding HasMultipleMatches}"
+                                            MinimumWidthRequest="24"
+                                            HeightRequest="20"
+                                            Padding="7,0"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 10"
+                                            BackgroundColor="{Binding MatchBgColor}"
+                                            VerticalOptions="Center"
+                                            SemanticProperties.Description="{Binding MatchCountDescription}">
+                                        <Label Text="{Binding MatchCountText}"
+                                               FontSize="11"
+                                               FontAttributes="Bold"
+                                               TextColor="{Binding MatchTextColor}"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"
+                                               HorizontalTextAlignment="Center"
+                                               VerticalTextAlignment="Center" />
+                                    </Border>
+
+                                    <Border Grid.Column="2"
                                             WidthRequest="8"
                                             HeightRequest="8"
                                             StrokeThickness="0"
