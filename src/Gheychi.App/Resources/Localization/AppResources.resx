@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Tab_Messages" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="Tab_Spam" xml:space="preserve">
+    <value>Spam</value>
+  </data>
+  <data name="Tab_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Search_Messages" xml:space="preserve">
+    <value>Search messages</value>
+  </data>
+  <data name="Spam_PageTitle" xml:space="preserve">
+    <value>Spam &amp; Blocked</value>
+  </data>
+  <data name="Spam_Subtitle" xml:space="preserve">
+    <value>Isolated on-device · Auto-cleared in 30 days</value>
+  </data>
+  <data name="Spam_ClearAll" xml:space="preserve">
+    <value>Clear all</value>
+  </data>
+  <data name="Settings_PageTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_Placeholder" xml:space="preserve">
+    <value>Settings will appear here</value>
+  </data>
+  <data name="Spam_Placeholder" xml:space="preserve">
+    <value>Blocked messages will appear here</value>
+  </data>
+  <data name="Chat_Today" xml:space="preserve">
+    <value>Today · 10:42 AM</value>
+  </data>
+  <data name="Chat_MessageHint" xml:space="preserve">
+    <value>SMS message</value>
+  </data>
+  <data name="Chat_Delivered" xml:space="preserve">
+    <value>Delivered</value>
+  </data>
+  <data name="Chat_NotDelivered" xml:space="preserve">
+    <value>Not delivered · Retry</value>
+  </data>
+  <data name="Chat_Call" xml:space="preserve">
+    <value>Call</value>
+  </data>
+  <data name="Chat_MoreOptions" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="Chat_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Chat_Attach" xml:space="preserve">
+    <value>Attach</value>
+  </data>
+  <data name="Chat_Emoji" xml:space="preserve">
+    <value>Emoji</value>
+  </data>
+  <data name="Chat_Sim" xml:space="preserve">
+    <value>SIM slot</value>
+  </data>
+  <data name="Chat_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Chat_SimTitle" xml:space="preserve">
+    <value>Send via</value>
+  </data>
+  <data name="Chat_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Compose" xml:space="preserve">
+    <value>Compose</value>
+  </data>
+  <data name="Failed_Send" xml:space="preserve">
+    <value>Failed to send · Tap to retry</value>
+  </data>
+  <data name="Time_Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>Gheychi</value>
+  </data>
+  <data name="Chat_UnreadMessages" xml:space="preserve">
+    <value>Unread Messages</value>
+  </data>
+  <data name="Chat_CopyUrl" xml:space="preserve">
+    <value>Copy URL</value>
+  </data>
+  <data name="Chat_CopyText" xml:space="preserve">
+    <value>Copy Text</value>
+  </data>
+  <data name="Chat_Star" xml:space="preserve">
+    <value>Star</value>
+  </data>
+  <data name="Chat_Unstar" xml:space="preserve">
+    <value>Unstar</value>
+  </data>
+  <data name="Chat_SelectMore" xml:space="preserve">
+    <value>Select More</value>
+  </data>
+  <data name="Chat_Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Chat_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Chat_Selected" xml:space="preserve">
+    <value>Selected</value>
+  </data>
+  <data name="Chat_SelectedCount" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="Chat_SelectAll" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="Chat_DeleteSingleConfirmTitle" xml:space="preserve">
+    <value>Delete message?</value>
+  </data>
+  <data name="Chat_DeleteSingleConfirmMessage" xml:space="preserve">
+    <value>This message will be permanently deleted from your phone.</value>
+  </data>
+  <data name="Chat_DeleteMultipleConfirmTitle" xml:space="preserve">
+    <value>Delete {0} messages?</value>
+  </data>
+  <data name="Chat_DeleteMultipleConfirmMessage" xml:space="preserve">
+    <value>These messages will be permanently deleted from your phone.</value>
+  </data>
+  <data name="Chat_DeleteConfirmButton" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Chat_LinkBadge" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Chat_InfoTitle" xml:space="preserve">
+    <value>Message details</value>
+  </data>
+  <data name="Chat_InfoType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Chat_InfoSent" xml:space="preserve">
+    <value>Sent</value>
+  </data>
+  <data name="Chat_InfoReceived" xml:space="preserve">
+    <value>Received</value>
+  </data>
+  <data name="Chat_InfoDelivered" xml:space="preserve">
+    <value>Delivered</value>
+  </data>
+  <data name="Chat_InfoSim" xml:space="preserve">
+    <value>SIM</value>
+  </data>
+  <data name="Chat_InfoCarrier" xml:space="preserve">
+    <value>Carrier</value>
+  </data>
+  <data name="Chat_InfoTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Chat_InfoStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Chat_Copied" xml:space="preserve">
+    <value>Copied to clipboard</value>
+  </data>
+  <data name="Chat_ReactionsMore" xml:space="preserve">
+    <value>More reactions</value>
+  </data>
+</root>

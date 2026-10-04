@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Tab_Messages" xml:space="preserve">
+    <value>پیام‌ها</value>
+  </data>
+  <data name="Tab_Spam" xml:space="preserve">
+    <value>هرزنامه</value>
+  </data>
+  <data name="Tab_Settings" xml:space="preserve">
+    <value>تنظیمات</value>
+  </data>
+  <data name="Search_Messages" xml:space="preserve">
+    <value>جستجوی پیام‌ها</value>
+  </data>
+  <data name="Spam_PageTitle" xml:space="preserve">
+    <value>هرزنامه و مسدودشده‌ها</value>
+  </data>
+  <data name="Spam_Subtitle" xml:space="preserve">
+    <value>جداسازی روی دستگاه · پاک‌سازی خودکار در ۳۰ روز</value>
+  </data>
+  <data name="Spam_ClearAll" xml:space="preserve">
+    <value>پاک کردن همه</value>
+  </data>
+  <data name="Settings_PageTitle" xml:space="preserve">
+    <value>تنظیمات</value>
+  </data>
+  <data name="Settings_Placeholder" xml:space="preserve">
+    <value>تنظیمات اینجا نمایش داده می‌شود</value>
+  </data>
+  <data name="Spam_Placeholder" xml:space="preserve">
+    <value>پیام‌های مسدودشده اینجا نمایش داده می‌شود</value>
+  </data>
+  <data name="Chat_Today" xml:space="preserve">
+    <value>امروز · ۱۰:۴۲</value>
+  </data>
+  <data name="Chat_MessageHint" xml:space="preserve">
+    <value>پیامک</value>
+  </data>
+  <data name="Chat_Delivered" xml:space="preserve">
+    <value>تحویل شد</value>
+  </data>
+  <data name="Chat_NotDelivered" xml:space="preserve">
+    <value>تحویل نشد · تلاش مجدد</value>
+  </data>
+  <data name="Chat_Call" xml:space="preserve">
+    <value>تماس</value>
+  </data>
+  <data name="Chat_MoreOptions" xml:space="preserve">
+    <value>گزینه‌های بیشتر</value>
+  </data>
+  <data name="Chat_Back" xml:space="preserve">
+    <value>بازگشت</value>
+  </data>
+  <data name="Chat_Attach" xml:space="preserve">
+    <value>پیوست</value>
+  </data>
+  <data name="Chat_Emoji" xml:space="preserve">
+    <value>شکلک</value>
+  </data>
+  <data name="Chat_Sim" xml:space="preserve">
+    <value>شیار سیم‌کارت</value>
+  </data>
+  <data name="Chat_Send" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Chat_SimTitle" xml:space="preserve">
+    <value>ارسال با</value>
+  </data>
+  <data name="Chat_Cancel" xml:space="preserve">
+    <value>انصراف</value>
+  </data>
+  <data name="Compose" xml:space="preserve">
+    <value>نوشتن پیام</value>
+  </data>
+  <data name="Failed_Send" xml:space="preserve">
+    <value>ارسال نشد · برای تلاش دوباره بزنید</value>
+  </data>
+  <data name="Time_Yesterday" xml:space="preserve">
+    <value>دیروز</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>فیلتر</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>بیشتر</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>گیچی</value>
+  </data>
+  <data name="Chat_UnreadMessages" xml:space="preserve">
+    <value>پیام‌های خوانده نشده</value>
+  </data>
+  <data name="Chat_CopyUrl" xml:space="preserve">
+    <value>کپی پیوند</value>
+  </data>
+  <data name="Chat_CopyText" xml:space="preserve">
+    <value>کپی متن</value>
+  </data>
+  <data name="Chat_Star" xml:space="preserve">
+    <value>نشان‌گذاری</value>
+  </data>
+  <data name="Chat_Unstar" xml:space="preserve">
+    <value>حذف نشان</value>
+  </data>
+  <data name="Chat_SelectMore" xml:space="preserve">
+    <value>انتخاب بیشتر</value>
+  </data>
+  <data name="Chat_Info" xml:space="preserve">
+    <value>اطلاعات پیام</value>
+  </data>
+  <data name="Chat_Delete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Chat_Selected" xml:space="preserve">
+    <value>انتخاب شده</value>
+  </data>
+  <data name="Chat_SelectedCount" xml:space="preserve">
+    <value>{0} انتخاب شده</value>
+  </data>
+  <data name="Chat_SelectAll" xml:space="preserve">
+    <value>انتخاب همه</value>
+  </data>
+  <data name="Chat_DeleteSingleConfirmTitle" xml:space="preserve">
+    <value>حذف پیام؟</value>
+  </data>
+  <data name="Chat_DeleteSingleConfirmMessage" xml:space="preserve">
+    <value>این پیام برای همیشه از گوشی شما حذف خواهد شد.</value>
+  </data>
+  <data name="Chat_DeleteMultipleConfirmTitle" xml:space="preserve">
+    <value>حذف {0} پیام؟</value>
+  </data>
+  <data name="Chat_DeleteMultipleConfirmMessage" xml:space="preserve">
+    <value>این پیام‌ها برای همیشه از گوشی شما حذف خواهند شد.</value>
+  </data>
+  <data name="Chat_DeleteConfirmButton" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Chat_LinkBadge" xml:space="preserve">
+    <value>پیوند</value>
+  </data>
+  <data name="Chat_InfoTitle" xml:space="preserve">
+    <value>جزئیات پیام</value>
+  </data>
+  <data name="Chat_InfoType" xml:space="preserve">
+    <value>نوع</value>
+  </data>
+  <data name="Chat_InfoSent" xml:space="preserve">
+    <value>ارسال شده</value>
+  </data>
+  <data name="Chat_InfoReceived" xml:space="preserve">
+    <value>دریافت شده</value>
+  </data>
+  <data name="Chat_InfoDelivered" xml:space="preserve">
+    <value>تحویل شده</value>
+  </data>
+  <data name="Chat_InfoSim" xml:space="preserve">
+    <value>سیم‌کارت</value>
+  </data>
+  <data name="Chat_InfoCarrier" xml:space="preserve">
+    <value>اپراتور</value>
+  </data>
+  <data name="Chat_InfoTime" xml:space="preserve">
+    <value>زمان</value>
+  </data>
+  <data name="Chat_InfoStatus" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="Chat_Copied" xml:space="preserve">
+    <value>در حافظه کپی شد</value>
+  </data>
+  <data name="Chat_ReactionsMore" xml:space="preserve">
+    <value>واکنش‌های بیشتر</value>
+  </data>
+</root>

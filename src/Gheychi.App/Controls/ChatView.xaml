@@ -1,0 +1,1188 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+             xmlns:converters="clr-namespace:Gheychi.App.Converters"
+             xmlns:controls="clr-namespace:Gheychi.App.Controls"
+             x:Class="Gheychi.App.Controls.ChatView">
+
+    <ContentView.Resources>
+        <DataTemplate x:Key="IncomingTemplate" x:DataType="vm:ChatMessage">
+            <Grid Padding="12,3,12,4" HorizontalOptions="Fill" ColumnDefinitions="Auto,0.8*,0.2*">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMessageRowTapped" />
+                </Grid.GestureRecognizers>
+
+                <!-- Multi-select checkbox -->
+                <Border Grid.Column="0"
+                        Margin="0,0,10,0"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        StrokeShape="RoundRectangle 11"
+                        VerticalOptions="Center"
+                        IsVisible="{Binding IsSelectionMode}">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                            <Setter Property="StrokeThickness" Value="0" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="StrokeThickness" Value="1.5" />
+                            <Setter Property="Stroke" Value="{AppThemeBinding Light=#9AA0AB, Dark=#5C6370}" />
+                        </DataTrigger>
+                    </Border.Triggers>
+                    <Label Text="✓"
+                           FontSize="12"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           IsVisible="{Binding IsSelected}" />
+                </Border>
+
+                <Grid Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="Start">
+                    <Grid Grid.Row="0">
+                        <Border Padding="{Binding BubblePadding}"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 16"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                HorizontalOptions="Start"
+                                behaviors:MessageHoldBehavior.IsEnabled="True">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnMessageBubbleTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="3">
+                                <BoxView HeightRequest="140"
+                                         WidthRequest="220"
+                                         CornerRadius="10"
+                                         IsVisible="{Binding HasMedia}"
+                                         BackgroundColor="{AppThemeBinding Light=#DDE3EA, Dark=#2A2E35}" />
+                                <Label Text="{Binding BodyBeforeLink}"
+                                       FontSize="13"
+                                       LineBreakMode="WordWrap"
+                                       IsVisible="{Binding HasNoLink}"
+                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                                <Label FontSize="13" LineBreakMode="WordWrap" IsVisible="{Binding HasLink}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding BodyBeforeLink}"
+                                                  TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                                            <Span Text="{Binding Link}"
+                                                  TextColor="{StaticResource AccentText}"
+                                                  TextDecorations="Underline" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Attached Reaction Pill -->
+                        <Border IsVisible="{Binding HasReaction}"
+                                StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                StrokeShape="RoundRectangle 12"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                Padding="6,2"
+                                Margin="8,0,0,-8"
+                                VerticalOptions="End"
+                                HorizontalOptions="Start">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,1" Radius="3" Opacity="0.18" />
+                            </Border.Shadow>
+                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                                <Label Text="{Binding ReactionEmoji}" FontSize="12" VerticalOptions="Center" />
+                                <ActivityIndicator IsRunning="{Binding IsReactionSending}"
+                                                   IsVisible="{Binding IsReactionSending}"
+                                                   WidthRequest="11"
+                                                   HeightRequest="11"
+                                                   Color="{StaticResource Primary}"
+                                                   VerticalOptions="Center" />
+                                <Label Text="!"
+                                       IsVisible="{Binding HasReactionFailed}"
+                                       FontSize="11"
+                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       TextColor="{StaticResource Danger}"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnReactionPillTapped" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+
+                    <HorizontalStackLayout Grid.Row="1" Spacing="6" VerticalOptions="Center">
+                        <Label Text="{Binding Time}"
+                               FontSize="11"
+                               TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
+                               VerticalOptions="Center" />
+                        <Label Text="★"
+                               FontSize="11"
+                               TextColor="#F59E0B"
+                               IsVisible="{Binding IsStarred}"
+                               VerticalOptions="Center" />
+                        <Border IsVisible="{Binding SimTagVisible}"
+                                Padding="5,1"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="{Binding SimTagBgColor}"
+                                VerticalOptions="Center">
+                            <Label Text="{Binding SimTagText}"
+                                   FontSize="9.5"
+                                   FontFamily="{DynamicResource AppFontFamilyBold}"
+                                   TextColor="{Binding SimTagTextColor}"
+                                   VerticalOptions="Center" />
+                        </Border>
+                    </HorizontalStackLayout>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="OutgoingTemplate" x:DataType="vm:ChatMessage">
+            <Grid Padding="12,3,12,4" HorizontalOptions="Fill" ColumnDefinitions="Auto,0.2*,0.8*">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMessageRowTapped" />
+                </Grid.GestureRecognizers>
+
+                <!-- Multi-select checkbox -->
+                <Border Grid.Column="0"
+                        Margin="0,0,10,0"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        StrokeShape="RoundRectangle 11"
+                        VerticalOptions="Center"
+                        IsVisible="{Binding IsSelectionMode}">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                            <Setter Property="StrokeThickness" Value="0" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="StrokeThickness" Value="1.5" />
+                            <Setter Property="Stroke" Value="{AppThemeBinding Light=#9AA0AB, Dark=#5C6370}" />
+                        </DataTrigger>
+                    </Border.Triggers>
+                    <Label Text="✓"
+                           FontSize="12"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           IsVisible="{Binding IsSelected}" />
+                </Border>
+
+                <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="End">
+                    <Grid Grid.Row="0">
+                        <Border Padding="{Binding BubblePadding}"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 16"
+                                BackgroundColor="{StaticResource Primary}"
+                                HorizontalOptions="End"
+                                behaviors:MessageHoldBehavior.IsEnabled="True">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnOutgoingBubbleTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding BodyBeforeLink}"
+                                       FontSize="13"
+                                       LineBreakMode="WordWrap"
+                                       TextColor="White" />
+                                <HorizontalStackLayout HorizontalOptions="End" Spacing="4">
+                                    <Label Text="★"
+                                           FontSize="11"
+                                           TextColor="#FCD34D"
+                                           IsVisible="{Binding IsStarred}"
+                                           VerticalOptions="Center" />
+                                    <Label Text="{Binding Time}"
+                                           FontSize="11"
+                                           TextColor="#BFE8D2"
+                                           VerticalOptions="End" />
+                                    <Grid IsVisible="{Binding IsDelivered}" Margin="4,0,0,0" VerticalOptions="End">
+                                        <Label Text="✓"
+                                               FontSize="11"
+                                               TextColor="{StaticResource Mint}"
+                                               VerticalOptions="Center" />
+                                        <Label Text="✓"
+                                               FontSize="11"
+                                               Margin="-4.5,0,0,0"
+                                               TextColor="{StaticResource Mint}"
+                                               VerticalOptions="Center" />
+                                    </Grid>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Attached Reaction Pill -->
+                        <Border IsVisible="{Binding HasReaction}"
+                                StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                StrokeShape="RoundRectangle 12"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                Padding="6,2"
+                                Margin="0,0,8,-8"
+                                VerticalOptions="End"
+                                HorizontalOptions="End">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,1" Radius="3" Opacity="0.18" />
+                            </Border.Shadow>
+                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                                <Label Text="{Binding ReactionEmoji}" FontSize="12" VerticalOptions="Center" />
+                                <ActivityIndicator IsRunning="{Binding IsReactionSending}"
+                                                   IsVisible="{Binding IsReactionSending}"
+                                                   WidthRequest="11"
+                                                   HeightRequest="11"
+                                                   Color="{StaticResource Primary}"
+                                                   VerticalOptions="Center" />
+                                <Label Text="!"
+                                       IsVisible="{Binding HasReactionFailed}"
+                                       FontSize="11"
+                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       TextColor="{StaticResource Danger}"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnReactionPillTapped" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="Auto,Auto"
+                          ColumnSpacing="5"
+                          HorizontalOptions="End"
+                          IsVisible="{Binding HasFailed}">
+                        <Image Grid.Column="0"
+                               Source="failed.png"
+                               WidthRequest="14"
+                               HeightRequest="14"
+                               VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="{loc:Translate Chat_NotDelivered}"
+                               FontSize="12"
+                               TextColor="{StaticResource Danger}"
+                               VerticalOptions="Center" />
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnRetry" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <vm:ChatTemplateSelector x:Key="ChatSelector"
+                                 IncomingTemplate="{StaticResource IncomingTemplate}"
+                                 OutgoingTemplate="{StaticResource OutgoingTemplate}"
+                                 DateSeparatorTemplate="{StaticResource DateSeparatorTemplate}"
+                                 UnreadSeparatorTemplate="{StaticResource UnreadSeparatorTemplate}" />
+
+        <DataTemplate x:Key="DateSeparatorTemplate" x:DataType="vm:DateSeparatorItem">
+            <Border Margin="0,8,0,4"
+                    Padding="12,4"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 11"
+                    BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                    HorizontalOptions="Center">
+                <Label Text="{Binding Text}"
+                       FontSize="11"
+                       TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="UnreadSeparatorTemplate" x:DataType="vm:UnreadSeparatorItem">
+            <Grid Margin="16,8" ColumnDefinitions="*,Auto,*" VerticalOptions="Center">
+                <BoxView Grid.Column="0" HeightRequest="1" BackgroundColor="{StaticResource Primary}" Opacity="0.5" VerticalOptions="Center" />
+                <Border Grid.Column="1"
+                        Margin="8,0"
+                        Padding="12,4"
+                        StrokeThickness="1"
+                        Stroke="{StaticResource Primary}"
+                        StrokeShape="RoundRectangle 11"
+                        BackgroundColor="{AppThemeBinding Light=#EBF3EE, Dark=#142B1F}">
+                    <Label Text="{Binding Text}"
+                           FontSize="11"
+                           FontFamily="{DynamicResource AppFontFamilyBold}"
+                           TextColor="{StaticResource Primary}"
+                           HorizontalOptions="Center" />
+                </Border>
+                <BoxView Grid.Column="2" HeightRequest="1" BackgroundColor="{StaticResource Primary}" Opacity="0.5" VerticalOptions="Center" />
+            </Grid>
+        </DataTemplate>
+    </ContentView.Resources>
+
+    <Grid>
+        <Grid x:Name="PageContent"
+              RowDefinitions="Auto,*,Auto"
+              BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnOverlayTapEater" />
+            </Grid.GestureRecognizers>
+
+            <!-- Row 0: Dual Header (Normal vs Selection Contextual Header) -->
+            <Grid Grid.Row="0">
+                <!-- Normal Header -->
+                <Grid IsVisible="{Binding IsNotSelectionMode}"
+                      Padding="8,10,8,10"
+                      ColumnDefinitions="Auto,Auto,*,Auto,Auto"
+                      ColumnSpacing="10">
+                    <Grid Grid.Column="0" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                        <Image Source="back.png"
+                               WidthRequest="24"
+                               HeightRequest="24"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_Back}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBack" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Border Grid.Column="1"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20"
+                            BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#35423C}">
+                        <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+                            <Image IsVisible="{Binding Thread.HasIcon}"
+                                   Source="{Binding Thread.IconFile}"
+                                   WidthRequest="22"
+                                   HeightRequest="22"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                </Image.Behaviors>
+                            </Image>
+                            <Label Text="{Binding Thread.Initials}"
+                                   IsVisible="{Binding Thread.HasNoIcon}"
+                                   TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
+                                   FontSize="14"
+                                   FontFamily="{DynamicResource AppFontFamilyBold}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalTextAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Grid Grid.Column="2"
+                          RowDefinitions="Auto,Auto"
+                          RowSpacing="1"
+                          VerticalOptions="Center"
+                          HorizontalOptions="Fill">
+                        <Label Grid.Row="0"
+                               Text="{Binding Thread.Name}"
+                               FontSize="15"
+                               FontFamily="{DynamicResource AppFontFamilyBold}"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="1"
+                               HorizontalOptions="Fill" />
+                        <Label Grid.Row="1"
+                               Text="{Binding Thread.Phone}"
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="1"
+                               HorizontalOptions="Fill" />
+                    </Grid>
+                    <Grid Grid.Column="3" WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                        <Image Source="phone.png"
+                               WidthRequest="22"
+                               HeightRequest="22"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_Call}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                    <Grid Grid.Column="4" WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                        <Image Source="morevert.png"
+                               WidthRequest="22"
+                               HeightRequest="22"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_MoreOptions}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                </Grid>
+
+                <!-- Selection Contextual Header -->
+                <Grid IsVisible="{Binding IsSelectionMode}"
+                      Padding="12,10,12,10"
+                      ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto"
+                      ColumnSpacing="14"
+                      BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}">
+                    <Grid Grid.Column="0" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                        <Image Source="close.png"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnExitSelectionMode" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Label Grid.Column="1"
+                           Text="{Binding SelectedCountText}"
+                           FontSize="16"
+                           FontFamily="{DynamicResource AppFontFamilyBold}"
+                           VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                    <Grid Grid.Column="2" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                        <Image Source="checklist.png"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_SelectAll}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSelectAllTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Grid Grid.Column="3" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                        <Image Source="copy.png"
+                               WidthRequest="19"
+                               HeightRequest="19"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_CopyText}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCopySelectedTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Grid Grid.Column="4" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                        <Image Source="star.png"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_Star}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnStarSelectedTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Grid Grid.Column="5" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                        <Image Source="trash.png"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_Delete}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="#EF4444" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnDeleteSelectedTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <CollectionView x:Name="MessagesList"
+                                Margin="0"
+                                ItemsSource="{Binding Items}"
+                                ItemTemplate="{StaticResource ChatSelector}"
+                                SelectionMode="None"
+                                Scrolled="OnMessagesScrolled"
+                                VerticalScrollBarVisibility="Never">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical"
+                                           ItemSpacing="0" />
+                    </CollectionView.ItemsLayout>
+                </CollectionView>
+
+                <Border Margin="0,8,0,0"
+                        Padding="12,4"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 11"
+                        BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Start"
+                        IsVisible="{Binding HasStickyDate}"
+                        InputTransparent="True">
+                    <Label Text="{Binding StickyDate}"
+                           FontSize="11"
+                           TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                </Border>
+
+                <Grid x:Name="SkeletonOverlay"
+                      IsVisible="False"
+                      InputTransparent="True"
+                      Padding="12,16"
+                      RowSpacing="14"
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                      VerticalOptions="End">
+                    <Border Grid.Row="0"
+                            WidthRequest="210"
+                            HeightRequest="42"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#1C1F24}"
+                            HorizontalOptions="Start" />
+                    <Border Grid.Row="1"
+                            WidthRequest="180"
+                            HeightRequest="52"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{AppThemeBinding Light=#D0E6DA, Dark=#173827}"
+                            HorizontalOptions="End" />
+                    <Border Grid.Row="2"
+                            WidthRequest="260"
+                            HeightRequest="46"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#1C1F24}"
+                            HorizontalOptions="Start" />
+                    <Border Grid.Row="3"
+                            WidthRequest="230"
+                            HeightRequest="42"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{AppThemeBinding Light=#D0E6DA, Dark=#173827}"
+                            HorizontalOptions="End" />
+                    <Border Grid.Row="4"
+                            WidthRequest="160"
+                            HeightRequest="38"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#1C1F24}"
+                            HorizontalOptions="Start" />
+                </Grid>
+
+                <Border x:Name="ScrollToBottomButton"
+                        Margin="0,0,16,16"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20"
+                        BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                        HorizontalOptions="End"
+                        VerticalOptions="End"
+                        IsVisible="False"
+                        Opacity="0">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,2" Radius="4" Opacity="0.3" />
+                    </Border.Shadow>
+                    <Grid>
+                        <Image Source="back.png"
+                               Rotation="270"
+                               WidthRequest="18"
+                               HeightRequest="18"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnScrollToBottomTapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
+
+            <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode) -->
+            <Grid Grid.Row="2"
+                  IsVisible="{Binding IsNotSelectionMode}"
+                  Padding="10,6,10,8"
+                  ColumnDefinitions="Auto,*,Auto,Auto"
+                  ColumnSpacing="6">
+                <Border Grid.Column="0"
+                        WidthRequest="34"
+                        HeightRequest="34"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 17"
+                        BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Chat_Attach}">
+                    <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+                        <Image Source="plus.png"
+                               WidthRequest="16"
+                               HeightRequest="16"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                </Border>
+                <Border Grid.Column="1"
+                        Padding="12,0"
+                        MinimumHeightRequest="36"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 18"
+                        BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                        VerticalOptions="Center">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" VerticalOptions="Center">
+                        <Editor Grid.Column="0"
+                                x:Name="MessageEntry"
+                                VerticalOptions="Center"
+                                VerticalTextAlignment="Center"
+                                Text="{Binding Draft}"
+                                Placeholder="{loc:Translate Chat_MessageHint}"
+                                FontSize="13"
+                                AutoSize="TextChanges"
+                                MinimumHeightRequest="0"
+                                MaximumHeightRequest="100"
+                                BackgroundColor="Transparent"
+                                TextChanged="OnMessageEntryTextChanged" />
+                        <Grid Grid.Column="1" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                            <Image Source="emoji.png"
+                                   WidthRequest="20"
+                                   HeightRequest="20"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   SemanticProperties.Description="{loc:Translate Chat_Emoji}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <Border Grid.Column="2"
+                        WidthRequest="34"
+                        HeightRequest="34"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 17"
+                        BackgroundColor="{Binding SimBadgeColor}"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Chat_Sim}">
+                    <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+                        <Label Text="{Binding SimText}"
+                               Margin="0,-2,0,0"
+                               FontSize="13"
+                               FontFamily="{DynamicResource AppFontFamilyBold}"
+                               TextColor="White"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center" />
+                    </Grid>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSimTap" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border Grid.Column="3"
+                        WidthRequest="36"
+                        HeightRequest="36"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 18"
+                        BackgroundColor="{StaticResource Primary}"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Chat_Send}">
+                    <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+                        <Image Source="send.png"
+                               Margin="0,3,0,0"
+                               WidthRequest="18"
+                               HeightRequest="18"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="White" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSend" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ================= LAYER 2 & 3: FLOATING SELECTION OVERLAY ================= -->
+        <Grid x:Name="SelectionOverlay"
+              IsVisible="False"
+              Opacity="0"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+            <!-- Layer 2: Backdrop Scrim -->
+            <BoxView x:Name="OverlayScrim"
+                     BackgroundColor="{AppThemeBinding Light=#73000000, Dark=#A6000000}"
+                     HorizontalOptions="Fill"
+                     VerticalOptions="Fill">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDismissSelectionOverlay" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+
+            <!-- Layer 3: Interactive Floating Group -->
+            <ScrollView x:Name="OverlayScroll"
+                        Padding="0"
+                        VerticalScrollBarVisibility="Never"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill">
+                <ScrollView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDismissSelectionOverlay" />
+                </ScrollView.GestureRecognizers>
+                <VerticalStackLayout x:Name="OverlayContent"
+                                     Spacing="0"
+                                     Margin="16,24,16,24"
+                                     HorizontalOptions="Fill"
+                                     VerticalOptions="Center">
+                    <!-- 1. Floating Quick Reactions Dock -->
+                    <Border x:Name="ReactionDock"
+                            StrokeThickness="1"
+                            Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                            StrokeShape="RoundRectangle 24"
+                            BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                            Padding="10,6"
+                            Margin="4,0,4,10"
+                            HorizontalOptions="Start">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnMenuTapEater" />
+                        </Border.GestureRecognizers>
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.2" />
+                        </Border.Shadow>
+                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                            <Label Text="👍" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnReactionThumbTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Text="❤️" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnReactionHeartTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Text="😂" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnReactionJoyTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Text="😮" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnReactionWowTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Text="😢" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnReactionSadTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <Label Text="✂️" FontSize="20" Padding="5,2" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnReactionGheychiTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                            <BoxView WidthRequest="1" HeightRequest="16" BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}" VerticalOptions="Center" Margin="2,0" />
+                            <Grid WidthRequest="28" HeightRequest="28" VerticalOptions="Center">
+                                <Image Source="plus.png" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMoreReactionsTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- 2. The Lifted & Highlighted Focused Message -->
+                    <Border x:Name="ElevatedBubbleBorder"
+                            Padding="10,7"
+                            Margin="4,0,4,0"
+                            StrokeThickness="1.5"
+                            Stroke="{StaticResource Primary}"
+                            StrokeShape="RoundRectangle 16"
+                            MaximumHeightRequest="240"
+                            HorizontalOptions="Start">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,8" Radius="20" Opacity="0.3" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="3">
+                            <Label x:Name="ElevatedBubbleBody"
+                                   FontSize="13"
+                                   LineBreakMode="WordWrap" />
+                            <Label x:Name="ElevatedBubbleLink"
+                                   FontSize="13"
+                                   LineBreakMode="WordWrap"
+                                   TextColor="{StaticResource AccentText}"
+                                   TextDecorations="Underline"
+                                   IsVisible="False" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Selection Metadata Chip -->
+                    <HorizontalStackLayout x:Name="ElevatedMetadataGroup" Spacing="6" Margin="6,6,6,0">
+                        <Label x:Name="ElevatedBubbleTime"
+                               FontSize="11"
+                               TextColor="{AppThemeBinding Light=#FFFFFF, Dark=#E8EAED}"
+                               VerticalOptions="Center" />
+                        <Border Padding="6,2"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                VerticalOptions="Center">
+                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                                <Label Text="✓" FontSize="10" TextColor="{StaticResource Primary}" FontFamily="{DynamicResource AppFontFamilyBold}" VerticalOptions="Center" />
+                                <Label Text="{loc:Translate Chat_Selected}"
+                                       FontSize="10"
+                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </HorizontalStackLayout>
+
+                    <!-- 3. Floating Context Options Popover Menu -->
+                    <Border x:Name="ContextActionMenu"
+                            Margin="4,14,4,0"
+                            WidthRequest="260"
+                            StrokeThickness="1"
+                            Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                            StrokeShape="RoundRectangle 18"
+                            BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                            HorizontalOptions="Start">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnMenuTapEater" />
+                        </Border.GestureRecognizers>
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,10" Radius="24" Opacity="0.3" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Padding="6" Spacing="2">
+                            <!-- Copy URL (Only visible when link present) -->
+                            <Grid x:Name="CopyUrlActionRow"
+                                  Padding="10,8"
+                                  ColumnDefinitions="Auto,*,Auto"
+                                  ColumnSpacing="10"
+                                  VerticalOptions="Center">
+                                <Image Grid.Column="0" Source="link.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{StaticResource Primary}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Grid.Column="1"
+                                       Text="{loc:Translate Chat_CopyUrl}"
+                                       FontSize="13"
+                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       TextColor="{StaticResource Primary}"
+                                       VerticalOptions="Center" />
+                                <Border Grid.Column="2"
+                                        Padding="5,1"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 6"
+                                        BackgroundColor="{AppThemeBinding Light=#EBF3EE, Dark=#142B1F}"
+                                        VerticalOptions="Center">
+                                    <Label Text="{loc:Translate Chat_LinkBadge}"
+                                           FontSize="9.5"
+                                           FontFamily="{DynamicResource AppFontFamilyBold}"
+                                           TextColor="{StaticResource Primary}"
+                                           VerticalOptions="Center" />
+                                </Border>
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnCopyUrlTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+
+                            <!-- Copy Text -->
+                            <Grid Padding="10,8"
+                                  ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10"
+                                  VerticalOptions="Center">
+                                <Image Grid.Column="0" Source="copy.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Grid.Column="1"
+                                       Text="{loc:Translate Chat_CopyText}"
+                                       FontSize="13"
+                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnCopyTextTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+
+                            <!-- Star / Unstar -->
+                            <Grid Padding="10,8"
+                                  ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10"
+                                  VerticalOptions="Center">
+                                <Image Grid.Column="0"
+                                       x:Name="MenuStarIcon"
+                                       Source="star.png"
+                                       WidthRequest="18"
+                                       HeightRequest="18"
+                                       VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Grid.Column="1"
+                                       x:Name="MenuStarLabel"
+                                       Text="{loc:Translate Chat_Star}"
+                                       FontSize="13"
+                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMenuStarTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#F1F4FA, Dark=#2A2E35}" Margin="0,3" />
+
+                            <!-- Select More -->
+                            <Grid Padding="10,8"
+                                  ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10"
+                                  VerticalOptions="Center">
+                                <Image Grid.Column="0" Source="checklist.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Grid.Column="1"
+                                       Text="{loc:Translate Chat_SelectMore}"
+                                       FontSize="13"
+                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMenuSelectMoreTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+
+                            <!-- Info -->
+                            <Grid Padding="10,8"
+                                  ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10"
+                                  VerticalOptions="Center">
+                                <Image Grid.Column="0" Source="info.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Grid.Column="1"
+                                       Text="{loc:Translate Chat_Info}"
+                                       FontSize="13"
+                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMenuInfoTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+
+                            <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#F1F4FA, Dark=#2A2E35}" Margin="0,3" />
+
+                            <!-- Delete -->
+                            <Grid Padding="10,8"
+                                  ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10"
+                                  VerticalOptions="Center">
+                                <Image Grid.Column="0" Source="trash.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="#EF4444" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Grid.Column="1"
+                                       Text="{loc:Translate Chat_Delete}"
+                                       FontSize="13"
+                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       TextColor="#EF4444"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMenuDeleteTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+        <!-- ================= CURATED EMOJI PICKER SHEET ================= -->
+        <Grid x:Name="CuratedEmojiModal"
+              IsVisible="False"
+              Opacity="0"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+            <BoxView BackgroundColor="{AppThemeBinding Light=#60000000, Dark=#90000000}">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCloseEmojiModalTapped" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+            <Border Margin="16,0,16,24"
+                    StrokeThickness="1"
+                    Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                    StrokeShape="RoundRectangle 24"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                    VerticalOptions="End"
+                    HorizontalOptions="Fill"
+                    Padding="16,14">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,10" Radius="24" Opacity="0.35" />
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{loc:Translate Chat_ReactionsMore}"
+                               FontSize="14"
+                               FontFamily="{DynamicResource AppFontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                               VerticalOptions="Center" />
+                        <Grid Grid.Column="1" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                            <Image Source="close.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                </Image.Behaviors>
+                            </Image>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCloseEmojiModalTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Grid>
+                    <FlexLayout Wrap="Wrap" JustifyContent="SpaceBetween" AlignItems="Center">
+                        <Label Text="🔥" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🔥" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🎉" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🎉" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🙏" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🙏" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="👏" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="👏" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="💯" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💯" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🤔" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🤔" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="💩" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💩" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="✨" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="✨" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🚀" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🚀" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="😍" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="😍" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🥳" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🥳" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="👀" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="👀" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="💪" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💪" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🤝" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🤝" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="💡" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="💡" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🎯" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🎯" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🙌" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🙌" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="🤩" FontSize="26" Padding="6,4">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnCuratedEmojiTapped" CommandParameter="🤩" /></Label.GestureRecognizers>
+                        </Label>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- ================= MESSAGE INFO SHEET ================= -->
+        <Grid x:Name="MessageInfoModal"
+              IsVisible="False"
+              Opacity="0"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+            <BoxView BackgroundColor="{AppThemeBinding Light=#60000000, Dark=#90000000}">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCloseInfoModalTapped" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+            <Border Margin="24,0,24,0"
+                    StrokeThickness="1"
+                    Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                    StrokeShape="RoundRectangle 24"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Fill"
+                    Padding="20,18">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,10" Radius="24" Opacity="0.35" />
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{loc:Translate Chat_InfoTitle}"
+                               FontSize="16"
+                               FontFamily="{DynamicResource AppFontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                               VerticalOptions="Center" />
+                        <Grid Grid.Column="1" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                            <Image Source="close.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                </Image.Behaviors>
+                            </Image>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCloseInfoModalTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#F1F4FA, Dark=#2A2E35}" />
+
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Label Text="{loc:Translate Chat_InfoType}" FontSize="13" TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                            <Label Grid.Column="1" x:Name="InfoTypeLabel" FontSize="13" FontFamily="{DynamicResource AppFontFamilyBold}" TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" HorizontalTextAlignment="End" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Label Text="{loc:Translate Chat_InfoTime}" FontSize="13" TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                            <Label Grid.Column="1" x:Name="InfoTimeLabel" FontSize="13" TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" HorizontalTextAlignment="End" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Label Text="{loc:Translate Chat_InfoStatus}" FontSize="13" TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                            <Label Grid.Column="1" x:Name="InfoStatusLabel" FontSize="13" TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" HorizontalTextAlignment="End" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Label Text="{loc:Translate Chat_InfoSim}" FontSize="13" TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                            <Label Grid.Column="1" x:Name="InfoSimLabel" FontSize="13" TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" HorizontalTextAlignment="End" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentView>

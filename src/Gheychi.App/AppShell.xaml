@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Gheychi.App.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:Gheychi.App.Pages"
+    xmlns:loc="clr-namespace:Gheychi.App.Localization"
+    Title="Gheychi">
+
+    <TabBar>
+        <ShellContent
+            Title="{loc:Translate Tab_Messages}"
+            Icon="tabmessages.png"
+            Route="messages"
+            ContentTemplate="{DataTemplate pages:MessagesPage}" />
+        <ShellContent
+            Title="{loc:Translate Tab_Spam}"
+            Icon="tabspam.png"
+            Route="spam"
+            ContentTemplate="{DataTemplate pages:SpamPage}" />
+        <ShellContent
+            Title="{loc:Translate Tab_Settings}"
+            Icon="tabsettings.png"
+            Route="settings"
+            ContentTemplate="{DataTemplate pages:SettingsPage}" />
+    </TabBar>
+
+</Shell>

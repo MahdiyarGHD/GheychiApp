@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/Gheychi.App/Gheychi.App.csproj" />
+  <Project Path="src/Gheychi.Core/Gheychi.Core.csproj" />
+  <Project Path="src/Gheychi.Infrastructure/Gheychi.Infrastructure.csproj" />
+  <Project Path="tests/Gheychi.Core.Tests/Gheychi.Core.Tests.csproj" />
+  <Project Path="tests/Gheychi.Infrastructure.Tests/Gheychi.Infrastructure.Tests.csproj" />
+</Solution>

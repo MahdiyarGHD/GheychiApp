@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+             xmlns:controls="clr-namespace:Gheychi.App.Controls"
+             x:Class="Gheychi.App.Pages.MessagesPage"
+             Shell.NavBarIsVisible="False">
+
+    <Grid>
+        <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0"
+                Margin="16,12,16,8"
+                Padding="14,10"
+                BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 28">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                <Image Grid.Column="0"
+                       Source="search.png"
+                       WidthRequest="20"
+                       HeightRequest="20"
+                       SemanticProperties.Description="{loc:Translate Search}">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#6B7280, Dark=#9AA0AB}" />
+                    </Image.Behaviors>
+                </Image>
+                <Label Grid.Column="1"
+                       Text="{loc:Translate Search_Messages}"
+                       TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
+                       FontSize="13"
+                       LineBreakMode="TailTruncation"
+                       VerticalOptions="Center" />
+                <Image Grid.Column="2"
+                       Source="tabspam.png"
+                       WidthRequest="20"
+                       HeightRequest="20"
+                       VerticalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#6B7280, Dark=#9AA0AB}" />
+                    </Image.Behaviors>
+                </Image>
+                <Border Grid.Column="3"
+                       WidthRequest="32"
+                       HeightRequest="32"
+                       StrokeThickness="0"
+                       StrokeShape="RoundRectangle 16"
+                       BackgroundColor="{AppThemeBinding Light=#DDE3EA, Dark=#2A2E35}">
+                    <Image Source="person.png"
+                           WidthRequest="16"
+                           HeightRequest="16">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                        </Image.Behaviors>
+                    </Image>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <CollectionView Margin="8,4,8,0"
+                            ItemsSource="{Binding Threads}"
+                            ItemSizingStrategy="MeasureFirstItem"
+                            SelectionMode="Single"
+                            SelectionChanged="OnThreadTapped"
+                            Scrolled="OnThreadsScrolled"
+                            VerticalScrollBarVisibility="Never">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ThreadItem">
+                    <Grid Padding="8,10"
+                          HeightRequest="68"
+                          ColumnDefinitions="Auto,*,Auto"
+                          ColumnSpacing="14"
+                          HorizontalOptions="Fill"
+                          BackgroundColor="Transparent">
+                        <Frame Grid.Column="0"
+                               WidthRequest="46"
+                               HeightRequest="46"
+                               CornerRadius="23"
+                               Padding="0"
+                               HasShadow="False"
+                               BorderColor="Transparent"
+                               BackgroundColor="{Binding AvatarBgColor}">
+                            <Grid>
+                                <Image IsVisible="{Binding HasIcon}"
+                                       Source="{Binding IconFile}"
+                                       WidthRequest="24"
+                                       HeightRequest="24"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       SemanticProperties.Description="{Binding Name}">
+                                     <Image.Behaviors>
+                                         <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                                     </Image.Behaviors>
+                                </Image>
+                                <Label Text="{Binding Initials}"
+                                       IsVisible="{Binding HasNoIcon}"
+                                       TextColor="{Binding AvatarTextColor}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       HorizontalTextAlignment="Center"
+                                       VerticalTextAlignment="Center" />
+                            </Grid>
+                        </Frame>
+
+                        <Grid Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="3" VerticalOptions="Center" HorizontalOptions="Fill">
+                            <Label Grid.Row="0"
+                                   Text="{Binding Name}"
+                                   FontSize="14"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1"
+                                   HorizontalOptions="Fill"
+                                   VerticalOptions="Center" />
+
+                            <Label Grid.Row="1"
+                                   Text="{Binding Preview}"
+                                   FontSize="12"
+                                   TextColor="{Binding PreviewColor}"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1"
+                                   HorizontalOptions="Fill"
+                                   VerticalOptions="Center" />
+                        </Grid>
+
+                        <Grid Grid.Column="2" RowDefinitions="Auto,Auto" RowSpacing="6" VerticalOptions="Center" HorizontalOptions="End">
+                            <Label Grid.Row="0"
+                                   Text="{Binding Time}"
+                                   FontSize="11"
+                                   TextColor="{Binding TimeColor}"
+                                   HorizontalOptions="End" />
+                            <Frame Grid.Row="1"
+                                   IsVisible="{Binding IsUnread}"
+                                   Padding="7,1"
+                                   CornerRadius="9"
+                                   HasShadow="False"
+                                   BorderColor="Transparent"
+                                   BackgroundColor="{StaticResource Primary}"
+                                   HorizontalOptions="End">
+                                <Label Text="{Binding CountText}"
+                                       FontSize="11"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="White"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                            </Frame>
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Border Margin="0,0,24,24"
+                WidthRequest="58"
+                HeightRequest="58"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 29"
+                BackgroundColor="{StaticResource Primary}"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                SemanticProperties.Description="{loc:Translate Compose}">
+            <Image Source="compose.png"
+                   WidthRequest="24"
+                   HeightRequest="24">
+                <Image.Behaviors>
+                    <behaviors:IconTintBehavior TintColor="White" />
+                </Image.Behaviors>
+            </Image>
+        </Border>
+
+        </Grid>
+
+        </Grid>
+
+        <controls:ChatView x:Name="ChatOverlay"
+                           IsVisible="True"
+                           InputTransparent="True"
+                           TranslationY="3000"
+                           VerticalOptions="Fill"
+                           HorizontalOptions="Fill" />
+
+    </Grid>
+</ContentPage>
