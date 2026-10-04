@@ -192,6 +192,24 @@
   <data name="Messages_Archive" xml:space="preserve">
     <value>Archive</value>
   </data>
+  <data name="Archive_Title" xml:space="preserve">
+    <value>Archived</value>
+  </data>
+  <data name="Archive_SearchHint" xml:space="preserve">
+    <value>Search archived messages or sender…</value>
+  </data>
+  <data name="Archive_EmptyTitle" xml:space="preserve">
+    <value>No archived conversations</value>
+  </data>
+  <data name="Archive_EmptyMessage" xml:space="preserve">
+    <value>Conversations you archive will rest here.</value>
+  </data>
+  <data name="Archive_NoMatches" xml:space="preserve">
+    <value>No matching conversations</value>
+  </data>
+  <data name="Messages_Unarchive" xml:space="preserve">
+    <value>Unarchive</value>
+  </data>
   <data name="Messages_MarkAsUnread" xml:space="preserve">
     <value>Mark as unread</value>
   </data>

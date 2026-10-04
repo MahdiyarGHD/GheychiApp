@@ -1,7 +1,7 @@
 #if ANDROID
 using Android.Views;
 #endif
-using Gheychi.App.Pages;
+using Gheychi.App.Gestures;
 using Gheychi.App.ViewModels;
 using Microsoft.Maui.Controls;
 using View = Microsoft.Maui.Controls.View;
@@ -140,10 +140,10 @@ public static class ThreadHoldBehavior
                 return false;
 
             Element? p = view.Parent;
-            while (p != null && p is not MessagesPage)
+            while (p != null && p is not IThreadRowHost)
                 p = p.Parent;
 
-            if (p is MessagesPage page && view.BindingContext is ThreadItem thread)
+            if (p is IThreadRowHost page && view.BindingContext is ThreadItem thread)
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
@@ -179,10 +179,10 @@ public static class ThreadHoldBehavior
             catch { }
 
             Element? p = view.Parent;
-            while (p != null && p is not MessagesPage)
+            while (p != null && p is not IThreadRowHost)
                 p = p.Parent;
 
-            if (p is MessagesPage page && view.BindingContext is ThreadItem thread)
+            if (p is IThreadRowHost page && view.BindingContext is ThreadItem thread)
             {
                 _onFired();
                 MainThread.BeginInvokeOnMainThread(() =>

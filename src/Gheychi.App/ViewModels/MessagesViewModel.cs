@@ -15,7 +15,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private bool _hasPermission = true;
     private bool _initialized;
     private bool _reloadPending;
-    private readonly Task<List<ThreadItem>> _snapshotTask;
+    private readonly Task<BuiltThreads> _snapshotTask;
 
     private const string ArchivedKey = "archived_threads_v1";
     private const int MaxIncrementalChanges = 40;
@@ -34,6 +34,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     }
 
     public FastObservableCollection<ThreadItem> Threads { get; } = [];
+
+    public FastObservableCollection<ThreadItem> ArchivedThreads { get; } = [];
+
+    private readonly record struct BuiltThreads(List<ThreadItem> Inbox, List<ThreadItem> Archived);
 
     private bool _isSelectionMode;
     public bool IsSelectionMode
@@ -90,6 +94,27 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(AllSelectedAreUnread));
     }
 
+    public Task<bool> UnarchiveThreadsAsync(IReadOnlyList<ThreadItem> threads)
+    {
+        if (threads.Count == 0)
+            return Task.FromResult(false);
+
+        var archivedIds = GetArchivedThreadIds();
+        foreach (var t in threads)
+            archivedIds.Remove(t.ThreadId);
+        SaveArchivedThreadIds(archivedIds);
+
+        // The rows leave the archive now; the reload puts them back into the inbox in date order.
+        foreach (var t in threads)
+        {
+            t.IsSelected = false;
+            ArchivedThreads.Remove(t);
+        }
+
+        _ = LoadThreadsAsync();
+        return Task.FromResult(true);
+    }
+
     public async Task<bool> DeleteSelectedThreadsAsync()
     {
         var selected = SelectedThreads;
@@ -132,13 +157,17 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
         SaveArchivedThreadIds(archivedIds);
 
+        // The moved rows are shown in the archive straight away; the reload below rebuilds both lists.
         MainThread.BeginInvokeOnMainThread(() =>
         {
             foreach (var t in selected)
             {
                 Threads.Remove(t);
+                t.IsSelected = false;
             }
             ExitSelectionMode();
+            ArchivedThreads.AddRange(selected);
+            _ = LoadThreadsAsync();
         });
 
         return Task.FromResult(true);
@@ -230,8 +259,12 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         if (Threads.Count == 0)
         {
             var cached = await _snapshotTask;
-            if (cached.Count > 0 && Threads.Count == 0)
-                Threads.Reset(cached);
+            if (cached.Inbox.Count > 0 && Threads.Count == 0)
+            {
+                Threads.Reset(cached.Inbox);
+                if (ArchivedThreads.Count == 0)
+                    ArchivedThreads.Reset(cached.Archived);
+            }
         }
 
         await _smsService.EnsureDefaultSmsAppAsync();
@@ -260,7 +293,11 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
             var items = await Task.Run(() => BuildItems(rawThreads));
 
-            MainThread.BeginInvokeOnMainThread(() => ApplyThreads(items));
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                ApplyItems(Threads, items.Inbox);
+                ApplyItems(ArchivedThreads, items.Archived);
+            });
 
             if (HasPermission)
                 _ = Task.Run(() => ThreadSnapshotStore.Save(SnapshotPath, rawThreads));
@@ -268,7 +305,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             _ = Task.Run(async () =>
             {
                 await Task.Delay(800);
-                ChatViewModel.PreloadVisibleThreads(items.Take(12), _smsService, _dateFormatter);
+                ChatViewModel.PreloadVisibleThreads(items.Inbox.Take(12), _smsService, _dateFormatter);
             });
         }
         finally
@@ -282,25 +319,23 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
     }
 
-    private List<ThreadItem> BuildItems(IReadOnlyList<SmsThread> rawThreads)
+    private BuiltThreads BuildItems(IReadOnlyList<SmsThread> rawThreads)
     {
         var archivedIds = GetArchivedThreadIds();
         var now = DateTime.Now;
         var culture = CultureInfo.CurrentUICulture;
 
         var items = new List<ThreadItem>(rawThreads.Count);
+        var archived = new List<ThreadItem>();
         foreach (var t in rawThreads)
         {
-            if (archivedIds.Contains(t.ThreadId))
-                continue;
-
             var name = !string.IsNullOrWhiteSpace(t.ContactName)
                 ? t.ContactName
                 : PhoneNumberNormalizer.IsAlphanumeric(t.Address)
                     ? t.Address
                     : PhoneNumberNormalizer.FormatDisplay(t.Address);
 
-            items.Add(new ThreadItem
+            (archivedIds.Contains(t.ThreadId) ? archived : items).Add(new ThreadItem
             {
                 ThreadId = t.ThreadId,
                 SubId = t.SubId,
@@ -317,31 +352,32 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             });
         }
 
-        return items;
+        return new BuiltThreads(items, archived);
     }
 
     // A full Reset drops the scroll position and rebinds every visible row, so refreshes
     // after the first paint only touch the rows that actually changed.
-    private void ApplyThreads(List<ThreadItem> items)
+    internal static void ApplyItems(FastObservableCollection<ThreadItem> target, List<ThreadItem> items)
     {
-        if (Threads.Count == 0)
+        if (target.Count == 0)
         {
-            Threads.Reset(items);
+            if (items.Count > 0)
+                target.Reset(items);
             return;
         }
 
         // Individual notifications are cheaper than a Reset only while few rows change.
-        if (ListSynchronizer.ExceedsChangeLimit(Threads, items, t => t.ThreadId, (a, b) => a.HasSameContent(b), MaxIncrementalChanges))
+        if (ListSynchronizer.ExceedsChangeLimit(target, items, t => t.ThreadId, (a, b) => a.HasSameContent(b), MaxIncrementalChanges))
         {
-            var selectedIds = Threads.Where(t => t.IsSelected).Select(t => t.ThreadId).ToHashSet();
+            var selectedIds = target.Where(t => t.IsSelected).Select(t => t.ThreadId).ToHashSet();
             foreach (var item in items)
                 item.IsSelected = selectedIds.Contains(item.ThreadId);
-            Threads.Reset(items);
+            target.Reset(items);
             return;
         }
 
         ListSynchronizer.Sync(
-            Threads,
+            target,
             items,
             t => t.ThreadId,
             (a, b) => a.HasSameContent(b),

@@ -9,7 +9,7 @@
              Shell.NavBarIsVisible="False">
 
     <Grid x:Name="RootGrid">
-        <Grid RowDefinitions="Auto,*">
+        <Grid x:Name="InboxLayer" RowDefinitions="Auto,*">
 
         <!-- Top Header Area: Normal Search Header or Selection Contextual Header -->
         <Grid Grid.Row="0">

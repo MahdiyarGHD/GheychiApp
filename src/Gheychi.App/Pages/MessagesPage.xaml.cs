@@ -1,9 +1,10 @@
 using Gheychi.App.Controls;
+using Gheychi.App.Gestures;
 using Gheychi.App.ViewModels;
 
 namespace Gheychi.App.Pages;
 
-public partial class MessagesPage : ContentPage
+public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClient
 {
     private bool _animating;
     private long _lastScrollTime;
@@ -15,12 +16,16 @@ public partial class MessagesPage : ContentPage
     private bool _overlaysWarmedUp;
     private ChatView? _chatOverlay;
     private SearchView? _searchOverlay;
+    private ArchiveView? _archiveOverlay;
+    private bool _archiveOpen;
+    private bool _swipeDragging;
     private MessagesViewModel? Vm => BindingContext as MessagesViewModel;
 
     // ChatView (1000+ lines of XAML) and SearchView are only needed once the user opens them;
     // building them in the constructor delayed the first inbox frame.
     private ChatView ChatOverlay => _chatOverlay ??= CreateChatOverlay();
     private SearchView SearchOverlay => _searchOverlay ??= CreateSearchOverlay();
+    private ArchiveView ArchiveOverlay => _archiveOverlay ??= CreateArchiveOverlay();
     private bool IsChatClosed => _chatOverlay is null || _chatOverlay.InputTransparent;
     private bool IsSearchClosed => _searchOverlay is null || _searchOverlay.InputTransparent;
 
@@ -64,9 +69,47 @@ public partial class MessagesPage : ContentPage
         return search;
     }
 
+    private ArchiveView CreateArchiveOverlay()
+    {
+        var archive = new ArchiveView
+        {
+            IsVisible = true,
+            InputTransparent = true,
+            TranslationX = -OpenSwipeSign * OffscreenDistance,
+            VerticalOptions = LayoutOptions.Fill,
+            HorizontalOptions = LayoutOptions.Fill
+        };
+        archive.BackRequested += OnArchiveBackRequested;
+        archive.ThreadOpened += OnArchiveThreadOpened;
+        if (Vm != null)
+            archive.Initialize(Vm);
+
+        // Under the chat and search overlays, which open on top of it.
+        RootGrid.Children.Insert(1, archive);
+        return archive;
+    }
+
+    private void OnArchiveBackRequested(object? sender, EventArgs e) => _ = CloseArchiveAsync();
+
+    private void OnArchiveThreadOpened(object? sender, ThreadItem thread)
+    {
+        if (_animating || !IsChatClosed)
+            return;
+
+        OpenChatSafely(thread);
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        if (ReferenceEquals(PageSwipe.Client, this))
+            PageSwipe.Client = null;
+    }
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        PageSwipe.Client = this;
         try
         {
             if (Vm != null)
@@ -98,6 +141,10 @@ public partial class MessagesPage : ContentPage
             await Task.Delay(400);
             await WaitForScrollIdleAsync();
             _ = SearchOverlay;
+
+            await Task.Delay(400);
+            await WaitForScrollIdleAsync();
+            _ = ArchiveOverlay;
         }
         catch
         {
@@ -549,8 +596,153 @@ public partial class MessagesPage : ContentPage
         OpenChatSafely(thread);
     }
 
+    private const double OffscreenDistance = 3000;
+    private const double InboxParallax = 0.25;
+    private const double FlingVelocity = 700;
+
+    // Finger direction that opens the archive: toward the leading edge's opposite side, so the
+    // archive page sits past the trailing edge and mirrors in right-to-left languages.
+    private static int OpenSwipeSign =>
+        Localization.CultureService.GetFlowDirection() == FlowDirection.RightToLeft ? 1 : -1;
+
+    private double PageWidth => Width > 0 ? Width : DeviceDisplay.Current.MainDisplayInfo.Width / Math.Max(1, DeviceDisplay.Current.MainDisplayInfo.Density);
+
+    public int AllowedSwipeSign
+    {
+        get
+        {
+            if (_animating || !IsChatClosed || !IsSearchClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true)
+                return 0;
+
+            if (_archiveOpen)
+                return _archiveOverlay?.IsSelectionMode == true ? 0 : -OpenSwipeSign;
+
+            return OpenSwipeSign;
+        }
+    }
+
+    public void OnSwipeStarted()
+    {
+        _swipeDragging = true;
+        if (Vm != null)
+            ArchiveOverlay.Initialize(Vm);
+        ArchiveOverlay.InputTransparent = true;
+        SetArchiveProgress(_archiveOpen ? 1 : 0);
+    }
+
+    public void OnSwipeMoved(double offsetDp)
+    {
+        if (!_swipeDragging)
+            return;
+
+        SetArchiveProgress(ProgressFor(offsetDp));
+    }
+
+    public void OnSwipeEnded(double offsetDp, double velocityDpPerSecond, bool cancelled)
+    {
+        if (!_swipeDragging)
+            return;
+        _swipeDragging = false;
+
+        var wasOpen = _archiveOpen;
+        var progress = ProgressFor(offsetDp);
+
+        // Positive when the finger is moving the way the current gesture is heading.
+        var heading = wasOpen ? -OpenSwipeSign : OpenSwipeSign;
+        var toward = velocityDpPerSecond * heading;
+
+        bool open;
+        if (cancelled)
+            open = wasOpen;
+        else if (!wasOpen)
+            open = toward > FlingVelocity || (toward > -FlingVelocity && progress > 0.4);
+        else
+            open = !(toward > FlingVelocity || (toward > -FlingVelocity && progress < 0.6));
+
+        _ = SettleArchiveAsync(open, progress, Math.Abs(velocityDpPerSecond));
+    }
+
+    private double ProgressFor(double offsetDp)
+    {
+        var width = PageWidth;
+        if (_archiveOpen)
+            return 1 - Math.Clamp(offsetDp * -OpenSwipeSign / width, 0, 1);
+
+        return Math.Clamp(offsetDp * OpenSwipeSign / width, 0, 1);
+    }
+
+    private void SetArchiveProgress(double progress)
+    {
+        var width = PageWidth;
+        ArchiveOverlay.TranslationX = -OpenSwipeSign * width * (1 - progress);
+        InboxLayer.TranslationX = OpenSwipeSign * width * InboxParallax * progress;
+    }
+
+    private async Task SettleArchiveAsync(bool open, double fromProgress, double velocity)
+    {
+        if (_animating)
+            return;
+        _animating = true;
+        try
+        {
+            var width = PageWidth;
+            var targetProgress = open ? 1.0 : 0.0;
+            var remainingDp = Math.Abs(targetProgress - fromProgress) * width;
+            var duration = (uint)Math.Clamp(remainingDp / Math.Max(velocity, 900) * 1000, 140, 300);
+
+            var archiveX = -OpenSwipeSign * width * (1 - targetProgress);
+            var inboxX = OpenSwipeSign * width * InboxParallax * targetProgress;
+
+            if (!open)
+                ArchiveOverlay.InputTransparent = true;
+
+            await Task.WhenAll(
+                ArchiveOverlay.TranslateToAsync(archiveX, 0, duration, Easing.CubicOut),
+                InboxLayer.TranslateToAsync(inboxX, 0, duration, Easing.CubicOut));
+
+            _archiveOpen = open;
+            if (open)
+            {
+                ArchiveOverlay.InputTransparent = false;
+            }
+            else
+            {
+                ArchiveOverlay.TranslationX = -OpenSwipeSign * OffscreenDistance;
+                ArchiveOverlay.ResetState();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            _archiveOpen = open;
+            SetArchiveProgress(open ? 1 : 0);
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private async Task CloseArchiveAsync()
+    {
+        if (!_archiveOpen)
+            return;
+
+        // Same bookkeeping as a swipe that ends on the closed side.
+        _swipeDragging = false;
+        await SettleArchiveAsync(false, 1, 0);
+    }
+
     protected override bool OnBackButtonPressed()
     {
+        if (_archiveOpen && IsChatClosed && IsSearchClosed)
+        {
+            if (_archiveOverlay?.HandleBack() == true)
+                return true;
+
+            MainThread.BeginInvokeOnMainThread(async () => await CloseArchiveAsync());
+            return true;
+        }
+
         if (SelectBoxOverlay.IsVisible)
         {
             SelectBoxOverlay.IsVisible = false;
