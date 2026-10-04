@@ -1,6 +1,7 @@
 using Gheychi.App.Controls;
 using Gheychi.App.Gestures;
 using Gheychi.App.ViewModels;
+using Gheychi.Core.Models;
 
 namespace Gheychi.App.Pages;
 
@@ -16,6 +17,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private bool _overlaysWarmedUp;
     private ChatView? _chatOverlay;
     private SearchView? _searchOverlay;
+    private ComposeView? _composeOverlay;
+    private bool _composeBusy;
     private ArchiveView? _archiveOverlay;
     private bool _archiveOpen;
     private bool _swipeDragging;
@@ -25,9 +28,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     // building them in the constructor delayed the first inbox frame.
     private ChatView ChatOverlay => _chatOverlay ??= CreateChatOverlay();
     private SearchView SearchOverlay => _searchOverlay ??= CreateSearchOverlay();
+    private ComposeView ComposeOverlay => _composeOverlay ??= CreateComposeOverlay();
     private ArchiveView ArchiveOverlay => _archiveOverlay ??= CreateArchiveOverlay();
     private bool IsChatClosed => _chatOverlay is null || _chatOverlay.InputTransparent;
     private bool IsSearchClosed => _searchOverlay is null || _searchOverlay.InputTransparent;
+    private bool IsComposeClosed => _composeOverlay is null || _composeOverlay.InputTransparent;
 
     public MessagesPage(MessagesViewModel? vm = null)
     {
@@ -148,6 +153,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             await Task.Delay(400);
             await WaitForScrollIdleAsync();
             _ = ArchiveOverlay;
+
+            await Task.Delay(400);
+            await WaitForScrollIdleAsync();
+            _ = ComposeOverlay.PrepareAsync();
         }
         catch
         {
@@ -381,7 +390,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
     }
 
-    private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false, int unreadCount = 0)
+    private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false, int unreadCount = 0, SimCardInfo? sim = null)
     {
         if (_animating)
             return;
@@ -395,6 +404,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // queries so page 1 + its history prefetch run uncontended.
             ChatViewModel.CancelPreload();
             var cacheHit = ChatOverlay.PrepareForTransition(thread);
+            if (sim is not null)
+                ChatOverlay.Vm?.SelectSim(sim.SlotIndex, sim.SubId);
             var offscreenY = Height > 0 ? Height : GetFallbackHeight();
             ChatOverlay.TranslationY = offscreenY;
             ChatOverlay.InputTransparent = false;
@@ -599,8 +610,168 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         OpenChatSafely(thread);
     }
 
+    private ComposeView CreateComposeOverlay()
+    {
+        var compose = new ComposeView
+        {
+            IsVisible = true,
+            InputTransparent = true,
+            TranslationY = OffscreenDistance,
+            VerticalOptions = LayoutOptions.Fill,
+            HorizontalOptions = LayoutOptions.Fill
+        };
+        compose.BackRequested += (_, _) => _ = CloseComposeAsync();
+        compose.RecipientChosen += OnComposeRecipientChosen;
+
+        // Above the inbox and archive, under the chat that opens from it.
+        compose.ZIndex = ComposeZIndex;
+        RootGrid.Children.Add(compose);
+        return compose;
+    }
+
+    private async void OnComposeTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || Vm?.IsSelectionMode == true)
+                return;
+
+            await OpenComposeAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open compose failed: {ex}");
+        }
+    }
+
+    private async Task OpenComposeAsync()
+    {
+        if (_animating)
+            return;
+        _animating = true;
+        try
+        {
+            if (_composeOverlay is null)
+                await EnsureOverlayReadyAsync(ComposeOverlay);
+
+            _ = ComposeOverlay.PrepareAsync();
+            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
+            ComposeOverlay.TranslationY = offscreenY;
+            ComposeOverlay.InputTransparent = false;
+            Shell.SetTabBarIsVisible(this, false);
+
+            await ComposeOverlay.TranslateToAsync(0, 0, 220, Easing.CubicOut);
+            ComposeOverlay.FocusInput();
+        }
+        catch (InvalidOperationException)
+        {
+            ComposeOverlay.TranslationY = 0;
+            Shell.SetTabBarIsVisible(this, false);
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private async Task CloseComposeAsync()
+    {
+        if (_animating || IsComposeClosed)
+            return;
+        _animating = true;
+        try
+        {
+            ComposeOverlay.ResetState();
+            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
+            var slideTask = ComposeOverlay.TranslateToAsync(0, offscreenY, 220, Easing.CubicIn);
+
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(60);
+                MainThread.BeginInvokeOnMainThread(() => Shell.SetTabBarIsVisible(this, true));
+            });
+
+            await slideTask;
+            HideComposeInstantly();
+        }
+        catch (InvalidOperationException)
+        {
+            HideComposeInstantly();
+            Shell.SetTabBarIsVisible(this, true);
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private void HideComposeInstantly()
+    {
+        ComposeOverlay.InputTransparent = true;
+        ComposeOverlay.TranslationY = OffscreenDistance;
+    }
+
+    private async void OnComposeRecipientChosen(object? sender, ComposeRecipient recipient)
+    {
+        if (_composeBusy || _animating || !IsChatClosed)
+            return;
+        _composeBusy = true;
+        try
+        {
+            var smsService = IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Services.ISmsService>();
+            var address = Gheychi.Core.Services.PhoneNumberNormalizer.ToSendAddress(recipient.Address);
+            var threadId = smsService is null ? 0 : await smsService.GetOrCreateThreadIdAsync(address);
+            if (threadId <= 0)
+            {
+                await DisplayAlert(string.Empty, Localization.LocalizationManager.Instance["Compose_OpenFailed"], "OK");
+                return;
+            }
+
+            // An existing conversation (inbox or archive) keeps its name, unread state and SIM.
+            var thread = Vm?.Threads.FirstOrDefault(t => t.ThreadId == threadId)
+                         ?? Vm?.ArchivedThreads.FirstOrDefault(t => t.ThreadId == threadId)
+                         ?? CreateNewThreadItem(threadId, recipient);
+
+            var wasUnread = thread.IsUnread;
+            var unreadCount = thread.Count;
+            if (wasUnread)
+                thread.MarkAsRead();
+
+            await OpenChatAsync(thread, wasUnread, unreadCount, recipient.Sim);
+
+            // The chat now covers the compose screen; closing it returns to the inbox.
+            ComposeOverlay.ResetState();
+            HideComposeInstantly();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open conversation failed: {ex}");
+        }
+        finally
+        {
+            _composeBusy = false;
+        }
+    }
+
+    private static ThreadItem CreateNewThreadItem(long threadId, ComposeRecipient recipient)
+    {
+        var phone = Gheychi.Core.Services.PhoneNumberNormalizer.FormatDisplay(recipient.Address);
+        var name = string.IsNullOrWhiteSpace(recipient.ContactName) ? phone : recipient.ContactName;
+        return new ThreadItem
+        {
+            ThreadId = threadId,
+            Name = name,
+            Phone = phone,
+            Initials = ThreadItem.GenerateInitials(name),
+            IconFile = ThreadItem.DetectIcon(name, recipient.Address),
+            Time = string.Empty,
+            Preview = string.Empty
+        };
+    }
+
     private const int ArchiveZIndex = 1;
-    private const int OverlayZIndex = 2;
+    private const int ComposeZIndex = 2;
+    private const int OverlayZIndex = 3;
     private const double OffscreenDistance = 3000;
     private const double InboxParallax = 0.25;
     private const double FlingVelocity = 250;
@@ -617,7 +788,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         get
         {
-            if (_animating || !IsChatClosed || !IsSearchClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true)
+            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true)
                 return 0;
 
             if (_archiveOpen)
@@ -722,9 +893,6 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (open)
             {
                 ArchiveOverlay.InputTransparent = false;
-#if DEBUG
-                _ = ShowArchiveDiagnosticsAsync();
-#endif
             }
             else
             {
@@ -743,30 +911,6 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
     }
 
-#if DEBUG
-    // Temporary: reports what the archive overlay looks like after it opens.
-    private async Task ShowArchiveDiagnosticsAsync()
-    {
-        try
-        {
-            await Task.Delay(400);
-            var a = ArchiveOverlay;
-            var info = $"idx={RootGrid.Children.IndexOf(a)}/{RootGrid.Children.Count} z={a.ZIndex} vis={a.IsVisible} op={a.Opacity} tx={a.TranslationX:F0}\n"
-                + $"bounds={a.Bounds} pageW={Width:F0} h={Height:F0}\n"
-                + $"handler={a.Handler?.GetType().Name ?? "null"} loaded={a.IsLoaded} content={a.Content?.GetType().Name ?? "null"}";
-#if ANDROID
-            if (a.Handler?.PlatformView is Android.Views.View v)
-                info += $"\nnative vis={v.Visibility} alpha={v.Alpha} size={v.Width}x{v.Height} left={v.Left} tx={v.TranslationX} attached={v.IsAttachedToWindow} parent={v.Parent?.GetType().Name}";
-#endif
-            await DisplayAlert("Archive debug", info, "OK");
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Archive debug failed", ex.ToString(), "OK");
-        }
-    }
-#endif
-
     private async Task CloseArchiveAsync()
     {
         if (!_archiveOpen)
@@ -779,7 +923,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
     protected override bool OnBackButtonPressed()
     {
-        if (_archiveOpen && IsChatClosed && IsSearchClosed)
+        if (_archiveOpen && IsChatClosed && IsSearchClosed && IsComposeClosed)
         {
             if (_archiveOverlay?.HandleBack() == true)
                 return true;
@@ -812,6 +956,15 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             }
 
             MainThread.BeginInvokeOnMainThread(async () => await CloseSearchAsync());
+            return true;
+        }
+
+        if (!IsComposeClosed)
+        {
+            if (ComposeOverlay.HandleBack())
+                return true;
+
+            MainThread.BeginInvokeOnMainThread(async () => await CloseComposeAsync());
             return true;
         }
 

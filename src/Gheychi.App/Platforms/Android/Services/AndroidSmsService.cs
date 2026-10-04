@@ -125,6 +125,10 @@ public sealed class AndroidSmsService : ISmsService
                             var subId = simCol >= 0 && !cursor.IsNull(simCol) ? cursor.GetInt(simCol) : 1;
                             var hasFailed = errorCol >= 0 && cursor.GetInt(errorCol) != 0;
 
+                            // A thread opened for a new conversation has no messages until the first send.
+                            if (countCol >= 0 && msgCount <= 0)
+                                continue;
+
                             var address = string.Empty;
                             if (!string.IsNullOrEmpty(recipRaw))
                             {
@@ -1532,6 +1536,98 @@ public sealed class AndroidSmsService : ISmsService
             return _cachedSimList ?? (IReadOnlyList<SimCardInfo>)Array.Empty<SimCardInfo>();
         });
     }
+
+    public Task<IReadOnlyList<ContactEntry>> GetContactsAsync(CancellationToken cancellationToken = default) =>
+        Task.Run<IReadOnlyList<ContactEntry>>(() => LoadContactEntries(Microsoft.Maui.ApplicationModel.Platform.AppContext, cancellationToken), cancellationToken);
+
+    private static List<ContactEntry> LoadContactEntries(Context context, CancellationToken cancellationToken)
+    {
+        var entries = new List<ContactEntry>();
+        if (ContextCompat.CheckSelfPermission(context, Manifest.Permission.ReadContacts) != Permission.Granted)
+            return entries;
+
+        var uri = ContactsContract.CommonDataKinds.Phone.ContentUri;
+        if (uri == null)
+            return entries;
+
+        try
+        {
+            using var cursor = context.ContentResolver?.Query(
+                uri,
+                [
+                    ContactsContract.IContactsColumns.DisplayName,
+                    ContactsContract.CommonDataKinds.Phone.Number,
+                    "data2",
+                    "data3"
+                ],
+                null,
+                null,
+                null);
+
+            if (cursor == null)
+                return entries;
+
+            var nameCol = cursor.GetColumnIndex(ContactsContract.IContactsColumns.DisplayName);
+            var numCol = cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Phone.Number);
+            var typeCol = cursor.GetColumnIndex("data2");
+            var labelCol = cursor.GetColumnIndex("data3");
+            var loc = Gheychi.App.Localization.LocalizationManager.Instance;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+
+            while (cursor.MoveToNext())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var name = nameCol >= 0 ? cursor.GetString(nameCol) : null;
+                var number = numCol >= 0 ? cursor.GetString(numCol) : null;
+                if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(number))
+                    continue;
+
+                // The same number is often stored twice (SIM + account copies of one contact).
+                if (!seen.Add(name + "|" + PhoneNumberNormalizer.ToLookupKey(number)))
+                    continue;
+
+                var type = typeCol >= 0 && !cursor.IsNull(typeCol) ? cursor.GetInt(typeCol) : 7;
+                var custom = labelCol >= 0 ? cursor.GetString(labelCol) : null;
+                var label = type switch
+                {
+                    1 => loc["Contact_Home"],
+                    2 => loc["Contact_Mobile"],
+                    3 => loc["Contact_Work"],
+                    0 when !string.IsNullOrWhiteSpace(custom) => custom,
+                    _ => loc["Contact_Other"]
+                };
+
+                entries.Add(new ContactEntry(name.Trim(), number.Trim(), label));
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // A provider failure shows as an empty list rather than a crash.
+        }
+
+        return entries;
+    }
+
+    public Task<long> GetOrCreateThreadIdAsync(string address) =>
+        Task.Run(() =>
+        {
+            if (string.IsNullOrWhiteSpace(address))
+                return 0L;
+
+            try
+            {
+                return Telephony.Threads.GetOrCreateThreadId(Microsoft.Maui.ApplicationModel.Platform.AppContext, address);
+            }
+            catch (Exception)
+            {
+                return 0L;
+            }
+        });
 
     public Task<bool> IsDualSimAsync()
     {

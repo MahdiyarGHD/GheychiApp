@@ -20,6 +20,10 @@ public interface ISmsService
     Task<IReadOnlyDictionary<int, int>> GetSimSlotMapAsync();
     Task<IReadOnlyDictionary<int, string>> GetSimCarrierMapAsync();
     Task<bool> IsDualSimAsync();
+    /// <summary>Every phone number in the address book, sorted by name. Empty without contacts permission.</summary>
+    Task<IReadOnlyList<ContactEntry>> GetContactsAsync(CancellationToken cancellationToken = default);
+    /// <summary>Id of the conversation with <paramref name="address"/>, created when there is none yet; 0 on failure.</summary>
+    Task<long> GetOrCreateThreadIdAsync(string address);
     Task<IReadOnlyList<SearchResultChat>> SearchChatsAsync(SearchQuery query, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SearchResultLink>> SearchLinksAsync(SearchQuery query, CancellationToken cancellationToken = default);
 }

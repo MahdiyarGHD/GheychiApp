@@ -210,6 +210,48 @@
   <data name="Messages_Unarchive" xml:space="preserve">
     <value>Unarchive</value>
   </data>
+  <data name="Compose_Title" xml:space="preserve">
+    <value>New message</value>
+  </data>
+  <data name="Compose_To" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Compose_Hint" xml:space="preserve">
+    <value>Type name, phone, or shortcode…</value>
+  </data>
+  <data name="Compose_SendTo" xml:space="preserve">
+    <value>Send to {0}</value>
+  </data>
+  <data name="Compose_NoContacts" xml:space="preserve">
+    <value>No contacts found</value>
+  </data>
+  <data name="Compose_NoPermission" xml:space="preserve">
+    <value>Allow contacts access in Settings to see your contacts. You can still type a number above.</value>
+  </data>
+  <data name="Compose_NoMatches" xml:space="preserve">
+    <value>No matching contacts</value>
+  </data>
+  <data name="Compose_OpenFailed" xml:space="preserve">
+    <value>Could not start this conversation.</value>
+  </data>
+  <data name="Compose_Dialpad" xml:space="preserve">
+    <value>Number pad</value>
+  </data>
+  <data name="Compose_Sim" xml:space="preserve">
+    <value>Send from this SIM</value>
+  </data>
+  <data name="Contact_Mobile" xml:space="preserve">
+    <value>Mobile</value>
+  </data>
+  <data name="Contact_Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Contact_Work" xml:space="preserve">
+    <value>Work</value>
+  </data>
+  <data name="Contact_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
   <data name="Messages_MarkAsUnread" xml:space="preserve">
     <value>Mark as unread</value>
   </data>

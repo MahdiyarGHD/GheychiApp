@@ -86,7 +86,7 @@ public static class SearchTextHelper
             list.Add(value);
     }
 
-    private static string ToAsciiDigits(string text)
+    public static string ToAsciiDigits(string text)
     {
         var chars = text.ToCharArray();
         for (var i = 0; i < chars.Length; i++)
