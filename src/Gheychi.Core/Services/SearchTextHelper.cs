@@ -33,6 +33,53 @@ public static class SearchTextHelper
         return false;
     }
 
+    public const int NoTitleMatch = int.MaxValue;
+
+    /// <summary>
+    /// How well a conversation title matches the query, lower is better:
+    /// 0 equals, 1 starts with, 2 a word starts with, 3 contains anywhere, <see cref="NoTitleMatch"/> otherwise.
+    /// </summary>
+    public static int TitleRank(string? title, IReadOnlyList<string> needles)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return NoTitleMatch;
+
+        var best = NoTitleMatch;
+        foreach (var needle in needles)
+        {
+            var index = title.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+                continue;
+
+            int rank;
+            if (title.Length == needle.Length)
+                rank = 0;
+            else if (index == 0)
+                rank = 1;
+            else if (!char.IsLetterOrDigit(title[index - 1]) || WordStartsLater(title, needle, index))
+                rank = 2;
+            else
+                rank = 3;
+
+            best = Math.Min(best, rank);
+        }
+
+        return best;
+    }
+
+    // The first hit can be mid-word while a later hit starts a word ("Ana" in "Banana Ana").
+    private static bool WordStartsLater(string title, string needle, int firstIndex)
+    {
+        var index = firstIndex;
+        while ((index = title.IndexOf(needle, index + 1, StringComparison.OrdinalIgnoreCase)) >= 0)
+        {
+            if (!char.IsLetterOrDigit(title[index - 1]))
+                return true;
+        }
+
+        return false;
+    }
+
     private static void AddIfNew(List<string> list, string value)
     {
         if (value.Length > 0 && !list.Contains(value, StringComparer.Ordinal))

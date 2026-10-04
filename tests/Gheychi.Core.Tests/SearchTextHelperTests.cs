@@ -46,4 +46,28 @@ public sealed class SearchTextHelperTests
         var variants = SearchTextHelper.BuildVariants("علي");
         Assert.True(SearchTextHelper.ContainsAny("سلام علی جان", variants));
     }
+
+    [Theory]
+    [InlineData("Ali", "Ali", 0)]
+    [InlineData("ali", "Ali Reza", 1)]
+    [InlineData("reza", "Ali Reza", 2)]
+    [InlineData("ali", "Khalil", 3)]
+    [InlineData("ana", "Banana Ana", 2)]
+    [InlineData("xyz", "Ali Reza", SearchTextHelper.NoTitleMatch)]
+    public void TitleRank_BestMatchIsLowest(string query, string title, int expected)
+    {
+        Assert.Equal(expected, SearchTextHelper.TitleRank(title, SearchTextHelper.BuildVariants(query)));
+    }
+
+    [Fact]
+    public void TitleRank_EmptyTitleDoesNotMatch()
+    {
+        Assert.Equal(SearchTextHelper.NoTitleMatch, SearchTextHelper.TitleRank(null, SearchTextHelper.BuildVariants("a")));
+    }
+
+    [Fact]
+    public void TitleRank_PersianTitleFoundByArabicQuery()
+    {
+        Assert.Equal(1, SearchTextHelper.TitleRank("علی رضا", SearchTextHelper.BuildVariants("علي")));
+    }
 }

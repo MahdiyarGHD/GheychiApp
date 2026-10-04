@@ -408,10 +408,28 @@ public sealed class AndroidSmsService : ISmsService
                     isKnown));
             }
 
+            if (!hasText)
+                return results.OrderByDescending(r => r.Timestamp).ToList();
+
+            // Conversations whose title (contact name, or the number when unsaved) matches come first,
+            // best match first; message-only hits follow, newest first.
             return results
-                .OrderByDescending(r => r.Timestamp)
+                .Select(r => (Result: r, Rank: TitleRank(r.ContactName, r.Address, variants)))
+                .OrderBy(x => x.Rank)
+                .ThenByDescending(x => x.Result.Timestamp)
+                .Select(x => x.Result)
                 .ToList();
         }, cancellationToken);
+
+    private static int TitleRank(string? contactName, string address, IReadOnlyList<string> variants)
+    {
+        if (!string.IsNullOrWhiteSpace(contactName))
+            return SearchTextHelper.TitleRank(contactName, variants);
+
+        // Unsaved number: the number is the title. Local "0912..." vs stored "+98912..." still counts.
+        var rank = SearchTextHelper.TitleRank(address, variants);
+        return rank == SearchTextHelper.NoTitleMatch && AddressMatches(address, variants) ? 3 : rank;
+    }
 
     /// <summary>
     /// Lists every link (or place) found in message bodies, newest first, one row per occurrence.
