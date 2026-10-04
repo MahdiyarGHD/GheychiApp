@@ -318,6 +318,15 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         {
             if (SetField(ref _activeFilter, value))
             {
+                // Rows (and the count) of the previous filter must not linger under the new one.
+                SearchResultItems.Reset(Enumerable.Empty<SearchResultItem>());
+                SearchLinkItems.Reset(Enumerable.Empty<LinkResultItem>());
+                _allSearchResults.Clear();
+                CategoryTabs.Clear();
+                FoundCountText = string.Empty;
+                OnPropertyChanged(nameof(HasResults));
+                OnPropertyChanged(nameof(HasLinkResults));
+
                 OnPropertyChanged(nameof(HasActiveFilter));
                 OnPropertyChanged(nameof(HasNoActiveFilter));
                 OnPropertyChanged(nameof(IsInSearchResultsMode));
@@ -346,6 +355,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(IsLinkResultsMode));
         OnPropertyChanged(nameof(HasNoResults));
         OnPropertyChanged(nameof(HasNoLinkResults));
+        OnPropertyChanged(nameof(ShowSkeleton));
     }
 
     private bool _isSearching;
@@ -358,6 +368,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             {
                 OnPropertyChanged(nameof(HasNoResults));
                 OnPropertyChanged(nameof(HasNoLinkResults));
+                OnPropertyChanged(nameof(ShowSkeleton));
             }
         }
     }
@@ -402,6 +413,13 @@ public sealed class SearchViewModel : INotifyPropertyChanged
     public FastObservableCollection<LinkResultItem> SearchLinkItems { get; } = [];
     public bool HasLinkResults => SearchLinkItems.Count > 0;
     public bool HasNoLinkResults => IsLinkResultsMode && !IsSearching && SearchLinkItems.Count == 0;
+
+    // Placeholder rows are shown only while there is nothing on screen to keep: later keystrokes
+    // keep the previous results visible until the new ones arrive.
+    public bool ShowSkeleton => IsInSearchResultsMode && IsSearching &&
+        (IsLinkMode ? SearchLinkItems.Count == 0 : SearchResultItems.Count == 0);
+
+    public IReadOnlyList<int> SkeletonRows { get; } = Enumerable.Range(0, 9).ToArray();
 
     private string _noLinksText = string.Empty;
     public string NoLinksText
@@ -567,6 +585,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             SearchResultItems.Reset(Enumerable.Empty<SearchResultItem>());
             SearchLinkItems.Reset(Enumerable.Empty<LinkResultItem>());
             _allSearchResults.Clear();
+            FoundCountText = string.Empty;
             CategoryTabs.Clear();
             IsSearching = false;
             OnPropertyChanged(nameof(HasResults));

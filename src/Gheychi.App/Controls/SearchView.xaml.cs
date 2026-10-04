@@ -29,11 +29,68 @@ public partial class SearchView : ContentView
     protected override void OnBindingContextChanged()
     {
         base.OnBindingContextChanged();
+
+        if (_observedVm != null)
+            _observedVm.PropertyChanged -= OnVmPropertyChanged;
+        _observedVm = BindingContext as SearchViewModel;
+        if (_observedVm != null)
+            _observedVm.PropertyChanged += OnVmPropertyChanged;
+
         if (BindingContext is not SearchViewModel)
         {
             var vm = IPlatformApplication.Current?.Services.GetService<SearchViewModel>() ?? new SearchViewModel();
             BindingContext = vm;
             _ = vm.InitializeAsync();
+        }
+    }
+
+    private SearchViewModel? _observedVm;
+    private CancellationTokenSource? _pulseCts;
+
+    private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(SearchViewModel.ShowSkeleton))
+            return;
+
+        if (_observedVm?.ShowSkeleton == true)
+            StartSkeletonPulse();
+        else
+            StopSkeletonPulse();
+    }
+
+    private void StartSkeletonPulse()
+    {
+        if (_pulseCts != null)
+            return;
+
+        var cts = new CancellationTokenSource();
+        _pulseCts = cts;
+        _ = PulseAsync(cts.Token);
+    }
+
+    private void StopSkeletonPulse()
+    {
+        _pulseCts?.Cancel();
+        _pulseCts = null;
+        SkeletonRowsHost.CancelAnimations();
+        SkeletonRowsHost.Opacity = 1;
+    }
+
+    private async Task PulseAsync(CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await SkeletonRowsHost.FadeToAsync(0.45, 650, Easing.SinInOut);
+                if (token.IsCancellationRequested)
+                    break;
+                await SkeletonRowsHost.FadeToAsync(1, 650, Easing.SinInOut);
+            }
+        }
+        catch (Exception)
+        {
+            // Animation is cosmetic; it can fail if the view is torn down mid-fade.
         }
     }
 
