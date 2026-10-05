@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Android.Provider;
+using Gheychi.App.Platforms.Android.Notifications;
 
 namespace Gheychi.App.Platforms.Android.Receivers;
 
@@ -28,32 +29,33 @@ public class SmsDeliverReceiver : BroadcastReceiver
 
         // A long SMS arrives as several PDUs in one intent; they are one message.
         var body = string.Concat(messages.Where(m => m is not null).Select(m => m.DisplayMessageBody));
-
-        var values = new ContentValues();
-        values.Put(Telephony.Sms.InterfaceConsts.Address, first.DisplayOriginatingAddress);
-        values.Put(Telephony.Sms.InterfaceConsts.Body, body);
-        values.Put(Telephony.Sms.InterfaceConsts.Date, first.TimestampMillis);
-        values.Put(Telephony.Sms.InterfaceConsts.Read, 0);
-        values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Inbox);
-
-        // Without sub_id the message is stored with no SIM, and replying/reacting to it later
-        // falls back to SIM 1 — on a dual-SIM phone that sends from the wrong number.
+        var address = first.DisplayOriginatingAddress ?? string.Empty;
+        var timestamp = first.TimestampMillis;
         var subId = ReadSubscriptionId(intent);
-        if (subId > 0)
-            values.Put("sub_id", subId);
 
-        // OnReceive runs on the main thread: a provider or subscriber exception here kills the app.
-        try
+        // The provider write and the notification queries stay off the main thread. goAsync keeps the
+        // process alive until they finish, without a service or a wake lock.
+        var pending = GoAsync();
+        Task.Run(() =>
         {
-            var inboxUri = Telephony.Sms.Inbox.ContentUri;
-            if (inboxUri != null)
-                context.ContentResolver?.Insert(inboxUri, values);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"SMS insert failed: {ex}");
-        }
+            try
+            {
+                IncomingSmsHandler.Handle(context, address, body, timestamp, subId, RaiseSmsReceived);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SMS handling failed: {ex}");
+            }
+            finally
+            {
+                pending?.Finish();
+            }
+        });
+    }
 
+    // Runs on the main thread: a subscriber exception here would kill the app.
+    private static void RaiseSmsReceived()
+    {
         try
         {
             SmsReceived?.Invoke();

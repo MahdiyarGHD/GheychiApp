@@ -13,6 +13,15 @@ public sealed class SmsPermission : Microsoft.Maui.ApplicationModel.Permissions.
     ];
 }
 
+/// <summary>Runtime permission from Android 13; only ask for it there.</summary>
+public sealed class NotificationsPermission : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
+{
+    public override (string androidPermission, bool isRuntime)[] RequiredPermissions =>
+    [
+        (Manifest.Permission.PostNotifications, true)
+    ];
+}
+
 public sealed class ContactsPermission : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
 {
     public override (string androidPermission, bool isRuntime)[] RequiredPermissions =>

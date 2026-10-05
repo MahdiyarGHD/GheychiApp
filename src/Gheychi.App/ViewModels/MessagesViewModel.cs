@@ -33,6 +33,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         _snapshotTask = Task.Run(() => BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath)));
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
+        NotificationActionReceiver.ThreadsChanged += OnSmsReceived;
     }
 
     public FastObservableCollection<ThreadItem> Threads { get; } = [];

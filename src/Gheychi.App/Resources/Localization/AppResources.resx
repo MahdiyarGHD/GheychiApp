@@ -357,4 +357,19 @@
   <data name="Search_Tag_Archived" xml:space="preserve">
     <value>Archived</value>
   </data>
+  <data name="Notification_ChannelMessages" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="Notification_ChannelMessagesDescription" xml:space="preserve">
+    <value>Alerts for new text messages</value>
+  </data>
+  <data name="Notification_Reply" xml:space="preserve">
+    <value>Reply</value>
+  </data>
+  <data name="Notification_You" xml:space="preserve">
+    <value>You</value>
+  </data>
+  <data name="Notification_ReplyFailed" xml:space="preserve">
+    <value>Reply was not sent</value>
+  </data>
 </root>

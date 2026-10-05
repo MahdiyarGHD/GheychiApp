@@ -1,5 +1,6 @@
 ﻿using Gheychi.App.Platforms.Android.Services;
 using Gheychi.App.ViewModels;
+using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 using Microsoft.Extensions.Logging;
 
@@ -27,6 +28,12 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMessageMetadataRepository>(_ =>
             new Gheychi.Infrastructure.Data.MessageMetadataRepository(Path.Combine(FileSystem.AppDataDirectory, "gheychi.db")));
         builder.Services.AddSingleton<ISmsService, AndroidSmsService>();
+
+        // A new reason to hold back a notification (archived, snoozed, spam) is one more INotificationRule here.
+        builder.Services.AddSingleton<ActiveChatState>();
+        builder.Services.AddSingleton<IActiveChatState>(sp => sp.GetRequiredService<ActiveChatState>());
+        builder.Services.AddSingleton<INotificationRule, ActiveChatRule>();
+        builder.Services.AddSingleton<NotificationPolicy>();
         builder.Services.AddSingleton<MessagesViewModel>();
         builder.Services.AddTransient<ChatViewModel>();
         builder.Services.AddTransient<SearchViewModel>();

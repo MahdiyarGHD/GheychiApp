@@ -5,6 +5,7 @@ using Android.OS;
 using Android.Speech;
 using Android.Views;
 using Gheychi.App.Gestures;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.Core.Services;
 
 namespace Gheychi.App;
@@ -39,6 +40,26 @@ public class MainActivity : MauiAppCompatActivity
         _density = Resources?.DisplayMetrics?.Density ?? 1;
         var slop = ViewConfiguration.Get(this)?.ScaledTouchSlop ?? 24;
         _swipe = new HorizontalSwipeTracker(slop);
+
+        ChatLaunchRequests.FromIntent(Intent);
+    }
+
+    protected override void OnNewIntent(Intent? intent)
+    {
+        base.OnNewIntent(intent);
+        ChatLaunchRequests.FromIntent(intent);
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        ChatPresence.AppVisibilityChanged(true);
+    }
+
+    protected override void OnPause()
+    {
+        ChatPresence.AppVisibilityChanged(false);
+        base.OnPause();
     }
 
     public override bool DispatchTouchEvent(MotionEvent? ev)

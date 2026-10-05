@@ -9,6 +9,7 @@ using Android.Provider;
 using Android.Telephony;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Permissions;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
@@ -74,6 +75,16 @@ public sealed class AndroidSmsService : ISmsService
         var contactStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ContactsPermission>();
         if (contactStatus != PermissionStatus.Granted)
             await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ContactsPermission>();
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            // The channel has to exist before Android 13 shows its notification prompt.
+            NotificationChannels.Ensure(Microsoft.Maui.ApplicationModel.Platform.AppContext);
+
+            var notificationStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<NotificationsPermission>();
+            if (notificationStatus != PermissionStatus.Granted)
+                await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<NotificationsPermission>();
+        }
 
         return smsStatus == PermissionStatus.Granted;
     }
@@ -1198,33 +1209,36 @@ public sealed class AndroidSmsService : ISmsService
         }, cancellationToken);
 
     public Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default) =>
-        Task.Run(() =>
+        Task.Run(() => MarkThreadRead(Microsoft.Maui.ApplicationModel.Platform.AppContext, threadId), cancellationToken);
+
+    /// <summary>Marks the thread read and dismisses its notification. Also used by the notification's own "Mark as read".</summary>
+    internal static bool MarkThreadRead(Context context, long threadId)
+    {
+        var smsUri = Telephony.Sms.ContentUri;
+        if (smsUri == null)
+            return false;
+
+        try
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
-            var smsUri = Telephony.Sms.ContentUri;
-            if (smsUri == null)
-                return false;
+            var values = new ContentValues();
+            values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
+            values.Put(Telephony.Sms.InterfaceConsts.Seen, 1);
 
-            try
-            {
-                var values = new ContentValues();
-                values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
-                values.Put(Telephony.Sms.InterfaceConsts.Seen, 1);
+            var rows = context.ContentResolver?.Update(
+                smsUri,
+                values,
+                $"{Telephony.Sms.InterfaceConsts.ThreadId} = ? AND {Telephony.Sms.InterfaceConsts.Read} = 0",
+                [threadId.ToString()]);
 
-                var rows = context.ContentResolver?.Update(
-                    smsUri,
-                    values,
-                    $"{Telephony.Sms.InterfaceConsts.ThreadId} = ? AND {Telephony.Sms.InterfaceConsts.Read} = 0",
-                    [threadId.ToString()]);
-
-                InvalidateSearchCaches();
-                return rows > 0;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }, cancellationToken);
+            InvalidateSearchCaches();
+            MessageNotifier.Cancel(context, threadId);
+            return rows > 0;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 
     public Task<bool> MarkThreadAsUnreadAsync(long threadId, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
@@ -1296,6 +1310,9 @@ public sealed class AndroidSmsService : ISmsService
                 {
                     await _metadataRepo.DeleteForThreadsAsync(threadIds);
                 }
+
+                foreach (var threadId in threadIds)
+                    MessageNotifier.Cancel(context, threadId);
 
                 InvalidateSearchCaches();
                 return deleted > 0;

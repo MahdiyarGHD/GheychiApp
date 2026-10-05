@@ -1,5 +1,6 @@
 using Gheychi.App.Controls;
 using Gheychi.App.Gestures;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
 
@@ -110,6 +111,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         if (ReferenceEquals(PageSwipe.Client, this))
             PageSwipe.Client = null;
     }
@@ -118,6 +120,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         base.OnAppearing();
         PageSwipe.Client = this;
+        ChatLaunchRequests.Requested -= OnChatLaunchRequested;
+        ChatLaunchRequests.Requested += OnChatLaunchRequested;
         try
         {
             if (Vm != null)
@@ -128,6 +132,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // async void: a failed permission request or snapshot read must not terminate the app.
             System.Diagnostics.Debug.WriteLine($"Inbox initialize failed: {ex}");
         }
+
+        await OpenRequestedChatAsync();
 
         if (!_overlaysWarmedUp)
         {
@@ -309,6 +315,45 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         _ = OpenChatAsync(thread, wasUnread, unreadCount);
     }
 
+    private void OnChatLaunchRequested() => _ = OpenRequestedChatAsync();
+
+    /// <summary>Opens the conversation a tapped notification asked for.</summary>
+    private async Task OpenRequestedChatAsync()
+    {
+        try
+        {
+            var threadId = ChatLaunchRequests.Take();
+            if (threadId <= 0 || Vm is null)
+                return;
+
+            if (!IsChatClosed)
+            {
+                if (ChatOverlay.Vm?.Thread.ThreadId == threadId)
+                    return;
+
+                await CloseChatAsync();
+            }
+
+            var thread = FindThread(threadId);
+            if (thread is null)
+            {
+                await Vm.LoadThreadsAsync();
+                thread = FindThread(threadId);
+            }
+
+            if (thread is not null)
+                OpenChatSafely(thread);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open notified chat failed: {ex}");
+        }
+    }
+
+    private ThreadItem? FindThread(long threadId) =>
+        Vm?.Threads.FirstOrDefault(t => t.ThreadId == threadId)
+        ?? Vm?.ArchivedThreads.FirstOrDefault(t => t.ThreadId == threadId);
+
     private void OnExitSelectionModeTapped(object? sender, EventArgs e)
     {
         SelectBoxOverlay.IsVisible = false;
@@ -420,6 +465,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             var distance = GetFallbackHeight();
             OverlayAnimator.SetTranslationY(ChatOverlay, distance);
             ChatOverlay.InputTransparent = false;
+            ChatPresence.ChatOpened(thread.ThreadId);
             Shell.SetTabBarIsVisible(this, false);
 
             Task<PreparedChatData?>? fetchTask = null;
@@ -499,6 +545,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
     private void ParkChatOverlay()
     {
+        ChatPresence.ChatClosed();
         ChatOverlay.InputTransparent = true;
         OverlayAnimator.SetTranslationY(ChatOverlay, OverlayAnimator.ParkedDistance);
         ChatOverlay.ResetAfterClose();
