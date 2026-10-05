@@ -102,7 +102,7 @@ internal static class MessageNotifier
                    ?? (PhoneNumberNormalizer.IsAlphanumeric(address) ? address : PhoneNumberNormalizer.FormatDisplay(address));
         var last = unread[^1];
 
-        var builder = new NotificationCompat.Builder(context, NotificationIds.ChannelMessages);
+        var builder = new NotificationCompat.Builder(context, NotificationChannels.ChannelFor(context, address));
         builder.SetSmallIcon(SmallIcon(context));
         builder.SetColor(AccentColor);
         builder.SetContentTitle(name);

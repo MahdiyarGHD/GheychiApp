@@ -375,4 +375,127 @@
   <data name="Notification_ReplyFailed" xml:space="preserve">
     <value>Reply was not sent</value>
   </data>
+  <data name="Chat_SearchHint" xml:space="preserve">
+    <value>Search in conversation</value>
+  </data>
+  <data name="Chat_SearchCounter" xml:space="preserve">
+    <value>{0} of {1}</value>
+  </data>
+  <data name="Chat_SearchNoResults" xml:space="preserve">
+    <value>No results</value>
+  </data>
+  <data name="Chat_SearchOlder" xml:space="preserve">
+    <value>Previous match</value>
+  </data>
+  <data name="Chat_SearchNewer" xml:space="preserve">
+    <value>Next match</value>
+  </data>
+  <data name="Profile_Title" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Profile_Call" xml:space="preserve">
+    <value>Call</value>
+  </data>
+  <data name="Profile_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Profile_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Profile_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Profile_SectionPhone" xml:space="preserve">
+    <value>Phone &amp; routing</value>
+  </data>
+  <data name="Profile_NumberMobile" xml:space="preserve">
+    <value>Mobile</value>
+  </data>
+  <data name="Profile_NumberSender" xml:space="preserve">
+    <value>Sender ID</value>
+  </data>
+  <data name="Profile_PreferredSim" xml:space="preserve">
+    <value>Preferred SIM</value>
+  </data>
+  <data name="Profile_SimAutomatic" xml:space="preserve">
+    <value>Uses the SIM of the last message</value>
+  </data>
+  <data name="Profile_SimAlways" xml:space="preserve">
+    <value>Always sends from {0}</value>
+  </data>
+  <data name="Profile_SimPickerTitle" xml:space="preserve">
+    <value>Send messages from</value>
+  </data>
+  <data name="Profile_SimPickerAutomatic" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Profile_SectionPreferences" xml:space="preserve">
+    <value>Preferences</value>
+  </data>
+  <data name="Profile_Links" xml:space="preserve">
+    <value>Links</value>
+  </data>
+  <data name="Profile_LinksCount" xml:space="preserve">
+    <value>{0} shared links</value>
+  </data>
+  <data name="Profile_LinksNone" xml:space="preserve">
+    <value>No shared links</value>
+  </data>
+  <data name="Profile_LinksReading" xml:space="preserve">
+    <value>Looking for links…</value>
+  </data>
+  <data name="Profile_Notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Profile_NotificationsHint" xml:space="preserve">
+    <value>Sound, vibration and lights for this number</value>
+  </data>
+  <data name="Profile_NotificationsCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="Profile_Snooze" xml:space="preserve">
+    <value>Snooze chat</value>
+  </data>
+  <data name="Profile_SnoozeOff" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="Profile_SnoozeUntil" xml:space="preserve">
+    <value>Until {0}</value>
+  </data>
+  <data name="Profile_SnoozeForever" xml:space="preserve">
+    <value>Until you turn it back on</value>
+  </data>
+  <data name="Profile_SnoozeTitle" xml:space="preserve">
+    <value>Snooze notifications for</value>
+  </data>
+  <data name="Snooze_OneHour" xml:space="preserve">
+    <value>1 hour</value>
+  </data>
+  <data name="Snooze_EightHours" xml:space="preserve">
+    <value>8 hours</value>
+  </data>
+  <data name="Snooze_TomorrowMorning" xml:space="preserve">
+    <value>Tomorrow morning</value>
+  </data>
+  <data name="Snooze_OneWeek" xml:space="preserve">
+    <value>1 week</value>
+  </data>
+  <data name="Snooze_Forever" xml:space="preserve">
+    <value>Until I turn it back on</value>
+  </data>
+  <data name="Profile_SectionActions" xml:space="preserve">
+    <value>Conversation actions</value>
+  </data>
+  <data name="Profile_Archive" xml:space="preserve">
+    <value>Archive thread</value>
+  </data>
+  <data name="Profile_ArchiveHint" xml:space="preserve">
+    <value>Move chat out of main inbox</value>
+  </data>
+  <data name="Profile_Unarchive" xml:space="preserve">
+    <value>Unarchive thread</value>
+  </data>
+  <data name="Profile_UnarchiveHint" xml:space="preserve">
+    <value>Move chat back to the inbox</value>
+  </data>
 </root>

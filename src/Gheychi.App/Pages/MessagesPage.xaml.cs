@@ -22,6 +22,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private ComposeView? _composeOverlay;
     private bool _composeBusy;
     private ArchiveView? _archiveOverlay;
+    private ProfileView? _profileOverlay;
     private bool _archiveOpen;
     private bool _swipeDragging;
     private MessagesViewModel? Vm => BindingContext as MessagesViewModel;
@@ -32,9 +33,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private SearchView SearchOverlay => _searchOverlay ??= CreateSearchOverlay();
     private ComposeView ComposeOverlay => _composeOverlay ??= CreateComposeOverlay();
     private ArchiveView ArchiveOverlay => _archiveOverlay ??= CreateArchiveOverlay();
+    private ProfileView ProfileOverlay => _profileOverlay ??= CreateProfileOverlay();
     private bool IsChatClosed => _chatOverlay is null || _chatOverlay.InputTransparent;
     private bool IsSearchClosed => _searchOverlay is null || _searchOverlay.InputTransparent;
     private bool IsComposeClosed => _composeOverlay is null || _composeOverlay.InputTransparent;
+    private bool IsProfileClosed => _profileOverlay is null || _profileOverlay.InputTransparent;
 
     public MessagesPage(MessagesViewModel? vm = null)
     {
@@ -66,6 +69,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             HorizontalOptions = LayoutOptions.Fill
         };
         chat.BackRequested += CloseChatAsync;
+        chat.ProfileRequested += OnChatProfileRequested;
         chat.ZIndex = OverlayZIndex;
         RootGrid.Children.Add(chat);
         return chat;
@@ -107,6 +111,27 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         archive.ZIndex = ArchiveZIndex;
         RootGrid.Children.Add(archive);
         return archive;
+    }
+
+    private ProfileView CreateProfileOverlay()
+    {
+        var profile = new ProfileView
+        {
+            IsVisible = true,
+            InputTransparent = true,
+            TranslationY = OffscreenDistance,
+            VerticalOptions = LayoutOptions.Fill,
+            HorizontalOptions = LayoutOptions.Fill
+        };
+        profile.BackRequested += (_, _) => _ = CloseProfileAsync();
+        profile.TextRequested += OnProfileTextRequested;
+        profile.SearchRequested += OnProfileSearchRequested;
+        profile.ArchiveRequested += OnProfileArchiveRequested;
+
+        // Above the chat it was opened from.
+        profile.ZIndex = ProfileZIndex;
+        RootGrid.Children.Add(profile);
+        return profile;
     }
 
     private void OnArchiveBackRequested(object? sender, EventArgs e) => _ = CloseArchiveAsync();
@@ -316,7 +341,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         Vm?.ToggleThreadSelection(thread);
     }
 
-    private void OpenChatSafely(ThreadItem thread)
+    private void OpenChatSafely(ThreadItem thread, string? searchText = null, long focusMessageId = 0)
     {
         var now = Environment.TickCount64;
         if (thread.ThreadId == _lastTappedThreadId && now - _lastTappedThreadTick < 300)
@@ -333,7 +358,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         {
             thread.MarkAsRead();
         }
-        _ = OpenChatAsync(thread, wasUnread, unreadCount);
+        _ = OpenChatAsync(thread, wasUnread, unreadCount, searchText: searchText, focusMessageId: focusMessageId);
     }
 
     // Posted, not run inline: it is raised from inside the activity's OnResume, and the open has to
@@ -350,6 +375,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
         try
         {
+            if (!IsProfileClosed)
+                ParkProfileOverlay();
+
             if (!IsChatClosed)
             {
                 if (ChatOverlay.Vm?.Thread.ThreadId == request.ThreadId)
@@ -502,7 +530,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
     }
 
-    private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false, int unreadCount = 0, SimCardInfo? sim = null, bool animate = true)
+    /// <param name="searchText">Opens the chat with its search already running for this text (a result tapped in the main search).</param>
+    /// <param name="focusMessageId">The match the search starts on.</param>
+    private async Task OpenChatAsync(
+        ThreadItem thread, bool wasUnread = false, int unreadCount = 0, SimCardInfo? sim = null, bool animate = true,
+        string? searchText = null, long focusMessageId = 0)
     {
         if (_animating)
             return;
@@ -552,6 +584,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
             if (cacheHit && ChatOverlay.BindingContext is ChatViewModel cachedVm)
                 ChatOverlay.ScrollToInitialPosition(cachedVm.FirstUnreadIndex);
+
+            // Last, so the jump to the match is not undone by the chat settling at its bottom.
+            if (!string.IsNullOrWhiteSpace(searchText))
+                ChatOverlay.OpenSearch(searchText, focusMessageId);
 
             if (wasUnread)
             {
@@ -612,6 +648,130 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         ChatOverlay.InputTransparent = true;
         OverlayAnimator.SetTranslationY(ChatOverlay, OverlayAnimator.ParkedDistance);
         ChatOverlay.ResetAfterClose();
+    }
+
+    // ---- Profile -------------------------------------------------------------------------------
+
+    private async void OnChatProfileRequested()
+    {
+        try
+        {
+            if (_animating || IsChatClosed || !IsProfileClosed || ChatOverlay.Vm is null)
+                return;
+
+            await OpenProfileAsync(ChatOverlay.Vm.Thread);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open profile failed: {ex}");
+        }
+    }
+
+    private async Task OpenProfileAsync(ThreadItem thread)
+    {
+        if (_animating)
+            return;
+        _animating = true;
+        try
+        {
+            if (_profileOverlay is null)
+                await EnsureOverlayReadyAsync(ProfileOverlay);
+
+            ChatOverlay.ReleaseInputFocus();
+            ProfileOverlay.Bind(thread, IsArchived(thread.ThreadId));
+
+            var distance = GetFallbackHeight();
+            OverlayAnimator.SetTranslationY(ProfileOverlay, distance);
+            ProfileOverlay.InputTransparent = false;
+
+            await Task.Delay(30);
+            await OverlayAnimator.SlideYAsync(ProfileOverlay, distance, 0, 260, decelerate: true);
+        }
+        catch (InvalidOperationException)
+        {
+            OverlayAnimator.SetTranslationY(ProfileOverlay, 0);
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private async Task CloseProfileAsync()
+    {
+        if (_animating || IsProfileClosed)
+            return;
+        _animating = true;
+        try
+        {
+            await OverlayAnimator.SlideYAsync(ProfileOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
+            ParkProfileOverlay();
+        }
+        catch (InvalidOperationException)
+        {
+            ParkProfileOverlay();
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private void ParkProfileOverlay()
+    {
+        ProfileOverlay.InputTransparent = true;
+        OverlayAnimator.SetTranslationY(ProfileOverlay, OverlayAnimator.ParkedDistance);
+        ProfileOverlay.Reset();
+    }
+
+    private bool IsArchived(long threadId) => Vm?.ArchivedThreads.Any(t => t.ThreadId == threadId) == true;
+
+    private async void OnProfileTextRequested(object? sender, EventArgs e)
+    {
+        try
+        {
+            await CloseProfileAsync();
+            ChatOverlay.FocusMessageInput();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Profile text action failed: {ex}");
+        }
+    }
+
+    private async void OnProfileSearchRequested(object? sender, EventArgs e)
+    {
+        try
+        {
+            await CloseProfileAsync();
+            ChatOverlay.OpenSearch();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Profile search action failed: {ex}");
+        }
+    }
+
+    private async void OnProfileArchiveRequested(object? sender, bool archive)
+    {
+        try
+        {
+            if (Vm is null || ChatOverlay.Vm?.Thread is not { } thread)
+                return;
+
+            if (archive)
+                await Vm.ArchiveThreadAsync(thread);
+            else
+                await Vm.UnarchiveThreadsAsync([thread]);
+
+            // The conversation is no longer where the user opened it from: back to the inbox.
+            await CloseProfileAsync();
+            await CloseChatAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Profile archive action failed: {ex}");
+        }
     }
 
     private static double GetFallbackHeight()
@@ -726,7 +886,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
 
         await CloseSearchAsync();
-        OpenChatSafely(thread);
+
+        // A result that matched the message text opens its chat with the same search running, on that message,
+        // so the reader sees every other match in context. A result that matched only the name just opens the chat.
+        var matchedText = item.MessageId > 0 && !string.IsNullOrWhiteSpace(item.QueryText);
+        OpenChatSafely(thread, matchedText ? item.QueryText : null, matchedText ? item.MessageId : 0);
     }
 
     private ComposeView CreateComposeOverlay()
@@ -923,6 +1087,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private const int ArchiveZIndex = 1;
     private const int ComposeZIndex = 2;
     private const int OverlayZIndex = 3;
+    private const int ProfileZIndex = 4;
     private const double OffscreenDistance = 3000;
     private const double InboxParallax = 0.25;
     private const double FlingVelocity = 250;
@@ -1074,6 +1239,15 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
     protected override bool OnBackButtonPressed()
     {
+        if (!IsProfileClosed)
+        {
+            if (_profileOverlay?.HandleBack() == true)
+                return true;
+
+            MainThread.BeginInvokeOnMainThread(async () => await CloseProfileAsync());
+            return true;
+        }
+
         if (_archiveOpen && IsChatClosed && IsSearchClosed && IsComposeClosed)
         {
             if (_archiveOverlay?.HandleBack() == true)

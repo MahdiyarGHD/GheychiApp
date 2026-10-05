@@ -175,6 +175,35 @@ public sealed class ChatMessage : INotifyPropertyChanged
         set => SetField(ref _isSelectionMode, value);
     }
 
+    private static readonly Brush MatchStroke = new SolidColorBrush(Color.FromArgb("#F2B84B"));
+    private const double MatchStrokeThickness = 1.5;
+    private const double CurrentStrokeThickness = 3;
+
+    private SearchMark _searchMark;
+
+    /// <summary>How the open in-chat search sees this message; the bubble's outline follows it.</summary>
+    public SearchMark SearchMark
+    {
+        get => _searchMark;
+        set
+        {
+            if (_searchMark == value)
+                return;
+
+            _searchMark = value;
+            OnPropertyChanged(nameof(SearchStroke));
+            OnPropertyChanged(nameof(SearchStrokeThickness));
+        }
+    }
+
+    public Brush SearchStroke => _searchMark == SearchMark.None ? Brush.Transparent : MatchStroke;
+    public double SearchStrokeThickness => _searchMark switch
+    {
+        SearchMark.Current => CurrentStrokeThickness,
+        SearchMark.Match => MatchStrokeThickness,
+        _ => 0
+    };
+
     public int SubId { get; init; }
 
     private string? _carrierName;

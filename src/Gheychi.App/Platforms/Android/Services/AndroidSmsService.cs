@@ -519,6 +519,29 @@ public sealed class AndroidSmsService : ISmsService
             return results;
         }, cancellationToken);
 
+    /// <summary>
+    /// Every message body of one conversation, newest first: the same order and rows the chat pages through,
+    /// so a row's position is its paging offset.
+    /// </summary>
+    public Task<IReadOnlyList<ThreadTextRow>> GetThreadTextRowsAsync(long threadId, CancellationToken cancellationToken = default) =>
+        Task.Run<IReadOnlyList<ThreadTextRow>>(() =>
+        {
+            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var rows = new List<ThreadTextRow>();
+            ForEachMessage(
+                context,
+                $"{Telephony.Sms.InterfaceConsts.ThreadId} = ?",
+                [threadId.ToString()],
+                int.MaxValue,
+                cancellationToken,
+                row =>
+                {
+                    rows.Add(new ThreadTextRow(row.Id, row.DateMs, row.Body));
+                    return true;
+                });
+            return rows;
+        }, cancellationToken);
+
     // ---- Search caches -------------------------------------------------------------------------
     // Every keystroke used to re-scan the whole SMS table and reload the thread list. Typing "hel"
     // then "hell" can only narrow the earlier matches, so those rows are kept and filtered in memory.

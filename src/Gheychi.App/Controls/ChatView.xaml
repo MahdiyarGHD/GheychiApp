@@ -42,7 +42,8 @@
                 <Grid Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="Start">
                     <Grid Grid.Row="0">
                         <Border Padding="{Binding BubblePadding}"
-                                StrokeThickness="0"
+                                Stroke="{Binding SearchStroke}"
+                                StrokeThickness="{Binding SearchStrokeThickness}"
                                 StrokeShape="RoundRectangle 16"
                                 BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                                 HorizontalOptions="Start"
@@ -131,7 +132,8 @@
                 <Grid Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="Start">
                     <Grid Grid.Row="0">
                         <Border Padding="{Binding BubblePadding}"
-                                StrokeThickness="0"
+                                Stroke="{Binding SearchStroke}"
+                                StrokeThickness="{Binding SearchStrokeThickness}"
                                 StrokeShape="RoundRectangle 16"
                                 BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                                 HorizontalOptions="Start"
@@ -226,7 +228,8 @@
                 <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="End">
                     <Grid Grid.Row="0">
                         <Border Padding="{Binding BubblePadding}"
-                                StrokeThickness="0"
+                                Stroke="{Binding SearchStroke}"
+                                StrokeThickness="{Binding SearchStrokeThickness}"
                                 StrokeShape="RoundRectangle 16"
                                 BackgroundColor="{StaticResource Primary}"
                                 HorizontalOptions="End"
@@ -337,7 +340,8 @@
                 <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="End">
                     <Grid Grid.Row="0">
                         <Border Padding="{Binding BubblePadding}"
-                                StrokeThickness="0"
+                                Stroke="{Binding SearchStroke}"
+                                StrokeThickness="{Binding SearchStrokeThickness}"
                                 StrokeShape="RoundRectangle 16"
                                 BackgroundColor="{StaticResource Primary}"
                                 HorizontalOptions="End"
@@ -524,12 +528,18 @@
                                    HorizontalTextAlignment="Center"
                                    VerticalTextAlignment="Center" />
                         </Grid>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHeaderTapped" />
+                        </Border.GestureRecognizers>
                     </Border>
                     <Grid Grid.Column="2"
                           RowDefinitions="Auto,Auto"
                           RowSpacing="1"
                           VerticalOptions="Center"
                           HorizontalOptions="Fill">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHeaderTapped" />
+                        </Grid.GestureRecognizers>
                         <Label Grid.Row="0"
                                Text="{Binding Thread.Name}"
                                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
@@ -659,6 +669,94 @@
                         </Grid.GestureRecognizers>
                     </Grid>
                 </Grid>
+
+                <!-- In-chat search header: covers the other two headers while a search is open -->
+                <Grid x:Name="SearchHeader"
+                      IsVisible="False"
+                      Padding="8,8,10,8"
+                      ColumnDefinitions="Auto,*,Auto,Auto"
+                      ColumnSpacing="4"
+                      BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnOverlayTapEater" />
+                    </Grid.GestureRecognizers>
+                    <Grid Grid.Column="0" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
+                          SemanticProperties.Description="{loc:Translate Chat_Back}">
+                        <Image Source="back.png"
+                               WidthRequest="22"
+                               HeightRequest="22"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSearchBackTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Border Grid.Column="1"
+                            Padding="14,0,12,0"
+                            HeightRequest="40"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20"
+                            BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                            VerticalOptions="Center">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" VerticalOptions="Center">
+                            <Entry x:Name="SearchEntry"
+                                   Grid.Column="0"
+                                   Placeholder="{loc:Translate Chat_SearchHint}"
+                                   PlaceholderColor="#8A8F98"
+                                   TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                   BackgroundColor="Transparent"
+                                   FontSize="14"
+                                   ClearButtonVisibility="WhileEditing"
+                                   ReturnType="Search"
+                                   VerticalOptions="Center"
+                                   TextChanged="OnSearchTextChanged"
+                                   Completed="OnSearchCompleted" />
+                            <Label Grid.Column="1"
+                                   Text="{Binding Search.CounterText}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Grid Grid.Column="2" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
+                          IsEnabled="{Binding Search.CanNavigate}"
+                          SemanticProperties.Description="{loc:Translate Chat_SearchOlder}">
+                        <Image Source="back.png"
+                               Rotation="90"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSearchOlderTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Grid Grid.Column="3" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
+                          IsEnabled="{Binding Search.CanNavigate}"
+                          SemanticProperties.Description="{loc:Translate Chat_SearchNewer}">
+                        <Image Source="back.png"
+                               Rotation="270"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSearchNewerTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                </Grid>
             </Grid>
 
             <Grid Grid.Row="1">
@@ -767,7 +865,7 @@
 
             <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode) -->
             <Grid Grid.Row="2"
-                  IsVisible="{Binding IsNotSelectionMode}"
+                  IsVisible="{Binding IsInputBarVisible}"
                   Padding="10,6,10,8"
                   ColumnDefinitions="Auto,*,Auto,Auto"
                   ColumnSpacing="6">

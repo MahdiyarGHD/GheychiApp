@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+             x:Class="Gheychi.App.Controls.ProfileView"
+             behaviors:TouchShield.IsEnabled="True"
+             BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
+
+    <ContentView.Resources>
+        <Style x:Key="SectionTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextTransform" Value="Uppercase" />
+            <Setter Property="CharacterSpacing" Value="0.6" />
+            <Setter Property="Margin" Value="26,22,16,8" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+        </Style>
+
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FFFFFF, Dark=#1E2320}" />
+        </Style>
+
+        <Style x:Key="RowTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+            <Setter Property="MaxLines" Value="1" />
+        </Style>
+
+        <Style x:Key="RowSubtitle" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+            <Setter Property="MaxLines" Value="2" />
+        </Style>
+
+        <Style x:Key="RowIconBadge" TargetType="Border">
+            <Setter Property="WidthRequest" Value="42" />
+            <Setter Property="HeightRequest" Value="42" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 21" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E7EEE6, Dark=#2A332D}" />
+        </Style>
+
+        <Style x:Key="QuickAction" TargetType="Border">
+            <Setter Property="Padding" Value="4,14" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 22" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#EEF1EA, Dark=#1E2320}" />
+        </Style>
+
+        <Style x:Key="QuickActionBadge" TargetType="Border">
+            <Setter Property="WidthRequest" Value="52" />
+            <Setter Property="HeightRequest" Value="52" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 26" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+        </Style>
+
+        <Style x:Key="QuickActionLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+            <Setter Property="MaxLines" Value="1" />
+        </Style>
+
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="18,0" />
+            <Setter Property="Color" Value="{AppThemeBinding Light=#E8EDE6, Dark=#2A302C}" />
+        </Style>
+    </ContentView.Resources>
+
+    <Grid>
+        <!-- ===================== Profile ===================== -->
+        <Grid x:Name="ProfilePage" RowDefinitions="Auto,*">
+            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Border Grid.Column="0"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20"
+                        BackgroundColor="Transparent"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Chat_Back}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                        </Image.Behaviors>
+                    </Image>
+                </Border>
+                <Label Grid.Column="1"
+                       Text="{loc:Translate Profile_Title}"
+                       FontSize="20"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
+                       VerticalOptions="Center" />
+            </Grid>
+
+            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+                <VerticalStackLayout Padding="0,0,0,32" Spacing="0">
+
+                    <!-- Identity -->
+                    <Grid HorizontalOptions="Center" Margin="0,6,0,0" WidthRequest="124" HeightRequest="124">
+                        <Border WidthRequest="116"
+                                HeightRequest="116"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 58"
+                                BackgroundColor="{AppThemeBinding Light=#DCE7DE, Dark=#35423C}"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Start">
+                            <Grid>
+                                <Image x:Name="AvatarIcon" WidthRequest="52" HeightRequest="52" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label x:Name="AvatarInitials"
+                                       FontSize="40"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                        <Border x:Name="SimBadge"
+                                IsVisible="False"
+                                Padding="9,3"
+                                StrokeThickness="2"
+                                Stroke="{AppThemeBinding Light=#F7FAF4, Dark=#121413}"
+                                StrokeShape="RoundRectangle 12"
+                                BackgroundColor="#2E6B4C"
+                                HorizontalOptions="Center"
+                                VerticalOptions="End">
+                            <Label x:Name="SimBadgeLabel"
+                                   FontSize="11"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   TextColor="White" />
+                        </Border>
+                    </Grid>
+
+                    <Label x:Name="NameLabel"
+                           Margin="24,12,24,0"
+                           FontSize="24"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="2" />
+                    <Label x:Name="PhoneLabel"
+                           Margin="24,2,24,0"
+                           FontSize="14"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
+                           TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}"
+                           HorizontalOptions="Center" />
+                    <Border x:Name="SimPill"
+                            IsVisible="False"
+                            Margin="0,12,0,0"
+                            Padding="14,6"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16"
+                            BackgroundColor="{AppThemeBinding Light=#E9EDE6, Dark=#232A25}"
+                            HorizontalOptions="Center">
+                        <HorizontalStackLayout Spacing="8">
+                            <BoxView WidthRequest="7" HeightRequest="7" CornerRadius="4" Color="#2E6B4C" VerticalOptions="Center" />
+                            <Label x:Name="SimPillLabel"
+                                   FontSize="12.5"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
+                                   TextColor="{AppThemeBinding Light=#3A453D, Dark=#C9D2CB}"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- Quick actions: a button only exists when the conversation can do it; the rest share the width -->
+                    <Grid x:Name="ActionsGrid" Margin="16,24,16,0" ColumnSpacing="10">
+                        <Border x:Name="CallButton" Style="{StaticResource QuickAction}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCallTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Border Style="{StaticResource QuickActionBadge}" BackgroundColor="{AppThemeBinding Light=#B9EBCB, Dark=#1F5A3F}">
+                                    <Image Source="phone.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <Label Text="{loc:Translate Profile_Call}" Style="{StaticResource QuickActionLabel}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border x:Name="TextButton" Style="{StaticResource QuickAction}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnTextTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Border Style="{StaticResource QuickActionBadge}" BackgroundColor="{AppThemeBinding Light=#E4EBE3, Dark=#2A332D}">
+                                    <Image Source="chat.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <Label Text="{loc:Translate Profile_Text}" Style="{StaticResource QuickActionLabel}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border x:Name="DetailsButton" Style="{StaticResource QuickAction}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDetailsTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Border Style="{StaticResource QuickActionBadge}" BackgroundColor="{AppThemeBinding Light=#E4EBE3, Dark=#2A332D}">
+                                    <Image Source="person.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <Label Text="{loc:Translate Profile_Details}" Style="{StaticResource QuickActionLabel}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border x:Name="SearchButton" Style="{StaticResource QuickAction}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSearchTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Border Style="{StaticResource QuickActionBadge}" BackgroundColor="{AppThemeBinding Light=#E4EBE3, Dark=#2A332D}">
+                                    <Image Source="search.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <Label Text="{loc:Translate Profile_Search}" Style="{StaticResource QuickActionLabel}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <!-- Phone & routing -->
+                    <Label Text="{loc:Translate Profile_SectionPhone}" Style="{StaticResource SectionTitle}" />
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Grid Padding="20,16" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                    <Label x:Name="NumberLabel" Style="{StaticResource RowTitle}" />
+                                    <Label x:Name="NumberKindLabel" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <Border x:Name="NumberCallButton"
+                                        Grid.Column="1"
+                                        Style="{StaticResource RowIconBadge}"
+                                        SemanticProperties.Description="{loc:Translate Profile_Call}">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCallTapped" />
+                                    </Border.GestureRecognizers>
+                                    <Image Source="phone.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                            </Grid>
+
+                            <VerticalStackLayout x:Name="SimRow" IsVisible="False">
+                                <BoxView Style="{StaticResource Divider}" />
+                                <Grid Padding="20,16" ColumnDefinitions="*,Auto" ColumnSpacing="12" BackgroundColor="Transparent">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnPreferredSimTapped" />
+                                    </Grid.GestureRecognizers>
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{loc:Translate Profile_PreferredSim}" Style="{StaticResource RowTitle}" />
+                                        <Label x:Name="PreferredSimHint" Style="{StaticResource RowSubtitle}" />
+                                    </VerticalStackLayout>
+                                    <Border Grid.Column="1"
+                                            Padding="14,8"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 18"
+                                            BackgroundColor="{AppThemeBinding Light=#E9EDE6, Dark=#2A332D}"
+                                            VerticalOptions="Center">
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Label x:Name="PreferredSimValue"
+                                                   FontSize="13"
+                                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
+                                                   TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                                   VerticalOptions="Center" />
+                                            <Image Source="unfold.png" WidthRequest="16" HeightRequest="16" VerticalOptions="Center">
+                                                <Image.Behaviors>
+                                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                                </Image.Behaviors>
+                                            </Image>
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Preferences -->
+                    <Label Text="{loc:Translate Profile_SectionPreferences}" Style="{StaticResource SectionTitle}" />
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnLinksTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
+                                    <Image Source="link.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{loc:Translate Profile_Links}" Style="{StaticResource RowTitle}" />
+                                    <Label x:Name="LinksHint" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <Image x:Name="LinksChevron" Grid.Column="2" Source="chevron_right.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+
+                            <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnNotificationsTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
+                                    <Image Source="notifications.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{loc:Translate Profile_Notifications}" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{loc:Translate Profile_NotificationsHint}" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="NotificationsCustom"
+                                       Grid.Column="2"
+                                       IsVisible="False"
+                                       Text="{loc:Translate Profile_NotificationsCustom}"
+                                       FontSize="13"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}"
+                                       VerticalOptions="Center" />
+                                <Image x:Name="NotificationsChevron" Grid.Column="3" Source="chevron_right.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+
+                            <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnSnoozeTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
+                                    <Image Source="snooze.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{loc:Translate Profile_Snooze}" Style="{StaticResource RowTitle}" />
+                                    <Label x:Name="SnoozeHint" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <!-- Display only: the row is the control, so turning it on can ask for how long first -->
+                                <Switch x:Name="SnoozeSwitch"
+                                        Grid.Column="2"
+                                        InputTransparent="True"
+                                        VerticalOptions="Center"
+                                        OnColor="#2E6B4C" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Conversation actions -->
+                    <Label Text="{loc:Translate Profile_SectionActions}" Style="{StaticResource SectionTitle}" />
+                    <Border Style="{StaticResource Card}">
+                        <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnArchiveTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
+                                <Image x:Name="ArchiveIcon" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label x:Name="ArchiveTitle" Style="{StaticResource RowTitle}" />
+                                <Label x:Name="ArchiveHint" Style="{StaticResource RowSubtitle}" />
+                            </VerticalStackLayout>
+                            <Image x:Name="ArchiveChevron" Grid.Column="2" Source="chevron_right.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+        <!-- ===================== Links ===================== -->
+        <Grid x:Name="LinksPage"
+              IsVisible="False"
+              RowDefinitions="Auto,*"
+              BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
+            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Border Grid.Column="0"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20"
+                        BackgroundColor="Transparent"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Chat_Back}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLinksBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                        </Image.Behaviors>
+                    </Image>
+                </Border>
+                <Label Grid.Column="1"
+                       Text="{loc:Translate Profile_Links}"
+                       FontSize="20"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
+                       VerticalOptions="Center" />
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <CollectionView x:Name="LinksList"
+                                Margin="8,0"
+                                SelectionMode="None"
+                                VerticalScrollBarVisibility="Never">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LinkResultItem">
+                            <Grid Padding="10,10" ColumnDefinitions="Auto,*" ColumnSpacing="14" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnLinkTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border Grid.Column="0"
+                                        WidthRequest="42"
+                                        HeightRequest="42"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 21"
+                                        BackgroundColor="{Binding IconBgColor}"
+                                        VerticalOptions="Center">
+                                    <Image Source="link.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding Title}"
+                                           FontSize="14"
+                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                           TextColor="{Binding TitleColor}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1" />
+                                    <Label Text="{Binding ChatLine}"
+                                           FontSize="12"
+                                           TextColor="{Binding MutedColor}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label x:Name="LinksEmpty"
+                       IsVisible="False"
+                       FontSize="15"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
+                       TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentView>

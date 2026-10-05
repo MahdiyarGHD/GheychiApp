@@ -193,7 +193,9 @@ public partial class ChatView : ContentView
         // Bottom-only padding: header keeps its exact original position
         // (no top margin ever), the input bar lifts above the keyboard.
         PageContent.Padding = new Thickness(0, 0, 0, _keyboardOffset);
-        if (_keyboardOffset > 0)
+
+        // The search keyboard must not pull the list away from the match being read.
+        if (_keyboardOffset > 0 && !IsSearching)
         {
             _scrolledToEnd = false;
             ScrollToEnd(false);
@@ -493,11 +495,18 @@ public partial class ChatView : ContentView
 
     public Task Close()
     {
+        CloseSearch();
         DetachLiveUpdates();
         HideSkeleton();
         MessageEntry.Unfocus();
         return Task.CompletedTask;
     }
+
+    /// <summary>Puts the cursor in the message box (and brings up the keyboard).</summary>
+    public void FocusMessageInput() => MessageEntry.Focus();
+
+    /// <summary>Takes the keyboard down, e.g. before another page covers the chat.</summary>
+    public void ReleaseInputFocus() => MessageEntry.Unfocus();
 
     /// <summary>Called once the overlay is out of sight; resetting the padding earlier would re-lay out the chat mid-slide.</summary>
     public void ResetAfterClose() => ResetInputPadding();
@@ -1200,6 +1209,12 @@ public partial class ChatView : ContentView
 
     public bool HandleBack()
     {
+        if (IsSearching)
+        {
+            CloseSearch();
+            return true;
+        }
+
         if (MessageInfoModal.IsVisible)
         {
             _ = CloseInfoModalAsync();

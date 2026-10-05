@@ -26,4 +26,6 @@ public interface ISmsService
     Task<long> GetOrCreateThreadIdAsync(string address);
     Task<IReadOnlyList<SearchResultChat>> SearchChatsAsync(SearchQuery query, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SearchResultLink>> SearchLinksAsync(SearchQuery query, CancellationToken cancellationToken = default);
+    /// <summary>The text of every message in the conversation, newest first: the input of in-chat search and the links list.</summary>
+    Task<IReadOnlyList<ThreadTextRow>> GetThreadTextRowsAsync(long threadId, CancellationToken cancellationToken = default);
 }

@@ -32,7 +32,9 @@ public static class MauiProgram
         // A new reason to hold back a notification (archived, snoozed, spam) is one more INotificationRule here.
         builder.Services.AddSingleton<ActiveChatState>();
         builder.Services.AddSingleton<IActiveChatState>(sp => sp.GetRequiredService<ActiveChatState>());
+        builder.Services.AddSingleton<IThreadSettings, Services.PreferencesThreadSettings>();
         builder.Services.AddSingleton<INotificationRule, ActiveChatRule>();
+        builder.Services.AddSingleton<INotificationRule, SnoozeRule>();
         builder.Services.AddSingleton<NotificationPolicy>();
         builder.Services.AddSingleton<MessagesViewModel>();
         builder.Services.AddTransient<ChatViewModel>();

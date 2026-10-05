@@ -156,6 +156,29 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         return success;
     }
 
+    /// <summary>Moves one conversation to the archive, e.g. from its profile page.</summary>
+    public Task<bool> ArchiveThreadAsync(ThreadItem thread)
+    {
+        var archivedIds = GetArchivedThreadIds();
+        archivedIds.Add(thread.ThreadId);
+        SaveArchivedThreadIds(archivedIds);
+
+        // The row moves to the archive straight away; the reload rebuilds both lists.
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var row = Threads.FirstOrDefault(t => t.ThreadId == thread.ThreadId);
+            if (row is not null)
+            {
+                Threads.Remove(row);
+                ArchivedThreads.Add(row);
+            }
+
+            _ = LoadThreadsAsync();
+        });
+
+        return Task.FromResult(true);
+    }
+
     public Task<bool> ArchiveSelectedThreadsAsync()
     {
         var selected = SelectedThreads;

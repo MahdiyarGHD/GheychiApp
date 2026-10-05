@@ -375,4 +375,127 @@
   <data name="Notification_ReplyFailed" xml:space="preserve">
     <value>پاسخ ارسال نشد</value>
   </data>
+  <data name="Chat_SearchHint" xml:space="preserve">
+    <value>جستجو در گفتگو</value>
+  </data>
+  <data name="Chat_SearchCounter" xml:space="preserve">
+    <value>{0} از {1}</value>
+  </data>
+  <data name="Chat_SearchNoResults" xml:space="preserve">
+    <value>نتیجه‌ای نیست</value>
+  </data>
+  <data name="Chat_SearchOlder" xml:space="preserve">
+    <value>مورد قبلی</value>
+  </data>
+  <data name="Chat_SearchNewer" xml:space="preserve">
+    <value>مورد بعدی</value>
+  </data>
+  <data name="Profile_Title" xml:space="preserve">
+    <value>نمایه</value>
+  </data>
+  <data name="Profile_Call" xml:space="preserve">
+    <value>تماس</value>
+  </data>
+  <data name="Profile_Text" xml:space="preserve">
+    <value>پیام</value>
+  </data>
+  <data name="Profile_Details" xml:space="preserve">
+    <value>جزئیات</value>
+  </data>
+  <data name="Profile_Search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
+  <data name="Profile_SectionPhone" xml:space="preserve">
+    <value>شماره و مسیر ارسال</value>
+  </data>
+  <data name="Profile_NumberMobile" xml:space="preserve">
+    <value>موبایل</value>
+  </data>
+  <data name="Profile_NumberSender" xml:space="preserve">
+    <value>شناسه فرستنده</value>
+  </data>
+  <data name="Profile_PreferredSim" xml:space="preserve">
+    <value>سیم‌کارت ترجیحی</value>
+  </data>
+  <data name="Profile_SimAutomatic" xml:space="preserve">
+    <value>سیم‌کارتِ آخرین پیام استفاده می‌شود</value>
+  </data>
+  <data name="Profile_SimAlways" xml:space="preserve">
+    <value>همیشه از {0} ارسال می‌شود</value>
+  </data>
+  <data name="Profile_SimPickerTitle" xml:space="preserve">
+    <value>ارسال پیام از</value>
+  </data>
+  <data name="Profile_SimPickerAutomatic" xml:space="preserve">
+    <value>خودکار</value>
+  </data>
+  <data name="Profile_SectionPreferences" xml:space="preserve">
+    <value>تنظیمات</value>
+  </data>
+  <data name="Profile_Links" xml:space="preserve">
+    <value>پیوندها</value>
+  </data>
+  <data name="Profile_LinksCount" xml:space="preserve">
+    <value>{0} پیوند مشترک</value>
+  </data>
+  <data name="Profile_LinksNone" xml:space="preserve">
+    <value>پیوندی وجود ندارد</value>
+  </data>
+  <data name="Profile_LinksReading" xml:space="preserve">
+    <value>در حال جستجوی پیوندها…</value>
+  </data>
+  <data name="Profile_Notifications" xml:space="preserve">
+    <value>اعلان‌ها</value>
+  </data>
+  <data name="Profile_NotificationsHint" xml:space="preserve">
+    <value>صدا، لرزش و چراغ برای این شماره</value>
+  </data>
+  <data name="Profile_NotificationsCustom" xml:space="preserve">
+    <value>سفارشی</value>
+  </data>
+  <data name="Profile_Snooze" xml:space="preserve">
+    <value>به‌تعویق انداختن گفتگو</value>
+  </data>
+  <data name="Profile_SnoozeOff" xml:space="preserve">
+    <value>غیرفعال</value>
+  </data>
+  <data name="Profile_SnoozeUntil" xml:space="preserve">
+    <value>تا {0}</value>
+  </data>
+  <data name="Profile_SnoozeForever" xml:space="preserve">
+    <value>تا زمانی که دوباره روشن کنید</value>
+  </data>
+  <data name="Profile_SnoozeTitle" xml:space="preserve">
+    <value>بی‌صدا کردن اعلان‌ها برای</value>
+  </data>
+  <data name="Snooze_OneHour" xml:space="preserve">
+    <value>۱ ساعت</value>
+  </data>
+  <data name="Snooze_EightHours" xml:space="preserve">
+    <value>۸ ساعت</value>
+  </data>
+  <data name="Snooze_TomorrowMorning" xml:space="preserve">
+    <value>فردا صبح</value>
+  </data>
+  <data name="Snooze_OneWeek" xml:space="preserve">
+    <value>۱ هفته</value>
+  </data>
+  <data name="Snooze_Forever" xml:space="preserve">
+    <value>تا زمانی که دوباره روشن کنم</value>
+  </data>
+  <data name="Profile_SectionActions" xml:space="preserve">
+    <value>اقدامات گفتگو</value>
+  </data>
+  <data name="Profile_Archive" xml:space="preserve">
+    <value>بایگانی گفتگو</value>
+  </data>
+  <data name="Profile_ArchiveHint" xml:space="preserve">
+    <value>انتقال گفتگو از صندوق ورودی</value>
+  </data>
+  <data name="Profile_Unarchive" xml:space="preserve">
+    <value>خروج از بایگانی</value>
+  </data>
+  <data name="Profile_UnarchiveHint" xml:space="preserve">
+    <value>بازگرداندن گفتگو به صندوق ورودی</value>
+  </data>
 </root>

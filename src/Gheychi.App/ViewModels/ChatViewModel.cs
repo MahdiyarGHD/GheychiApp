@@ -6,6 +6,7 @@ using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Models;
+using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
@@ -41,6 +42,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     private readonly ISmsService _smsService;
     private readonly IDateFormattingService _dateFormatter;
     private readonly IMessageMetadataRepository _metadataRepo;
+    private readonly IThreadSettings? _threadSettings;
     private readonly List<(int Index, string Text)> _dateSeparators = [];
     private string _draft = string.Empty;
     private int _simSlot = 1;
@@ -56,9 +58,19 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _dateFormatter = dateFormatter ?? IPlatformApplication.Current?.Services.GetService<IDateFormattingService>() ?? new DateFormattingService();
         _metadataRepo = metadataRepo ?? IPlatformApplication.Current?.Services.GetService<IMessageMetadataRepository>() ?? new Gheychi.Infrastructure.Data.MessageMetadataRepository();
 
+        _threadSettings = IPlatformApplication.Current?.Services.GetService<IThreadSettings>();
+
         _thread = thread ?? ThreadItem.Empty;
         Items = [];
         Messages = [];
+
+        Search = new ChatSearchState(_smsService);
+        Search.Changed += RefreshSearchMarks;
+        Search.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ChatSearchState.IsActive))
+                OnPropertyChanged(nameof(IsInputBarVisible));
+        };
 
         _ = EnsureSimInfoLoadedAsync();
 
@@ -76,6 +88,15 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public FastObservableCollection<object> Items { get; }
     public FastObservableCollection<ChatMessage> Messages { get; }
+
+    public ChatSearchState Search { get; }
+
+    // Outlines the matching bubbles. A setter that finds the same mark does nothing, so this is cheap to repeat.
+    private void RefreshSearchMarks()
+    {
+        foreach (var message in Messages)
+            message.SearchMark = Search.MarkFor(message.Id);
+    }
 
     public string Draft
     {
@@ -589,6 +610,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         Items.Reset(data.Items);
         Messages.Reset(data.Messages);
         StickyDate = data.StickyDate;
+        ApplyPreferredSim();
+        if (Search.IsActive)
+            RefreshSearchMarks();
 
         // Pre-warm the NEXT page right away, in the background, so history is
         // already in memory long before the user scrolls up to it.
@@ -610,7 +634,31 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         ApplyMessages(data, data.RawCount);
     }
 
-    public async Task<bool> LoadOlderAsync()
+    /// <summary>
+    /// Loads older history until the message <paramref name="row"/> rows from the newest is in the list (search jumps to
+    /// messages that were never scrolled to). The gap is read in one query and prepended once. False if the history ends first.
+    /// </summary>
+    public async Task<bool> EnsureLoadedThroughAsync(int row)
+    {
+        for (var attempt = 0; row >= _loadedCount && attempt < 50; attempt++)
+        {
+            if (_loadingOlder)
+            {
+                // A scroll-triggered page is in flight; its result changes what is still missing.
+                await Task.Delay(40);
+                continue;
+            }
+
+            if (!_hasMore)
+                return false;
+
+            await LoadOlderAsync(minRows: row - _loadedCount + 1);
+        }
+
+        return row < _loadedCount;
+    }
+
+    public async Task<bool> LoadOlderAsync(int minRows = 0)
     {
         if (_loadingOlder || !_hasMore)
             return false;
@@ -633,7 +681,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 {
                     // Only reuse the prefetched page if it still belongs to this
                     // thread and the list hasn't moved past it.
-                    page = (_prefetchThreadId == Thread.ThreadId && pendingOffset == _loadedCount) ? await pending : null;
+                    page = (_prefetchThreadId == Thread.ThreadId && pendingOffset == _loadedCount && minRows <= RecentPageSize)
+                        ? await pending
+                        : null;
                 }
                 catch
                 {
@@ -645,7 +695,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             {
                 var current = Thread;
                 var offset = _loadedCount;
-                page = await Task.Run(() => FetchMessagesAsync(current, RecentPageSize, offset));
+                var limit = Math.Max(RecentPageSize, minRows);
+                page = await Task.Run(() => FetchMessagesAsync(current, limit, offset));
             }
 
             if (page == null || page.RawCount == 0)
@@ -704,6 +755,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         // RecyclerView shifts existing rows instead of rebinding everything.
         Items.PrependRange(page.Items);
         Messages.PrependRange(page.Messages);
+        if (Search.IsActive)
+            RefreshSearchMarks();
 
         var shift = page.Items.Count - (dropHead ? 1 : 0);
         var mergedSeps = new List<(int Index, string Text)>(page.Separators.Count + _dateSeparators.Count);
@@ -741,6 +794,18 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
         var next = sims[(currentIndex + 1) % sims.Count];
         SelectSim(next.SlotIndex, next.SubId);
+    }
+
+    /// <summary>A SIM the user chose for this conversation wins over the one its last message used, while that SIM is still in the phone.</summary>
+    private void ApplyPreferredSim()
+    {
+        var preferred = _threadSettings?.GetPreferredSubId(Thread.ThreadId) ?? 0;
+        if (preferred <= 0)
+            return;
+
+        var sim = ActiveSims.FirstOrDefault(s => s.SubId == preferred);
+        if (sim is not null)
+            SelectSim(sim.SlotIndex, sim.SubId);
     }
 
     public void SelectSim(int slot, int subId = 0)
@@ -1018,6 +1083,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             if (SetField(ref _isSelectionMode, value))
             {
                 OnPropertyChanged(nameof(IsNotSelectionMode));
+                OnPropertyChanged(nameof(IsInputBarVisible));
                 foreach (var msg in Messages)
                 {
                     msg.IsSelectionMode = value;
@@ -1030,6 +1096,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     }
 
     public bool IsNotSelectionMode => !IsSelectionMode;
+
+    // The message box makes no sense while picking messages or while the search bar and its keyboard are up.
+    public bool IsInputBarVisible => !IsSelectionMode && !Search.IsActive;
 
     private int _selectedCount;
     public int SelectedCount
