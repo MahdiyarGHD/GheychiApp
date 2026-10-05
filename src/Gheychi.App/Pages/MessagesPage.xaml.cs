@@ -134,6 +134,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
 
+        // On a cold start the Shell builds its tab bar around now; keep it from showing before the chat is up.
+        if (ChatLaunchRequests.HasPending)
+            NativeTabBar.Hold();
+
         // A tapped notification gets its chat before the inbox starts loading: the chat view is the slow
         // part to build, and the inbox behind it only has to be ready by the time the chat is closed.
         // While the activity is still resuming this is left to OnChatLaunchRequested: hiding the tab bar
@@ -357,7 +361,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // After a resume the Shell still has its tab bar up and only hides it on a later layout pass, which
             // shows as a flash and a chat input bar that jumps. Hiding the native bar now, before the first
             // frame, means the chat is laid out at its final size once.
-            NativeTabBar.Hide();
+            NativeTabBar.Hold();
 
             // Building the chat view is the slow part; the messages are being read meanwhile.
             await EnsureOverlayReadyAsync(ChatOverlay);
@@ -398,6 +402,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         InboxLayer.IsVisible = true;
         if (IsChatClosed)
         {
+            NativeTabBar.Release();
             Shell.SetTabBarIsVisible(this, true);
             NativeTabBar.Show();
         }
@@ -580,6 +585,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         try
         {
             await ChatOverlay.Close();
+            NativeTabBar.Release();
             _ = RestoreTabBarSoonAsync();
 
             await OverlayAnimator.SlideYAsync(ChatOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
@@ -817,6 +823,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         await Task.Delay(60);
         Shell.SetTabBarIsVisible(this, true);
+        NativeTabBar.Show();
     }
 
     private const int RecentSuggestionCount = 5;
