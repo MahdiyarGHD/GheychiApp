@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
@@ -15,7 +16,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private bool _hasPermission = true;
     private bool _initialized;
     private bool _reloadPending;
-    private readonly Task<BuiltThreads> _snapshotTask;
+    private Task<BuiltThreads>? _snapshotTask;
 
     private const string ArchivedKey = "archived_threads_v1";
     private const int MaxIncrementalChanges = 40;
@@ -29,11 +30,19 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         _smsService = smsService ?? IPlatformApplication.Current?.Services.GetService<ISmsService>() ?? throw new InvalidOperationException("ISmsService not resolved");
         _dateFormatter = dateFormatter ?? IPlatformApplication.Current?.Services.GetService<IDateFormattingService>() ?? new DateFormattingService();
 
-        var snapshotPath = SnapshotPath;
-        _snapshotTask = Task.Run(() => BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath)));
+        // Normally read while the XAML is inflated. Opened from a notification, the inbox is not what is
+        // waited for: the CPU belongs to the chat until it is up, so the read waits for InitializeAsync.
+        if (!ChatLaunchRequests.HasPending)
+            _snapshotTask = StartSnapshotLoad();
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
         NotificationActionReceiver.ThreadsChanged += OnSmsReceived;
+    }
+
+    private Task<BuiltThreads> StartSnapshotLoad()
+    {
+        var snapshotPath = SnapshotPath;
+        return Task.Run(() => BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath)));
     }
 
     public FastObservableCollection<ThreadItem> Threads { get; } = [];
@@ -271,7 +280,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         // Paint the last known inbox right away; the real query below refreshes it.
         if (Threads.Count == 0)
         {
-            var cached = await _snapshotTask;
+            var cached = await (_snapshotTask ??= StartSnapshotLoad());
             if (cached.Inbox.Count > 0 && Threads.Count == 0)
             {
                 Threads.Reset(cached.Inbox);

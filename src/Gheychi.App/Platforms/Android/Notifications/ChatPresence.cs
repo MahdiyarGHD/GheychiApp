@@ -14,8 +14,10 @@ public static class ChatPresence
     public static void ChatOpened(long threadId)
     {
         State?.SetOpenThread(threadId);
-        // What was notified is being read now.
-        MessageNotifier.Cancel(Platform.AppContext, threadId);
+
+        // What was notified is being read now. Asking the notification service is a binder call that can
+        // take tens of milliseconds, so it must not sit on the chat's opening path.
+        _ = Task.Run(() => MessageNotifier.Cancel(Platform.AppContext, threadId));
     }
 
     public static void ChatClosed() => State?.ClearOpenThread();

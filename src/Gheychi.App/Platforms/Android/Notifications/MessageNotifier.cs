@@ -32,6 +32,7 @@ internal static class MessageNotifier
     public static void Refresh(Context context, long threadId, string address, int subId) =>
         Post(context, threadId, address, subId, incoming: null, silent: false, onlyAlertOnce: true);
 
+    /// <summary>Dismisses the conversation's notification. Talks to the notification service: call it off the UI thread.</summary>
     public static void Cancel(Context context, long threadId)
     {
         try

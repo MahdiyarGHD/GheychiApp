@@ -135,7 +135,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
         // A tapped notification gets its chat before the inbox starts loading: the chat view is the slow
         // part to build, and the inbox behind it only has to be ready by the time the chat is closed.
-        await OpenRequestedChatAsync();
+        // While the activity is still resuming this is left to OnChatLaunchRequested: hiding the tab bar
+        // in the middle of a resume loses against the Shell's own resume work and the bar comes back.
+        if (ChatPresence.IsAppVisible)
+            await OpenRequestedChatAsync();
 
         try
         {
@@ -328,7 +331,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         _ = OpenChatAsync(thread, wasUnread, unreadCount);
     }
 
-    private void OnChatLaunchRequested() => _ = OpenRequestedChatAsync();
+    // Posted, not run inline: it is raised from inside the activity's OnResume, and the open has to
+    // start after that returns.
+    private void OnChatLaunchRequested() =>
+        MainThread.BeginInvokeOnMainThread(() => _ = OpenRequestedChatAsync());
 
     /// <summary>Opens the conversation a tapped notification asked for.</summary>
     private async Task OpenRequestedChatAsync()
@@ -369,6 +375,17 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (wasUnread)
                 thread.MarkAsRead();
             await OpenChatAsync(thread, wasUnread, unread, animate: false);
+
+            // Coming back from the background the Shell can still show its tab bar after the open; once the
+            // resume has settled, hide it again (toggled, because setting an unchanged value does nothing).
+            Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(150), () =>
+            {
+                if (IsChatClosed)
+                    return;
+
+                Shell.SetTabBarIsVisible(this, true);
+                Shell.SetTabBarIsVisible(this, false);
+            });
         }
         catch (Exception ex)
         {
