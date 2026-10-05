@@ -12,8 +12,8 @@
         <!-- Section title: a letter or "Recent" -->
         <DataTemplate x:Key="HeaderTemplate" x:DataType="vm:ComposeRow">
             <Label Text="{Binding Letter}"
-                   Padding="22,16,16,4"
-                   FontSize="12"
+                   Padding="20,10,16,2"
+                   FontSize="11"
                    CharacterSpacing="0.8"
                    FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                    TextColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}" />
@@ -21,32 +21,32 @@
 
         <!-- A person: avatar, name, "Mobile · number" -->
         <DataTemplate x:Key="ContactTemplate" x:DataType="vm:ComposeRow">
-            <Grid Padding="16,7"
+            <Grid Padding="16,5"
                   ColumnDefinitions="Auto,*"
-                  ColumnSpacing="14"
+                  ColumnSpacing="12"
                   BackgroundColor="Transparent">
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnRowTapped" />
                 </Grid.GestureRecognizers>
                 <Border Grid.Column="0"
-                        WidthRequest="44"
-                        HeightRequest="44"
+                        WidthRequest="40"
+                        HeightRequest="40"
                         StrokeThickness="0"
-                        StrokeShape="RoundRectangle 22"
+                        StrokeShape="RoundRectangle 20"
                         BackgroundColor="{AppThemeBinding Light=#E3E9E4, Dark=#35423C}"
                         InputTransparent="True">
                     <Grid InputTransparent="True" CascadeInputTransparent="True">
                         <Label Text="{Binding Initials}"
                                IsVisible="{Binding HasInitials}"
-                               FontSize="14"
+                               FontSize="13"
                                FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
                                HorizontalOptions="Center"
                                VerticalOptions="Center" />
                         <Image Source="person.png"
                                IsVisible="{Binding HasNoInitials}"
-                               WidthRequest="20"
-                               HeightRequest="20"
+                               WidthRequest="18"
+                               HeightRequest="18"
                                HorizontalOptions="Center"
                                VerticalOptions="Center">
                             <Image.Behaviors>
@@ -56,12 +56,12 @@
                     </Grid>
                 </Border>
                 <VerticalStackLayout Grid.Column="1"
-                                     Spacing="2"
+                                     Spacing="1"
                                      VerticalOptions="Center"
                                      InputTransparent="True"
                                      CascadeInputTransparent="True">
                     <Label Text="{Binding Name}"
-                           FontSize="15"
+                           FontSize="14"
                            FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                            LineBreakMode="TailTruncation"
                            MaxLines="1"
@@ -78,23 +78,23 @@
 
         <!-- "Send to 0903…": the number typed in the To field -->
         <DataTemplate x:Key="TypedTemplate" x:DataType="vm:ComposeRow">
-            <Grid Padding="16,7"
+            <Grid Padding="16,5"
                   ColumnDefinitions="Auto,*"
-                  ColumnSpacing="14"
+                  ColumnSpacing="12"
                   BackgroundColor="Transparent">
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnRowTapped" />
                 </Grid.GestureRecognizers>
                 <Border Grid.Column="0"
-                        WidthRequest="44"
-                        HeightRequest="44"
+                        WidthRequest="40"
+                        HeightRequest="40"
                         StrokeThickness="0"
-                        StrokeShape="RoundRectangle 22"
+                        StrokeShape="RoundRectangle 20"
                         BackgroundColor="{StaticResource Primary}"
                         InputTransparent="True">
                     <Image Source="send.png"
-                           WidthRequest="19"
-                           HeightRequest="19"
+                           WidthRequest="18"
+                           HeightRequest="18"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"
                            InputTransparent="True">
@@ -104,12 +104,12 @@
                     </Image>
                 </Border>
                 <VerticalStackLayout Grid.Column="1"
-                                     Spacing="2"
+                                     Spacing="1"
                                      VerticalOptions="Center"
                                      InputTransparent="True"
                                      CascadeInputTransparent="True">
                     <Label Text="{Binding Name}"
-                           FontSize="15"
+                           FontSize="14"
                            FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                            LineBreakMode="TailTruncation"
                            MaxLines="1"
@@ -133,15 +133,15 @@
 
         <!-- Header -->
         <Grid Grid.Row="0"
-              HeightRequest="56"
-              Padding="12,0,12,0"
-              ColumnDefinitions="Auto,*,Auto"
-              ColumnSpacing="6">
+              HeightRequest="48"
+              Padding="8,0,12,0"
+              ColumnDefinitions="Auto,*"
+              ColumnSpacing="4">
             <Border Grid.Column="0"
-                    WidthRequest="44"
-                    HeightRequest="44"
+                    WidthRequest="40"
+                    HeightRequest="40"
                     StrokeThickness="0"
-                    StrokeShape="RoundRectangle 22"
+                    StrokeShape="RoundRectangle 20"
                     BackgroundColor="Transparent"
                     VerticalOptions="Center"
                     SemanticProperties.Description="{loc:Translate Chat_Back}">
@@ -149,8 +149,8 @@
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Border.GestureRecognizers>
                 <Image Source="back.png"
-                       WidthRequest="22"
-                       HeightRequest="22"
+                       WidthRequest="20"
+                       HeightRequest="20"
                        HorizontalOptions="Center"
                        VerticalOptions="Center">
                     <Image.Behaviors>
@@ -160,48 +160,26 @@
             </Border>
             <Label Grid.Column="1"
                    Text="{loc:Translate Compose_Title}"
-                   FontSize="20"
+                   FontSize="18"
                    FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                    TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}"
                    VerticalOptions="Center" />
-            <Border x:Name="DialpadButton"
-                    Grid.Column="2"
-                    WidthRequest="44"
-                    HeightRequest="44"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 22"
-                    BackgroundColor="Transparent"
-                    VerticalOptions="Center"
-                    SemanticProperties.Description="{loc:Translate Compose_Dialpad}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnDialpadTapped" />
-                </Border.GestureRecognizers>
-                <Image Source="dialpad.png"
-                       WidthRequest="20"
-                       HeightRequest="20"
-                       HorizontalOptions="Center"
-                       VerticalOptions="Center">
-                    <Image.Behaviors>
-                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#4A544C, Dark=#B7BEB9}" />
-                    </Image.Behaviors>
-                </Image>
-            </Border>
         </Grid>
 
         <!-- Recipient field -->
         <Border x:Name="RecipientCard"
                 Grid.Row="1"
-                Margin="16,4,16,8"
-                Padding="18,0,8,0"
-                HeightRequest="52"
+                Margin="12,0,12,6"
+                Padding="14,0,6,0"
+                HeightRequest="42"
                 StrokeThickness="1.5"
                 Stroke="Transparent"
-                StrokeShape="RoundRectangle 26"
+                StrokeShape="RoundRectangle 21"
                 BackgroundColor="{AppThemeBinding Light=#EAF0E8, Dark=#1E2320}">
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" VerticalOptions="Center">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalOptions="Center">
                 <Label Grid.Column="0"
                        Text="{loc:Translate Compose_To}"
-                       FontSize="14"
+                       FontSize="13"
                        FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                        TextColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}"
                        VerticalOptions="Center" />
@@ -211,7 +189,7 @@
                        PlaceholderColor="{AppThemeBinding Light=#7C857D, Dark=#7F8791}"
                        TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}"
                        BackgroundColor="Transparent"
-                       FontSize="15"
+                       FontSize="14"
                        FontFamily="{DynamicResource AppFontFamily}"
                        ClearButtonVisibility="Never"
                        ReturnType="Go"
@@ -223,10 +201,10 @@
                 <Border x:Name="ClearButton"
                         Grid.Column="2"
                         IsVisible="False"
-                        WidthRequest="34"
-                        HeightRequest="34"
+                        WidthRequest="30"
+                        HeightRequest="30"
                         StrokeThickness="0"
-                        StrokeShape="RoundRectangle 17"
+                        StrokeShape="RoundRectangle 15"
                         BackgroundColor="Transparent"
                         VerticalOptions="Center"
                         SemanticProperties.Description="{loc:Translate Chat_Cancel}">
@@ -234,8 +212,8 @@
                         <TapGestureRecognizer Tapped="OnClearTapped" />
                     </Border.GestureRecognizers>
                     <Image Source="close.png"
-                           WidthRequest="16"
-                           HeightRequest="16"
+                           WidthRequest="14"
+                           HeightRequest="14"
                            HorizontalOptions="Center"
                            VerticalOptions="Center"
                            InputTransparent="True">
@@ -247,10 +225,10 @@
                 <Border x:Name="SimChip"
                         Grid.Column="3"
                         IsVisible="False"
-                        Padding="10,0"
-                        HeightRequest="32"
+                        Padding="9,0"
+                        HeightRequest="28"
                         StrokeThickness="0"
-                        StrokeShape="RoundRectangle 16"
+                        StrokeShape="RoundRectangle 14"
                         BackgroundColor="{AppThemeBinding Light=#D9E4D7, Dark=#2A332D}"
                         VerticalOptions="Center"
                         SemanticProperties.Description="{loc:Translate Compose_Sim}">
@@ -259,15 +237,15 @@
                     </Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
                         <Image Source="sim_card.png"
-                               WidthRequest="14"
-                               HeightRequest="14"
+                               WidthRequest="13"
+                               HeightRequest="13"
                                VerticalOptions="Center">
                             <Image.Behaviors>
                                 <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}" />
                             </Image.Behaviors>
                         </Image>
                         <Label x:Name="SimLabel"
-                               FontSize="12"
+                               FontSize="11"
                                FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                TextColor="{AppThemeBinding Light=#34443A, Dark=#CFE5D8}"
                                VerticalOptions="Center" />

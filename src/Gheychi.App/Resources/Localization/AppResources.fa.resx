@@ -252,9 +252,6 @@
   <data name="Compose_OpenFailed" xml:space="preserve">
     <value>شروع این گفتگو ممکن نشد.</value>
   </data>
-  <data name="Compose_Dialpad" xml:space="preserve">
-    <value>صفحه‌کلید شماره‌گیری</value>
-  </data>
   <data name="Compose_Sim" xml:space="preserve">
     <value>ارسال با این سیم‌کارت</value>
   </data>

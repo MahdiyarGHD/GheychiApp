@@ -19,7 +19,6 @@ public partial class ComposeView : ContentView
     private string _recentKey = string.Empty;
     private IReadOnlyList<SimCardInfo> _sims = [];
     private int _simIndex;
-    private bool _numericKeyboard;
     private bool _hasContactsPermission = true;
     private long _contactsLoadedTick;
     private long _lastChosenTick;
@@ -81,7 +80,6 @@ public partial class ComposeView : ContentView
         RecipientEntry.Unfocus();
         if (!string.IsNullOrEmpty(RecipientEntry.Text))
             RecipientEntry.Text = string.Empty;
-        SetNumericKeyboard(false);
         _simIndex = 0;
         UpdateSimChip();
         UpdateCardFocus(false);
@@ -420,15 +418,6 @@ public partial class ComposeView : ContentView
             ? new SolidColorBrush(IsDark ? Color.FromArgb("#8FE0BE") : Color.FromArgb("#2E6B4C"))
             : Brush.Transparent;
 
-    private void SetNumericKeyboard(bool numeric)
-    {
-        _numericKeyboard = numeric;
-        RecipientEntry.Keyboard = numeric ? Keyboard.Telephone : Keyboard.Default;
-        DialpadButton.BackgroundColor = numeric
-            ? (IsDark ? Color.FromArgb("#2A332D") : Color.FromArgb("#D9E4D7"))
-            : Colors.Transparent;
-    }
-
     private void Choose(ComposeRow row)
     {
         if (string.IsNullOrWhiteSpace(row.Address))
@@ -485,15 +474,6 @@ public partial class ComposeView : ContentView
 
         _simIndex = (_simIndex + 1) % _sims.Count;
         UpdateSimChip();
-    }
-
-    private void OnDialpadTapped(object? sender, TappedEventArgs e)
-    {
-        SetNumericKeyboard(!_numericKeyboard);
-
-        // The keyboard type only applies to a freshly shown keyboard.
-        RecipientEntry.Unfocus();
-        FocusInput();
     }
 
     private void OnBackTapped(object? sender, TappedEventArgs e)
