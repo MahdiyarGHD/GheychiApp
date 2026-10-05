@@ -25,7 +25,6 @@ public partial class ChatView
             return;
 
         CloseSearch();
-        HideEmojiPanel(focusMessageBox: false);
         _searchVm = vm;
         vm.Search.CurrentHitChanged += OnSearchHitChanged;
 

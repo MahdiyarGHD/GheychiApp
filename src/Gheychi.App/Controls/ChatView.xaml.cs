@@ -30,7 +30,6 @@ public partial class ChatView : ContentView
     {
         InitializeComponent();
         OpenSelectionMenuCommand = new Command<object>(OnOpenSelectionMenu);
-        InitializeEmoji();
         var initialVm = new ChatViewModel();
         initialVm.SafeDispatcher = SafePrependItems;
         BindingContext = initialVm;
@@ -496,7 +495,6 @@ public partial class ChatView : ContentView
 
     public Task Close()
     {
-        HideEmojiPanel(focusMessageBox: false);
         HeaderMenuOverlay.IsVisible = false;
         CloseSearch();
         DetachLiveUpdates();
@@ -1212,12 +1210,6 @@ public partial class ChatView : ContentView
 
     public bool HandleBack()
     {
-        if (EmojiPanel.IsVisible)
-        {
-            HideEmojiPanel(focusMessageBox: false);
-            return true;
-        }
-
         if (HeaderMenuOverlay.IsVisible)
         {
             HeaderMenuOverlay.IsVisible = false;

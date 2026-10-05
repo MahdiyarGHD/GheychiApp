@@ -873,8 +873,9 @@
             </Grid>
 
             <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode) -->
-            <VerticalStackLayout Grid.Row="2" IsVisible="{Binding IsInputBarVisible}" Spacing="0">
-            <Grid Padding="10,6,10,8"
+            <Grid Grid.Row="2"
+                  IsVisible="{Binding IsInputBarVisible}"
+                  Padding="10,6,10,8"
                   ColumnDefinitions="Auto,*,Auto,Auto"
                   ColumnSpacing="6">
                 <Border Grid.Column="0"
@@ -904,7 +905,7 @@
                         StrokeShape="RoundRectangle 18"
                         BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
                         VerticalOptions="Center">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" VerticalOptions="Center">
+                    <Grid VerticalOptions="Center">
                         <Editor Grid.Column="0"
                                 x:Name="MessageEntry"
                                 VerticalOptions="Center"
@@ -916,22 +917,7 @@
                                 MinimumHeightRequest="0"
                                 MaximumHeightRequest="100"
                                 BackgroundColor="Transparent"
-                                TextChanged="OnMessageEntryTextChanged" />
-                        <Grid Grid.Column="1" WidthRequest="32" HeightRequest="32" VerticalOptions="Center" BackgroundColor="Transparent">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnEmojiButtonTapped" />
-                            </Grid.GestureRecognizers>
-                            <Image x:Name="EmojiToggleIcon" Source="emoji.png"
-                                   WidthRequest="20"
-                                   HeightRequest="20"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"
-                                   SemanticProperties.Description="{loc:Translate Chat_Emoji}">
-                                <Image.Behaviors>
-                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
-                                </Image.Behaviors>
-                            </Image>
-                        </Grid>
+                                TextChanged="OnMessageEntryTextChanged" />
                     </Grid>
                 </Border>
                 <Border Grid.Column="2"
@@ -982,43 +968,6 @@
                     </Border.GestureRecognizers>
                 </Border>
             </Grid>
-
-            <!-- Emoji picker: takes the keyboard's place; its height follows the keyboard's -->
-            <Grid x:Name="EmojiPanel"
-                  IsVisible="False"
-                  RowDefinitions="*,Auto"
-                  BackgroundColor="{AppThemeBinding Light=#F1F4EE, Dark=#171A18}">
-                <CollectionView x:Name="EmojiList"
-                                Grid.Row="0"
-                                Margin="6,6,6,0"
-                                SelectionMode="None"
-                                ItemSizingStrategy="MeasureFirstItem"
-                                VerticalScrollBarVisibility="Never">
-                    <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical" Span="8" />
-                    </CollectionView.ItemsLayout>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <Label Text="{Binding .}"
-                                   FontSize="26"
-                                   HeightRequest="46"
-                                   HorizontalTextAlignment="Center"
-                                   VerticalTextAlignment="Center"
-                                   BackgroundColor="Transparent">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnEmojiTapped" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-                <Grid x:Name="EmojiTabs"
-                      Grid.Row="1"
-                      Padding="6,0"
-                      HeightRequest="44"
-                      BackgroundColor="{AppThemeBinding Light=#E7ECE4, Dark=#1E2320}" />
-            </Grid>
-            </VerticalStackLayout>
         </Grid>
 
         <!-- Header menu (three dots): a tap outside it closes it -->

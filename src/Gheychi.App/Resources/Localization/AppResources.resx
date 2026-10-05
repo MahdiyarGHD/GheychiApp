@@ -66,9 +66,6 @@
   <data name="Chat_Attach" xml:space="preserve">
     <value>Attach</value>
   </data>
-  <data name="Chat_Emoji" xml:space="preserve">
-    <value>Emoji</value>
-  </data>
   <data name="Chat_Sim" xml:space="preserve">
     <value>SIM slot</value>
   </data>

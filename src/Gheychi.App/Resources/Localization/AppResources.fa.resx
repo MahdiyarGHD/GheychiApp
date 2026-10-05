@@ -66,9 +66,6 @@
   <data name="Chat_Attach" xml:space="preserve">
     <value>پیوست</value>
   </data>
-  <data name="Chat_Emoji" xml:space="preserve">
-    <value>شکلک</value>
-  </data>
   <data name="Chat_Sim" xml:space="preserve">
     <value>شیار سیم‌کارت</value>
   </data>
