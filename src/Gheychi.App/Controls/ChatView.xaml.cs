@@ -495,6 +495,7 @@ public partial class ChatView : ContentView
 
     public Task Close()
     {
+        HeaderMenuOverlay.IsVisible = false;
         CloseSearch();
         DetachLiveUpdates();
         HideSkeleton();
@@ -1209,6 +1210,12 @@ public partial class ChatView : ContentView
 
     public bool HandleBack()
     {
+        if (HeaderMenuOverlay.IsVisible)
+        {
+            HeaderMenuOverlay.IsVisible = false;
+            return true;
+        }
+
         if (IsSearching)
         {
             CloseSearch();

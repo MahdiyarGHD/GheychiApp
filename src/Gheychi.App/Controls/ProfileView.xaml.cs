@@ -72,7 +72,7 @@ public partial class ProfileView : ContentView
         UpdateSnooze();
         UpdateNotificationState();
 
-        SimBadge.IsVisible = SimPill.IsVisible = SimRow.IsVisible = false;
+        SimPill.IsVisible = SimRow.IsVisible = false;
         LinksHint.Text = LocalizationManager.Instance["Profile_LinksReading"];
         _links = [];
 
@@ -206,13 +206,9 @@ public partial class ProfileView : ContentView
             : string.Format(loc["Profile_SimAlways"], SimLabel(preferred));
 
         var show = effective is not null && _sims.Count > 1;
-        SimBadge.IsVisible = SimPill.IsVisible = show;
-        if (effective is null)
-            return;
-
-        SimBadgeLabel.Text = $"SIM {effective.SlotIndex}";
-        SimBadge.BackgroundColor = ChatMessage.SimTintText(effective.SlotIndex);
-        SimPillLabel.Text = SimLabel(effective);
+        SimPill.IsVisible = show;
+        if (effective is not null)
+            SimPillLabel.Text = SimLabel(effective);
     }
 
     private static string SimLabel(SimCardInfo sim) =>

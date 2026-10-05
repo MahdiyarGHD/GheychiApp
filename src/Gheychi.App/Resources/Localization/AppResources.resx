@@ -498,4 +498,7 @@
   <data name="Profile_UnarchiveHint" xml:space="preserve">
     <value>Move chat back to the inbox</value>
   </data>
+  <data name="Chat_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
 </root>

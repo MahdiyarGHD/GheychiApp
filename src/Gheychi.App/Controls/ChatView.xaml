@@ -556,7 +556,12 @@
                                MaxLines="1"
                                HorizontalOptions="Fill" />
                     </Grid>
-                    <Grid Grid.Column="3" WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                    <Grid Grid.Column="3" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
+                              IsVisible="{Binding Thread.CanCall}"
+                              BackgroundColor="Transparent">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHeaderCallTapped" />
+                        </Grid.GestureRecognizers>
                         <Image Source="phone.png"
                                WidthRequest="22"
                                HeightRequest="22"
@@ -568,7 +573,11 @@
                             </Image.Behaviors>
                         </Image>
                     </Grid>
-                    <Grid Grid.Column="4" WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                    <Grid Grid.Column="4" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
+                              BackgroundColor="Transparent">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHeaderMenuTapped" />
+                        </Grid.GestureRecognizers>
                         <Image Source="morevert.png"
                                WidthRequest="22"
                                HeightRequest="22"
@@ -971,6 +980,56 @@
                     </Border.GestureRecognizers>
                 </Border>
             </Grid>
+        </Grid>
+
+        <!-- Header menu (three dots): a tap outside it closes it -->
+        <Grid x:Name="HeaderMenuOverlay"
+              IsVisible="False"
+              BackgroundColor="Transparent">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnCloseHeaderMenuTapped" />
+            </Grid.GestureRecognizers>
+            <Border Margin="0,54,12,0"
+                    Padding="4"
+                    WidthRequest="200"
+                    StrokeThickness="1"
+                    Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                    StrokeShape="RoundRectangle 12"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                    HorizontalOptions="End"
+                    VerticalOptions="Start">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,6" Radius="16" Opacity="0.25" />
+                </Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnOverlayTapEater" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="0">
+                    <Grid Padding="12,11"
+                          ColumnDefinitions="Auto,*"
+                          ColumnSpacing="10"
+                          BackgroundColor="Transparent">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnMenuSearchTapped" />
+                        </Grid.GestureRecognizers>
+                        <Image Grid.Column="0"
+                               Source="search.png"
+                               WidthRequest="18"
+                               HeightRequest="18"
+                               VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Label Grid.Column="1"
+                               Text="{loc:Translate Chat_Search}"
+                               FontSize="13"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                               VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
         </Grid>
 
         <!-- ================= LAYER 2 & 3: FLOATING SELECTION OVERLAY ================= -->

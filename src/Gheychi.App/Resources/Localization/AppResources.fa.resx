@@ -498,4 +498,7 @@
   <data name="Profile_UnarchiveHint" xml:space="preserve">
     <value>بازگرداندن گفتگو به صندوق ورودی</value>
   </data>
+  <data name="Chat_Search" xml:space="preserve">
+    <value>جستجو</value>
+  </data>
 </root>

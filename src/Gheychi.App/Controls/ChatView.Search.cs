@@ -1,3 +1,4 @@
+using Gheychi.App.Platforms.Android;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
 
@@ -55,6 +56,22 @@ public partial class ChatView
     }
 
     private void OnHeaderTapped(object? sender, TappedEventArgs e) => ProfileRequested?.Invoke();
+
+    private void OnHeaderCallTapped(object? sender, TappedEventArgs e)
+    {
+        if (Vm is { } vm)
+            ProfileLauncher.Dial(PhoneNumberNormalizer.ToSendAddress(vm.Thread.Phone));
+    }
+
+    private void OnHeaderMenuTapped(object? sender, TappedEventArgs e) => HeaderMenuOverlay.IsVisible = true;
+
+    private void OnCloseHeaderMenuTapped(object? sender, TappedEventArgs e) => HeaderMenuOverlay.IsVisible = false;
+
+    private void OnMenuSearchTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        OpenSearch();
+    }
 
     private void OnSearchBackTapped(object? sender, TappedEventArgs e) => CloseSearch();
 

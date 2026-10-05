@@ -100,6 +100,9 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public bool HasNoIcon => string.IsNullOrEmpty(IconFile);
     public bool IsNotFailed => !HasFailed;
 
+    /// <summary>False for sender names and short codes, which cannot be dialled.</summary>
+    public bool CanCall => Gheychi.Core.Services.ThreadProfileActions.CanCall(Gheychi.Core.Services.PhoneNumberNormalizer.ToSendAddress(Phone));
+
     public Color TimeColor => HasFailed ? DangerColor : TimeNormalColor;
     public Color PreviewColor => HasFailed ? DangerColor : (IsDarkTheme ? PreviewDarkColor : PreviewLightColor);
     public Color AvatarBgColor => IsSelected

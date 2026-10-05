@@ -137,20 +137,6 @@
                                        VerticalOptions="Center" />
                             </Grid>
                         </Border>
-                        <Border x:Name="SimBadge"
-                                IsVisible="False"
-                                Padding="9,3"
-                                StrokeThickness="2"
-                                Stroke="{AppThemeBinding Light=#F7FAF4, Dark=#121413}"
-                                StrokeShape="RoundRectangle 12"
-                                BackgroundColor="#2E6B4C"
-                                HorizontalOptions="Center"
-                                VerticalOptions="End">
-                            <Label x:Name="SimBadgeLabel"
-                                   FontSize="11"
-                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                   TextColor="White" />
-                        </Border>
                     </Grid>
 
                     <Label x:Name="NameLabel"
