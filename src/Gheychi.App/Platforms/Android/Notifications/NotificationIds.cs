@@ -8,6 +8,7 @@ internal static class NotificationIds
 
     public const string ExtraThreadId = "com.evergreen.gheychiapp.THREAD_ID";
     public const string ExtraAddress = "com.evergreen.gheychiapp.ADDRESS";
+    public const string ExtraName = "com.evergreen.gheychiapp.NAME";
     public const string ExtraSubId = "com.evergreen.gheychiapp.SUB_ID";
 
     private const int ThreadIdBase = 1000;

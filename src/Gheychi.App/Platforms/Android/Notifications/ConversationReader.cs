@@ -12,6 +12,9 @@ internal static class ConversationReader
 {
     public const int MaxUnreadShown = 5;
 
+    private static readonly string UnreadFilter =
+        $"{Telephony.Sms.InterfaceConsts.ThreadId} = ? AND {Telephony.Sms.InterfaceConsts.Read} = 0 AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox}";
+
     public static long ReadThreadId(Context context, global::Android.Net.Uri messageRow)
     {
         try
@@ -19,6 +22,28 @@ internal static class ConversationReader
             using var cursor = context.ContentResolver?.Query(
                 messageRow, [Telephony.Sms.InterfaceConsts.ThreadId], null, null, null);
             return cursor is not null && cursor.MoveToFirst() ? cursor.GetLong(0) : 0;
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+
+    public static int CountUnread(Context context, long threadId)
+    {
+        var uri = Telephony.Sms.ContentUri;
+        if (uri is null)
+            return 0;
+
+        try
+        {
+            using var cursor = context.ContentResolver?.Query(
+                uri,
+                [Telephony.Sms.InterfaceConsts.Id],
+                UnreadFilter,
+                [threadId.ToString()],
+                null);
+            return cursor?.Count ?? 0;
         }
         catch (Exception)
         {
@@ -39,7 +64,7 @@ internal static class ConversationReader
             using var cursor = context.ContentResolver?.Query(
                 uri,
                 [Telephony.Sms.InterfaceConsts.Body, Telephony.Sms.InterfaceConsts.Date],
-                $"{Telephony.Sms.InterfaceConsts.ThreadId} = ? AND {Telephony.Sms.InterfaceConsts.Read} = 0 AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox}",
+                UnreadFilter,
                 [threadId.ToString()],
                 $"{Telephony.Sms.InterfaceConsts.Date} DESC LIMIT {MaxUnreadShown}");
 

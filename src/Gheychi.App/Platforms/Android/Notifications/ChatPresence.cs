@@ -9,6 +9,8 @@ public static class ChatPresence
     private static ActiveChatState? State =>
         IPlatformApplication.Current?.Services.GetService<ActiveChatState>();
 
+    public static bool IsAppVisible => State?.IsAppVisible ?? false;
+
     public static void ChatOpened(long threadId)
     {
         State?.SetOpenThread(threadId);

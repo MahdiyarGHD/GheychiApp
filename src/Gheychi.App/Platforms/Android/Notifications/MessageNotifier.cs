@@ -62,7 +62,8 @@ internal static class MessageNotifier
 
         NotificationChannels.Ensure(context);
 
-        var name = ConversationReader.ReadContactName(context, address) ?? PhoneNumberNormalizer.FormatDisplay(address);
+        var name = ConversationReader.ReadContactName(context, address)
+                   ?? (PhoneNumberNormalizer.IsAlphanumeric(address) ? address : PhoneNumberNormalizer.FormatDisplay(address));
         var last = unread[^1];
 
         var builder = new NotificationCompat.Builder(context, NotificationIds.ChannelMessages);
@@ -80,7 +81,7 @@ internal static class MessageNotifier
         builder.SetGroup(NotificationIds.GroupKey);
         builder.SetOnlyAlertOnce(onlyAlertOnce);
         builder.SetSilent(silent);
-        builder.SetContentIntent(OpenIntent(context, threadId));
+        builder.SetContentIntent(OpenIntent(context, threadId, address, name, subId));
         builder.AddAction(BuildReplyAction(context, threadId, address, subId));
         builder.AddAction(BuildMarkReadAction(context, threadId, address, subId));
 
@@ -115,11 +116,14 @@ internal static class MessageNotifier
         return summary.Build()!;
     }
 
-    private static PendingIntent? OpenIntent(Context context, long threadId)
+    private static PendingIntent? OpenIntent(Context context, long threadId, string address, string name, int subId)
     {
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
         intent.PutExtra(NotificationIds.ExtraThreadId, threadId);
+        intent.PutExtra(NotificationIds.ExtraAddress, address);
+        intent.PutExtra(NotificationIds.ExtraName, name);
+        intent.PutExtra(NotificationIds.ExtraSubId, subId);
         return PendingIntent.GetActivity(
             context,
             NotificationIds.RequestCode(threadId, NotificationIds.PendingSlot.Open),

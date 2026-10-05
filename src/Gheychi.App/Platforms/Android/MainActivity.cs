@@ -54,6 +54,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnResume();
         ChatPresence.AppVisibilityChanged(true);
+        ChatLaunchRequests.RaiseIfPending();
     }
 
     protected override void OnPause()

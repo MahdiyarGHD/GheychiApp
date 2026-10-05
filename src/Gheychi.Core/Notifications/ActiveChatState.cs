@@ -6,9 +6,11 @@ public sealed class ActiveChatState : IActiveChatState
     private long _openThreadId;
     private int _appVisible;
 
+    public bool IsAppVisible => Volatile.Read(ref _appVisible) == 1;
+
     public bool IsThreadOnScreen(long threadId) =>
         threadId > 0
-        && Volatile.Read(ref _appVisible) == 1
+        && IsAppVisible
         && Interlocked.Read(ref _openThreadId) == threadId;
 
     public void SetOpenThread(long threadId) => Interlocked.Exchange(ref _openThreadId, threadId);

@@ -122,6 +122,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         PageSwipe.Client = this;
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
+
+        // A tapped notification gets its chat before the inbox starts loading: the chat view is the slow
+        // part to build, and the inbox behind it only has to be ready by the time the chat is closed.
+        await OpenRequestedChatAsync();
+
         try
         {
             if (Vm != null)
@@ -132,8 +137,6 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // async void: a failed permission request or snapshot read must not terminate the app.
             System.Diagnostics.Debug.WriteLine($"Inbox initialize failed: {ex}");
         }
-
-        await OpenRequestedChatAsync();
 
         if (!_overlaysWarmedUp)
         {
@@ -322,27 +325,30 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         try
         {
-            var threadId = ChatLaunchRequests.Take();
-            if (threadId <= 0 || Vm is null)
+            var request = ChatLaunchRequests.Take();
+            if (request is null)
                 return;
 
             if (!IsChatClosed)
             {
-                if (ChatOverlay.Vm?.Thread.ThreadId == threadId)
+                if (ChatOverlay.Vm?.Thread.ThreadId == request.ThreadId)
                     return;
 
                 await CloseChatAsync();
             }
 
-            var thread = FindThread(threadId);
-            if (thread is null)
-            {
-                await Vm.LoadThreadsAsync();
-                thread = FindThread(threadId);
-            }
+            // The provider is the truth for what is unread; the inbox list may not be loaded yet.
+            var unread = await Task.Run(() =>
+                ConversationReader.CountUnread(Microsoft.Maui.ApplicationModel.Platform.AppContext, request.ThreadId));
 
-            if (thread is not null)
-                OpenChatSafely(thread);
+            var thread = FindThread(request.ThreadId) ?? CreateThreadItem(request);
+            thread.Count = unread;
+            thread.IsUnread = unread > 0;
+
+            var wasUnread = thread.IsUnread;
+            if (wasUnread)
+                thread.MarkAsRead();
+            await OpenChatAsync(thread, wasUnread, unread);
         }
         catch (Exception ex)
         {
@@ -353,6 +359,23 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private ThreadItem? FindThread(long threadId) =>
         Vm?.Threads.FirstOrDefault(t => t.ThreadId == threadId)
         ?? Vm?.ArchivedThreads.FirstOrDefault(t => t.ThreadId == threadId);
+
+    private static ThreadItem CreateThreadItem(ChatLaunchRequest request)
+    {
+        var phone = Gheychi.Core.Services.PhoneNumberNormalizer.FormatDisplay(request.Address);
+        var name = string.IsNullOrWhiteSpace(request.Name) ? phone : request.Name;
+        return new ThreadItem
+        {
+            ThreadId = request.ThreadId,
+            SubId = Math.Max(0, request.SubId),
+            Name = name,
+            Phone = phone,
+            Initials = ThreadItem.GenerateInitials(name),
+            IconFile = ThreadItem.DetectIcon(name, request.Address),
+            Time = string.Empty,
+            Preview = string.Empty
+        };
+    }
 
     private void OnExitSelectionModeTapped(object? sender, EventArgs e)
     {
