@@ -58,10 +58,9 @@ public partial class ComposeView : ContentView
         _ = LoadSimsAsync();
     }
 
-    /// <summary>After the slide-in: the keyboard and any contact refresh must not compete with the animation.</summary>
+    /// <summary>After the slide-in: a contact refresh must not compete with the animation. The keyboard stays closed until the field is tapped.</summary>
     public void OnOpened()
     {
-        FocusInput();
         _ = EnsureContactsAsync(force: false);
     }
 
@@ -100,22 +99,6 @@ public partial class ComposeView : ContentView
         OverlayAnimator.SlideYAsync(this, open ? distanceDp : 0, open ? 0 : distanceDp, open ? 280u : 220u, open);
 
     public void SetTranslationY(double dp) => OverlayAnimator.SetTranslationY(this, dp);
-
-    public void FocusInput()
-    {
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
-            try
-            {
-                await Task.Delay(30);
-                RecipientEntry.Focus();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Compose focus failed: {ex}");
-            }
-        });
-    }
 
     public void ScrollToTop()
     {

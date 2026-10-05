@@ -23,7 +23,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
     private static readonly TimeSpan ReplyWait = TimeSpan.FromSeconds(4);
 
     /// <summary>Raised on the main thread after a notification action changed stored messages.</summary>
-    public static event Action? ThreadsChanged;
+    public static event Action<long>? ThreadsChanged;
 
     public override void OnReceive(Context? context, Intent? intent)
     {
@@ -69,7 +69,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
     private static void MarkRead(Context context, long threadId)
     {
         AndroidSmsService.MarkThreadRead(context, threadId);
-        MainThread.BeginInvokeOnMainThread(RaiseThreadsChanged);
+        MainThread.BeginInvokeOnMainThread(() => RaiseThreadsChanged(threadId));
     }
 
     private static async Task ReplyAsync(Context context, long threadId, string address, int subId, string? text)
@@ -102,14 +102,14 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
             AndroidSmsService.MarkThreadRead(context, threadId);
         }
 
-        MainThread.BeginInvokeOnMainThread(RaiseThreadsChanged);
+        MainThread.BeginInvokeOnMainThread(() => RaiseThreadsChanged(threadId));
     }
 
-    private static void RaiseThreadsChanged()
+    private static void RaiseThreadsChanged(long threadId)
     {
         try
         {
-            ThreadsChanged?.Invoke();
+            ThreadsChanged?.Invoke(threadId);
         }
         catch (Exception ex)
         {

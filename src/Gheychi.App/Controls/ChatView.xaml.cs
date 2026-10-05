@@ -402,13 +402,8 @@ public partial class ChatView : ContentView
             vm.Thread = thread;
             vm.SafeDispatcher = SafePrependItems;
             BindingContext = vm;
-
-            // A chat read ahead (a notified one, or a recent one) fills the first open too, not just later ones.
-            if (!ChatViewModel.TryGetCached(thread.ThreadId, out _))
-            {
-                ShowSkeleton();
-                return false;
-            }
+            ShowSkeleton();
+            return false;
         }
 
         if (ChatViewModel.TryGetCached(thread.ThreadId, out var cached) && cached is not null)

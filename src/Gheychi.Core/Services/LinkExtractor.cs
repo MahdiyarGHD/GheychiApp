@@ -8,11 +8,10 @@ namespace Gheychi.Core.Services;
 /// <param name="OpenUrl">Something the OS can open (scheme always present).</param>
 public sealed record DetectedItem(string Title, string Host, string OpenUrl);
 
-public static class LinkExtractor
+public static partial class LinkExtractor
 {
-    private static readonly Regex UrlRegex = new(
-        @"(?:https?://|www\.)[^\s<>""“”«»]+",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"(?:https?://|www\.)[^\s<>""“”«»]+", RegexOptions.IgnoreCase)]
+    private static partial Regex UrlRegex();
 
     private static readonly char[] TrailingPunctuation =
         ['.', ',', ';', ':', '!', '?', '\'', '"', '>', ']', '}', '»', '”', '’', '،', '؛', '؟', '…'];
@@ -23,7 +22,7 @@ public static class LinkExtractor
             return [];
 
         List<DetectedItem>? found = null;
-        foreach (Match match in UrlRegex.Matches(body))
+        foreach (Match match in UrlRegex().Matches(body))
         {
             var url = Clean(match.Value);
             var host = HostOf(url);
@@ -41,7 +40,7 @@ public static class LinkExtractor
     }
 
     /// <summary>Removes the text of every URL so other detectors do not re-read numbers inside them.</summary>
-    public static string StripLinks(string body) => UrlRegex.Replace(body, " ");
+    public static string StripLinks(string body) => UrlRegex().Replace(body, " ");
 
     public static string HostOf(string url)
     {

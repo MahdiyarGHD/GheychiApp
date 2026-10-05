@@ -12,7 +12,7 @@ namespace Gheychi.App.Platforms.Android.Receivers;
 [IntentFilter(["android.provider.Telephony.SMS_DELIVER"])]
 public class SmsDeliverReceiver : BroadcastReceiver
 {
-    public static event Action? SmsReceived;
+    public static event Action<long>? SmsReceived;
 
     public override void OnReceive(Context? context, Intent? intent)
     {
@@ -54,11 +54,11 @@ public class SmsDeliverReceiver : BroadcastReceiver
     }
 
     // Runs on the main thread: a subscriber exception here would kill the app.
-    private static void RaiseSmsReceived()
+    private static void RaiseSmsReceived(long threadId)
     {
         try
         {
-            SmsReceived?.Invoke();
+            SmsReceived?.Invoke(threadId);
         }
         catch (Exception ex)
         {

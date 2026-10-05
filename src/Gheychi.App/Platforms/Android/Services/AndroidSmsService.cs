@@ -24,7 +24,7 @@ public sealed class AndroidSmsService : ISmsService
     public AndroidSmsService(IMessageMetadataRepository? metadataRepo = null)
     {
         _metadataRepo = metadataRepo;
-        Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.SmsReceived += InvalidateSearchCaches;
+        Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.SmsReceived += _ => InvalidateSearchCaches();
     }
 
     private static readonly string[] SmsProjection =
@@ -76,17 +76,28 @@ public sealed class AndroidSmsService : ISmsService
         if (contactStatus != PermissionStatus.Granted)
             await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ContactsPermission>();
 
+        // Not awaited: the inbox must not wait for a notification prompt the user may take a while to answer.
         if (OperatingSystem.IsAndroidVersionAtLeast(33))
-        {
-            // The channel has to exist before Android 13 shows its notification prompt.
-            NotificationChannels.Ensure(Microsoft.Maui.ApplicationModel.Platform.AppContext);
-
-            var notificationStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<NotificationsPermission>();
-            if (notificationStatus != PermissionStatus.Granted)
-                await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<NotificationsPermission>();
-        }
+            _ = EnsureNotificationPermissionAsync();
 
         return smsStatus == PermissionStatus.Granted;
+    }
+
+    private static async Task EnsureNotificationPermissionAsync()
+    {
+        try
+        {
+            // The channel has to exist before Android 13 shows its notification prompt.
+            await Task.Run(() => NotificationChannels.Ensure(Microsoft.Maui.ApplicationModel.Platform.AppContext));
+
+            var status = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<NotificationsPermission>();
+            if (status != PermissionStatus.Granted)
+                await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<NotificationsPermission>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Notification permission failed: {ex}");
+        }
     }
 
     public Task<IReadOnlyList<SmsThread>> GetThreadsAsync(CancellationToken cancellationToken = default) =>
@@ -1311,8 +1322,8 @@ public sealed class AndroidSmsService : ISmsService
                     await _metadataRepo.DeleteForThreadsAsync(threadIds);
                 }
 
-                foreach (var threadId in threadIds)
-                    MessageNotifier.Cancel(context, threadId);
+                // Not awaited: the rows are gone, and dismissing notifications is a service call the delete need not wait for.
+                _ = Task.Run(() => MessageNotifier.CancelMany(context, threadIds));
 
                 InvalidateSearchCaches();
                 return deleted > 0;

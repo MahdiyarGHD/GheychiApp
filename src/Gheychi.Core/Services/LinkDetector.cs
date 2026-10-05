@@ -2,16 +2,17 @@ using System.Text.RegularExpressions;
 
 namespace Gheychi.Core.Services;
 
-public static class LinkDetector
+public static partial class LinkDetector
 {
-    private static readonly Regex UrlRegex = new(@"(https?://[^\s]+|www\.[^\s]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"(https?://[^\s]+|www\.[^\s]+)", RegexOptions.IgnoreCase)]
+    private static partial Regex UrlRegex();
 
     public static (string BodyBefore, string Link) ExtractLink(string? text)
     {
         if (string.IsNullOrEmpty(text))
             return (string.Empty, string.Empty);
 
-        var match = UrlRegex.Match(text);
+        var match = UrlRegex().Match(text);
         if (!match.Success)
             return (text, string.Empty);
 

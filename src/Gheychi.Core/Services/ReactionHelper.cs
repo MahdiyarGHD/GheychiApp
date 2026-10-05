@@ -5,7 +5,7 @@ namespace Gheychi.Core.Services;
 
 public sealed record ReactionParseResult(bool IsReaction, string? Emoji, string? Snippet);
 
-public static class ReactionHelper
+public static partial class ReactionHelper
 {
     private const int MaxSnippetLength = 100;
 
@@ -14,7 +14,8 @@ public static class ReactionHelper
     private const char CurlyOpen = '“';
     private const char CurlyClose = '”';
 
-    private static readonly Regex WhitespaceRuns = new(@"\s+", RegexOptions.Compiled);
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRuns();
 
     /// <summary>
     /// Formats an outgoing reaction SMS using Apple's Tapback template so that
@@ -80,7 +81,7 @@ public static class ReactionHelper
             .Replace('“', '"').Replace('”', '"')
             .Replace('«', '"').Replace('»', '"')
             .Replace("\r\n", "\n").Replace('\r', '\n');
-        s = WhitespaceRuns.Replace(s, " ");
+        s = WhitespaceRuns().Replace(s, " ");
         return s;
     }
 

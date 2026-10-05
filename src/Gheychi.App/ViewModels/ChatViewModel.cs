@@ -267,6 +267,20 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// A message arrived in, or an action changed, one conversation: its cached page is stale, the others are not.
+    /// The generation still moves, so a read-ahead that was running during the change is not cached.
+    /// </summary>
+    public static void InvalidateThread(long threadId)
+    {
+        lock (CacheLock)
+        {
+            _cacheGeneration++;
+            RecentCache.Remove(threadId);
+            CacheOrder.Remove(threadId);
+        }
+    }
+
     /// <summary>Drops one thread's cached page (e.g. after it was marked read, so the unread divider is not replayed).</summary>
     public static void EvictCache(long threadId)
     {
@@ -627,7 +641,12 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 }
             }
 
-            page ??= await FetchMessagesAsync(Thread, RecentPageSize, _loadedCount);
+            if (page is null)
+            {
+                var current = Thread;
+                var offset = _loadedCount;
+                page = await Task.Run(() => FetchMessagesAsync(current, RecentPageSize, offset));
+            }
 
             if (page == null || page.RawCount == 0)
             {
@@ -862,7 +881,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         SmsSendTracker.OutgoingUpdated -= OnOutgoingUpdated;
     }
 
-    private void OnIncomingSms() => _ = RefreshNewestAsync();
+    private void OnIncomingSms(long threadId)
+    {
+        // A message for another conversation changes nothing in this one.
+        if (threadId > 0 && threadId != Thread.ThreadId)
+            return;
+
+        _ = RefreshNewestAsync();
+    }
 
     private async Task RefreshNewestAsync()
     {
@@ -882,7 +908,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 if (thread.ThreadId <= 0)
                     return;
 
-                var data = await FetchMessagesAsync(thread, RecentPageSize, 0);
+                // Building the page (links, dates, rows) must not run on the UI thread, where this was called from.
+                var data = await Task.Run(() => FetchMessagesAsync(thread, RecentPageSize, 0));
                 await MainThread.InvokeOnMainThreadAsync(() => AppendNew(thread.ThreadId, data));
             }
             while (_refreshAgain);

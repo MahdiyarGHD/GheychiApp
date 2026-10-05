@@ -8,11 +8,11 @@ namespace Gheychi.App.Platforms.Android.Notifications;
 /// <summary>What happens to a received SMS: store it, tell the open screens, then notify if the rules allow.</summary>
 internal static class IncomingSmsHandler
 {
-    public static void Handle(Context context, string address, string body, long timestampMillis, int subId, Action raiseReceived)
+    public static void Handle(Context context, string address, string body, long timestampMillis, int subId, Action<long> raiseReceived)
     {
         var threadId = Store(context, address, body, timestampMillis, subId);
 
-        MainThread.BeginInvokeOnMainThread(raiseReceived);
+        MainThread.BeginInvokeOnMainThread(() => raiseReceived(threadId));
 
         if (threadId <= 0)
             return;

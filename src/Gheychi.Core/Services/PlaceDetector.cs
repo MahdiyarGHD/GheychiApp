@@ -6,17 +6,15 @@ namespace Gheychi.Core.Services;
 /// <summary>
 /// Finds places in a message: links to map services, geo: URIs and plain latitude/longitude pairs.
 /// </summary>
-public static class PlaceDetector
+public static partial class PlaceDetector
 {
-    private static readonly Regex GeoUriRegex = new(
-        @"\bgeo:(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"\bgeo:(-?\d{1,2}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)", RegexOptions.IgnoreCase)]
+    private static partial Regex GeoUriRegex();
 
     // Four or more decimals on both numbers: real GPS output ("35.7219, 51.3347"), but not
     // prices, versions or dates.
-    private static readonly Regex CoordinateRegex = new(
-        @"(?<![\d.])(-?\d{1,2}\.\d{4,})\s*[,،]\s*(-?\d{1,3}\.\d{4,})(?![\d.])",
-        RegexOptions.Compiled);
+    [GeneratedRegex(@"(?<![\d.])(-?\d{1,2}\.\d{4,})\s*[,،]\s*(-?\d{1,3}\.\d{4,})(?![\d.])")]
+    private static partial Regex CoordinateRegex();
 
     public static IReadOnlyList<DetectedItem> Find(string? body)
     {
@@ -34,10 +32,10 @@ public static class PlaceDetector
         // Numbers inside a map URL ("@35.72,51.33,17z") are already covered by the link itself.
         var text = LinkExtractor.StripLinks(body);
 
-        foreach (Match match in GeoUriRegex.Matches(text))
+        foreach (Match match in GeoUriRegex().Matches(text))
             AddCoordinates(places, match.Groups[1].Value, match.Groups[2].Value);
 
-        foreach (Match match in CoordinateRegex.Matches(text))
+        foreach (Match match in CoordinateRegex().Matches(text))
             AddCoordinates(places, match.Groups[1].Value, match.Groups[2].Value);
 
         return places;

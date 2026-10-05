@@ -411,9 +411,14 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             (old, replacement) => replacement.IsSelected = old.IsSelected);
     }
 
-    private void OnSmsReceived()
+    // threadId 0: the conversation is unknown, so every cached page may be stale.
+    private void OnSmsReceived(long threadId)
     {
-        ChatViewModel.InvalidateCache();
+        if (threadId > 0)
+            ChatViewModel.InvalidateThread(threadId);
+        else
+            ChatViewModel.InvalidateCache();
+
         _ = LoadThreadsAsync();
     }
 

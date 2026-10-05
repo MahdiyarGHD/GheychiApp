@@ -1,5 +1,6 @@
 using Gheychi.App.Controls;
 using Gheychi.App.Gestures;
+using Gheychi.App.Platforms.Android;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
@@ -353,6 +354,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
                 await CloseChatAsync();
             }
 
+            // After a resume the Shell still has its tab bar up and only hides it on a later layout pass, which
+            // shows as a flash and a chat input bar that jumps. Hiding the native bar now, before the first
+            // frame, means the chat is laid out at its final size once.
+            NativeTabBar.Hide();
+
             // Building the chat view is the slow part; the messages are being read meanwhile.
             await EnsureOverlayReadyAsync(ChatOverlay);
 
@@ -375,17 +381,6 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (wasUnread)
                 thread.MarkAsRead();
             await OpenChatAsync(thread, wasUnread, unread, animate: false);
-
-            // Coming back from the background the Shell can still show its tab bar after the open; once the
-            // resume has settled, hide it again (toggled, because setting an unchanged value does nothing).
-            Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(150), () =>
-            {
-                if (IsChatClosed)
-                    return;
-
-                Shell.SetTabBarIsVisible(this, true);
-                Shell.SetTabBarIsVisible(this, false);
-            });
         }
         catch (Exception ex)
         {
@@ -402,7 +397,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         InboxLayer.IsVisible = true;
         if (IsChatClosed)
+        {
             Shell.SetTabBarIsVisible(this, true);
+            NativeTabBar.Show();
+        }
     }
 
     private ThreadItem? FindThread(long threadId) =>

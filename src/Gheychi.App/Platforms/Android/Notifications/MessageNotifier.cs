@@ -33,20 +33,28 @@ internal static class MessageNotifier
         Post(context, threadId, address, subId, incoming: null, silent: false, onlyAlertOnce: true);
 
     /// <summary>Dismisses the conversation's notification. Talks to the notification service: call it off the UI thread.</summary>
-    public static void Cancel(Context context, long threadId)
+    public static void Cancel(Context context, long threadId) => CancelMany(context, [threadId]);
+
+    /// <summary>Dismisses several conversations' notifications with one look at what is showing.</summary>
+    public static void CancelMany(Context context, IEnumerable<long> threadIds)
     {
         try
         {
-            var id = NotificationIds.ForThread(threadId);
             var active = ActiveConversationIds(context);
-            if (!active.Remove(id))
-                return;
-
             var manager = NotificationManagerCompat.From(context);
-            manager.Cancel(id);
+            var cancelled = false;
+            foreach (var threadId in threadIds)
+            {
+                var id = NotificationIds.ForThread(threadId);
+                if (!active.Remove(id))
+                    continue;
+
+                manager.Cancel(id);
+                cancelled = true;
+            }
 
             // A group of one is just that notification; a lone summary would leave an empty header behind.
-            if (active.Count < MinConversationsForSummary)
+            if (cancelled && active.Count < MinConversationsForSummary)
                 manager.Cancel(NotificationIds.SummaryId);
         }
         catch (Exception ex)
