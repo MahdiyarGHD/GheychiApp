@@ -117,7 +117,7 @@
                            PlaceholderColor="{AppThemeBinding Light=#59615A, Dark=#8A8F98}"
                            TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
                            FontSize="14"
-                           FontFamily="{DynamicResource AppFontFamily}"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                            BackgroundColor="Transparent"
                            VerticalOptions="Center"
                            ClearButtonVisibility="Never"
@@ -233,7 +233,7 @@
                                             </Image>
                                             <Label Text="{Binding Title}"
                                                    FontSize="12"
-                                                   FontFamily="{DynamicResource AppFontFamily}"
+                                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                                                    TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
                                                    VerticalOptions="Center" />
                                         </HorizontalStackLayout>
@@ -300,7 +300,7 @@
                                     <Label Grid.Column="1"
                                            Text="{Binding Query}"
                                            FontSize="13"
-                                           FontFamily="{DynamicResource AppFontFamily}"
+                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                                            TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
                                            LineBreakMode="TailTruncation"
                                            VerticalOptions="Center" />
@@ -410,7 +410,7 @@
                 <Label Grid.Column="1"
                        Text="{Binding FoundCountText}"
                        FontSize="11"
-                       FontFamily="{DynamicResource AppFontFamily}"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                        TextColor="{AppThemeBinding Light=#747D75, Dark=#8A8F98}"
                        VerticalOptions="Center"
                        Margin="8,0,0,0" />
@@ -514,7 +514,7 @@
                                            Text="{Binding Time}"
                                            FontSize="12"
                                            TextColor="{Binding TimeColor}"
-                                           FontFamily="{DynamicResource AppFontFamily}"
+                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                                            VerticalOptions="Center" />
                                 </Grid>
 
@@ -629,7 +629,7 @@
                   BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
                 <Label Text="{Binding FoundCountText}"
                        FontSize="12"
-                       FontFamily="{DynamicResource AppFontFamily}"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                        TextColor="{AppThemeBinding Light=#747D75, Dark=#8A8F98}"
                        HorizontalOptions="End"
                        VerticalOptions="Center" />
@@ -666,14 +666,14 @@
                                        MaxLines="1" />
                                 <Label Text="{Binding HostText}"
                                        FontSize="12"
-                                       FontFamily="{DynamicResource AppFontFamily}"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                                        TextColor="{Binding MutedColor}"
                                        LineBreakMode="TailTruncation"
                                        MaxLines="1" />
                                 <Label Text="{Binding ChatLine}"
                                        Margin="0,4,0,0"
                                        FontSize="12"
-                                       FontFamily="{DynamicResource AppFontFamily}"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                                        TextColor="{Binding MutedColor}"
                                        LineBreakMode="TailTruncation"
                                        MaxLines="1" />

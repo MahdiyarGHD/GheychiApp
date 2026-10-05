@@ -43,6 +43,8 @@ public class MainActivity : MauiAppCompatActivity
 
     public override bool DispatchTouchEvent(MotionEvent? ev)
     {
+        UserActivity.Touched();
+
         if (ev is null || _swipe is null)
             return base.DispatchTouchEvent(ev);
 

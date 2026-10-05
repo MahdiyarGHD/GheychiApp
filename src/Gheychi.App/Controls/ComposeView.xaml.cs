@@ -1,3 +1,4 @@
+using Gheychi.App.Gestures;
 using Gheychi.App.Localization;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
@@ -8,7 +9,6 @@ namespace Gheychi.App.Controls;
 public partial class ComposeView : ContentView
 {
     private const long ContactsMaxAgeMs = 60_000;
-    private const double ParkedDistance = 3000;
 
     // Everything about the address book that does not change between keystrokes, built off the UI thread.
     private sealed record BuiltContacts(ContactIndex Index, ComposeRow[] Rows, Dictionary<string, ComposeRow> Headers);
@@ -71,7 +71,7 @@ public partial class ComposeView : ContentView
     public void Park()
     {
         InputTransparent = true;
-        SetTranslationY(ParkedDistance);
+        SetTranslationY(OverlayAnimator.ParkedDistance);
         ResetState();
     }
 
@@ -96,65 +96,10 @@ public partial class ComposeView : ContentView
         return true;
     }
 
-    public async Task SlideAsync(bool open, double distanceDp)
-    {
-        var from = open ? distanceDp : 0;
-        var to = open ? 0 : distanceDp;
-        var duration = open ? 280u : 220u;
+    public Task SlideAsync(bool open, double distanceDp) =>
+        OverlayAnimator.SlideYAsync(this, open ? distanceDp : 0, open ? 0 : distanceDp, open ? 280u : 220u, open);
 
-        var animated = false;
-#if ANDROID
-        animated = await TryNativeSlideAsync(from, to, duration, open);
-#endif
-        if (!animated)
-        {
-            SetTranslationY(from);
-            await this.TranslateToAsync(0, to, duration, open ? Easing.CubicOut : Easing.CubicIn);
-        }
-
-        SetTranslationY(to);
-    }
-
-    public void SetTranslationY(double dp)
-    {
-        TranslationY = dp;
-#if ANDROID
-        if (Handler?.PlatformView is Android.Views.View native)
-            native.TranslationY = (float)(dp * (native.Resources?.DisplayMetrics?.Density ?? 1f));
-#endif
-    }
-
-#if ANDROID
-    // A platform animator runs on the render thread, so layout work during the slide (the tab bar
-    // hiding, the keyboard) cannot make it stutter the way a per-frame managed animation does.
-    private async Task<bool> TryNativeSlideAsync(double fromDp, double toDp, uint duration, bool open)
-    {
-        if (Handler?.PlatformView is not Android.Views.View native || !native.IsAttachedToWindow)
-            return false;
-
-        var animator = native.Animate();
-        if (animator is null)
-            return false;
-
-        var density = native.Resources?.DisplayMetrics?.Density ?? 1f;
-        var finished = new TaskCompletionSource();
-
-        animator.Cancel();
-        native.TranslationY = (float)(fromDp * density);
-        animator.SetDuration(duration);
-        if (open)
-            animator.SetInterpolator(new Android.Views.Animations.DecelerateInterpolator(2f));
-        else
-            animator.SetInterpolator(new Android.Views.Animations.AccelerateInterpolator(1.4f));
-        animator.TranslationY((float)(toDp * density));
-        animator.WithEndAction(new Java.Lang.Runnable(() => finished.TrySetResult()));
-        animator.Start();
-
-        // The end action is skipped when the animation is cancelled; never wait on it forever.
-        await Task.WhenAny(finished.Task, Task.Delay((int)duration + 400));
-        return true;
-    }
-#endif
+    public void SetTranslationY(double dp) => OverlayAnimator.SetTranslationY(this, dp);
 
     public void FocusInput()
     {

@@ -19,6 +19,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
     private const string ArchivedKey = "archived_threads_v1";
     private const int MaxIncrementalChanges = 40;
+    private const int PreloadCount = 8;
+    private bool _chatPreloadEnabled;
 
     private static string SnapshotPath => Path.Combine(FileSystem.AppDataDirectory, "threads_snapshot.json");
 
@@ -235,6 +237,16 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         private set => SetField(ref _isLoading, value);
     }
 
+    public bool ChatPreloadEnabled => _chatPreloadEnabled;
+
+    /// <summary>Starts reading the newest chats ahead so opening them is instant; called once the screens are built.</summary>
+    public void EnableChatPreload()
+    {
+        _chatPreloadEnabled = true;
+        if (Threads.Count > 0)
+            ChatViewModel.PreloadVisibleThreads(Threads.Take(PreloadCount).ToList(), _smsService, _dateFormatter, PreloadCount);
+    }
+
     public bool HasPermission
     {
         get => _hasPermission;
@@ -302,11 +314,16 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             if (HasPermission)
                 _ = Task.Run(() => ThreadSnapshotStore.Save(SnapshotPath, rawThreads));
 
-            _ = Task.Run(async () =>
+            // Before the screens are warmed up the CPU belongs to them; EnableChatPreload starts this later.
+            if (_chatPreloadEnabled)
             {
-                await Task.Delay(800);
-                ChatViewModel.PreloadVisibleThreads(items.Inbox.Take(12), _smsService, _dateFormatter);
-            });
+                var newest = items.Inbox.Take(PreloadCount).ToList();
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(800);
+                    ChatViewModel.PreloadVisibleThreads(newest, _smsService, _dateFormatter, PreloadCount);
+                });
+            }
         }
         finally
         {

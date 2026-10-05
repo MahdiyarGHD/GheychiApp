@@ -195,17 +195,11 @@
                           ColumnDefinitions="Auto,*,Auto"
                           ColumnSpacing="14"
                           HorizontalOptions="Fill"
-                          BackgroundColor="Transparent"
+                          BackgroundColor="{Binding RowBackgroundColor}"
                           behaviors:ThreadHoldBehavior.IsEnabled="True">
                         <Grid.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnThreadRowTapped" />
                         </Grid.GestureRecognizers>
-                        <Grid.Triggers>
-                            <DataTrigger TargetType="Grid" Binding="{Binding IsSelected}" Value="True">
-                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#142E6B4C, Dark=#262E6B4C}" />
-                            </DataTrigger>
-                        </Grid.Triggers>
-
                         <!-- Profile Picture / Selection Tick -->
                         <Border Grid.Column="0"
                                 WidthRequest="46"
@@ -215,55 +209,42 @@
                                 Padding="0"
                                 BackgroundColor="{Binding AvatarBgColor}"
                                 InputTransparent="True">
-                            <Border.Triggers>
-                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                                </DataTrigger>
-                            </Border.Triggers>
                             <Grid InputTransparent="True" CascadeInputTransparent="True">
-                                <!-- Normal Avatar Content: Icon or Initials (Hidden when selected) -->
-                                <Grid IsVisible="{Binding IsNotSelected}" InputTransparent="True" CascadeInputTransparent="True">
-                                    <Image IsVisible="{Binding HasIcon}"
-                                           Source="{Binding IconFile}"
-                                           WidthRequest="24"
-                                           HeightRequest="24"
-                                           HorizontalOptions="Center"
-                                           VerticalOptions="Center"
-                                           InputTransparent="True"
-                                           SemanticProperties.Description="{Binding Name}">
-                                         <Image.Behaviors>
-                                             <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
-                                         </Image.Behaviors>
-                                    </Image>
-                                    <Label Text="{Binding Initials}"
-                                           IsVisible="{Binding HasNoIcon}"
-                                           TextColor="{Binding AvatarTextColor}"
-                                           FontSize="14"
-                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                           HorizontalOptions="Center"
-                                           VerticalOptions="Center"
-                                           HorizontalTextAlignment="Center"
-                                           VerticalTextAlignment="Center"
-                                           InputTransparent="True" />
-                                </Grid>
+                                <Image IsVisible="{Binding ShowIcon}"
+                                       Source="{Binding IconFile}"
+                                       WidthRequest="24"
+                                       HeightRequest="24"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       InputTransparent="True"
+                                       SemanticProperties.Description="{Binding Name}">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Text="{Binding Initials}"
+                                       IsVisible="{Binding ShowInitials}"
+                                       TextColor="{Binding AvatarTextColor}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       HorizontalTextAlignment="Center"
+                                       VerticalTextAlignment="Center"
+                                       InputTransparent="True" />
 
                                 <!-- Selected State: White Tick on Primary Background -->
-                                <Grid IsVisible="{Binding IsSelected}"
-                                      HorizontalOptions="Center"
-                                      VerticalOptions="Center"
-                                      InputTransparent="True"
-                                      CascadeInputTransparent="True">
-                                    <Image Source="check.png"
-                                           WidthRequest="22"
-                                           HeightRequest="22"
-                                           HorizontalOptions="Center"
-                                           VerticalOptions="Center"
-                                           InputTransparent="True">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="White" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Grid>
+                                <Image Source="check.png"
+                                       IsVisible="{Binding IsSelected}"
+                                       WidthRequest="22"
+                                       HeightRequest="22"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       InputTransparent="True">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="White" />
+                                    </Image.Behaviors>
+                                </Image>
                             </Grid>
                         </Border>
 
@@ -276,6 +257,7 @@
                               CascadeInputTransparent="True">
                             <Label Grid.Row="0"
                                    Text="{Binding Name}"
+                                   TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                                    FontSize="14"
                                    FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                    LineBreakMode="TailTruncation"

@@ -2,13 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
              x:Class="Gheychi.App.Pages.SettingsPage"
              Shell.NavBarIsVisible="False">
 
     <VerticalStackLayout Padding="20,24" Spacing="8">
         <Label Text="{loc:Translate Settings_PageTitle}"
                FontSize="26"
-               FontFamily="{DynamicResource AppFontFamilyBold}" />
+               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
         <Label Text="{loc:Translate Settings_Placeholder}"
                FontSize="15"
                TextColor="{AppThemeBinding Light=#6B7280, Dark=#9AA0AB}" />

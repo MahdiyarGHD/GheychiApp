@@ -190,7 +190,7 @@
                        TextColor="{AppThemeBinding Light=#1A1C19, Dark=#E8EAED}"
                        BackgroundColor="Transparent"
                        FontSize="14"
-                       FontFamily="{DynamicResource AppFontFamily}"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyRegular}"
                        ClearButtonVisibility="Never"
                        ReturnType="Go"
                        VerticalOptions="Center"

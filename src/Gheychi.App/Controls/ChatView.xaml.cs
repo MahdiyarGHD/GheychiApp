@@ -15,7 +15,6 @@ public partial class ChatView : ContentView
     private ChatViewModel? _liveVm;
     private bool _initialLayoutSettled;
     internal ChatViewModel? Vm => BindingContext as ChatViewModel;
-    private CancellationTokenSource? _skeletonCts;
     private bool _buttonVisible;
     private bool _loadingOlder;
     private int _lastFirstVisibleIndex = -1;
@@ -50,6 +49,11 @@ public partial class ChatView : ContentView
                 }
                 rv.HasFixedSize = false;
                 rv.SetItemViewCacheSize(25);
+                // The default pool keeps 5 recycled rows per template; a chat shows about twice that, so
+                // every chat switch re-created rows. View types are small consecutive ints.
+                var pool = rv.GetRecycledViewPool();
+                for (var viewType = 0; viewType < 24; viewType++)
+                    pool.SetMaxRecycledViews(viewType, 16);
                 rv.OverScrollMode = Android.Views.OverScrollMode.Never;
                 // No insert/remove animations at all: a 25-row history prepend
                 // must land instantly instead of animating 25 rows (visible jank).
@@ -492,41 +496,62 @@ public partial class ChatView : ContentView
         DetachLiveUpdates();
         HideSkeleton();
         MessageEntry.Unfocus();
-        ResetInputPadding();
         return Task.CompletedTask;
     }
 
+    /// <summary>Called once the overlay is out of sight; resetting the padding earlier would re-lay out the chat mid-slide.</summary>
+    public void ResetAfterClose() => ResetInputPadding();
+
     public void ShowSkeleton()
     {
-        _skeletonCts?.Cancel();
-        _skeletonCts = new CancellationTokenSource();
         SkeletonOverlay.IsVisible = true;
         SkeletonOverlay.Opacity = 1;
-        _ = AnimateSkeletonPulseAsync(_skeletonCts.Token);
+        StartSkeletonPulse();
     }
 
     public void HideSkeleton()
     {
-        _skeletonCts?.Cancel();
-        _skeletonCts = null;
+        StopSkeletonPulse();
         SkeletonOverlay.IsVisible = false;
     }
 
-    private async Task AnimateSkeletonPulseAsync(CancellationToken ct)
+#if ANDROID
+    private Android.Animation.ObjectAnimator? _skeletonAnimator;
+
+    // A platform alpha animation: nothing runs in managed code per frame while the chat opens.
+    private void StartSkeletonPulse()
     {
-        while (!ct.IsCancellationRequested)
-        {
-            try
-            {
-                await SkeletonOverlay.FadeToAsync(0.35, 550, Easing.SinInOut);
-                await SkeletonOverlay.FadeToAsync(1.0, 550, Easing.SinInOut);
-            }
-            catch
-            {
-                break;
-            }
-        }
+        StopSkeletonPulse();
+        if (SkeletonOverlay.Handler?.PlatformView is not Android.Views.View native)
+            return;
+
+        var animator = Android.Animation.ObjectAnimator.OfFloat(native, "alpha", 1f, 0.35f);
+        if (animator is null)
+            return;
+
+        animator.SetDuration(550);
+        animator.RepeatMode = Android.Animation.ValueAnimatorRepeatMode.Reverse;
+        animator.RepeatCount = Android.Animation.ValueAnimator.Infinite;
+        animator.Start();
+        _skeletonAnimator = animator;
     }
+
+    private void StopSkeletonPulse()
+    {
+        _skeletonAnimator?.Cancel();
+        _skeletonAnimator = null;
+        if (SkeletonOverlay.Handler?.PlatformView is Android.Views.View native)
+            native.Alpha = 1f;
+    }
+#else
+    private void StartSkeletonPulse()
+    {
+    }
+
+    private void StopSkeletonPulse()
+    {
+    }
+#endif
 
     private void OnScrollToBottomTapped(object? sender, EventArgs e)
     {

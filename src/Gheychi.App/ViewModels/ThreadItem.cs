@@ -16,6 +16,8 @@ public sealed class ThreadItem : INotifyPropertyChanged
     private static readonly Color AvatarTextLightColor = Color.FromArgb("#1B5E43");
     private static readonly Color IconTintDark = Color.FromArgb("#D9E3DD");
     private static readonly Color IconTintLight = Color.FromArgb("#33443C");
+    private static readonly Color SelectedRowLight = Color.FromArgb("#142E6B4C");
+    private static readonly Color SelectedRowDark = Color.FromArgb("#262E6B4C");
 
     private static readonly string CachedFontFamilyBold =
         CultureInfo.CurrentUICulture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
@@ -80,10 +82,18 @@ public sealed class ThreadItem : INotifyPropertyChanged
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsNotSelected));
             OnPropertyChanged(nameof(AvatarBgColor));
+            OnPropertyChanged(nameof(ShowIcon));
+            OnPropertyChanged(nameof(ShowInitials));
+            OnPropertyChanged(nameof(RowBackgroundColor));
         }
     }
 
     public bool IsNotSelected => !IsSelected;
+
+    // Row visuals as plain bindings: a trigger per row (each with its own theme binding) was the costly way to do this.
+    public bool ShowIcon => HasIcon && !_isSelected;
+    public bool ShowInitials => HasNoIcon && !_isSelected;
+    public Color RowBackgroundColor => _isSelected ? (IsDarkTheme ? SelectedRowDark : SelectedRowLight) : Colors.Transparent;
     public string CountText => Count > 0 ? Count.ToString() : string.Empty;
     public Thickness PreviewMargin => HasFailed ? new Thickness(20, 0, 0, 0) : new Thickness(0);
     public bool HasIcon => !string.IsNullOrEmpty(IconFile);

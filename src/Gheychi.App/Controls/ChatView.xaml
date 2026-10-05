@@ -9,6 +9,11 @@
              x:Class="Gheychi.App.Controls.ChatView">
 
     <ContentView.Resources>
+        <!--
+            Message row templates. Every view in a row is created for every bound row (hidden or not), so
+            rows are kept as small as possible: rare content (links) has its own template, and state that
+            changes while a row is bound (delivery, reaction, selection) is one bound label/colour each.
+        -->
         <DataTemplate x:Key="IncomingTemplate" x:DataType="vm:ChatMessage">
             <Grid Padding="12,3,12,4" HorizontalOptions="Fill" ColumnDefinitions="Auto,0.8*,0.2*">
                 <Grid.GestureRecognizers>
@@ -22,18 +27,10 @@
                         HeightRequest="22"
                         StrokeShape="RoundRectangle 11"
                         VerticalOptions="Center"
-                        IsVisible="{Binding IsSelectionMode}">
-                    <Border.Triggers>
-                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                            <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                            <Setter Property="StrokeThickness" Value="0" />
-                        </DataTrigger>
-                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
-                            <Setter Property="BackgroundColor" Value="Transparent" />
-                            <Setter Property="StrokeThickness" Value="1.5" />
-                            <Setter Property="Stroke" Value="{AppThemeBinding Light=#9AA0AB, Dark=#5C6370}" />
-                        </DataTrigger>
-                    </Border.Triggers>
+                        IsVisible="{Binding IsSelectionMode}"
+                        BackgroundColor="{Binding SelectionFill}"
+                        Stroke="{Binding SelectionStroke}"
+                        StrokeThickness="{Binding SelectionStrokeThickness}">
                     <Label Text="✓"
                            FontSize="12"
                            TextColor="White"
@@ -53,29 +50,10 @@
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnMessageBubbleTapped" />
                             </Border.GestureRecognizers>
-                            <VerticalStackLayout Spacing="3">
-                                <BoxView HeightRequest="140"
-                                         WidthRequest="220"
-                                         CornerRadius="10"
-                                         IsVisible="{Binding HasMedia}"
-                                         BackgroundColor="{AppThemeBinding Light=#DDE3EA, Dark=#2A2E35}" />
-                                <Label Text="{Binding BodyBeforeLink}"
-                                       FontSize="13"
-                                       LineBreakMode="WordWrap"
-                                       IsVisible="{Binding HasNoLink}"
-                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
-                                <Label FontSize="13" LineBreakMode="WordWrap" IsVisible="{Binding HasLink}">
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="{Binding BodyBeforeLink}"
-                                                  TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
-                                            <Span Text="{Binding Link}"
-                                                  TextColor="{StaticResource AccentText}"
-                                                  TextDecorations="Underline" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
-                            </VerticalStackLayout>
+                            <Label Text="{Binding BodyBeforeLink}"
+                                   FontSize="13"
+                                   LineBreakMode="WordWrap"
+                                   TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
                         </Border>
 
                         <!-- Attached Reaction Pill -->
@@ -88,21 +66,10 @@
                                 Margin="8,0,0,-8"
                                 VerticalOptions="End"
                                 HorizontalOptions="Start">
-                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
-                                <Label Text="{Binding ReactionEmoji}" FontSize="12" VerticalOptions="Center" />
-                                <ActivityIndicator IsRunning="{Binding IsReactionSending}"
-                                                   IsVisible="{Binding IsReactionSending}"
-                                                   WidthRequest="11"
-                                                   HeightRequest="11"
-                                                   Color="{StaticResource Primary}"
-                                                   VerticalOptions="Center" />
-                                <Label Text="!"
-                                       IsVisible="{Binding HasReactionFailed}"
-                                       FontSize="11"
-                                       FontFamily="{DynamicResource AppFontFamilyBold}"
-                                       TextColor="{StaticResource Danger}"
-                                       VerticalOptions="Center" />
-                            </HorizontalStackLayout>
+                            <Label Text="{Binding ReactionText}"
+                                   TextColor="{Binding ReactionTextColor}"
+                                   FontSize="12"
+                                   VerticalOptions="Center" />
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnReactionPillTapped" />
                             </Border.GestureRecognizers>
@@ -112,7 +79,7 @@
                     <HorizontalStackLayout Grid.Row="1" Spacing="6" VerticalOptions="Center">
                         <Label Text="{Binding Time}"
                                FontSize="11"
-                               TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
+                               TextColor="#8A8F98"
                                VerticalOptions="Center" />
                         <Label Text="★"
                                FontSize="11"
@@ -127,7 +94,102 @@
                                 VerticalOptions="Center">
                             <Label Text="{Binding SimTagText}"
                                    FontSize="9.5"
-                                   FontFamily="{DynamicResource AppFontFamilyBold}"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   TextColor="{Binding SimTagTextColor}"
+                                   VerticalOptions="Center" />
+                        </Border>
+                    </HorizontalStackLayout>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Incoming message that contains a link: same row, formatted text with the link underlined -->
+        <DataTemplate x:Key="IncomingLinkTemplate" x:DataType="vm:ChatMessage">
+            <Grid Padding="12,3,12,4" HorizontalOptions="Fill" ColumnDefinitions="Auto,0.8*,0.2*">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMessageRowTapped" />
+                </Grid.GestureRecognizers>
+
+                <Border Grid.Column="0"
+                        Margin="0,0,10,0"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        StrokeShape="RoundRectangle 11"
+                        VerticalOptions="Center"
+                        IsVisible="{Binding IsSelectionMode}"
+                        BackgroundColor="{Binding SelectionFill}"
+                        Stroke="{Binding SelectionStroke}"
+                        StrokeThickness="{Binding SelectionStrokeThickness}">
+                    <Label Text="✓"
+                           FontSize="12"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           IsVisible="{Binding IsSelected}" />
+                </Border>
+
+                <Grid Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="Start">
+                    <Grid Grid.Row="0">
+                        <Border Padding="{Binding BubblePadding}"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 16"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                HorizontalOptions="Start"
+                                behaviors:MessageHoldBehavior.IsEnabled="True">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnMessageBubbleTapped" />
+                            </Border.GestureRecognizers>
+                            <Label FontSize="13" LineBreakMode="WordWrap">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding BodyBeforeLink}"
+                                              TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                                        <Span Text="{Binding Link}"
+                                              TextColor="{StaticResource AccentText}"
+                                              TextDecorations="Underline" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </Border>
+
+                        <Border IsVisible="{Binding HasReaction}"
+                                StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                StrokeShape="RoundRectangle 12"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                Padding="6,2"
+                                Margin="8,0,0,-8"
+                                VerticalOptions="End"
+                                HorizontalOptions="Start">
+                            <Label Text="{Binding ReactionText}"
+                                   TextColor="{Binding ReactionTextColor}"
+                                   FontSize="12"
+                                   VerticalOptions="Center" />
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnReactionPillTapped" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+
+                    <HorizontalStackLayout Grid.Row="1" Spacing="6" VerticalOptions="Center">
+                        <Label Text="{Binding Time}"
+                               FontSize="11"
+                               TextColor="#8A8F98"
+                               VerticalOptions="Center" />
+                        <Label Text="★"
+                               FontSize="11"
+                               TextColor="#F59E0B"
+                               IsVisible="{Binding IsStarred}"
+                               VerticalOptions="Center" />
+                        <Border IsVisible="{Binding SimTagVisible}"
+                                Padding="5,1"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="{Binding SimTagBgColor}"
+                                VerticalOptions="Center">
+                            <Label Text="{Binding SimTagText}"
+                                   FontSize="9.5"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                    TextColor="{Binding SimTagTextColor}"
                                    VerticalOptions="Center" />
                         </Border>
@@ -149,18 +211,10 @@
                         HeightRequest="22"
                         StrokeShape="RoundRectangle 11"
                         VerticalOptions="Center"
-                        IsVisible="{Binding IsSelectionMode}">
-                    <Border.Triggers>
-                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                            <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                            <Setter Property="StrokeThickness" Value="0" />
-                        </DataTrigger>
-                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
-                            <Setter Property="BackgroundColor" Value="Transparent" />
-                            <Setter Property="StrokeThickness" Value="1.5" />
-                            <Setter Property="Stroke" Value="{AppThemeBinding Light=#9AA0AB, Dark=#5C6370}" />
-                        </DataTrigger>
-                    </Border.Triggers>
+                        IsVisible="{Binding IsSelectionMode}"
+                        BackgroundColor="{Binding SelectionFill}"
+                        Stroke="{Binding SelectionStroke}"
+                        StrokeThickness="{Binding SelectionStrokeThickness}">
                     <Label Text="✓"
                            FontSize="12"
                            TextColor="White"
@@ -202,17 +256,12 @@
                                                        Margin="4,0,0,0"
                                                        Color="#BFE8D2"
                                                        VerticalOptions="End" />
-                                    <Grid IsVisible="{Binding IsDelivered}" Margin="4,0,0,0" VerticalOptions="End">
-                                        <Label Text="✓"
-                                               FontSize="11"
-                                               TextColor="{StaticResource Mint}"
-                                               VerticalOptions="Center" />
-                                        <Label Text="✓"
-                                               FontSize="11"
-                                               Margin="-4.5,0,0,0"
-                                               TextColor="{StaticResource Mint}"
-                                               VerticalOptions="Center" />
-                                    </Grid>
+                                    <Label Text="{Binding StatusGlyph}"
+                                           FontSize="11"
+                                           CharacterSpacing="-4.5"
+                                           Margin="2,0,0,0"
+                                           TextColor="{StaticResource Mint}"
+                                           VerticalOptions="End" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>
@@ -227,21 +276,126 @@
                                 Margin="0,0,8,-8"
                                 VerticalOptions="End"
                                 HorizontalOptions="End">
-                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
-                                <Label Text="{Binding ReactionEmoji}" FontSize="12" VerticalOptions="Center" />
-                                <ActivityIndicator IsRunning="{Binding IsReactionSending}"
-                                                   IsVisible="{Binding IsReactionSending}"
-                                                   WidthRequest="11"
-                                                   HeightRequest="11"
-                                                   Color="{StaticResource Primary}"
-                                                   VerticalOptions="Center" />
-                                <Label Text="!"
-                                       IsVisible="{Binding HasReactionFailed}"
-                                       FontSize="11"
-                                       FontFamily="{DynamicResource AppFontFamilyBold}"
-                                       TextColor="{StaticResource Danger}"
-                                       VerticalOptions="Center" />
-                            </HorizontalStackLayout>
+                            <Label Text="{Binding ReactionText}"
+                                   TextColor="{Binding ReactionTextColor}"
+                                   FontSize="12"
+                                   VerticalOptions="Center" />
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnReactionPillTapped" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="Auto,Auto"
+                          ColumnSpacing="5"
+                          HorizontalOptions="End"
+                          IsVisible="{Binding HasFailed}">
+                        <Image Grid.Column="0"
+                               Source="failed.png"
+                               WidthRequest="14"
+                               HeightRequest="14"
+                               VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="{loc:Translate Chat_NotDelivered}"
+                               FontSize="12"
+                               TextColor="{StaticResource Danger}"
+                               VerticalOptions="Center" />
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnRetry" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Outgoing message that contains a link: the link used to be dropped from the bubble -->
+        <DataTemplate x:Key="OutgoingLinkTemplate" x:DataType="vm:ChatMessage">
+            <Grid Padding="12,3,12,4" HorizontalOptions="Fill" ColumnDefinitions="Auto,0.2*,0.8*">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMessageRowTapped" />
+                </Grid.GestureRecognizers>
+
+                <Border Grid.Column="0"
+                        Margin="0,0,10,0"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        StrokeShape="RoundRectangle 11"
+                        VerticalOptions="Center"
+                        IsVisible="{Binding IsSelectionMode}"
+                        BackgroundColor="{Binding SelectionFill}"
+                        Stroke="{Binding SelectionStroke}"
+                        StrokeThickness="{Binding SelectionStrokeThickness}">
+                    <Label Text="✓"
+                           FontSize="12"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           IsVisible="{Binding IsSelected}" />
+                </Border>
+
+                <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto" RowSpacing="{Binding RowSpacingForReaction}" HorizontalOptions="End">
+                    <Grid Grid.Row="0">
+                        <Border Padding="{Binding BubblePadding}"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 16"
+                                BackgroundColor="{StaticResource Primary}"
+                                HorizontalOptions="End"
+                                behaviors:MessageHoldBehavior.IsEnabled="True">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnOutgoingBubbleTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label FontSize="13" LineBreakMode="WordWrap">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding BodyBeforeLink}" TextColor="White" />
+                                            <Span Text="{Binding Link}"
+                                                  TextColor="#E3F8EC"
+                                                  TextDecorations="Underline" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <HorizontalStackLayout HorizontalOptions="End" Spacing="4">
+                                    <Label Text="★"
+                                           FontSize="11"
+                                           TextColor="#FCD34D"
+                                           IsVisible="{Binding IsStarred}"
+                                           VerticalOptions="Center" />
+                                    <Label Text="{Binding Time}"
+                                           FontSize="11"
+                                           TextColor="#BFE8D2"
+                                           VerticalOptions="End" />
+                                    <ActivityIndicator IsRunning="{Binding IsSending}"
+                                                       IsVisible="{Binding IsSending}"
+                                                       WidthRequest="12"
+                                                       HeightRequest="12"
+                                                       Margin="4,0,0,0"
+                                                       Color="#BFE8D2"
+                                                       VerticalOptions="End" />
+                                    <Label Text="{Binding StatusGlyph}"
+                                           FontSize="11"
+                                           CharacterSpacing="-4.5"
+                                           Margin="2,0,0,0"
+                                           TextColor="{StaticResource Mint}"
+                                           VerticalOptions="End" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border IsVisible="{Binding HasReaction}"
+                                StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                StrokeShape="RoundRectangle 12"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                Padding="6,2"
+                                Margin="0,0,8,-8"
+                                VerticalOptions="End"
+                                HorizontalOptions="End">
+                            <Label Text="{Binding ReactionText}"
+                                   TextColor="{Binding ReactionTextColor}"
+                                   FontSize="12"
+                                   VerticalOptions="Center" />
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnReactionPillTapped" />
                             </Border.GestureRecognizers>
@@ -273,7 +427,9 @@
 
         <vm:ChatTemplateSelector x:Key="ChatSelector"
                                  IncomingTemplate="{StaticResource IncomingTemplate}"
+                                 IncomingLinkTemplate="{StaticResource IncomingLinkTemplate}"
                                  OutgoingTemplate="{StaticResource OutgoingTemplate}"
+                                 OutgoingLinkTemplate="{StaticResource OutgoingLinkTemplate}"
                                  DateSeparatorTemplate="{StaticResource DateSeparatorTemplate}"
                                  UnreadSeparatorTemplate="{StaticResource UnreadSeparatorTemplate}" />
 
@@ -302,7 +458,7 @@
                         BackgroundColor="{AppThemeBinding Light=#EBF3EE, Dark=#142B1F}">
                     <Label Text="{Binding Text}"
                            FontSize="11"
-                           FontFamily="{DynamicResource AppFontFamilyBold}"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                            TextColor="{StaticResource Primary}"
                            HorizontalOptions="Center" />
                 </Border>
@@ -362,7 +518,7 @@
                                    IsVisible="{Binding Thread.HasNoIcon}"
                                    TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
                                    FontSize="14"
-                                   FontFamily="{DynamicResource AppFontFamilyBold}"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                    HorizontalOptions="Center"
                                    VerticalOptions="Center"
                                    HorizontalTextAlignment="Center"
@@ -376,8 +532,9 @@
                           HorizontalOptions="Fill">
                         <Label Grid.Row="0"
                                Text="{Binding Thread.Name}"
+                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                                FontSize="15"
-                               FontFamily="{DynamicResource AppFontFamilyBold}"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                LineBreakMode="TailTruncation"
                                MaxLines="1"
                                HorizontalOptions="Fill" />
@@ -438,7 +595,7 @@
                     <Label Grid.Column="1"
                            Text="{Binding SelectedCountText}"
                            FontSize="16"
-                           FontFamily="{DynamicResource AppFontFamilyBold}"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                            VerticalOptions="Center"
                            TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
                     <Grid Grid.Column="2" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
@@ -680,7 +837,7 @@
                         <Label Text="{Binding SimText}"
                                Margin="0,-2,0,0"
                                FontSize="13"
-                               FontFamily="{DynamicResource AppFontFamilyBold}"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                TextColor="White"
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
@@ -834,10 +991,10 @@
                                 BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                                 VerticalOptions="Center">
                             <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
-                                <Label Text="✓" FontSize="10" TextColor="{StaticResource Primary}" FontFamily="{DynamicResource AppFontFamilyBold}" VerticalOptions="Center" />
+                                <Label Text="✓" FontSize="10" TextColor="{StaticResource Primary}" FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}" VerticalOptions="Center" />
                                 <Label Text="{loc:Translate Chat_Selected}"
                                        FontSize="10"
-                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                        TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
                                        VerticalOptions="Center" />
                             </HorizontalStackLayout>
@@ -874,7 +1031,7 @@
                                 <Label Grid.Column="1"
                                        Text="{loc:Translate Chat_CopyUrl}"
                                        FontSize="13"
-                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                        TextColor="{StaticResource Primary}"
                                        VerticalOptions="Center" />
                                 <Border Grid.Column="2"
@@ -885,7 +1042,7 @@
                                         VerticalOptions="Center">
                                     <Label Text="{loc:Translate Chat_LinkBadge}"
                                            FontSize="9.5"
-                                           FontFamily="{DynamicResource AppFontFamilyBold}"
+                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                            TextColor="{StaticResource Primary}"
                                            VerticalOptions="Center" />
                                 </Border>
@@ -997,7 +1154,7 @@
                                 <Label Grid.Column="1"
                                        Text="{loc:Translate Chat_Delete}"
                                        FontSize="13"
-                                       FontFamily="{DynamicResource AppFontFamilyBold}"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                        TextColor="#EF4444"
                                        VerticalOptions="Center" />
                                 <Grid.GestureRecognizers>
@@ -1036,7 +1193,7 @@
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Text="{loc:Translate Chat_InfoTitle}"
                                FontSize="16"
-                               FontFamily="{DynamicResource AppFontFamilyBold}"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
                                VerticalOptions="Center" />
                         <Grid Grid.Column="1" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
@@ -1056,7 +1213,7 @@
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <Label Text="{loc:Translate Chat_InfoType}" FontSize="13" TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
-                            <Label Grid.Column="1" x:Name="InfoTypeLabel" FontSize="13" FontFamily="{DynamicResource AppFontFamilyBold}" TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" HorizontalTextAlignment="End" />
+                            <Label Grid.Column="1" x:Name="InfoTypeLabel" FontSize="13" FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}" TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" HorizontalTextAlignment="End" />
                         </Grid>
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <Label Text="{loc:Translate Chat_InfoTime}" FontSize="13" TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />

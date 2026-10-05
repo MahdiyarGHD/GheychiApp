@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Gheychi.App.Gestures;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Models;
@@ -166,7 +167,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 // always has SQLite priority, so list warm-up never blocks it.
                 try
                 {
-                    await Task.Delay(150, ct);
+                    await Task.Delay(250, ct);
+
+                    // Reading a chat is real work (provider, SQLite, allocations): not while the user is touching the screen.
+                    await UserActivity.WaitForIdleAsync(500, ct);
                 }
                 catch (OperationCanceledException)
                 {

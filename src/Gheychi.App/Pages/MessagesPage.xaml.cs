@@ -136,37 +136,43 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
     }
 
-    // Build the overlays once the inbox is on screen and the user is not scrolling, so the first
-    // chat/search open does not pay the XAML inflation cost.
+    // Build the overlays once the inbox is on screen, so the first chat/search/compose open does not pay
+    // the XAML inflation cost. Each one is hundreds of views created in a single UI-thread step, so they
+    // are built one at a time, only while nobody is touching the screen, with a pause in between.
     private async Task WarmUpOverlaysAsync()
     {
         try
         {
-            await Task.Delay(1500);
-            await WaitForScrollIdleAsync();
+            await Task.Delay(2500);
+            await WaitForQuietAsync();
             _ = ChatOverlay;
 
-            await Task.Delay(400);
-            await WaitForScrollIdleAsync();
+            await Task.Delay(1000);
+            await WaitForQuietAsync();
             _ = SearchOverlay;
 
-            await Task.Delay(400);
-            await WaitForScrollIdleAsync();
+            await Task.Delay(1000);
+            await WaitForQuietAsync();
+            _ = ComposeOverlay.PreloadContactsAsync();
+
+            await Task.Delay(1000);
+            await WaitForQuietAsync();
             _ = ArchiveOverlay;
 
-            await Task.Delay(400);
-            await WaitForScrollIdleAsync();
-            _ = ComposeOverlay.PreloadContactsAsync();
+            // Reading chats ahead is background work that would compete with the screens above.
+            await Task.Delay(1500);
+            await WaitForQuietAsync();
+            Vm?.EnableChatPreload();
         }
         catch
         {
         }
     }
 
-    private async Task WaitForScrollIdleAsync()
+    private async Task WaitForQuietAsync()
     {
-        while (Environment.TickCount64 - _lastScrollTime < 500)
-            await Task.Delay(250);
+        while (Environment.TickCount64 - _lastScrollTime < 500 || !UserActivity.IsIdle(700))
+            await Task.Delay(200);
     }
 
     private void OnThreadsScrolled(object? sender, ItemsViewScrolledEventArgs e)
@@ -202,6 +208,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
     private void OnScrollSettled()
     {
+        if (Vm is not { ChatPreloadEnabled: true })
+            return;
+
         if (Vm == null || Vm.Threads.Count == 0 || _lastFirstVisible < 0)
             return;
 
@@ -403,11 +412,13 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // Yield SQLite to the opening chat immediately: stop list warm-up
             // queries so page 1 + its history prefetch run uncontended.
             ChatViewModel.CancelPreload();
+
+            // Everything that needs the UI thread happens while nothing moves yet.
             var cacheHit = ChatOverlay.PrepareForTransition(thread);
             if (sim is not null)
                 ChatOverlay.Vm?.SelectSim(sim.SlotIndex, sim.SubId);
-            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
-            ChatOverlay.TranslationY = offscreenY;
+            var distance = GetFallbackHeight();
+            OverlayAnimator.SetTranslationY(ChatOverlay, distance);
             ChatOverlay.InputTransparent = false;
             Shell.SetTabBarIsVisible(this, false);
 
@@ -415,18 +426,24 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (!cacheHit)
                 fetchTask = Task.Run(() => ChatOverlay.FetchMessagesAsync(thread, unreadHint: unreadCount));
 
-            await ChatOverlay.TranslateToAsync(0, 0, 220, Easing.CubicOut);
+            // The tab bar disappearing and a freshly filled list make the page lay out again; let that
+            // finish (two frames) before the slide starts instead of during it.
+            await Task.Delay(30);
+            var slide = OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, 260, decelerate: true);
 
             if (fetchTask is not null)
             {
+                // Show the messages as soon as they are read; the slide is on the render thread and
+                // keeps moving while the list is built.
                 var preparedData = await fetchTask;
                 if (preparedData is not null)
                     ChatOverlay.ApplyMessages(preparedData);
             }
-            else if (cacheHit && ChatOverlay.BindingContext is ChatViewModel cachedVm)
-            {
+
+            await slide;
+
+            if (cacheHit && ChatOverlay.BindingContext is ChatViewModel cachedVm)
                 ChatOverlay.ScrollToInitialPosition(cachedVm.FirstUnreadIndex);
-            }
 
             if (wasUnread)
             {
@@ -443,7 +460,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
         catch (InvalidOperationException)
         {
-            ChatOverlay.TranslationY = 0;
+            OverlayAnimator.SetTranslationY(ChatOverlay, 0);
             Shell.SetTabBarIsVisible(this, false);
         }
         finally
@@ -460,21 +477,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         try
         {
             await ChatOverlay.Close();
-            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
-            var slideTask = ChatOverlay.TranslateToAsync(0, offscreenY, 220, Easing.CubicIn);
+            _ = RestoreTabBarSoonAsync();
 
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(60);
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    Shell.SetTabBarIsVisible(this, true);
-                });
-            });
-
-            await slideTask;
-            ChatOverlay.InputTransparent = true;
-            ChatOverlay.TranslationY = 3000;
+            await OverlayAnimator.SlideYAsync(ChatOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
+            ParkChatOverlay();
 
             // Replies sent, messages read or deleted inside the chat are not in the list yet.
             if (Vm != null)
@@ -482,14 +488,20 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
         catch (InvalidOperationException)
         {
-            ChatOverlay.InputTransparent = true;
-            ChatOverlay.TranslationY = 3000;
+            ParkChatOverlay();
             Shell.SetTabBarIsVisible(this, true);
         }
         finally
         {
             _animating = false;
         }
+    }
+
+    private void ParkChatOverlay()
+    {
+        ChatOverlay.InputTransparent = true;
+        OverlayAnimator.SetTranslationY(ChatOverlay, OverlayAnimator.ParkedDistance);
+        ChatOverlay.ResetAfterClose();
     }
 
     private static double GetFallbackHeight()
@@ -520,17 +532,18 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
             var searchVm = IPlatformApplication.Current?.Services.GetService<SearchViewModel>() ?? new SearchViewModel();
             SearchOverlay.Initialize(searchVm);
-            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
-            SearchOverlay.TranslationY = offscreenY;
+            var distance = GetFallbackHeight();
+            OverlayAnimator.SetTranslationY(SearchOverlay, distance);
             SearchOverlay.InputTransparent = false;
             Shell.SetTabBarIsVisible(this, false);
 
-            await SearchOverlay.TranslateToAsync(0, 0, 220, Easing.CubicOut);
+            await Task.Delay(30);
+            await OverlayAnimator.SlideYAsync(SearchOverlay, distance, 0, 260, decelerate: true);
             SearchOverlay.FocusSearchInput();
         }
         catch (InvalidOperationException)
         {
-            SearchOverlay.TranslationY = 0;
+            OverlayAnimator.SetTranslationY(SearchOverlay, 0);
             Shell.SetTabBarIsVisible(this, false);
         }
         finally
@@ -546,33 +559,29 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         _animating = true;
         try
         {
-            SearchOverlay.Reset();
-            var offscreenY = Height > 0 ? Height : GetFallbackHeight();
-            var slideTask = SearchOverlay.TranslateToAsync(0, offscreenY, 220, Easing.CubicIn);
+            // The overlay leaves with what it shows; it is cleared once it is out of sight.
+            SearchOverlay.UnfocusSearchInput();
+            _ = RestoreTabBarSoonAsync();
 
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(60);
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    Shell.SetTabBarIsVisible(this, true);
-                });
-            });
-
-            await slideTask;
-            SearchOverlay.InputTransparent = true;
-            SearchOverlay.TranslationY = 3000;
+            await OverlayAnimator.SlideYAsync(SearchOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
+            ParkSearchOverlay();
         }
         catch (InvalidOperationException)
         {
-            SearchOverlay.InputTransparent = true;
-            SearchOverlay.TranslationY = 3000;
+            ParkSearchOverlay();
             Shell.SetTabBarIsVisible(this, true);
         }
         finally
         {
             _animating = false;
         }
+    }
+
+    private void ParkSearchOverlay()
+    {
+        SearchOverlay.InputTransparent = true;
+        OverlayAnimator.SetTranslationY(SearchOverlay, OverlayAnimator.ParkedDistance);
+        SearchOverlay.Reset();
     }
 
     private void OnCloseSearchRequested(object? sender, EventArgs e)

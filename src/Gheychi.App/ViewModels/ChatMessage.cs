@@ -17,6 +17,10 @@ public sealed class ChatMessage : INotifyPropertyChanged
     private static readonly Color TextDark = Color.FromArgb("#E8EAED");
     private static readonly Color TextLight = Color.FromArgb("#1B1E24");
     private static readonly Color TimeColorNormal = Color.FromArgb("#8A8F98");
+    private static readonly Color PrimaryColor = Color.FromArgb("#2E6B4C");
+    private static readonly Color DangerColor = Color.FromArgb("#D64545");
+    private static readonly Brush UncheckedStrokeLight = new SolidColorBrush(Color.FromArgb("#9AA0AB"));
+    private static readonly Brush UncheckedStrokeDark = new SolidColorBrush(Color.FromArgb("#5C6370"));
 
     private static bool IsDarkTheme => Application.Current?.RequestedTheme == AppTheme.Dark;
 
@@ -100,6 +104,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
             if (SetField(ref _reactionEmoji, value))
             {
                 OnPropertyChanged(nameof(HasReaction));
+                OnPropertyChanged(nameof(ReactionText));
                 OnPropertyChanged(nameof(BubblePadding));
                 OnPropertyChanged(nameof(RowSpacingForReaction));
             }
@@ -111,26 +116,57 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public Thickness BubblePadding => HasReaction ? new Thickness(10, 7, 10, 16) : new Thickness(10, 7, 10, 7);
     public double RowSpacingForReaction => HasReaction ? 10 : 2;
 
+    // The pill used to be a stack of emoji, spinner and "!" labels; one label is much cheaper to create
+    // for every message row, and the pill is only a few characters anyway.
+    public string ReactionText => _isReactionSending
+        ? $"{_reactionEmoji} …"
+        : _hasReactionFailed ? $"{_reactionEmoji} !" : _reactionEmoji ?? string.Empty;
+
+    public Color ReactionTextColor => _hasReactionFailed ? DangerColor : (IsDarkTheme ? TextDark : TextLight);
+
     private bool _isReactionSending;
     public bool IsReactionSending
     {
         get => _isReactionSending;
-        set => SetField(ref _isReactionSending, value);
+        set
+        {
+            if (SetField(ref _isReactionSending, value))
+                OnPropertyChanged(nameof(ReactionText));
+        }
     }
 
     private bool _hasReactionFailed;
     public bool HasReactionFailed
     {
         get => _hasReactionFailed;
-        set => SetField(ref _hasReactionFailed, value);
+        set
+        {
+            if (SetField(ref _hasReactionFailed, value))
+            {
+                OnPropertyChanged(nameof(ReactionText));
+                OnPropertyChanged(nameof(ReactionTextColor));
+            }
+        }
     }
 
     private bool _isSelected;
     public bool IsSelected
     {
         get => _isSelected;
-        set => SetField(ref _isSelected, value);
+        set
+        {
+            if (SetField(ref _isSelected, value))
+            {
+                OnPropertyChanged(nameof(SelectionFill));
+                OnPropertyChanged(nameof(SelectionStroke));
+                OnPropertyChanged(nameof(SelectionStrokeThickness));
+            }
+        }
     }
+
+    public Color SelectionFill => _isSelected ? PrimaryColor : Colors.Transparent;
+    public Brush SelectionStroke => _isSelected ? Brush.Transparent : (IsDarkTheme ? UncheckedStrokeDark : UncheckedStrokeLight);
+    public double SelectionStrokeThickness => _isSelected ? 0 : 1.5;
 
     private bool _isSelectionMode;
     public bool IsSelectionMode
@@ -225,7 +261,10 @@ public sealed class ChatMessage : INotifyPropertyChanged
         set
         {
             if (SetField(ref _isDelivered, value))
+            {
                 OnPropertyChanged(nameof(IsSending));
+                OnPropertyChanged(nameof(StatusGlyph));
+            }
         }
     }
 
@@ -236,11 +275,17 @@ public sealed class ChatMessage : INotifyPropertyChanged
         set
         {
             if (SetField(ref _hasFailed, value))
+            {
                 OnPropertyChanged(nameof(IsSending));
+                OnPropertyChanged(nameof(StatusGlyph));
+            }
         }
     }
 
     public bool IsSending => IsOutgoing && !IsDelivered && !HasFailed;
+
+    // The double tick once delivered; sending shows a spinner and failure the retry row.
+    public string StatusGlyph => IsOutgoing && IsDelivered ? "✓✓" : string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
