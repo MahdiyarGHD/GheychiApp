@@ -1,4 +1,5 @@
 using Android.Content;
+using Gheychi.App.ViewModels;
 
 namespace Gheychi.App.Platforms.Android.Notifications;
 
@@ -6,7 +7,11 @@ namespace Gheychi.App.Platforms.Android.Notifications;
 /// Everything needed to show a conversation without first loading the inbox: a tapped notification
 /// already knows who the chat is with.
 /// </summary>
-public sealed record ChatLaunchRequest(long ThreadId, string Address, string Name, int SubId);
+public sealed record ChatLaunchRequest(long ThreadId, string Address, string Name, int SubId)
+{
+    /// <summary>Completes with the unread count once the conversation's messages are read ahead.</summary>
+    public Task<int> Prepared { get; init; } = Task.FromResult(0);
+}
 
 /// <summary>
 /// A tapped notification asks the UI to open a conversation. The request is kept until the inbox
@@ -19,6 +24,8 @@ public static class ChatLaunchRequests
 
     public static event Action? Requested;
 
+    public static bool HasPending => Volatile.Read(ref _pending) is not null;
+
     public static void FromIntent(Intent? intent)
     {
         var threadId = intent?.GetLongExtra(NotificationIds.ExtraThreadId, 0) ?? 0;
@@ -30,6 +37,7 @@ public static class ChatLaunchRequests
             intent!.GetStringExtra(NotificationIds.ExtraAddress) ?? string.Empty,
             intent.GetStringExtra(NotificationIds.ExtraName) ?? string.Empty,
             intent.GetIntExtra(NotificationIds.ExtraSubId, -1));
+        request = request with { Prepared = ChatViewModel.PrepareLaunchAsync(request) };
 
         // The intent is delivered again after the activity is restored; it must not reopen the chat.
         intent.RemoveExtra(NotificationIds.ExtraThreadId);

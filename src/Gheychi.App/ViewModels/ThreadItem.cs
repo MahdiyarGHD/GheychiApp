@@ -142,6 +142,24 @@ public sealed class ThreadItem : INotifyPropertyChanged
         Preview = string.Empty
     };
 
+    /// <summary>A row for a conversation known only by its id, name and address, e.g. one opened from a notification before the inbox is loaded.</summary>
+    public static ThreadItem ForConversation(long threadId, int subId, string name, string address)
+    {
+        var phone = Gheychi.Core.Services.PhoneNumberNormalizer.FormatDisplay(address);
+        var title = string.IsNullOrWhiteSpace(name) ? phone : name;
+        return new ThreadItem
+        {
+            ThreadId = threadId,
+            SubId = Math.Max(0, subId),
+            Name = title,
+            Phone = phone,
+            Initials = GenerateInitials(title),
+            IconFile = DetectIcon(title, address),
+            Time = string.Empty,
+            Preview = string.Empty
+        };
+    }
+
     public static string GenerateInitials(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

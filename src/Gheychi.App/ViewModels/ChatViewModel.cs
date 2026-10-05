@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Gheychi.App.Gestures;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Models;
@@ -197,6 +198,40 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             }
         }, ct);
     }
+
+    /// <summary>
+    /// Starts reading a notified conversation the moment its tap arrives, in parallel with the app starting up
+    /// or resuming, so the chat opens with its messages already cached. Returns the conversation's unread count.
+    /// </summary>
+    public static Task<int> PrepareLaunchAsync(ChatLaunchRequest request) =>
+        Task.Run(async () =>
+        {
+            var unread = ConversationReader.CountUnread(Microsoft.Maui.ApplicationModel.Platform.AppContext, request.ThreadId);
+
+            var services = IPlatformApplication.Current?.Services;
+            var smsService = services?.GetService<ISmsService>();
+            if (smsService is null)
+                return unread;
+
+            try
+            {
+                var dateFormatter = services!.GetService<IDateFormattingService>() ?? new DateFormattingService();
+                var generation = CurrentCacheGeneration();
+                var thread = ThreadItem.ForConversation(request.ThreadId, request.SubId, request.Name, request.Address);
+                var loader = new ChatViewModel(null, smsService, dateFormatter);
+
+                // The hint widens the page when more is unread than one page holds, so the divider is found.
+                var data = await loader.FetchMessagesAsync(thread, RecentPageSize, unreadHint: unread);
+                if (data.RawCount > 0 && generation == CurrentCacheGeneration())
+                    AddToCache(request.ThreadId, data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Prepare notified chat failed: {ex}");
+            }
+
+            return unread;
+        });
 
     public static bool TryGetCached(long threadId, out PreparedChatData? data)
     {

@@ -42,6 +42,16 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         var viewModel = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
         InitializeComponent();
         BindingContext = viewModel;
+
+        // Opened from a notification on a cold start: show the chat, not an inbox that is about to be covered.
+        // The chat view is built now instead of after the first frame, and the inbox and tab bar stay out
+        // of sight until the chat is up.
+        if (ChatLaunchRequests.HasPending)
+        {
+            InboxLayer.IsVisible = false;
+            Shell.SetTabBarIsVisible(this, false);
+            _ = ChatOverlay;
+        }
     }
 
     private ChatView CreateChatOverlay()
@@ -323,12 +333,12 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     /// <summary>Opens the conversation a tapped notification asked for.</summary>
     private async Task OpenRequestedChatAsync()
     {
+        var request = ChatLaunchRequests.Take();
+        if (request is null)
+            return;
+
         try
         {
-            var request = ChatLaunchRequests.Take();
-            if (request is null)
-                return;
-
             if (!IsChatClosed)
             {
                 if (ChatOverlay.Vm?.Thread.ThreadId == request.ThreadId)
@@ -337,45 +347,50 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
                 await CloseChatAsync();
             }
 
-            // The provider is the truth for what is unread; the inbox list may not be loaded yet.
-            var unread = await Task.Run(() =>
-                ConversationReader.CountUnread(Microsoft.Maui.ApplicationModel.Platform.AppContext, request.ThreadId));
+            // Building the chat view is the slow part; the messages are being read meanwhile.
+            await EnsureOverlayReadyAsync(ChatOverlay);
 
-            var thread = FindThread(request.ThreadId) ?? CreateThreadItem(request);
+            int unread;
+            try
+            {
+                unread = await request.Prepared;
+            }
+            catch (Exception)
+            {
+                unread = 0;
+            }
+
+            var thread = FindThread(request.ThreadId)
+                         ?? ThreadItem.ForConversation(request.ThreadId, request.SubId, request.Name, request.Address);
             thread.Count = unread;
             thread.IsUnread = unread > 0;
 
             var wasUnread = thread.IsUnread;
             if (wasUnread)
                 thread.MarkAsRead();
-            await OpenChatAsync(thread, wasUnread, unread);
+            await OpenChatAsync(thread, wasUnread, unread, animate: false);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Open notified chat failed: {ex}");
         }
+        finally
+        {
+            RevealInbox();
+        }
+    }
+
+    /// <summary>Ends the cold-start hold (see the constructor); harmless when nothing was held.</summary>
+    private void RevealInbox()
+    {
+        InboxLayer.IsVisible = true;
+        if (IsChatClosed)
+            Shell.SetTabBarIsVisible(this, true);
     }
 
     private ThreadItem? FindThread(long threadId) =>
         Vm?.Threads.FirstOrDefault(t => t.ThreadId == threadId)
         ?? Vm?.ArchivedThreads.FirstOrDefault(t => t.ThreadId == threadId);
-
-    private static ThreadItem CreateThreadItem(ChatLaunchRequest request)
-    {
-        var phone = Gheychi.Core.Services.PhoneNumberNormalizer.FormatDisplay(request.Address);
-        var name = string.IsNullOrWhiteSpace(request.Name) ? phone : request.Name;
-        return new ThreadItem
-        {
-            ThreadId = request.ThreadId,
-            SubId = Math.Max(0, request.SubId),
-            Name = name,
-            Phone = phone,
-            Initials = ThreadItem.GenerateInitials(name),
-            IconFile = ThreadItem.DetectIcon(name, request.Address),
-            Time = string.Empty,
-            Preview = string.Empty
-        };
-    }
 
     private void OnExitSelectionModeTapped(object? sender, EventArgs e)
     {
@@ -467,7 +482,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
     }
 
-    private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false, int unreadCount = 0, SimCardInfo? sim = null)
+    private async Task OpenChatAsync(ThreadItem thread, bool wasUnread = false, int unreadCount = 0, SimCardInfo? sim = null, bool animate = true)
     {
         if (_animating)
             return;
@@ -486,7 +501,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (sim is not null)
                 ChatOverlay.Vm?.SelectSim(sim.SlotIndex, sim.SubId);
             var distance = GetFallbackHeight();
-            OverlayAnimator.SetTranslationY(ChatOverlay, distance);
+            OverlayAnimator.SetTranslationY(ChatOverlay, animate ? distance : 0);
             ChatOverlay.InputTransparent = false;
             ChatPresence.ChatOpened(thread.ThreadId);
             Shell.SetTabBarIsVisible(this, false);
@@ -497,8 +512,12 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
             // The tab bar disappearing and a freshly filled list make the page lay out again; let that
             // finish (two frames) before the slide starts instead of during it.
-            await Task.Delay(30);
-            var slide = OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, 260, decelerate: true);
+            var slide = Task.CompletedTask;
+            if (animate)
+            {
+                await Task.Delay(30);
+                slide = OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, 260, decelerate: true);
+            }
 
             if (fetchTask is not null)
             {

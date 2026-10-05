@@ -363,6 +363,9 @@
   <data name="Notification_ChannelMessagesDescription" xml:space="preserve">
     <value>Alerts for new text messages</value>
   </data>
+  <data name="Notification_ConversationCount" xml:space="preserve">
+    <value>{0} conversations</value>
+  </data>
   <data name="Notification_Reply" xml:space="preserve">
     <value>Reply</value>
   </data>

@@ -18,6 +18,8 @@ internal static class MessageNotifier
 {
     public const string ReplyKey = "reply_text";
 
+    private const int MinConversationsForSummary = 2;
+
     private static readonly int AccentColor = global::Android.Graphics.Color.ParseColor("#2E6B4C").ToArgb();
     private static int _smallIcon;
 
@@ -34,12 +36,37 @@ internal static class MessageNotifier
     {
         try
         {
-            NotificationManagerCompat.From(context).Cancel(NotificationIds.ForThread(threadId));
+            var id = NotificationIds.ForThread(threadId);
+            var active = ActiveConversationIds(context);
+            if (!active.Remove(id))
+                return;
+
+            var manager = NotificationManagerCompat.From(context);
+            manager.Cancel(id);
+
+            // A group of one is just that notification; a lone summary would leave an empty header behind.
+            if (active.Count < MinConversationsForSummary)
+                manager.Cancel(NotificationIds.SummaryId);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Cancel notification failed: {ex}");
         }
+    }
+
+    private static HashSet<int> ActiveConversationIds(Context context)
+    {
+        var ids = new HashSet<int>();
+        if (context.GetSystemService(Context.NotificationService) is not NotificationManager manager)
+            return ids;
+
+        foreach (var active in manager.GetActiveNotifications() ?? [])
+        {
+            if (active.Id != NotificationIds.SummaryId && active.Notification?.Group == NotificationIds.GroupKey)
+                ids.Add(active.Id);
+        }
+
+        return ids;
     }
 
     private static void Post(
@@ -56,7 +83,7 @@ internal static class MessageNotifier
         var id = NotificationIds.ForThread(threadId);
         if (unread.Count == 0)
         {
-            manager.Cancel(id);
+            Cancel(context, threadId);
             return;
         }
 
@@ -89,8 +116,12 @@ internal static class MessageNotifier
         if (notification is null)
             return;
 
+        var conversations = ActiveConversationIds(context);
+        conversations.Add(id);
+
         manager.Notify(id, notification);
-        manager.Notify(NotificationIds.SummaryId, BuildSummary(context));
+        if (conversations.Count >= MinConversationsForSummary)
+            manager.Notify(NotificationIds.SummaryId, BuildSummary(context, conversations.Count));
     }
 
     private static NotificationCompat.MessagingStyle BuildStyle(string name, string address, List<UnreadMessage> unread)
@@ -104,16 +135,28 @@ internal static class MessageNotifier
         return style;
     }
 
-    private static Notification BuildSummary(Context context)
+    private static Notification BuildSummary(Context context, int conversations)
     {
+        var loc = LocalizationManager.Instance;
         var summary = new NotificationCompat.Builder(context, NotificationIds.ChannelMessages);
         summary.SetSmallIcon(SmallIcon(context));
         summary.SetColor(AccentColor);
+        summary.SetContentTitle(loc["Notification_ChannelMessages"]);
+        summary.SetContentText(string.Format(loc["Notification_ConversationCount"], conversations));
+        summary.SetContentIntent(OpenAppIntent(context));
         summary.SetGroup(NotificationIds.GroupKey);
         summary.SetGroupSummary(true);
         summary.SetGroupAlertBehavior(NotificationCompat.GroupAlertChildren);
         summary.SetAutoCancel(true);
         return summary.Build()!;
+    }
+
+    private static PendingIntent? OpenAppIntent(Context context)
+    {
+        var intent = new Intent(context, typeof(MainActivity));
+        intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
+        return PendingIntent.GetActivity(
+            context, NotificationIds.SummaryId, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
     }
 
     private static PendingIntent? OpenIntent(Context context, long threadId, string address, string name, int subId)

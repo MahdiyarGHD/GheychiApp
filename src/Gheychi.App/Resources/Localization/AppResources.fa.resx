@@ -363,6 +363,9 @@
   <data name="Notification_ChannelMessagesDescription" xml:space="preserve">
     <value>اعلان پیام‌های متنی جدید</value>
   </data>
+  <data name="Notification_ConversationCount" xml:space="preserve">
+    <value>{0} گفتگو</value>
+  </data>
   <data name="Notification_Reply" xml:space="preserve">
     <value>پاسخ</value>
   </data>

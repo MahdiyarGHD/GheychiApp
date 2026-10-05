@@ -34,14 +34,15 @@ public class MainActivity : MauiAppCompatActivity
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        // base.OnCreate builds the first page, which has to know a notified chat is coming.
+        ChatLaunchRequests.FromIntent(Intent);
+
         base.OnCreate(savedInstanceState);
         Window?.SetSoftInputMode(SoftInput.AdjustResize);
 
         _density = Resources?.DisplayMetrics?.Density ?? 1;
         var slop = ViewConfiguration.Get(this)?.ScaledTouchSlop ?? 24;
         _swipe = new HorizontalSwipeTracker(slop);
-
-        ChatLaunchRequests.FromIntent(Intent);
     }
 
     protected override void OnNewIntent(Intent? intent)
