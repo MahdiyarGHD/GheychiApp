@@ -20,4 +20,6 @@ public sealed class SpamMessageEntity
     public float Score { get; set; }
 
     public int ModelVersion { get; set; }
+
+    public float Threshold { get; set; }
 }

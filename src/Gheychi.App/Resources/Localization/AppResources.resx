@@ -520,15 +520,7 @@
     <value>Clear</value>
   </data>
   <data name="Spam_InfoTitle" xml:space="preserve">
-    <value>Why this is spam</value>
-  </data>
-  <data name="Spam_InfoBody" xml:space="preserve">
-    <value>{0}% sure — {1}.
-Messages scoring {2}% or more are treated as spam.
-
-Spam model: v{3}
-From: {4}
-Received: {5}</value>
+    <value>Spam details</value>
   </data>
   <data name="Spam_ClearAllTitle" xml:space="preserve">
     <value>Clear all spam?</value>
@@ -556,5 +548,35 @@ Received: {5}</value>
   </data>
   <data name="Profile_SpamImmuneContact" xml:space="preserve">
     <value>Saved contacts are never checked</value>
+  </data>
+  <data name="Spam_InfoPercent" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="Spam_InfoExplain" xml:space="preserve">
+    <value>Flagged because it scored above the {0} threshold set when it arrived.</value>
+  </data>
+  <data name="Spam_InfoExplainUnknown" xml:space="preserve">
+    <value>Flagged because it scored above the spam threshold when it arrived.</value>
+  </data>
+  <data name="Spam_InfoFrom" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Spam_InfoReceived" xml:space="preserve">
+    <value>Received</value>
+  </data>
+  <data name="Spam_InfoThreshold" xml:space="preserve">
+    <value>Threshold then</value>
+  </data>
+  <data name="Spam_InfoModel" xml:space="preserve">
+    <value>Detection model</value>
+  </data>
+  <data name="Spam_InfoModelValue" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="Spam_InfoNotRecorded" xml:space="preserve">
+    <value>Not recorded</value>
+  </data>
+  <data name="Spam_ActionRestoreShort" xml:space="preserve">
+    <value>Restore</value>
   </data>
 </root>

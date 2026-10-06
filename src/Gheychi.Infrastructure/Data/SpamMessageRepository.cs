@@ -50,7 +50,8 @@ public sealed class SpamMessageRepository : ISpamMessageRepository
                 TimestampMillis = new DateTimeOffset(message.Timestamp).ToUnixTimeMilliseconds(),
                 SubId = message.SubId,
                 Score = message.Score,
-                ModelVersion = message.ModelVersion
+                ModelVersion = message.ModelVersion,
+                Threshold = message.Threshold
             };
             await _db.InsertAsync(entity);
             return entity.Id;
@@ -132,5 +133,6 @@ public sealed class SpamMessageRepository : ISpamMessageRepository
             DateTimeOffset.FromUnixTimeMilliseconds(entity.TimestampMillis).LocalDateTime,
             entity.SubId,
             entity.Score,
-            entity.ModelVersion);
+            entity.ModelVersion,
+            entity.Threshold);
 }

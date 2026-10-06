@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+             x:Class="Gheychi.App.Controls.SpamOverlay"
+             IsVisible="False">
+
+    <ContentView.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}" />
+            <Setter Property="Shadow">
+                <Shadow Brush="Black" Offset="0,8" Radius="24" Opacity="0.25" />
+            </Setter>
+        </Style>
+
+        <Style x:Key="MenuRow" TargetType="Grid">
+            <Setter Property="Padding" Value="18,11" />
+            <Setter Property="ColumnDefinitions" Value="Auto,*" />
+            <Setter Property="ColumnSpacing" Value="14" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+
+        <Style x:Key="MenuLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+
+        <Style x:Key="DetailKey" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextColor" Value="#8A8F98" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+
+        <Style x:Key="DetailValue" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+            <Setter Property="HorizontalTextAlignment" Value="End" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+            <Setter Property="MaxLines" Value="1" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Color" Value="{AppThemeBinding Light=#F1F4F0, Dark=#2A2E35}" />
+        </Style>
+    </ContentView.Resources>
+
+    <Grid>
+        <BoxView x:Name="Backdrop" Color="{AppThemeBinding Light=#66000000, Dark=#99000000}" Opacity="0">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBackdropTapped" />
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <!-- ===================== Menu ===================== -->
+        <Border x:Name="MenuSheet"
+                Style="{StaticResource Card}"
+                IsVisible="False"
+                Margin="10,0,10,10"
+                Padding="0,4"
+                StrokeShape="RoundRectangle 22"
+                VerticalOptions="End">
+            <VerticalStackLayout>
+                <VerticalStackLayout Padding="18,12,18,10" Spacing="3">
+                    <Label LineBreakMode="TailTruncation" MaxLines="1">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span x:Name="MenuSender"
+                                      FontSize="14"
+                                      FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                      TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                                <Span Text="  ·  " FontSize="12" TextColor="#8A8F98" />
+                                <Span x:Name="MenuConfidence" FontSize="12" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Label x:Name="MenuPreview"
+                           FontSize="12"
+                           TextColor="#8A8F98"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="2" />
+                </VerticalStackLayout>
+
+                <BoxView Style="{StaticResource Divider}" />
+
+                <Grid Style="{StaticResource MenuRow}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRestoreTapped" />
+                    </Grid.GestureRecognizers>
+                    <Image Source="unarchive.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                        </Image.Behaviors>
+                    </Image>
+                    <Label Grid.Column="1" Text="{loc:Translate Spam_ActionRestore}" Style="{StaticResource MenuLabel}" />
+                </Grid>
+
+                <Grid Style="{StaticResource MenuRow}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRestoreTrustTapped" />
+                    </Grid.GestureRecognizers>
+                    <Image Source="shield.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                        </Image.Behaviors>
+                    </Image>
+                    <Label Grid.Column="1" Text="{loc:Translate Spam_ActionRestoreTrust}" Style="{StaticResource MenuLabel}" />
+                </Grid>
+
+                <Grid Style="{StaticResource MenuRow}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnInfoTapped" />
+                    </Grid.GestureRecognizers>
+                    <Image Source="info.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                        </Image.Behaviors>
+                    </Image>
+                    <Label Grid.Column="1" Text="{loc:Translate Spam_ActionInfo}" Style="{StaticResource MenuLabel}" />
+                </Grid>
+
+                <BoxView Style="{StaticResource Divider}" Margin="0,4" />
+
+                <Grid Style="{StaticResource MenuRow}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnDeleteTapped" />
+                    </Grid.GestureRecognizers>
+                    <Image Source="trash.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="#D64545" />
+                        </Image.Behaviors>
+                    </Image>
+                    <Label Grid.Column="1" Text="{loc:Translate Spam_ActionDelete}" Style="{StaticResource MenuLabel}" TextColor="#D64545" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- ===================== Info ===================== -->
+        <Border x:Name="InfoCard"
+                Style="{StaticResource Card}"
+                IsVisible="False"
+                Margin="24,0"
+                Padding="18,16"
+                StrokeShape="RoundRectangle 22"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="12">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="{loc:Translate Spam_InfoTitle}"
+                           FontSize="15"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                           VerticalOptions="Center" />
+                    <Grid Grid.Column="1" WidthRequest="28" HeightRequest="28" VerticalOptions="Center">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBackdropTapped" />
+                        </Grid.GestureRecognizers>
+                        <Image Source="close.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                </Grid>
+
+                <Border x:Name="ScorePanel"
+                        Padding="14,12"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16">
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label x:Name="InfoPercent"
+                                   FontSize="26"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   VerticalOptions="Center" />
+                            <Label x:Name="InfoConfidence"
+                                   Grid.Column="1"
+                                   FontSize="13"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                        <ProgressBar x:Name="InfoBar" HeightRequest="6" />
+                        <Label x:Name="InfoExplain"
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#4B5563, Dark=#B5BAC2}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Spacing="9">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="{loc:Translate Spam_InfoFrom}" Style="{StaticResource DetailKey}" />
+                        <Label x:Name="InfoFrom" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="{loc:Translate Spam_InfoReceived}" Style="{StaticResource DetailKey}" />
+                        <Label x:Name="InfoReceived" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="{loc:Translate Spam_InfoThreshold}" Style="{StaticResource DetailKey}" />
+                        <Label x:Name="InfoThreshold" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Text="{loc:Translate Spam_InfoModel}" Style="{StaticResource DetailKey}" />
+                        <Label x:Name="InfoModel" Grid.Column="1" Style="{StaticResource DetailValue}" />
+                    </Grid>
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,4,0,0">
+                    <Border Grid.Column="0"
+                            Padding="0,10"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14"
+                            BackgroundColor="{AppThemeBinding Light=#2E6B4C, Dark=#2E6B4C}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnRestoreTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{loc:Translate Spam_ActionRestoreShort}"
+                               FontSize="13"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="White"
+                               HorizontalOptions="Center" />
+                    </Border>
+                    <Border Grid.Column="1"
+                            Padding="0,10"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14"
+                            BackgroundColor="{AppThemeBinding Light=#FBEAEA, Dark=#3A2323}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnDeleteTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{loc:Translate Spam_ActionDelete}"
+                               FontSize="13"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="#D64545"
+                               HorizontalOptions="Center" />
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- ===================== Confirm ===================== -->
+        <Border x:Name="ConfirmCard"
+                Style="{StaticResource Card}"
+                IsVisible="False"
+                Margin="32,0"
+                Padding="20,18,20,14"
+                StrokeShape="RoundRectangle 22"
+                VerticalOptions="Center">
+            <VerticalStackLayout Spacing="8">
+                <Label x:Name="ConfirmTitle"
+                       FontSize="15"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+                <Label x:Name="ConfirmMessage"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#4B5563, Dark=#B5BAC2}" />
+                <HorizontalStackLayout HorizontalOptions="End" Spacing="4" Margin="0,8,0,0">
+                    <Label Text="{loc:Translate Chat_Cancel}"
+                           Padding="12,8"
+                           FontSize="13"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnConfirmCancelTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="ConfirmAccept"
+                           Padding="12,8"
+                           FontSize="13"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="#D64545">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnConfirmAcceptTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentView>

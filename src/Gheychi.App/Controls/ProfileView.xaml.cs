@@ -106,6 +106,7 @@ public partial class ProfileView : ContentView
         LinksList.ItemsSource = null;
         _spamItems = [];
         SpamList.ItemsSource = null;
+        SpamPopup.HandleBack();
         if (_window is not null)
         {
             _window.Activated -= OnWindowActivated;
@@ -116,6 +117,9 @@ public partial class ProfileView : ContentView
     // Returns true when it consumed the back press.
     public bool HandleBack()
     {
+        if (SpamPopup.HandleBack())
+            return true;
+
         if (SpamListPage.IsVisible)
         {
             SpamListPage.IsVisible = false;
@@ -396,17 +400,10 @@ public partial class ProfileView : ContentView
 
     private void OnSpamListBackTapped(object? sender, TappedEventArgs e) => SpamListPage.IsVisible = false;
 
-    private async void OnSpamMoreTapped(object? sender, TappedEventArgs e)
+    private void OnSpamMoreTapped(object? sender, TappedEventArgs e)
     {
-        try
-        {
-            if ((sender as Element)?.BindingContext is SpamItem item && _spam is not null)
-                await SpamMenu.ShowAsync(item, _spam);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Spam menu failed: {ex}");
-        }
+        if ((sender as Element)?.BindingContext is SpamItem item)
+            SpamPopup.ShowMenu(item);
     }
 
     // ---- Notifications and snooze -------------------------------------------------------------

@@ -41,7 +41,7 @@ public sealed class SpamDetectorTests
     {
         var detector = Detector(new FakeClassifier(new SpamScore(0.85f, 1)), 0.85f);
 
-        Assert.Equal(new SpamScore(0.85f, 1), await detector.DetectAsync("+989121234567", "win a prize", fromContact: false));
+        Assert.Equal(new SpamVerdict(new SpamScore(0.85f, 1), 0.85f), await detector.DetectAsync("+989121234567", "win a prize", fromContact: false));
     }
 
     [Fact]

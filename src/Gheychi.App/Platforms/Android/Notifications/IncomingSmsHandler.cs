@@ -68,11 +68,12 @@ internal static class IncomingSmsHandler
                 return null;
             }
 
-            if (await detection is not { } s)
+            if (await detection is not { } verdict)
                 return null;
 
             var message = new SpamMessage(0, address, body,
-                DateTimeOffset.FromUnixTimeMilliseconds(timestampMillis).LocalDateTime, subId, s.Probability, s.ModelVersion);
+                DateTimeOffset.FromUnixTimeMilliseconds(timestampMillis).LocalDateTime, subId,
+                verdict.Score.Probability, verdict.Score.ModelVersion, verdict.Threshold);
             var id = await repository.AddAsync(message);
             return id > 0 ? message with { Id = id } : null;
         }

@@ -27,7 +27,7 @@ public sealed class SpamMessageRepositoryTests : IDisposable
         var older = new DateTime(2026, 10, 1, 9, 30, 0, DateTimeKind.Local);
         var newer = older.AddHours(2);
 
-        var olderId = await repository.AddAsync(new SpamMessage(0, "+989121234567", "older", older, 2, 0.9f, 1));
+        var olderId = await repository.AddAsync(new SpamMessage(0, "+989121234567", "older", older, 2, 0.9f, 1, 0.8f));
         var newerId = await repository.AddAsync(new SpamMessage(0, "Bank", "newer", newer, 0, 0.99f, 1));
 
         var all = await repository.GetAllAsync();
@@ -35,7 +35,23 @@ public sealed class SpamMessageRepositoryTests : IDisposable
         Assert.True(olderId > 0);
         Assert.True(newerId > olderId);
         Assert.Equal(["newer", "older"], all.Select(m => m.Body));
-        Assert.Equal(new SpamMessage(olderId, "+989121234567", "older", older, 2, 0.9f, 1), all[1]);
+        Assert.Equal(new SpamMessage(olderId, "+989121234567", "older", older, 2, 0.9f, 1, 0.8f), all[1]);
+    }
+
+    [Fact]
+    public async Task DatabaseFromBeforeThresholdColumn_IsUpgradedInPlace()
+    {
+        var old = new SQLite.SQLiteConnection(_dbPath);
+        old.Execute("CREATE TABLE SpamMessage (Id integer primary key autoincrement not null, Address varchar, Body varchar, TimestampMillis integer, SubId integer, Score float, ModelVersion integer)");
+        old.Execute("INSERT INTO SpamMessage (Address, Body, TimestampMillis, SubId, Score, ModelVersion) VALUES ('a', 'kept', 1759740000000, 0, 0.9, 1)");
+        old.Close();
+
+        var repository = new SpamMessageRepository(_dbPath);
+        await repository.AddAsync(new SpamMessage(0, "b", "new", DateTime.Now, 0, 0.95f, 1, 0.85f));
+
+        var all = await repository.GetAllAsync();
+        Assert.Equal(0f, all.Single(m => m.Body == "kept").Threshold);
+        Assert.Equal(0.85f, all.Single(m => m.Body == "new").Threshold);
     }
 
     [Fact]

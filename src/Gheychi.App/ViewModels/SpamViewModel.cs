@@ -105,20 +105,6 @@ public sealed class SpamViewModel : INotifyPropertyChanged
         Remove(_all.ToList());
     }
 
-    public string DescribeInfo(SpamItem item)
-    {
-        var loc = LocalizationManager.Instance;
-        var message = item.Message;
-        return string.Format(
-            loc["Spam_InfoBody"],
-            SpamConfidence.Percent(message.Score),
-            item.Confidence,
-            SpamConfidence.Percent(_settings.Threshold),
-            message.ModelVersion,
-            item.Sender,
-            message.Timestamp.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture));
-    }
-
     private async Task LoadAsync()
     {
         do

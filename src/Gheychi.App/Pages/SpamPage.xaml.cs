@@ -1,4 +1,5 @@
 using Gheychi.App.Controls;
+using Gheychi.App.Localization;
 using Gheychi.App.ViewModels;
 
 namespace Gheychi.App.Pages;
@@ -21,6 +22,9 @@ public partial class SpamPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
+        if (Overlay.HandleBack())
+            return true;
+
         if (!SearchBar.IsVisible)
             return base.OnBackButtonPressed();
 
@@ -46,16 +50,12 @@ public partial class SpamPage : ContentPage
         AppHeader.IsVisible = true;
     }
 
-    private async void OnMoreTapped(object? sender, TappedEventArgs e)
+    private void OnMoreTapped(object? sender, TappedEventArgs e)
     {
-        try
+        if ((sender as BindableObject)?.BindingContext is SpamItem item)
         {
-            if ((sender as BindableObject)?.BindingContext is SpamItem item && Vm is not null)
-                await SpamMenu.ShowAsync(item, Vm);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Spam menu failed: {ex}");
+            SearchEntry.Unfocus();
+            Overlay.ShowMenu(item);
         }
     }
 
@@ -63,8 +63,9 @@ public partial class SpamPage : ContentPage
     {
         try
         {
-            if (Vm is not null)
-                await SpamMenu.ConfirmClearAllAsync(Vm);
+            var loc = LocalizationManager.Instance;
+            if (Vm is not null && await Overlay.ConfirmAsync(loc["Spam_ClearAllTitle"], loc["Spam_ClearAllMessage"], loc["Spam_ClearAll"]))
+                await Vm.ClearAllAsync();
         }
         catch (Exception ex)
         {
