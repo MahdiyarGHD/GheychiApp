@@ -957,6 +957,7 @@ public partial class ChatView : ContentView
         ElevatedBubbleBorder.AnchorY = 0.5;
 
         CopyUrlActionRow.IsVisible = msg.HasLink;
+        MenuReportRow.IsVisible = !msg.IsOutgoing;
 
         var loc = LocalizationManager.Instance;
         MenuStarLabel.Text = msg.IsStarred ? loc["Chat_Unstar"] : loc["Chat_Star"];
@@ -1166,6 +1167,24 @@ public partial class ChatView : ContentView
             TriggerLightHaptic();
             Vm.ExitSelectionMode();
         }
+    }
+
+    private async void OnMenuReportTapped(object? sender, EventArgs e)
+    {
+        var msg = _targetMessage;
+        await DismissSelectionOverlayAsync();
+        if (msg is not null)
+            SpamReport.Submit([$"{msg.BodyBeforeLink}{msg.Link}"], isSpam: true);
+    }
+
+    private void OnReportSelectedTapped(object? sender, EventArgs e)
+    {
+        if (Vm is null || Vm.SelectedCount == 0)
+            return;
+
+        SpamReport.Submit([Vm.GetSelectedMessagesText()], isSpam: true);
+        TriggerLightHaptic();
+        Vm.ExitSelectionMode();
     }
 
     private async void OnStarSelectedTapped(object? sender, EventArgs e)

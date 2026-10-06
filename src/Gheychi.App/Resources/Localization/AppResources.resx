@@ -585,4 +585,7 @@
   <data name="Spam_ReportThanks" xml:space="preserve">
     <value>Thanks! Your report helps improve spam detection.</value>
   </data>
+  <data name="Chat_ReportSpam" xml:space="preserve">
+    <value>Report as spam</value>
+  </data>
 </root>

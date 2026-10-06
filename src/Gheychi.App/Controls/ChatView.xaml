@@ -594,7 +594,7 @@
                 <!-- Selection Contextual Header -->
                 <Grid IsVisible="{Binding IsSelectionMode}"
                       Padding="12,10,12,10"
-                      ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto"
+                      ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto"
                       ColumnSpacing="14"
                       BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}">
                     <Grid Grid.Column="0" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
@@ -663,6 +663,21 @@
                         </Grid.GestureRecognizers>
                     </Grid>
                     <Grid Grid.Column="5" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                        <Image Source="report.png"
+                               WidthRequest="19"
+                               HeightRequest="19"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               SemanticProperties.Description="{loc:Translate Chat_ReportSpam}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                            </Image.Behaviors>
+                        </Image>
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnReportSelectedTapped" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                    <Grid Grid.Column="6" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
                         <Image Source="trash.png"
                                WidthRequest="20"
                                HeightRequest="20"
@@ -917,7 +932,7 @@
                                 MinimumHeightRequest="0"
                                 MaximumHeightRequest="100"
                                 BackgroundColor="Transparent"
-                                TextChanged="OnMessageEntryTextChanged" />
+                                TextChanged="OnMessageEntryTextChanged" />
                     </Grid>
                 </Border>
                 <Border Grid.Column="2"
@@ -1281,6 +1296,27 @@
                                        VerticalOptions="Center" />
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnMenuInfoTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
+
+                            <!-- Report as spam: received messages only -->
+                            <Grid x:Name="MenuReportRow"
+                                  Padding="10,8"
+                                  ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="10"
+                                  VerticalOptions="Center">
+                                <Image Grid.Column="0" Source="report.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                    </Image.Behaviors>
+                                </Image>
+                                <Label Grid.Column="1"
+                                       Text="{loc:Translate Chat_ReportSpam}"
+                                       FontSize="13"
+                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMenuReportTapped" />
                                 </Grid.GestureRecognizers>
                             </Grid>
 

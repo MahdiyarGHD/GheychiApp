@@ -585,4 +585,7 @@
   <data name="Spam_ReportThanks" xml:space="preserve">
     <value>ممنون! گزارش شما به بهبود تشخیص هرزنامه کمک می‌کند.</value>
   </data>
+  <data name="Chat_ReportSpam" xml:space="preserve">
+    <value>گزارش به عنوان هرزنامه</value>
+  </data>
 </root>
