@@ -128,7 +128,7 @@ public partial class ComposeView : ContentView
     }
 
     public Task SlideAsync(bool open, double distanceDp) =>
-        OverlayAnimator.SlideYAsync(this, open ? distanceDp : 0, open ? 0 : distanceDp, open ? 280u : 220u, open);
+        OverlayAnimator.SlideYAsync(this, open ? distanceDp : 0, open ? 0 : distanceDp, open ? OverlayAnimator.OpenDuration : OverlayAnimator.CloseDuration, open);
 
     public void SetTranslationY(double dp) => OverlayAnimator.SetTranslationY(this, dp);
 

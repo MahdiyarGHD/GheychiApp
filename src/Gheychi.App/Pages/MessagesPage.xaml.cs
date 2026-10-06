@@ -467,6 +467,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             NativeTabBar.Release();
             Shell.SetTabBarIsVisible(this, true);
             NativeTabBar.Show();
+            _ = ReapplyInsetsAfterTabBarAsync();
         }
     }
 
@@ -602,8 +603,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // before the slide starts instead of during it.
             if (animate)
             {
-                await Task.Delay(30);
-                await OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, 260, decelerate: true);
+                await OverlayAnimator.SettleAsync();
+                await OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, OverlayAnimator.OpenDuration, decelerate: true);
             }
 
             CoverInbox();
@@ -657,7 +658,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             NativeTabBar.Release();
             _ = RestoreTabBarSoonAsync();
 
-            await OverlayAnimator.SlideYAsync(ChatOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
+            await OverlayAnimator.SlideYAsync(ChatOverlay, 0, GetFallbackHeight(), OverlayAnimator.CloseDuration, decelerate: false);
             ParkChatOverlay();
 
             // Replies sent, messages read or deleted inside the chat are not in the list yet.
@@ -720,8 +721,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             Unpark(ProfileOverlay);
             ProfileOverlay.InputTransparent = false;
 
-            await Task.Delay(30);
-            await OverlayAnimator.SlideYAsync(ProfileOverlay, distance, 0, 260, decelerate: true);
+            await OverlayAnimator.SettleAsync();
+            await OverlayAnimator.SlideYAsync(ProfileOverlay, distance, 0, OverlayAnimator.OpenDuration, decelerate: true);
             ProfileOverlay.OnOpened();
         }
         catch (InvalidOperationException)
@@ -742,7 +743,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         _animating = true;
         try
         {
-            await OverlayAnimator.SlideYAsync(ProfileOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
+            await OverlayAnimator.SlideYAsync(ProfileOverlay, 0, GetFallbackHeight(), OverlayAnimator.CloseDuration, decelerate: false);
             ParkProfileOverlay();
         }
         catch (InvalidOperationException)
@@ -848,8 +849,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             SearchOverlay.InputTransparent = false;
             Shell.SetTabBarIsVisible(this, false);
 
-            await Task.Delay(30);
-            await OverlayAnimator.SlideYAsync(SearchOverlay, distance, 0, 260, decelerate: true);
+            await OverlayAnimator.SettleAsync();
+            await OverlayAnimator.SlideYAsync(SearchOverlay, distance, 0, OverlayAnimator.OpenDuration, decelerate: true);
             CoverInbox();
             SearchOverlay.FocusSearchInput();
         }
@@ -877,7 +878,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             UncoverInbox();
             _ = RestoreTabBarSoonAsync();
 
-            await OverlayAnimator.SlideYAsync(SearchOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
+            await OverlayAnimator.SlideYAsync(SearchOverlay, 0, GetFallbackHeight(), OverlayAnimator.CloseDuration, decelerate: false);
             ParkSearchOverlay();
         }
         catch (InvalidOperationException)
@@ -1003,7 +1004,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             Shell.SetTabBarIsVisible(this, false);
 
             // Same settle as the other overlays: the tab bar leaving re-lays out the page.
-            await Task.Delay(30);
+            await OverlayAnimator.SettleAsync();
             await compose.SlideAsync(open: true, distance);
             CoverInbox();
             compose.OnOpened();
@@ -1053,7 +1054,44 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         await Task.Delay(60);
         Shell.SetTabBarIsVisible(this, true);
         NativeTabBar.Show();
+        await ReapplyInsetsAfterTabBarAsync();
     }
+
+    // MAUI pads the page for the system navigation bar according to where the page sits on screen when
+    // window insets are dispatched. The dispatch it posts when the tab bar comes back can run before the
+    // page is laid out at its new, shorter size: the page keeps the navigation-bar padding, which shows as
+    // an empty (green) strip above the tab bar covering the last rows. Dispatch again once that layout
+    // is done, and once more after a closing keyboard, whose animation holds dispatches back.
+    private async Task ReapplyInsetsAfterTabBarAsync()
+    {
+#if ANDROID
+        if (Handler?.PlatformView is not Android.Views.View page)
+            return;
+
+        if (page.ViewTreeObserver is { IsAlive: true } observer)
+            observer.AddOnGlobalLayoutListener(new InsetsAfterLayout(page));
+
+        await Task.Delay(400);
+        if (page.IsAttachedToWindow)
+            AndroidX.Core.View.ViewCompat.RequestApplyInsets(page);
+#else
+        await Task.CompletedTask;
+#endif
+    }
+
+#if ANDROID
+    private sealed class InsetsAfterLayout(Android.Views.View view) : Java.Lang.Object, Android.Views.ViewTreeObserver.IOnGlobalLayoutListener
+    {
+        public void OnGlobalLayout()
+        {
+            if (view.ViewTreeObserver is { IsAlive: true } observer)
+                observer.RemoveOnGlobalLayoutListener(this);
+
+            if (view.IsAttachedToWindow)
+                AndroidX.Core.View.ViewCompat.RequestApplyInsets(view);
+        }
+    }
+#endif
 
     private const int RecentSuggestionCount = 5;
 
@@ -1261,7 +1299,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             var width = PageWidth;
             var targetProgress = open ? 1.0 : 0.0;
             var remainingDp = Math.Abs(targetProgress - fromProgress) * width;
-            var duration = (uint)Math.Clamp(remainingDp / Math.Max(velocity, 900) * 1000, 140, 300);
+            var duration = (uint)Math.Clamp(remainingDp / Math.Max(velocity, 1100) * 1000, 110, 220);
 
             if (!open)
                 ArchiveOverlay.InputTransparent = true;

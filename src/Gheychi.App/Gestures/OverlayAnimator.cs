@@ -12,6 +12,12 @@ public static class OverlayAnimator
     /// <summary>Distance that keeps a parked overlay far outside the screen on any device.</summary>
     public const double ParkedDistance = 3000;
 
+    public const uint OpenDuration = 200;
+    public const uint CloseDuration = 160;
+
+    /// <summary>Lets the tab bar change before an open be laid out (one frame) so it is not part of the slide.</summary>
+    public static Task SettleAsync() => Task.Delay(16);
+
     public static async Task SlideYAsync(VisualElement overlay, double fromDp, double toDp, uint duration, bool decelerate)
     {
         var animated = false;
