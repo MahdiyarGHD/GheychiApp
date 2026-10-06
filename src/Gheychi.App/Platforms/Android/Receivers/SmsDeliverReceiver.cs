@@ -58,7 +58,7 @@ public class SmsDeliverReceiver : BroadcastReceiver
     }
 
     // Runs on the main thread: a subscriber exception here would kill the app.
-    private static void RaiseSmsReceived(long threadId)
+    internal static void RaiseSmsReceived(long threadId)
     {
         try
         {

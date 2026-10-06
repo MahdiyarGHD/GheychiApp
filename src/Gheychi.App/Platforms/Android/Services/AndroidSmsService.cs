@@ -1148,6 +1148,20 @@ public sealed class AndroidSmsService : ISmsService
         SmsSendTracker.RaiseOutgoingUpdated(rowId, ok);
     }
 
+    public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId)
+    {
+        var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+        var millis = new DateTimeOffset(timestamp).ToUnixTimeMilliseconds();
+        var threadId = await Task.Run(() => IncomingSmsHandler.Store(context, address, body, millis, subId, read: true));
+        if (threadId > 0)
+        {
+            InvalidateSearchCaches();
+            MainThread.BeginInvokeOnMainThread(() => Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.RaiseSmsReceived(threadId));
+        }
+
+        return threadId;
+    }
+
     /// <summary>A delivery report confirmed the message reached the phone.</summary>
     internal static void MarkDelivered(Context context, long rowId)
     {

@@ -15,6 +15,8 @@ public partial class ProfileView : ContentView
     private readonly ISmsService? _sms;
     private readonly IThreadSettings? _settings;
     private readonly IDateFormattingService _dates;
+    private readonly SpamViewModel? _spam;
+    private IReadOnlyList<SpamItem> _spamItems = [];
 
     private ThreadItem _thread = ThreadItem.Empty;
     private ThreadProfileActions _actions = ThreadProfileActions.For(null);
@@ -33,11 +35,14 @@ public partial class ProfileView : ContentView
         _sms = services?.GetService<ISmsService>();
         _settings = services?.GetService<IThreadSettings>();
         _dates = services?.GetService<IDateFormattingService>() ?? new DateFormattingService();
+        _spam = services?.GetService<SpamViewModel>();
+        if (_spam is not null)
+            _spam.Changed += UpdateSpam;
 
         // The chevrons point along the reading direction.
         if (CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft)
         {
-            foreach (var chevron in new[] { LinksChevron, NotificationsChevron, ArchiveChevron })
+            foreach (var chevron in new[] { LinksChevron, NotificationsChevron, ArchiveChevron, SpamMessagesChevron })
                 chevron.Rotation = 180;
         }
     }
@@ -64,6 +69,7 @@ public partial class ProfileView : ContentView
 
         ProfilePage.IsVisible = true;
         LinksPage.IsVisible = false;
+        SpamListPage.IsVisible = false;
 
         BindIdentity();
         ApplyActions();
@@ -71,6 +77,9 @@ public partial class ProfileView : ContentView
         BindArchive();
         UpdateSnooze();
         UpdateNotificationState();
+        UpdateSpam();
+        if (_spam is not null)
+            _ = _spam.EnsureLoadedAsync();
 
         SimPill.IsVisible = SimRow.IsVisible = false;
         LinksHint.Text = LocalizationManager.Instance["Profile_LinksReading"];
@@ -95,6 +104,8 @@ public partial class ProfileView : ContentView
         _bindVersion++;
         _links = [];
         LinksList.ItemsSource = null;
+        _spamItems = [];
+        SpamList.ItemsSource = null;
         if (_window is not null)
         {
             _window.Activated -= OnWindowActivated;
@@ -105,6 +116,12 @@ public partial class ProfileView : ContentView
     // Returns true when it consumed the back press.
     public bool HandleBack()
     {
+        if (SpamListPage.IsVisible)
+        {
+            SpamListPage.IsVisible = false;
+            return true;
+        }
+
         if (!LinksPage.IsVisible)
             return false;
 
@@ -331,6 +348,64 @@ public partial class ProfileView : ContentView
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Opening a link failed: {ex}");
+        }
+    }
+
+    // ---- Spam ----------------------------------------------------------------------------------
+
+    // The profile shows a contact by name; a number or sender id is shown as itself.
+    private bool IsContact =>
+        _thread != ThreadItem.Empty && !string.Equals(_thread.Name, _thread.Phone, StringComparison.Ordinal);
+
+    private void UpdateSpam()
+    {
+        if (_spam is null || _thread == ThreadItem.Empty)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        var isContact = IsContact;
+        SpamImmuneSwitch.IsToggled = isContact || _spam.IsTrusted(_sendAddress);
+        SpamImmuneSwitch.IsEnabled = !isContact;
+        SpamImmuneHint.Text = isContact ? loc["Profile_SpamImmuneContact"] : loc["Profile_SpamImmuneHint"];
+
+        _spamItems = _spam.ForSender(_sendAddress);
+        SpamMessagesRow.IsVisible = _spamItems.Count > 0;
+        SpamMessagesHint.Text = string.Format(loc["Profile_SpamMessagesHint"], _spamItems.Count);
+
+        if (SpamListPage.IsVisible)
+        {
+            SpamList.ItemsSource = _spamItems;
+            SpamListPage.IsVisible = _spamItems.Count > 0;
+        }
+    }
+
+    private void OnSpamImmuneTapped(object? sender, TappedEventArgs e)
+    {
+        if (_spam is null || IsContact)
+            return;
+
+        _spam.SetTrusted(_sendAddress, !_spam.IsTrusted(_sendAddress));
+        UpdateSpam();
+    }
+
+    private void OnSpamMessagesTapped(object? sender, TappedEventArgs e)
+    {
+        SpamList.ItemsSource = _spamItems;
+        SpamListPage.IsVisible = true;
+    }
+
+    private void OnSpamListBackTapped(object? sender, TappedEventArgs e) => SpamListPage.IsVisible = false;
+
+    private async void OnSpamMoreTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            if ((sender as Element)?.BindingContext is SpamItem item && _spam is not null)
+                await SpamMenu.ShowAsync(item, _spam);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Spam menu failed: {ex}");
         }
     }
 

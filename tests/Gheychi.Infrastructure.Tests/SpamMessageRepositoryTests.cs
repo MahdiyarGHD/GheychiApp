@@ -37,4 +37,24 @@ public sealed class SpamMessageRepositoryTests : IDisposable
         Assert.Equal(["newer", "older"], all.Select(m => m.Body));
         Assert.Equal(new SpamMessage(olderId, "+989121234567", "older", older, 2, 0.9f, 1), all[1]);
     }
+
+    [Fact]
+    public async Task DeleteMethods_RemoveTheRightRows()
+    {
+        var repository = new SpamMessageRepository(_dbPath);
+        var now = new DateTime(2026, 10, 6, 12, 0, 0, DateTimeKind.Local);
+
+        var oldId = await repository.AddAsync(new SpamMessage(0, "a", "old", now.AddDays(-31), 0, 0.9f, 1));
+        var keepId = await repository.AddAsync(new SpamMessage(0, "b", "keep", now.AddDays(-1), 0, 0.9f, 1));
+        var deleteId = await repository.AddAsync(new SpamMessage(0, "c", "delete", now, 0, 0.9f, 1));
+
+        await repository.DeleteOlderThanAsync(now.AddDays(-30));
+        await repository.DeleteAsync([deleteId]);
+
+        Assert.Equal([keepId], (await repository.GetAllAsync()).Select(m => m.Id));
+        Assert.NotEqual(0, oldId);
+
+        await repository.DeleteAllAsync();
+        Assert.Empty(await repository.GetAllAsync());
+    }
 }

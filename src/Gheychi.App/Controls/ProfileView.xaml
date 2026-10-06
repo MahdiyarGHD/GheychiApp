@@ -374,6 +374,55 @@
                                         VerticalOptions="Center"
                                         OnColor="#2E6B4C" />
                             </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+
+                            <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnSpamImmuneTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
+                                    <Image Source="shield.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{loc:Translate Profile_SpamImmune}" Style="{StaticResource RowTitle}" />
+                                    <Label x:Name="SpamImmuneHint" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <!-- Display only, like the snooze switch: the row is the control -->
+                                <Switch x:Name="SpamImmuneSwitch"
+                                        Grid.Column="2"
+                                        InputTransparent="True"
+                                        VerticalOptions="Center"
+                                        OnColor="#2E6B4C" />
+                            </Grid>
+
+                            <VerticalStackLayout x:Name="SpamMessagesRow" IsVisible="False">
+                                <BoxView Style="{StaticResource Divider}" />
+                                <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnSpamMessagesTapped" />
+                                    </Grid.GestureRecognizers>
+                                    <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
+                                        <Image Source="spamrow.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                            <Image.Behaviors>
+                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                            </Image.Behaviors>
+                                        </Image>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{loc:Translate Profile_SpamMessages}" Style="{StaticResource RowTitle}" />
+                                        <Label x:Name="SpamMessagesHint" Style="{StaticResource RowSubtitle}" />
+                                    </VerticalStackLayout>
+                                    <Image x:Name="SpamMessagesChevron" Grid.Column="2" Source="chevron_right.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Grid>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>
 
@@ -487,6 +536,95 @@
                        HorizontalOptions="Center"
                        VerticalOptions="Center" />
             </Grid>
+        </Grid>
+
+        <!-- ===================== Spam messages ===================== -->
+        <Grid x:Name="SpamListPage"
+              IsVisible="False"
+              RowDefinitions="Auto,*"
+              BackgroundColor="{AppThemeBinding Light=#F7FAF4, Dark=#121413}">
+            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Border Grid.Column="0"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20"
+                        BackgroundColor="Transparent"
+                        VerticalOptions="Center"
+                        SemanticProperties.Description="{loc:Translate Chat_Back}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSpamListBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                        </Image.Behaviors>
+                    </Image>
+                </Border>
+                <Label Grid.Column="1"
+                       Text="{loc:Translate Profile_SpamMessages}"
+                       FontSize="20"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}"
+                       VerticalOptions="Center" />
+            </Grid>
+
+            <CollectionView x:Name="SpamList"
+                            Grid.Row="1"
+                            Margin="16,0,8,0"
+                            SelectionMode="None"
+                            VerticalScrollBarVisibility="Never">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SpamItem">
+                        <Grid Padding="0,12" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">
+                            <Label Grid.Row="0"
+                                   Grid.Column="0"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Confidence}"
+                                              FontSize="13"
+                                              FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                              TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                        <Span Text="  ·  "
+                                              FontSize="13"
+                                              TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                        <Span Text="{Binding Time}"
+                                              FontSize="13"
+                                              TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Grid.Row="1"
+                                   Grid.Column="0"
+                                   Text="{Binding Preview}"
+                                   FontSize="15"
+                                   TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="3" />
+                            <Border Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Grid.Column="1"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 20"
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnSpamMoreTapped" />
+                                </Border.GestureRecognizers>
+                                <Image Source="more.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
         </Grid>
     </Grid>
 </ContentView>

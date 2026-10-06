@@ -8,4 +8,10 @@ public interface ISpamMessageRepository
 
     /// <summary>Newest first.</summary>
     Task<IReadOnlyList<SpamMessage>> GetAllAsync();
+
+    Task DeleteAsync(IEnumerable<long> ids);
+
+    Task DeleteAllAsync();
+
+    Task DeleteOlderThanAsync(DateTime cutoff);
 }

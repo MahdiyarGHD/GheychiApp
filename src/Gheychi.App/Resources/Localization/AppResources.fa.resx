@@ -28,7 +28,7 @@
     <value>هرزنامه و مسدودشده‌ها</value>
   </data>
   <data name="Spam_Subtitle" xml:space="preserve">
-    <value>جداسازی روی دستگاه · پاک‌سازی خودکار در ۳۰ روز</value>
+    <value>جداسازی روی دستگاه · پاک‌سازی خودکار پس از {0} روز</value>
   </data>
   <data name="Spam_ClearAll" xml:space="preserve">
     <value>پاک کردن همه</value>
@@ -497,5 +497,64 @@
   </data>
   <data name="Chat_Search" xml:space="preserve">
     <value>جستجو</value>
+  </data>
+  <data name="Spam_VeryLikely" xml:space="preserve">
+    <value>به احتمال زیاد هرزنامه</value>
+  </data>
+  <data name="Spam_Likely" xml:space="preserve">
+    <value>احتمالاً هرزنامه</value>
+  </data>
+  <data name="Spam_SearchHint" xml:space="preserve">
+    <value>جستجو در هرزنامه‌ها</value>
+  </data>
+  <data name="Spam_ActionRestore" xml:space="preserve">
+    <value>بازگرداندن به صندوق</value>
+  </data>
+  <data name="Spam_ActionRestoreTrust" xml:space="preserve">
+    <value>بازگرداندن و ایمن کردن فرستنده</value>
+  </data>
+  <data name="Spam_ActionInfo" xml:space="preserve">
+    <value>اطلاعات</value>
+  </data>
+  <data name="Spam_ActionDelete" xml:space="preserve">
+    <value>پاک کردن</value>
+  </data>
+  <data name="Spam_InfoTitle" xml:space="preserve">
+    <value>چرا هرزنامه است</value>
+  </data>
+  <data name="Spam_InfoBody" xml:space="preserve">
+    <value>{0}٪ اطمینان — {1}.
+پیام‌هایی با امتیاز {2}٪ یا بیشتر هرزنامه حساب می‌شوند.
+
+مدل تشخیص: نسخه {3}
+فرستنده: {4}
+دریافت: {5}</value>
+  </data>
+  <data name="Spam_ClearAllTitle" xml:space="preserve">
+    <value>همه هرزنامه‌ها پاک شوند؟</value>
+  </data>
+  <data name="Spam_ClearAllMessage" xml:space="preserve">
+    <value>همه پیام‌های جداشده حذف می‌شوند. این کار قابل بازگشت نیست.</value>
+  </data>
+  <data name="Spam_RestoreFailed" xml:space="preserve">
+    <value>بازگرداندن پیام ممکن نشد.</value>
+  </data>
+  <data name="Spam_Ok" xml:space="preserve">
+    <value>باشه</value>
+  </data>
+  <data name="Profile_SpamMessages" xml:space="preserve">
+    <value>پیام‌های هرزنامه</value>
+  </data>
+  <data name="Profile_SpamMessagesHint" xml:space="preserve">
+    <value>{0} پیام از این گفتگو پنهان شده</value>
+  </data>
+  <data name="Profile_SpamImmune" xml:space="preserve">
+    <value>هرگز هرزنامه نشود</value>
+  </data>
+  <data name="Profile_SpamImmuneHint" xml:space="preserve">
+    <value>پیام‌های این فرستنده بررسی نمی‌شوند</value>
+  </data>
+  <data name="Profile_SpamImmuneContact" xml:space="preserve">
+    <value>مخاطبان ذخیره‌شده بررسی نمی‌شوند</value>
   </data>
 </root>

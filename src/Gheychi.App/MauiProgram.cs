@@ -34,6 +34,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISmsService, AndroidSmsService>();
 
         builder.Services.AddSingleton<ISpamSettings, Services.PreferencesSpamSettings>();
+        builder.Services.AddSingleton<ITrustedSenders, Services.PreferencesTrustedSenders>();
         builder.Services.AddSingleton<ISpamMessageRepository>(_ => new SpamMessageRepository(databasePath));
         builder.Services.AddSingleton(_ => new SpamModelStore(
             Path.Combine(FileSystem.AppDataDirectory, "spam-model"),

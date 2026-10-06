@@ -28,7 +28,7 @@
     <value>Spam &amp; Blocked</value>
   </data>
   <data name="Spam_Subtitle" xml:space="preserve">
-    <value>Isolated on-device · Auto-cleared in 30 days</value>
+    <value>Isolated on-device · Auto-cleared in {0} days</value>
   </data>
   <data name="Spam_ClearAll" xml:space="preserve">
     <value>Clear all</value>
@@ -497,5 +497,64 @@
   </data>
   <data name="Chat_Search" xml:space="preserve">
     <value>Search</value>
+  </data>
+  <data name="Spam_VeryLikely" xml:space="preserve">
+    <value>Very likely spam</value>
+  </data>
+  <data name="Spam_Likely" xml:space="preserve">
+    <value>Likely spam</value>
+  </data>
+  <data name="Spam_SearchHint" xml:space="preserve">
+    <value>Search spam</value>
+  </data>
+  <data name="Spam_ActionRestore" xml:space="preserve">
+    <value>Restore to inbox</value>
+  </data>
+  <data name="Spam_ActionRestoreTrust" xml:space="preserve">
+    <value>Restore &amp; never mark as spam</value>
+  </data>
+  <data name="Spam_ActionInfo" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Spam_ActionDelete" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Spam_InfoTitle" xml:space="preserve">
+    <value>Why this is spam</value>
+  </data>
+  <data name="Spam_InfoBody" xml:space="preserve">
+    <value>{0}% sure — {1}.
+Messages scoring {2}% or more are treated as spam.
+
+Spam model: v{3}
+From: {4}
+Received: {5}</value>
+  </data>
+  <data name="Spam_ClearAllTitle" xml:space="preserve">
+    <value>Clear all spam?</value>
+  </data>
+  <data name="Spam_ClearAllMessage" xml:space="preserve">
+    <value>All quarantined messages will be deleted. This cannot be undone.</value>
+  </data>
+  <data name="Spam_RestoreFailed" xml:space="preserve">
+    <value>Could not restore the message.</value>
+  </data>
+  <data name="Spam_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Profile_SpamMessages" xml:space="preserve">
+    <value>Spam messages</value>
+  </data>
+  <data name="Profile_SpamMessagesHint" xml:space="preserve">
+    <value>{0} hidden from this chat</value>
+  </data>
+  <data name="Profile_SpamImmune" xml:space="preserve">
+    <value>Never mark as spam</value>
+  </data>
+  <data name="Profile_SpamImmuneHint" xml:space="preserve">
+    <value>Messages from this sender skip the spam check</value>
+  </data>
+  <data name="Profile_SpamImmuneContact" xml:space="preserve">
+    <value>Saved contacts are never checked</value>
   </data>
 </root>

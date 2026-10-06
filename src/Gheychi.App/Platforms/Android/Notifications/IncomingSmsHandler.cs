@@ -57,7 +57,7 @@ internal static class IncomingSmsHandler
                 return null;
 
             var fromContact = ConversationReader.ReadContactName(context, address) is not null;
-            var detection = detector.DetectAsync(body, fromContact);
+            var detection = detector.DetectAsync(address, body, fromContact);
 
             // Android kills the process when the receiver overruns its time, and an SMS not stored by then is lost.
             // When the model is still loading (first message after a cold start) the message goes to the inbox
@@ -84,13 +84,13 @@ internal static class IncomingSmsHandler
     }
 
     /// <summary>Writes the message to the inbox and returns its thread id, or 0 when it could not be stored.</summary>
-    private static long Store(Context context, string address, string body, long timestampMillis, int subId)
+    internal static long Store(Context context, string address, string body, long timestampMillis, int subId, bool read = false)
     {
         var values = new ContentValues();
         values.Put(Telephony.Sms.InterfaceConsts.Address, address);
         values.Put(Telephony.Sms.InterfaceConsts.Body, body);
         values.Put(Telephony.Sms.InterfaceConsts.Date, timestampMillis);
-        values.Put(Telephony.Sms.InterfaceConsts.Read, 0);
+        values.Put(Telephony.Sms.InterfaceConsts.Read, read ? 1 : 0);
         values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Inbox);
 
         // Without sub_id the message is stored with no SIM, and replying/reacting to it later

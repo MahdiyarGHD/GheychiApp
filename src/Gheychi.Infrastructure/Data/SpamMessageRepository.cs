@@ -80,6 +80,50 @@ public sealed class SpamMessageRepository : ISpamMessageRepository
         }
     }
 
+    public async Task DeleteAsync(IEnumerable<long> ids)
+    {
+        try
+        {
+            await EnsureInitializedAsync();
+            foreach (var chunk in ids.Distinct().Chunk(400))
+            {
+                var placeholders = string.Join(",", chunk.Select(_ => "?"));
+                await _db.ExecuteAsync($"DELETE FROM SpamMessage WHERE Id IN ({placeholders})", chunk.Cast<object>().ToArray());
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Deleting spam failed: {ex}");
+        }
+    }
+
+    public async Task DeleteAllAsync()
+    {
+        try
+        {
+            await EnsureInitializedAsync();
+            await _db.DeleteAllAsync<SpamMessageEntity>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Deleting spam failed: {ex}");
+        }
+    }
+
+    public async Task DeleteOlderThanAsync(DateTime cutoff)
+    {
+        try
+        {
+            await EnsureInitializedAsync();
+            var cutoffMillis = new DateTimeOffset(cutoff).ToUnixTimeMilliseconds();
+            await _db.ExecuteAsync("DELETE FROM SpamMessage WHERE TimestampMillis < ?", cutoffMillis);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Deleting old spam failed: {ex}");
+        }
+    }
+
     private static SpamMessage MapToDomain(SpamMessageEntity entity) =>
         new(
             entity.Id,
