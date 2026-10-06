@@ -23,7 +23,9 @@ public sealed class SpamModelStore
     /// <summary>The newest model that loads, or null when there is none.</summary>
     public async Task<SpamModel?> LoadActiveAsync(CancellationToken cancellationToken = default)
     {
-        await InstallBundledIfNewerAsync(cancellationToken);
+        var bundled = await InstallBundledIfNewerAsync(cancellationToken);
+        if (bundled is not null)
+            return bundled;
 
         foreach (var version in InstalledVersions())
         {
@@ -88,7 +90,8 @@ public sealed class SpamModelStore
             TryDelete(staging);
     }
 
-    private async Task InstallBundledIfNewerAsync(CancellationToken cancellationToken)
+    /// <summary>The bundled model, already loaded, when it was just installed; null when an installed one is as new.</summary>
+    private async Task<SpamModel?> InstallBundledIfNewerAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -98,15 +101,16 @@ public sealed class SpamModelStore
 
             var newest = InstalledVersions().DefaultIfEmpty(0).First();
             if (bundled.Version <= newest)
-                return;
+                return null;
 
             await using var manifest = await _openBundledFile(SpamModelManifest.FileName);
             await using var model = await _openBundledFile(bundled.ModelFile);
-            await InstallAsync(manifest, model, newest, cancellationToken);
+            return await InstallAsync(manifest, model, newest, cancellationToken);
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException)
         {
             System.Diagnostics.Debug.WriteLine($"Bundled spam model unavailable: {ex}");
+            return null;
         }
     }
 

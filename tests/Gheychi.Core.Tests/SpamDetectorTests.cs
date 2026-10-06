@@ -14,6 +14,8 @@ public sealed class SpamDetectorTests
             Calls++;
             return Task.FromResult(score);
         }
+
+        public Task WarmUpAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class FakeSettings(float threshold) : ISpamSettings

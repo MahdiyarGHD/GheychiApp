@@ -223,6 +223,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             await Task.Delay(1500);
             await WaitForQuietAsync();
             Vm?.EnableChatPreload();
+
+            await Task.Delay(1500);
+            await WaitForQuietAsync();
+            if (IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Spam.ISpamClassifier>() is { } spamClassifier)
+                await Task.Run(() => spamClassifier.WarmUpAsync());
         }
         catch
         {

@@ -9,6 +9,8 @@ namespace Gheychi.App.Platforms.Android.Notifications;
 /// <summary>What happens to a received SMS: quarantine it if it is spam; otherwise store it, tell the open screens, then notify if the rules allow.</summary>
 internal static class IncomingSmsHandler
 {
+    private static readonly TimeSpan SpamCheckBudget = TimeSpan.FromSeconds(4);
+
     public static async Task HandleAsync(Context context, string address, string body, long timestampMillis, int subId,
         Action<long> raiseReceived, Action<SpamMessage> raiseSpamReceived)
     {
@@ -55,8 +57,18 @@ internal static class IncomingSmsHandler
                 return null;
 
             var fromContact = ConversationReader.ReadContactName(context, address) is not null;
-            var score = await detector.DetectAsync(body, fromContact);
-            if (score is not { } s)
+            var detection = detector.DetectAsync(body, fromContact);
+
+            // Android kills the process when the receiver overruns its time, and an SMS not stored by then is lost.
+            // When the model is still loading (first message after a cold start) the message goes to the inbox
+            // instead; the load carries on, so the next message is checked.
+            if (await Task.WhenAny(detection, Task.Delay(SpamCheckBudget)) != detection)
+            {
+                System.Diagnostics.Debug.WriteLine("Spam check overran its budget; the message goes to the inbox.");
+                return null;
+            }
+
+            if (await detection is not { } s)
                 return null;
 
             var message = new SpamMessage(0, address, body,

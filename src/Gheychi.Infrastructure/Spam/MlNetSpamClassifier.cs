@@ -31,6 +31,8 @@ public sealed class MlNetSpamClassifier : ISpamClassifier, ISpamModelUpdater
         }
     }
 
+    public Task WarmUpAsync(CancellationToken cancellationToken = default) => GetModelAsync(cancellationToken);
+
     public async Task<int?> GetActiveVersionAsync(CancellationToken cancellationToken = default) =>
         (await GetModelAsync(cancellationToken))?.Version;
 
@@ -78,7 +80,9 @@ public sealed class MlNetSpamClassifier : ISpamClassifier, ISpamModelUpdater
         if (_model is null && !_loadAttempted)
         {
             _loadAttempted = true;
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             Volatile.Write(ref _model, await _store.LoadActiveAsync(cancellationToken));
+            System.Diagnostics.Debug.WriteLine($"Spam model {_model?.Version.ToString() ?? "none"} loaded in {watch.ElapsedMilliseconds} ms");
         }
 
         return _model;
