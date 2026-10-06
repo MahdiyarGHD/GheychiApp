@@ -23,7 +23,7 @@
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnSearchBarTapped" />
                 </Border.GestureRecognizers>
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                     <Image Grid.Column="0"
                            Source="search.png"
                            WidthRequest="20"
@@ -39,29 +39,6 @@
                            FontSize="13"
                            LineBreakMode="TailTruncation"
                            VerticalOptions="Center" />
-                    <Image Grid.Column="2"
-                           Source="tabspam.png"
-                           WidthRequest="20"
-                           HeightRequest="20"
-                           VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#6B7280, Dark=#9AA0AB}" />
-                        </Image.Behaviors>
-                    </Image>
-                    <Border Grid.Column="3"
-                           WidthRequest="32"
-                           HeightRequest="32"
-                           StrokeThickness="0"
-                           StrokeShape="RoundRectangle 16"
-                           BackgroundColor="{AppThemeBinding Light=#DDE3EA, Dark=#2A2E35}">
-                        <Image Source="person.png"
-                               WidthRequest="16"
-                               HeightRequest="16">
-                            <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
-                            </Image.Behaviors>
-                        </Image>
-                    </Border>
                 </Grid>
             </Border>
 
