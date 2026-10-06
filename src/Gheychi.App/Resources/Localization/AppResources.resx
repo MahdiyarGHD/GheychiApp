@@ -586,10 +586,10 @@
     <value>Your SMS inbox without the noise. Spam is caught and set aside right here, on your phone.</value>
   </data>
   <data name="Settings_Default" xml:space="preserve">
-    <value>Default SMS app</value>
+    <value>Default</value>
   </data>
   <data name="Settings_NotDefault" xml:space="preserve">
-    <value>Not default SMS app</value>
+    <value>Not default</value>
   </data>
   <data name="Settings_TileModel" xml:space="preserve">
     <value>Spam model</value>
@@ -768,9 +768,6 @@
   <data name="Settings_SectionLanguage" xml:space="preserve">
     <value>Language</value>
   </data>
-  <data name="Settings_LanguageHint" xml:space="preserve">
-    <value>The app restarts to apply a new language.</value>
-  </data>
   <data name="Settings_PrivacyCardTitle" xml:space="preserve">
     <value>Everything stays on this phone</value>
   </data>
@@ -808,16 +805,16 @@
     <value>Libraries this app is built on</value>
   </data>
   <data name="Settings_NotificationsOn" xml:space="preserve">
-    <value>Notifications on</value>
+    <value>On</value>
   </data>
   <data name="Settings_NotificationsOff" xml:space="preserve">
-    <value>Notifications off</value>
+    <value>Off</value>
   </data>
   <data name="Settings_ContactsOn" xml:space="preserve">
-    <value>Contacts allowed</value>
+    <value>Allowed</value>
   </data>
   <data name="Settings_ContactsOff" xml:space="preserve">
-    <value>No contacts access</value>
+    <value>Blocked</value>
   </data>
   <data name="Settings_SpamFilterOffHint" xml:space="preserve">
     <value>Off: every message goes to the inbox</value>
@@ -896,5 +893,20 @@
   </data>
   <data name="Messages_NotDefaultAction" xml:space="preserve">
     <value>Set as default</value>
+  </data>
+  <data name="Settings_ChipSms" xml:space="preserve">
+    <value>SMS app</value>
+  </data>
+  <data name="Settings_ChipNotifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Settings_ChipContacts" xml:space="preserve">
+    <value>Contacts</value>
+  </data>
+  <data name="Settings_RestartThemeMessage" xml:space="preserve">
+    <value>The new theme is applied after the app restarts.</value>
+  </data>
+  <data name="Settings_RestartHint" xml:space="preserve">
+    <value>The app restarts to apply a new theme or language.</value>
   </data>
 </root>

@@ -586,10 +586,10 @@
     <value>صندوق پیامک شما، بدون شلوغی. هرزنامه همین‌جا روی گوشی شما شناسایی و کنار گذاشته می‌شود.</value>
   </data>
   <data name="Settings_Default" xml:space="preserve">
-    <value>برنامه پیش‌فرض پیامک</value>
+    <value>پیش‌فرض</value>
   </data>
   <data name="Settings_NotDefault" xml:space="preserve">
-    <value>برنامه پیش‌فرض پیامک نیست</value>
+    <value>پیش‌فرض نیست</value>
   </data>
   <data name="Settings_TileModel" xml:space="preserve">
     <value>مدل هرزنامه</value>
@@ -768,9 +768,6 @@
   <data name="Settings_SectionLanguage" xml:space="preserve">
     <value>زبان</value>
   </data>
-  <data name="Settings_LanguageHint" xml:space="preserve">
-    <value>برای اعمال زبان جدید، برنامه دوباره اجرا می‌شود.</value>
-  </data>
   <data name="Settings_PrivacyCardTitle" xml:space="preserve">
     <value>همه‌چیز روی همین گوشی می‌ماند</value>
   </data>
@@ -808,16 +805,16 @@
     <value>کتابخانه‌های به‌کاررفته در برنامه</value>
   </data>
   <data name="Settings_NotificationsOn" xml:space="preserve">
-    <value>اعلان‌ها روشن</value>
+    <value>روشن</value>
   </data>
   <data name="Settings_NotificationsOff" xml:space="preserve">
-    <value>اعلان‌ها خاموش</value>
+    <value>خاموش</value>
   </data>
   <data name="Settings_ContactsOn" xml:space="preserve">
-    <value>دسترسی به مخاطبان</value>
+    <value>مجاز</value>
   </data>
   <data name="Settings_ContactsOff" xml:space="preserve">
-    <value>بدون دسترسی به مخاطبان</value>
+    <value>بدون دسترسی</value>
   </data>
   <data name="Settings_SpamFilterOffHint" xml:space="preserve">
     <value>خاموش: همه پیام‌ها به صندوق می‌روند</value>
@@ -896,5 +893,20 @@
   </data>
   <data name="Messages_NotDefaultAction" xml:space="preserve">
     <value>تنظیم به عنوان پیش‌فرض</value>
+  </data>
+  <data name="Settings_ChipSms" xml:space="preserve">
+    <value>برنامه پیامک</value>
+  </data>
+  <data name="Settings_ChipNotifications" xml:space="preserve">
+    <value>اعلان‌ها</value>
+  </data>
+  <data name="Settings_ChipContacts" xml:space="preserve">
+    <value>مخاطبان</value>
+  </data>
+  <data name="Settings_RestartThemeMessage" xml:space="preserve">
+    <value>پوسته جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
+  </data>
+  <data name="Settings_RestartHint" xml:space="preserve">
+    <value>برای اعمال پوسته یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
   </data>
 </root>

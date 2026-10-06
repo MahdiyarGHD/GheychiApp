@@ -64,7 +64,7 @@
                 HeightRequest="42"
                 StrokeThickness="0"
                 StrokeShape="RoundRectangle 21"
-                BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}">
+                BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}">
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                 <Image Grid.Column="0" Source="search.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
                     <Image.Behaviors>
@@ -209,7 +209,7 @@
                                        Grid.ColumnSpan="3"
                                        Text="{Binding Preview}"
                                        FontSize="13"
-                                       TextColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}"
+                                       TextColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}"
                                        LineBreakMode="TailTruncation"
                                        MaxLines="2" />
                             </Grid>

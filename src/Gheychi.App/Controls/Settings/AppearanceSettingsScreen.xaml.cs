@@ -24,15 +24,26 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         SettingsUi.Select(Resources, _languages.Select(l => l.Segment), _languages.FirstOrDefault(l => l.Language == language).Segment);
     }
 
-    private void OnThemeTapped(object? sender, TappedEventArgs e)
+    // Many colors are picked when a screen is built, so a theme is applied by restarting rather than live.
+    private async void OnThemeTapped(object? sender, TappedEventArgs e)
     {
-        var choice = _themes.FirstOrDefault(t => t.Segment == sender);
-        if (choice.Segment is null || Application.Current is not { } app)
-            return;
+        try
+        {
+            var choice = _themes.FirstOrDefault(t => t.Segment == sender);
+            if (choice.Segment is null || choice.Theme == AppPreferences.Theme)
+                return;
 
-        AppPreferences.Theme = choice.Theme;
-        app.UserAppTheme = choice.Theme;
-        OnShown();
+            var loc = LocalizationManager.Instance;
+            if (Confirm is null || !await Confirm(loc["Settings_RestartTitle"], loc["Settings_RestartThemeMessage"], loc["Settings_Restart"]))
+                return;
+
+            AppPreferences.Theme = choice.Theme;
+            AppStatus.Restart();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Changing the theme failed: {ex}");
+        }
     }
 
     private async void OnLanguageTapped(object? sender, TappedEventArgs e)

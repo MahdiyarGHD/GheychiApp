@@ -45,7 +45,7 @@
                                 Stroke="{Binding SearchStroke}"
                                 StrokeThickness="{Binding SearchStrokeThickness}"
                                 StrokeShape="RoundRectangle 16"
-                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                BackgroundColor="{AppThemeBinding Light=#EDF1EB, Dark=#1C1F24}"
                                 HorizontalOptions="Start"
                                 behaviors:MessageHoldBehavior.IsEnabled="True">
                             <Border.GestureRecognizers>
@@ -60,9 +60,9 @@
                         <!-- Attached Reaction Pill -->
                         <Border IsVisible="{Binding HasReaction}"
                                 StrokeThickness="1"
-                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                                 StrokeShape="RoundRectangle 12"
-                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                BackgroundColor="{AppThemeBinding Light=#EDF1EB, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalOptions="End"
@@ -135,7 +135,7 @@
                                 Stroke="{Binding SearchStroke}"
                                 StrokeThickness="{Binding SearchStrokeThickness}"
                                 StrokeShape="RoundRectangle 16"
-                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                BackgroundColor="{AppThemeBinding Light=#EDF1EB, Dark=#1C1F24}"
                                 HorizontalOptions="Start"
                                 behaviors:MessageHoldBehavior.IsEnabled="True">
                             <Border.GestureRecognizers>
@@ -156,9 +156,9 @@
 
                         <Border IsVisible="{Binding HasReaction}"
                                 StrokeThickness="1"
-                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                                 StrokeShape="RoundRectangle 12"
-                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                BackgroundColor="{AppThemeBinding Light=#EDF1EB, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalOptions="End"
@@ -272,9 +272,9 @@
                         <!-- Attached Reaction Pill -->
                         <Border IsVisible="{Binding HasReaction}"
                                 StrokeThickness="1"
-                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                                 StrokeShape="RoundRectangle 12"
-                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                BackgroundColor="{AppThemeBinding Light=#EDF1EB, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalOptions="End"
@@ -389,9 +389,9 @@
 
                         <Border IsVisible="{Binding HasReaction}"
                                 StrokeThickness="1"
-                                Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                                Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                                 StrokeShape="RoundRectangle 12"
-                                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
+                                BackgroundColor="{AppThemeBinding Light=#EDF1EB, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalOptions="End"
@@ -442,7 +442,7 @@
                     Padding="12,4"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 11"
-                    BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                    BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
                     HorizontalOptions="Center">
                 <Label Text="{Binding Text}"
                        FontSize="11"
@@ -585,7 +585,7 @@
                                VerticalOptions="Center"
                                SemanticProperties.Description="{loc:Translate Chat_MoreOptions}">
                             <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                             </Image.Behaviors>
                         </Image>
                     </Grid>
@@ -625,7 +625,7 @@
                                VerticalOptions="Center"
                                SemanticProperties.Description="{loc:Translate Chat_SelectAll}">
                             <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                             </Image.Behaviors>
                         </Image>
                         <Grid.GestureRecognizers>
@@ -640,7 +640,7 @@
                                VerticalOptions="Center"
                                SemanticProperties.Description="{loc:Translate Chat_CopyText}">
                             <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                             </Image.Behaviors>
                         </Image>
                         <Grid.GestureRecognizers>
@@ -655,7 +655,7 @@
                                VerticalOptions="Center"
                                SemanticProperties.Description="{loc:Translate Chat_Star}">
                             <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                             </Image.Behaviors>
                         </Image>
                         <Grid.GestureRecognizers>
@@ -670,7 +670,7 @@
                                VerticalOptions="Center"
                                SemanticProperties.Description="{loc:Translate Chat_ReportSpam}">
                             <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                             </Image.Behaviors>
                         </Image>
                         <Grid.GestureRecognizers>
@@ -724,7 +724,7 @@
                             HeightRequest="40"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 20"
-                            BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                            BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
                             VerticalOptions="Center">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" VerticalOptions="Center">
                             <Entry x:Name="SearchEntry"
@@ -742,7 +742,7 @@
                             <Label Grid.Column="1"
                                    Text="{Binding Search.CounterText}"
                                    FontSize="12"
-                                   TextColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}"
+                                   TextColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}"
                                    VerticalOptions="Center" />
                         </Grid>
                     </Border>
@@ -801,7 +801,7 @@
                         Padding="12,4"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 11"
-                        BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                        BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
                         HorizontalOptions="Center"
                         VerticalOptions="Start"
                         IsVisible="{Binding HasStickyDate}"
@@ -823,7 +823,7 @@
                             HeightRequest="42"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 16"
-                            BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#1C1F24}"
+                            BackgroundColor="{AppThemeBinding Light=#E2E8DF, Dark=#1C1F24}"
                             HorizontalOptions="Start" />
                     <Border Grid.Row="1"
                             WidthRequest="180"
@@ -837,7 +837,7 @@
                             HeightRequest="46"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 16"
-                            BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#1C1F24}"
+                            BackgroundColor="{AppThemeBinding Light=#E2E8DF, Dark=#1C1F24}"
                             HorizontalOptions="Start" />
                     <Border Grid.Row="3"
                             WidthRequest="230"
@@ -851,7 +851,7 @@
                             HeightRequest="38"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 16"
-                            BackgroundColor="{AppThemeBinding Light=#E2E6EE, Dark=#1C1F24}"
+                            BackgroundColor="{AppThemeBinding Light=#E2E8DF, Dark=#1C1F24}"
                             HorizontalOptions="Start" />
                 </Grid>
 
@@ -898,7 +898,7 @@
                         HeightRequest="34"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 17"
-                        BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                        BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
                         VerticalOptions="Center"
                         SemanticProperties.Description="{loc:Translate Chat_Attach}">
                     <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
@@ -908,7 +908,7 @@
                                HorizontalOptions="Center"
                                VerticalOptions="Center">
                             <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                             </Image.Behaviors>
                         </Image>
                     </Grid>
@@ -918,7 +918,7 @@
                         MinimumHeightRequest="36"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 18"
-                        BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
+                        BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
                         VerticalOptions="Center">
                     <Grid VerticalOptions="Center">
                         <Editor Grid.Column="0"
@@ -996,7 +996,7 @@
                     Padding="4"
                     WidthRequest="200"
                     StrokeThickness="1"
-                    Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                    Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                     StrokeShape="RoundRectangle 12"
                     BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                     HorizontalOptions="End"
@@ -1068,7 +1068,7 @@
                     <!-- 1. Floating Quick Reactions Dock -->
                     <Border x:Name="ReactionDock"
                             StrokeThickness="1"
-                            Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                            Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                             StrokeShape="RoundRectangle 24"
                             BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                             Padding="10,6"
@@ -1166,7 +1166,7 @@
                             Margin="4,14,4,0"
                             WidthRequest="260"
                             StrokeThickness="1"
-                            Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                            Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                             StrokeShape="RoundRectangle 18"
                             BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                             HorizontalOptions="Start">
@@ -1218,7 +1218,7 @@
                                   VerticalOptions="Center">
                                 <Image Grid.Column="0" Source="copy.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                                     </Image.Behaviors>
                                 </Image>
                                 <Label Grid.Column="1"
@@ -1243,7 +1243,7 @@
                                        HeightRequest="18"
                                        VerticalOptions="Center">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                                     </Image.Behaviors>
                                 </Image>
                                 <Label Grid.Column="1"
@@ -1257,7 +1257,7 @@
                                 </Grid.GestureRecognizers>
                             </Grid>
 
-                            <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#F1F4FA, Dark=#2A2E35}" Margin="0,3" />
+                            <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#EEF2EC, Dark=#2A2E35}" Margin="0,3" />
 
                             <!-- Select More -->
                             <Grid Padding="10,8"
@@ -1266,7 +1266,7 @@
                                   VerticalOptions="Center">
                                 <Image Grid.Column="0" Source="checklist.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                                     </Image.Behaviors>
                                 </Image>
                                 <Label Grid.Column="1"
@@ -1286,7 +1286,7 @@
                                   VerticalOptions="Center">
                                 <Image Grid.Column="0" Source="info.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                                     </Image.Behaviors>
                                 </Image>
                                 <Label Grid.Column="1"
@@ -1307,7 +1307,7 @@
                                   VerticalOptions="Center">
                                 <Image Grid.Column="0" Source="report.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                                     </Image.Behaviors>
                                 </Image>
                                 <Label Grid.Column="1"
@@ -1320,7 +1320,7 @@
                                 </Grid.GestureRecognizers>
                             </Grid>
 
-                            <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#F1F4FA, Dark=#2A2E35}" Margin="0,3" />
+                            <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#EEF2EC, Dark=#2A2E35}" Margin="0,3" />
 
                             <!-- Delete -->
                             <Grid Padding="10,8"
@@ -1361,7 +1361,7 @@
             </BoxView>
             <Border Margin="24,0,24,0"
                     StrokeThickness="1"
-                    Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                    Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                     StrokeShape="RoundRectangle 24"
                     BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                     VerticalOptions="Center"
@@ -1380,7 +1380,7 @@
                         <Grid Grid.Column="1" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
                             <Image Source="close.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
                                 <Image.Behaviors>
-                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}" />
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
                                 </Image.Behaviors>
                             </Image>
                             <Grid.GestureRecognizers>
@@ -1389,7 +1389,7 @@
                         </Grid>
                     </Grid>
 
-                    <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#F1F4FA, Dark=#2A2E35}" />
+                    <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#EEF2EC, Dark=#2A2E35}" />
 
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">

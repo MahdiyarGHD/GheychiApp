@@ -372,7 +372,7 @@
                     Padding="4"
                     WidthRequest="200"
                     StrokeThickness="1"
-                    Stroke="{AppThemeBinding Light=#E2E6EE, Dark=#2A2E35}"
+                    Stroke="{AppThemeBinding Light=#E2E8DF, Dark=#2A2E35}"
                     StrokeShape="RoundRectangle 12"
                     BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1C1F24}"
                     HorizontalOptions="End"

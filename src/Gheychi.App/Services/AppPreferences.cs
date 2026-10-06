@@ -26,14 +26,19 @@ public static class AppPreferences
 
     public static AppTheme Theme
     {
-        get => (AppTheme)Preferences.Default.Get(ThemeKey, (int)AppTheme.Unspecified);
-        set => Preferences.Default.Set(ThemeKey, (int)value);
+        get => (AppTheme)Committed.GetInt(ThemeKey, (int)AppTheme.Unspecified);
+        set => Committed.Edit()!.PutInt(ThemeKey, (int)value)!.Commit();
     }
 
     /// <summary><see cref="LanguageEnglish"/>, <see cref="LanguagePersian"/>, or empty to follow the phone.</summary>
     public static string Language
     {
-        get => Preferences.Default.Get(LanguageKey, string.Empty);
-        set => Preferences.Default.Set(LanguageKey, value);
+        get => Committed.GetString(LanguageKey, string.Empty) ?? string.Empty;
+        set => Committed.Edit()!.PutString(LanguageKey, value)!.Commit();
     }
+
+    // Theme and language are applied by restarting the app, and Preferences writes to disk in the background:
+    // the restart would end the process before the choice is saved. These are written synchronously instead.
+    private static Android.Content.ISharedPreferences Committed =>
+        Android.App.Application.Context.GetSharedPreferences("gheychi_restart_settings", Android.Content.FileCreationMode.Private)!;
 }

@@ -33,7 +33,7 @@
             <VerticalStackLayout Padding="0,4,0,24">
                 <Border Style="{StaticResource Card}" Padding="16" BackgroundColor="{AppThemeBinding Light=#DDF0E4, Dark=#173527}">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F7F9FF, Dark=#14251B}">
+                        <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F6F8F4, Dark=#14251B}">
                             <Image Source="shield.png" Style="{StaticResource BadgeIcon}">
                                 <Image.Behaviors>
                                     <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />

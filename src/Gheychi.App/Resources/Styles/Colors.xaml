@@ -15,8 +15,8 @@
     <Color x:Key="MintBright">#46F0AD</Color>
 
     <!-- Surfaces -->
-    <Color x:Key="Surface">#F7F9FF</Color>
-    <Color x:Key="SurfaceAlt">#F1F4FA</Color>
+    <Color x:Key="Surface">#F6F8F4</Color>
+    <Color x:Key="SurfaceAlt">#EEF2EC</Color>
     <Color x:Key="Border">#D7DAE0</Color>
     <Color x:Key="DarkBackground">#0A1A11</Color>
     <Color x:Key="DarkSurface">#121316</Color>

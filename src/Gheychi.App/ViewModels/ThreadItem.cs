@@ -9,7 +9,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
     private static readonly Color DangerColor = Color.FromArgb("#D64545");
     private static readonly Color TimeNormalColor = Color.FromArgb("#8A8F98");
     private static readonly Color PreviewDarkColor = Color.FromArgb("#9AA0AB");
-    private static readonly Color PreviewLightColor = Color.FromArgb("#5C6370");
+    private static readonly Color PreviewLightColor = Color.FromArgb("#5E665F");
     private static readonly Color AvatarBgDarkColor = Color.FromArgb("#35423C");
     private static readonly Color AvatarBgLightColor = Color.FromArgb("#E3E9E4");
     private static readonly Color AvatarTextDarkColor = Color.FromArgb("#8FE0BE");

@@ -78,7 +78,7 @@
                     </Border>
                     </Grid>
                 </Border>
-                <Label Text="{loc:Translate Settings_LanguageHint}" Style="{StaticResource Note}" Margin="26,8,26,0" />
+                <Label Text="{loc:Translate Settings_RestartHint}" Style="{StaticResource Note}" Margin="26,8,26,0" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

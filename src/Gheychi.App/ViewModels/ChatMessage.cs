@@ -13,7 +13,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
     private static readonly CornerRadius IncomingCornersRtl = new(18, 18, 4, 18);
 
     private static readonly Color IncomingBgDark = Color.FromArgb("#1C1F24");
-    private static readonly Color IncomingBgLight = Colors.White;
+    private static readonly Color IncomingBgLight = Color.FromArgb("#EDF1EB");
     private static readonly Color TextDark = Color.FromArgb("#E8EAED");
     private static readonly Color TextLight = Color.FromArgb("#1B1E24");
     private static readonly Color TimeColorNormal = Color.FromArgb("#8A8F98");

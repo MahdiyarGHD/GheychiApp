@@ -51,15 +51,15 @@
     </Style>
 
     <Style x:Key="TileCaption" TargetType="Label">
-        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontSize" Value="12" />
         <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-        <Setter Property="LineBreakMode" Value="TailTruncation" />
-        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+        <Setter Property="MaxLines" Value="2" />
     </Style>
 
     <Style x:Key="TileValue" TargetType="Label">
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="16" />
         <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
         <Setter Property="MaxLines" Value="2" />
@@ -185,9 +185,17 @@
     </Style>
 
     <!-- Status chips on the overview: OK or needs attention -->
+    <Style x:Key="ChipTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="MaxLines" Value="1" />
+    </Style>
+
     <Style x:Key="ChipOk" TargetType="Border">
-        <Setter Property="Padding" Value="10,6" />
-        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Padding" Value="10,8" />
         <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="StrokeShape" Value="RoundRectangle 14" />
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#DDF0E4, Dark=#1B3A2B}" />
@@ -198,7 +206,9 @@
     </Style>
 
     <Style x:Key="ChipLabelOk" TargetType="Label">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="MaxLines" Value="1" />
         <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
