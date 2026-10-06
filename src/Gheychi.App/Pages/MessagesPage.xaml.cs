@@ -87,7 +87,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         };
         search.BackRequested += OnCloseSearchRequested;
         search.SearchResultTapped += OnSearchResultTapped;
-        search.ZIndex = OverlayZIndex;
+        search.ZIndex = SearchZIndex;
         RootGrid.Children.Add(search);
         return search;
     }
@@ -141,7 +141,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         if (_animating || !IsChatClosed)
             return;
 
-        OpenChatSafely(thread);
+        _ = OpenChatSafely(thread);
     }
 
     protected override void OnDisappearing()
@@ -210,6 +210,10 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             await Task.Delay(1000);
             await WaitForQuietAsync();
             _ = ArchiveOverlay;
+
+            await Task.Delay(1000);
+            await WaitForQuietAsync();
+            _ = ProfileOverlay;
 
             // Reading chats ahead is background work that would compete with the screens above.
             await Task.Delay(1500);
@@ -294,7 +298,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             }
             else
             {
-                OpenChatSafely(thread);
+                _ = OpenChatSafely(thread);
             }
         }
     }
@@ -310,7 +314,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         }
         else
         {
-            OpenChatSafely(thread);
+            _ = OpenChatSafely(thread);
         }
     }
 
@@ -341,11 +345,11 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         Vm?.ToggleThreadSelection(thread);
     }
 
-    private void OpenChatSafely(ThreadItem thread, string? searchText = null, long focusMessageId = 0)
+    private Task OpenChatSafely(ThreadItem thread, string? searchText = null, long focusMessageId = 0)
     {
         var now = Environment.TickCount64;
         if (thread.ThreadId == _lastTappedThreadId && now - _lastTappedThreadTick < 300)
-            return;
+            return Task.CompletedTask;
 
         _lastTappedThreadTick = now;
         _lastTappedThreadId = thread.ThreadId;
@@ -358,7 +362,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         {
             thread.MarkAsRead();
         }
-        _ = OpenChatAsync(thread, wasUnread, unreadCount, searchText: searchText, focusMessageId: focusMessageId);
+        return OpenChatAsync(thread, wasUnread, unreadCount, searchText: searchText, focusMessageId: focusMessageId);
     }
 
     // Posted, not run inline: it is raised from inside the activity's OnResume, and the open has to
@@ -548,8 +552,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // queries so page 1 + its history prefetch run uncontended.
             ChatViewModel.CancelPreload();
 
-            // Everything that needs the UI thread happens while nothing moves yet.
-            var cacheHit = ChatOverlay.PrepareForTransition(thread);
+            // Only cheap UI work before the slide: the chat is reset to its skeleton and the page is read
+            // on a worker thread meanwhile.
+            var cached = ChatOverlay.PrepareForTransition(thread);
             if (sim is not null)
                 ChatOverlay.Vm?.SelectSim(sim.SlotIndex, sim.SubId);
             var distance = GetFallbackHeight();
@@ -558,32 +563,25 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             ChatPresence.ChatOpened(thread.ThreadId);
             Shell.SetTabBarIsVisible(this, false);
 
-            Task<PreparedChatData?>? fetchTask = null;
-            if (!cacheHit)
-                fetchTask = Task.Run(() => ChatOverlay.FetchMessagesAsync(thread, unreadHint: unreadCount));
+            var fetchTask = cached is not null
+                ? Task.FromResult<PreparedChatData?>(cached)
+                : ChatOverlay.FetchMessagesAsync(thread, unreadHint: unreadCount);
 
-            // The tab bar disappearing and a freshly filled list make the page lay out again; let that
-            // finish (two frames) before the slide starts instead of during it.
-            var slide = Task.CompletedTask;
+            // The tab bar disappearing makes the page lay out again; let that finish (two frames)
+            // before the slide starts instead of during it.
             if (animate)
             {
                 await Task.Delay(30);
-                slide = OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, 260, decelerate: true);
+                await OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, 260, decelerate: true);
             }
 
-            if (fetchTask is not null)
-            {
-                // Show the messages as soon as they are read; the slide is on the render thread and
-                // keeps moving while the list is built.
-                var preparedData = await fetchTask;
-                if (preparedData is not null)
-                    ChatOverlay.ApplyMessages(preparedData);
-            }
-
-            await slide;
-
-            if (cacheHit && ChatOverlay.BindingContext is ChatViewModel cachedVm)
-                ChatOverlay.ScrollToInitialPosition(cachedVm.FirstUnreadIndex);
+            // The list is filled once the chat has arrived. The slide's frames are produced on the UI
+            // thread, so binding the rows before it delayed its start and binding them during it froze it.
+            var preparedData = await fetchTask;
+            if (preparedData is not null)
+                ChatOverlay.ApplyMessages(preparedData);
+            else
+                ChatOverlay.HideSkeleton();
 
             // Last, so the jump to the match is not undone by the chat settling at its bottom.
             if (!string.IsNullOrWhiteSpace(searchText))
@@ -686,6 +684,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
             await Task.Delay(30);
             await OverlayAnimator.SlideYAsync(ProfileOverlay, distance, 0, 260, decelerate: true);
+            ProfileOverlay.OnOpened();
         }
         catch (InvalidOperationException)
         {
@@ -885,12 +884,24 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             };
         }
 
-        await CloseSearchAsync();
+        // The chat slides in over the results instead of waiting for them to slide away first; the
+        // search is parked under it afterwards, so closing the chat still returns to the inbox.
+        SearchOverlay.UnfocusSearchInput();
 
         // A result that matched the message text opens its chat with the same search running, on that message,
         // so the reader sees every other match in context. A result that matched only the name just opens the chat.
         var matchedText = item.MessageId > 0 && !string.IsNullOrWhiteSpace(item.QueryText);
-        OpenChatSafely(thread, matchedText ? item.QueryText : null, matchedText ? item.MessageId : 0);
+        try
+        {
+            await OpenChatSafely(thread, matchedText ? item.QueryText : null, matchedText ? item.MessageId : 0);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open chat from search failed: {ex}");
+        }
+
+        if (!IsSearchClosed && !IsChatClosed)
+            ParkSearchOverlay();
     }
 
     private ComposeView CreateComposeOverlay()
@@ -1086,6 +1097,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
     private const int ArchiveZIndex = 1;
     private const int ComposeZIndex = 2;
+    // Under the chat, so a result opens its chat straight over the results (search and compose are never open together).
+    private const int SearchZIndex = 2;
     private const int OverlayZIndex = 3;
     private const int ProfileZIndex = 4;
     private const double OffscreenDistance = 3000;

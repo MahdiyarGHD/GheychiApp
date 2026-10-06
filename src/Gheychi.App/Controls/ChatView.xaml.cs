@@ -338,11 +338,16 @@ public partial class ChatView : ContentView
 
     public bool SuppressAutoScroll { get; set; }
 
-    public bool PrepareForTransition(ThreadItem thread)
+    /// <summary>
+    /// Resets the chat for <paramref name="thread"/> before it slides in and returns its cached first page, if any.
+    /// Nothing is bound to the list here: filling it is the slow part of opening a chat, and doing it before or
+    /// during the slide (which runs on the UI thread) held the slide back. The caller applies the page after.
+    /// </summary>
+    public PreparedChatData? PrepareForTransition(ThreadItem thread)
     {
-        var cacheHit = PrepareForTransitionCore(thread);
+        var cached = PrepareForTransitionCore(thread);
         AttachLiveUpdates();
-        return cacheHit;
+        return cached;
     }
 
     private void AttachLiveUpdates()
@@ -383,7 +388,7 @@ public partial class ChatView : ContentView
         }
     }
 
-    private bool PrepareForTransitionCore(ThreadItem thread)
+    private PreparedChatData? PrepareForTransitionCore(ThreadItem thread)
     {
         _followTail = true;
         _initialLayoutSettled = false;
@@ -392,51 +397,32 @@ public partial class ChatView : ContentView
         _olderTriggerIndex = OlderTriggerAhead;
         _loadingOlder = false;
         HideScrollToBottomButton();
-        if (Vm is not null)
-        {
-            Vm.ResetForOpen();
-            Vm.SafeDispatcher = SafePrependItems;
-        }
 
-        if (Vm is null)
+        if (Vm is not { } vm)
         {
-            var vm = new ChatViewModel();
-            vm.Thread = thread;
-            vm.SafeDispatcher = SafePrependItems;
+            vm = new ChatViewModel();
             BindingContext = vm;
-            ShowSkeleton();
-            return false;
         }
 
-        if (ChatViewModel.TryGetCached(thread.ThreadId, out var cached) && cached is not null)
-        {
-            HideSkeleton();
-            Vm.Thread = thread;
-            Vm.SafeDispatcher = SafePrependItems;
-            Vm.ApplyMessages(cached, cached.RawCount);
-
-            ScrollToInitialPosition(cached.FirstUnreadIndex);
-            return true;
-        }
-
-        Vm.Thread = thread;
-        Vm.SafeDispatcher = SafePrependItems;
-        Vm.Items.Clear();
-        Vm.Messages.Clear();
-        Vm.StickyDate = string.Empty;
+        vm.ResetForOpen();
+        vm.Thread = thread;
+        vm.SafeDispatcher = SafePrependItems;
+        vm.Items.Clear();
+        vm.Messages.Clear();
+        vm.StickyDate = string.Empty;
         ShowSkeleton();
-        return false;
+
+        return ChatViewModel.TryGetCached(thread.ThreadId, out var cached) ? cached : null;
     }
 
-    public async Task<PreparedChatData?> FetchMessagesAsync(ThreadItem thread, CancellationToken ct = default, int unreadHint = 0)
+    /// <summary>Reads the first page off the UI thread; call from the UI thread.</summary>
+    public Task<PreparedChatData?> FetchMessagesAsync(ThreadItem thread, CancellationToken ct = default, int unreadHint = 0)
     {
-        if (ChatViewModel.TryGetCached(thread.ThreadId, out var cached) && cached is not null)
-            return cached;
+        if (Vm is not { } vm)
+            return Task.FromResult<PreparedChatData?>(null);
 
-        if (Vm is null)
-            return null;
-
-        return await Vm.FetchMessagesAsync(thread, cancellationToken: ct, unreadHint: unreadHint);
+        return Task.Run<PreparedChatData?>(async () =>
+            await vm.FetchMessagesAsync(thread, cancellationToken: ct, unreadHint: unreadHint));
     }
 
     public void ApplyMessages(PreparedChatData data)
@@ -454,8 +440,11 @@ public partial class ChatView : ContentView
 
     public void Bind(ThreadItem thread)
     {
-        if (PrepareForTransition(thread))
+        if (PrepareForTransition(thread) is { } cached)
+        {
+            ApplyMessages(cached);
             return;
+        }
 
         if (Vm is not null)
         {

@@ -77,7 +77,6 @@ public partial class ProfileView : ContentView
         _links = [];
 
         _ = LoadSimsAsync(version);
-        _ = LoadLinksAsync(version);
 
         // Back from the system's notification settings the "Custom" tag may have changed.
         if (_window is null && Window is { } window)
@@ -86,6 +85,9 @@ public partial class ProfileView : ContentView
             window.Activated += OnWindowActivated;
         }
     }
+
+    /// <summary>Called once the page has slid in.</summary>
+    public void OnOpened() => _ = LoadLinksAsync(_bindVersion);
 
     /// <summary>Called once the page is out of sight.</summary>
     public void Reset()
@@ -251,16 +253,21 @@ public partial class ProfileView : ContentView
 
     private IReadOnlyList<LinkResultItem> _links = [];
 
+    // Reads every message of the conversation, so it waits for the slide: the allocations it makes
+    // would otherwise pause the slide for garbage collections.
     private async Task LoadLinksAsync(int version)
     {
-        if (_sms is null)
+        if (_sms is not { } sms)
             return;
 
         try
         {
-            var rows = await _sms.GetThreadTextRowsAsync(_thread.ThreadId);
-            var found = await Task.Run(() => ThreadLinks.Find(rows));
-            var items = BuildLinkItems(found);
+            var threadId = _thread.ThreadId;
+            var items = await Task.Run(async () =>
+            {
+                var rows = await sms.GetThreadTextRowsAsync(threadId);
+                return BuildLinkItems(ThreadLinks.Find(rows), threadId);
+            });
             if (version != _bindVersion)
                 return;
 
@@ -278,7 +285,7 @@ public partial class ProfileView : ContentView
         }
     }
 
-    private List<LinkResultItem> BuildLinkItems(IReadOnlyList<ThreadLink> links)
+    private List<LinkResultItem> BuildLinkItems(IReadOnlyList<ThreadLink> links, long threadId)
     {
         var now = DateTime.Now;
         var culture = CultureInfo.CurrentUICulture;
@@ -288,7 +295,7 @@ public partial class ProfileView : ContentView
             var time = DateTimeOffset.FromUnixTimeMilliseconds(link.DateMs).LocalDateTime;
             items.Add(new LinkResultItem
             {
-                ThreadId = _thread.ThreadId,
+                ThreadId = threadId,
                 MessageId = link.MessageId,
                 Title = link.Item.Title,
                 HostText = link.Item.Host,

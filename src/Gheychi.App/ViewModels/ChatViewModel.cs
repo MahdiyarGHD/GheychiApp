@@ -14,7 +14,6 @@ namespace Gheychi.App.ViewModels;
 public sealed record PreparedChatData(
     List<object> Items,
     List<ChatMessage> Messages,
-    List<(int Index, string Text)> Separators,
     string StickyDate,
     int SimSlot,
     int? FirstUnreadIndex = null,
@@ -43,7 +42,6 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     private readonly IDateFormattingService _dateFormatter;
     private readonly IMessageMetadataRepository _metadataRepo;
     private readonly IThreadSettings? _threadSettings;
-    private readonly List<(int Index, string Text)> _dateSeparators = [];
     private string _draft = string.Empty;
     private int _simSlot = 1;
     private string _stickyDate = string.Empty;
@@ -312,20 +310,17 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
     }
 
+    // The day header the row sits under. Read from the list itself, so rows added, removed or
+    // prepended since the page was built can never leave it pointing at the wrong day.
     public string GetDateForIndex(int firstVisibleIndex)
     {
-        if (_dateSeparators.Count == 0)
-            return StickyDate;
-
-        var result = _dateSeparators[0].Text;
-        for (var i = 0; i < _dateSeparators.Count; i++)
+        for (var i = Math.Min(firstVisibleIndex, Items.Count - 1); i >= 0; i--)
         {
-            if (_dateSeparators[i].Index <= firstVisibleIndex)
-                result = _dateSeparators[i].Text;
-            else
-                break;
+            if (Items[i] is DateSeparatorItem separator)
+                return separator.Text;
         }
-        return result;
+
+        return StickyDate;
     }
 
     public async Task<PreparedChatData> FetchMessagesAsync(ThreadItem thread, int? limit = RecentPageSize, int offset = 0, CancellationToken cancellationToken = default, int unreadHint = 0)
@@ -351,7 +346,6 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         DateTime? lastDate = null;
         var newItems = new List<object>(rawMessages.Count * 2);
         var newMessages = new List<ChatMessage>(rawMessages.Count);
-        var seps = new List<(int Index, string Text)>();
         int? firstUnreadIndex = null;
         var unreadInserted = false;
 
@@ -359,9 +353,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         {
             if (lastDate == null || msg.Timestamp.Date != lastDate.Value.Date)
             {
-                var sepText = _dateFormatter.FormatDateSeparator(msg.Timestamp, now, culture);
-                seps.Add((newItems.Count, sepText));
-                newItems.Add(new DateSeparatorItem(sepText));
+                newItems.Add(new DateSeparatorItem(_dateFormatter.FormatDateSeparator(msg.Timestamp, now, culture)));
                 lastDate = msg.Timestamp.Date;
             }
 
@@ -414,7 +406,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         var threadSlot = (thread.SubId > 0 && slotMap != null && slotMap.TryGetValue(thread.SubId, out var s)) ? s : 1;
 
         // Reaction SMS are folded away, so paging has to count the provider rows that were read.
-        return new PreparedChatData(newItems, newMessages, seps, sticky, threadSlot, firstUnreadIndex, SmsMessagePage.RawCountOf(rawMessages));
+        return new PreparedChatData(newItems, newMessages, sticky, threadSlot, firstUnreadIndex, SmsMessagePage.RawCountOf(rawMessages));
     }
 
     private Task<PreparedChatData?>? _prefetchTask;
@@ -583,9 +575,6 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _loadedCount = rawCount;
         _hasMore = rawCount >= RecentPageSize;
 
-        _dateSeparators.Clear();
-        _dateSeparators.AddRange(data.Separators);
-
         var isDual = _isDualSim ?? false;
         var slotMap = _simSlotMap;
         var carrierMap = _simCarrierMap;
@@ -744,10 +733,11 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         // A day split across two pages: the page ends with that day's messages and the list
         // already starts with the same day's separator. Keep the page's (it sits above the day's
-        // first message) and drop the list's, otherwise the day shows two headers.
-        var dropHead = page.Separators.Count > 0 && _dateSeparators.Count > 0 &&
-            Items.Count > 0 && Items[0] is DateSeparatorItem head &&
-            page.Separators[^1].Text == head.Text;
+        // first message) and drop the list's, otherwise the day shows two headers. Compared by
+        // date: the header text carries the time of the day's first row, so it differs per page.
+        var dropHead = page.Messages.Count > 0 && Messages.Count > 0 &&
+            Items.Count > 0 && Items[0] is DateSeparatorItem &&
+            page.Messages[^1].Timestamp.Date == Messages[0].Timestamp.Date;
         if (dropHead)
             Items.RemoveAt(0);
 
@@ -757,15 +747,6 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         Messages.PrependRange(page.Messages);
         if (Search.IsActive)
             RefreshSearchMarks();
-
-        var shift = page.Items.Count - (dropHead ? 1 : 0);
-        var mergedSeps = new List<(int Index, string Text)>(page.Separators.Count + _dateSeparators.Count);
-        mergedSeps.AddRange(page.Separators);
-        for (var i = dropHead ? 1 : 0; i < _dateSeparators.Count; i++)
-            mergedSeps.Add((_dateSeparators[i].Index + shift, _dateSeparators[i].Text));
-
-        _dateSeparators.Clear();
-        _dateSeparators.AddRange(mergedSeps);
 
         EvictCache(Thread.ThreadId);
     }
@@ -841,8 +822,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             Timestamp = DateTime.Now
         };
 
-        Items.Add(outgoingMsg);
-        Messages.Add(outgoingMsg);
+        AppendMessage(outgoingMsg);
 
         EvictCache(Thread.ThreadId);
 
@@ -1005,24 +985,13 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         // A send whose row is not stored yet (Id 0) would show up here as a "new" outgoing message.
         var sendInFlight = Messages.Any(m => m.Id == 0 && m.IsOutgoing);
 
-        DateSeparatorItem? pendingSeparator = null;
         var appended = 0;
         ChatMessage? lastIncoming = null;
 
-        foreach (var item in data.Items)
+        foreach (var fetched in data.Messages)
         {
-            if (item is DateSeparatorItem separator)
-            {
-                pendingSeparator = separator;
-                continue;
-            }
-
-            if (item is not ChatMessage fetched)
-                continue;
-
             if (known.TryGetValue(fetched.Id, out var current))
             {
-                pendingSeparator = null;
                 if (current.ReactionEmoji != fetched.ReactionEmoji && !current.IsReactionSending)
                     current.ReactionEmoji = fetched.ReactionEmoji;
                 continue;
@@ -1031,17 +1000,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             if (sendInFlight && fetched.IsOutgoing)
                 continue;
 
-            if (pendingSeparator != null)
-            {
-                Items.Add(pendingSeparator);
-                _dateSeparators.Add((Items.Count - 1, pendingSeparator.Text));
-                pendingSeparator = null;
-            }
-
             // The chat is open and on screen: what arrives is read.
             fetched.IsUnread = false;
-            Items.Add(fetched);
-            Messages.Add(fetched);
+            AppendMessage(fetched);
             appended++;
             if (!fetched.IsOutgoing)
                 lastIncoming = fetched;
@@ -1061,6 +1022,32 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         EvictCache(threadId);
         MessagesAppended?.Invoke();
         _ = _smsService.MarkThreadAsReadAsync(threadId);
+    }
+
+    // Adds a message at the bottom, under a new day header when it is the first message of its day.
+    // Decided against the last message on screen, not the fetched page: a sent bubble is shown before
+    // its row is stored, so the page cannot tell which days the list already has a header for.
+    private void AppendMessage(ChatMessage message)
+    {
+        var previous = Messages.Count > 0 ? Messages[^1] : null;
+        if (previous is null || previous.Timestamp.Date != message.Timestamp.Date)
+        {
+            var text = _dateFormatter.FormatDateSeparator(message.Timestamp, DateTime.Now, CultureInfo.CurrentUICulture);
+            Items.Add(new DateSeparatorItem(text));
+        }
+
+        Items.Add(message);
+        Messages.Add(message);
+    }
+
+    // A day whose messages were all deleted keeps no header.
+    private void RemoveEmptyDaySeparators()
+    {
+        for (var i = Items.Count - 1; i >= 0; i--)
+        {
+            if (Items[i] is DateSeparatorItem && (i == Items.Count - 1 || Items[i + 1] is DateSeparatorItem))
+                Items.RemoveAt(i);
+        }
     }
 
     // Rows stored or deleted behind the paging cursor shift every later OFFSET. Without this the
@@ -1294,6 +1281,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         {
             Items.Remove(message);
             Messages.Remove(message);
+            RemoveEmptyDaySeparators();
             ShiftLoadedCount(-1);
             EvictCache(Thread.ThreadId);
         }
@@ -1315,6 +1303,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 Items.Remove(msg);
                 Messages.Remove(msg);
             }
+            RemoveEmptyDaySeparators();
             ExitSelectionMode();
             ShiftLoadedCount(-selected.Count);
             EvictCache(Thread.ThreadId);

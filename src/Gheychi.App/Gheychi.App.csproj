@@ -23,6 +23,13 @@
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     </PropertyGroup>
 
+    <!-- Profiled AOT only precompiles the MAUI startup path; the rest of the app (opening a chat, the
+         profile, search) was JIT-compiled the first time it ran, which showed as a pause. Larger APK. -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <RunAOTCompilation>true</RunAOTCompilation>
+        <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    </PropertyGroup>
+
     <ItemGroup>
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#3E5C76"/>
 
