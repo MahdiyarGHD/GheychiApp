@@ -511,7 +511,7 @@
     <value>Restore to inbox</value>
   </data>
   <data name="Spam_ActionRestoreTrust" xml:space="preserve">
-    <value>Restore &amp; never mark as spam</value>
+    <value>Restore &amp; trust</value>
   </data>
   <data name="Spam_ActionInfo" xml:space="preserve">
     <value>Info</value>
@@ -578,5 +578,11 @@
   </data>
   <data name="Spam_ActionRestoreShort" xml:space="preserve">
     <value>Restore</value>
+  </data>
+  <data name="Spam_ActionReportNotSpam" xml:space="preserve">
+    <value>Report: not spam</value>
+  </data>
+  <data name="Spam_ReportThanks" xml:space="preserve">
+    <value>Thanks! Your report helps improve spam detection.</value>
   </data>
 </root>

@@ -68,24 +68,31 @@
                 StrokeShape="RoundRectangle 22"
                 VerticalOptions="End">
             <VerticalStackLayout>
-                <VerticalStackLayout Padding="18,12,18,10" Spacing="3">
-                    <Label LineBreakMode="TailTruncation" MaxLines="1">
-                        <Label.FormattedText>
-                            <FormattedString>
-                                <Span x:Name="MenuSender"
-                                      FontSize="14"
-                                      FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                      TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
-                                <Span Text="  ·  " FontSize="12" TextColor="#8A8F98" />
-                                <Span x:Name="MenuConfidence" FontSize="12" />
-                            </FormattedString>
-                        </Label.FormattedText>
-                    </Label>
-                    <Label x:Name="MenuPreview"
-                           FontSize="12"
-                           TextColor="#8A8F98"
-                           LineBreakMode="TailTruncation"
-                           MaxLines="2" />
+                <VerticalStackLayout Padding="18,12,18,10" Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Label x:Name="MenuSender"
+                               FontSize="14"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="1"
+                               VerticalOptions="Center" />
+                        <Label x:Name="MenuConfidence"
+                               Grid.Column="1"
+                               FontSize="11"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               VerticalOptions="Center" />
+                    </Grid>
+                    <Border Padding="12,10"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14"
+                            BackgroundColor="{AppThemeBinding Light=#F3F5F1, Dark=#24292A}">
+                        <Label x:Name="MenuPreview"
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#3F4651, Dark=#C9CDD3}"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="8" />
+                    </Border>
                 </VerticalStackLayout>
 
                 <BoxView Style="{StaticResource Divider}" />
@@ -112,6 +119,18 @@
                         </Image.Behaviors>
                     </Image>
                     <Label Grid.Column="1" Text="{loc:Translate Spam_ActionRestoreTrust}" Style="{StaticResource MenuLabel}" />
+                </Grid>
+
+                <Grid Style="{StaticResource MenuRow}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnReportTapped" />
+                    </Grid.GestureRecognizers>
+                    <Image Source="report.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                        </Image.Behaviors>
+                    </Image>
+                    <Label Grid.Column="1" Text="{loc:Translate Spam_ActionReportNotSpam}" Style="{StaticResource MenuLabel}" />
                 </Grid>
 
                 <Grid Style="{StaticResource MenuRow}">

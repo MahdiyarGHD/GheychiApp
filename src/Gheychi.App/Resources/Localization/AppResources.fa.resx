@@ -511,7 +511,7 @@
     <value>بازگرداندن به صندوق</value>
   </data>
   <data name="Spam_ActionRestoreTrust" xml:space="preserve">
-    <value>بازگرداندن و ایمن کردن فرستنده</value>
+    <value>بازگردانی و اعتماد</value>
   </data>
   <data name="Spam_ActionInfo" xml:space="preserve">
     <value>اطلاعات</value>
@@ -578,5 +578,11 @@
   </data>
   <data name="Spam_ActionRestoreShort" xml:space="preserve">
     <value>بازگرداندن</value>
+  </data>
+  <data name="Spam_ActionReportNotSpam" xml:space="preserve">
+    <value>گزارش: هرزنامه نیست</value>
+  </data>
+  <data name="Spam_ReportThanks" xml:space="preserve">
+    <value>ممنون! گزارش شما به بهبود تشخیص هرزنامه کمک می‌کند.</value>
   </data>
 </root>

@@ -13,34 +13,35 @@
 
         <!-- Top Header Area: Normal Search Header or Selection Contextual Header -->
         <Grid Grid.Row="0">
-            <!-- Normal Header (Search Bar) -->
-            <Border IsVisible="{Binding IsNotSelectionMode}"
-                    Margin="16,12,16,8"
-                    Padding="14,10"
-                    BackgroundColor="{AppThemeBinding Light=#E9EDF3, Dark=#1C1F24}"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 28">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnSearchBarTapped" />
-                </Border.GestureRecognizers>
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Image Grid.Column="0"
-                           Source="search.png"
-                           WidthRequest="20"
-                           HeightRequest="20"
-                           SemanticProperties.Description="{loc:Translate Search}">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#6B7280, Dark=#9AA0AB}" />
-                        </Image.Behaviors>
-                    </Image>
-                    <Label Grid.Column="1"
-                           Text="{loc:Translate Search_Messages}"
-                           TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
-                           FontSize="13"
-                           LineBreakMode="TailTruncation"
+            <!-- Normal Header: same as the Spam tab's -->
+            <VerticalStackLayout IsVisible="{Binding IsNotSelectionMode}">
+                <Grid Padding="18,8,6,8" ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Text="Gheychi"
+                           FontSize="19"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                            VerticalOptions="Center" />
+                    <Border Grid.Column="1"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20"
+                            BackgroundColor="Transparent"
+                            VerticalOptions="Center"
+                            SemanticProperties.Description="{loc:Translate Search_Messages}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSearchBarTapped" />
+                        </Border.GestureRecognizers>
+                        <Image Source="search.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Border>
                 </Grid>
-            </Border>
+                <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#E8EDE6, Dark=#2A302C}" />
+            </VerticalStackLayout>
 
             <!-- Selection Contextual Header -->
             <Grid IsVisible="{Binding IsSelectionMode}"

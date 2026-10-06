@@ -139,6 +139,15 @@ public partial class SpamOverlay : ContentView
             ShowInfo(_item);
     }
 
+    // TODO: keep the report (text + verdict) so it can feed the next model; for now it only thanks the user.
+    private async void OnReportTapped(object? sender, TappedEventArgs e)
+    {
+        await CloseAsync();
+#if ANDROID
+        global::Android.Widget.Toast.MakeText(Platform.AppContext, LocalizationManager.Instance["Spam_ReportThanks"], global::Android.Widget.ToastLength.Short)?.Show();
+#endif
+    }
+
     private void OnRestoreTapped(object? sender, TappedEventArgs e) => _ = RestoreAsync(trustSender: false);
 
     private void OnRestoreTrustTapped(object? sender, TappedEventArgs e) => _ = RestoreAsync(trustSender: true);

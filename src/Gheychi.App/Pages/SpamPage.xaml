@@ -12,26 +12,27 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*">
 
         <!-- App header -->
-        <Grid x:Name="AppHeader" Grid.Row="0" Padding="16,8,6,8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-            <Border Grid.Column="0"
-                    WidthRequest="30"
-                    HeightRequest="30"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 9"
-                    BackgroundColor="{AppThemeBinding Light=#E7EEE6, Dark=#2A332D}"
-                    VerticalOptions="Center">
-                <Image Source="logo.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Image.Behaviors>
-                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
-                    </Image.Behaviors>
-                </Image>
-            </Border>
-            <Label Grid.Column="1"
+        <Grid x:Name="AppHeader" Grid.Row="0" Padding="18,8,6,8" ColumnDefinitions="*,Auto,Auto">
+            <Label Grid.Column="0"
                    Text="Gheychi"
                    FontSize="19"
                    FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                    TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                    VerticalOptions="Center" />
+            <Border Grid.Column="1"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20"
+                    BackgroundColor="Transparent"
+                    VerticalOptions="Center"
+                    SemanticProperties.Description="{loc:Translate Tab_Settings}">
+                <Image Source="tabsettings.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                    </Image.Behaviors>
+                </Image>
+            </Border>
             <Border Grid.Column="2"
                     WidthRequest="40"
                     HeightRequest="40"
@@ -176,33 +177,33 @@
                                 </Image>
                             </Border>
 
-                            <Grid Grid.Column="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8" RowSpacing="2">
+                            <!-- The sender gives way first; the confidence and time are always shown whole -->
+                            <Grid Grid.Column="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="2">
                                 <Label Grid.Row="0"
                                        Grid.Column="0"
+                                       Text="{Binding Sender}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
                                        LineBreakMode="TailTruncation"
-                                       MaxLines="1">
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="{Binding Sender}"
-                                                  FontSize="14"
-                                                  FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                                  TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
-                                            <Span Text="  ·  " FontSize="11" TextColor="#8A8F98" />
-                                            <Span Text="{Binding Confidence}"
-                                                  FontSize="11"
-                                                  TextColor="{Binding ConfidenceColor}" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
+                                       MaxLines="1"
+                                       VerticalOptions="Center" />
                                 <Label Grid.Row="0"
                                        Grid.Column="1"
+                                       Text="{Binding Confidence}"
+                                       FontSize="11"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{Binding ConfidenceColor}"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Row="0"
+                                       Grid.Column="2"
                                        Text="{Binding Time}"
                                        FontSize="11"
                                        TextColor="#8A8F98"
                                        VerticalOptions="Center" />
                                 <Label Grid.Row="1"
                                        Grid.Column="0"
-                                       Grid.ColumnSpan="2"
+                                       Grid.ColumnSpan="3"
                                        Text="{Binding Preview}"
                                        FontSize="13"
                                        TextColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}"
