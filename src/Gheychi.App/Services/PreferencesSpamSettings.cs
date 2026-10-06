@@ -4,8 +4,15 @@ namespace Gheychi.App.Services;
 
 public sealed class PreferencesSpamSettings : ISpamSettings
 {
+    private const string EnabledKey = "spam_enabled_v1";
     private const string ThresholdKey = "spam_threshold_v1";
     private const string RetentionDaysKey = "spam_retention_days_v1";
+
+    public bool Enabled
+    {
+        get => Preferences.Default.Get(EnabledKey, true);
+        set => Preferences.Default.Set(EnabledKey, value);
+    }
 
     public float Threshold
     {

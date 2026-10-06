@@ -15,7 +15,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private readonly IDateFormattingService _dateFormatter;
     private bool _isLoading;
     private bool _hasPermission = true;
+    private static readonly TimeSpan ReturnRefreshDelay = TimeSpan.FromMilliseconds(400);
+    private static readonly TimeSpan ReturnRefreshMinInterval = TimeSpan.FromSeconds(2);
     private bool _initialized;
+    private DateTime _lastLoadedAt;
     private bool _reloadPending;
     private Task<BuiltThreads>? _snapshotTask;
 
@@ -301,7 +304,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             // by incoming SMS otherwise, so sent replies, read state and "Yesterday" labels go stale.
             // Prompts are not repeated; they ran once and re-launching the role dialog on every
             // return to the tab is worse than an empty list.
-            _ = LoadThreadsAsync();
+            _ = RefreshAfterReturnAsync();
             return;
         }
 
@@ -323,6 +326,14 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var granted = await _smsService.EnsurePermissionsAsync();
         HasPermission = granted;
         await LoadThreadsAsync();
+    }
+
+    // The reload waits for the tab or chat transition to finish, and is skipped when the list was just read.
+    private async Task RefreshAfterReturnAsync()
+    {
+        await Task.Delay(ReturnRefreshDelay);
+        if (DateTime.UtcNow - _lastLoadedAt > ReturnRefreshMinInterval)
+            await LoadThreadsAsync();
     }
 
     public async Task LoadThreadsAsync()
@@ -368,6 +379,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         finally
         {
             IsLoading = false;
+            _lastLoadedAt = DateTime.UtcNow;
             if (_reloadPending)
             {
                 _reloadPending = false;

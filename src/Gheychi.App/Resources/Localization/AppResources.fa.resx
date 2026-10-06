@@ -33,9 +33,6 @@
   <data name="Spam_ClearAll" xml:space="preserve">
     <value>پاک کردن همه</value>
   </data>
-  <data name="Settings_PageTitle" xml:space="preserve">
-    <value>تنظیمات</value>
-  </data>
   <data name="Spam_Placeholder" xml:space="preserve">
     <value>پیام‌های مسدودشده اینجا نمایش داده می‌شود</value>
   </data>
@@ -586,19 +583,16 @@
     <value>گزارش به عنوان هرزنامه</value>
   </data>
   <data name="Settings_Tagline" xml:space="preserve">
-    <value>فیلتر آرام هرزنامه پیامک، روی همین گوشی</value>
+    <value>صندوق پیامک شما، بدون شلوغی. هرزنامه همین‌جا روی گوشی شما شناسایی و کنار گذاشته می‌شود.</value>
   </data>
   <data name="Settings_Default" xml:space="preserve">
     <value>برنامه پیش‌فرض پیامک</value>
   </data>
   <data name="Settings_NotDefault" xml:space="preserve">
-    <value>برنامه پیش‌فرض پیامک نیست · تنظیم</value>
+    <value>برنامه پیش‌فرض پیامک نیست</value>
   </data>
   <data name="Settings_TileModel" xml:space="preserve">
     <value>مدل هرزنامه</value>
-  </data>
-  <data name="Settings_TileModelValue" xml:space="preserve">
-    <value>نسخه {0} · روی گوشی</value>
   </data>
   <data name="Settings_TileCaught" xml:space="preserve">
     <value>هرزنامه گرفته‌شده</value>
@@ -739,13 +733,13 @@
     <value>سیم پیش‌فرض پیام‌های جدید</value>
   </data>
   <data name="Settings_DefaultSimHint" xml:space="preserve">
-    <value>انتخاب سیم هر گفتگو اولویت دارد</value>
+    <value>پیام جدید با این سیم شروع می‌شود</value>
   </data>
   <data name="Settings_LockScreen" xml:space="preserve">
     <value>نمایش متن در صفحه قفل</value>
   </data>
   <data name="Settings_LockScreenHint" xml:space="preserve">
-    <value>وقتی خاموش است، فقط فرستنده نمایش داده می‌شود</value>
+    <value>وقتی خاموش است، تا زمانی که گوشی اعلان‌های حساس را پنهان می‌کند فقط فرستنده نمایش داده می‌شود</value>
   </data>
   <data name="Settings_SystemNotifications" xml:space="preserve">
     <value>تنظیمات اعلان سیستم</value>
@@ -812,5 +806,95 @@
   </data>
   <data name="Settings_LicensesHint" xml:space="preserve">
     <value>کتابخانه‌های به‌کاررفته در برنامه</value>
+  </data>
+  <data name="Settings_NotificationsOn" xml:space="preserve">
+    <value>اعلان‌ها روشن</value>
+  </data>
+  <data name="Settings_NotificationsOff" xml:space="preserve">
+    <value>اعلان‌ها خاموش</value>
+  </data>
+  <data name="Settings_ContactsOn" xml:space="preserve">
+    <value>دسترسی به مخاطبان</value>
+  </data>
+  <data name="Settings_ContactsOff" xml:space="preserve">
+    <value>بدون دسترسی به مخاطبان</value>
+  </data>
+  <data name="Settings_SpamFilterOffHint" xml:space="preserve">
+    <value>خاموش: همه پیام‌ها به صندوق می‌روند</value>
+  </data>
+  <data name="Settings_SpamOffHint" xml:space="preserve">
+    <value>خاموش · همه پیام‌ها به صندوق می‌روند</value>
+  </data>
+  <data name="Settings_Analytics" xml:space="preserve">
+    <value>آمار هرزنامه</value>
+  </data>
+  <data name="Settings_AnalyticsHint" xml:space="preserve">
+    <value>چه چیزی، چه زمانی و با چه دقتی گرفته شد</value>
+  </data>
+  <data name="Settings_AnalyticsEmpty" xml:space="preserve">
+    <value>هنوز هرزنامه‌ای گرفته نشده. با رسیدن هرزنامه، آمار کامل می‌شود.</value>
+  </data>
+  <data name="Settings_StatTotal" xml:space="preserve">
+    <value>از ابتدا</value>
+  </data>
+  <data name="Settings_StatToday" xml:space="preserve">
+    <value>امروز</value>
+  </data>
+  <data name="Settings_StatWeek" xml:space="preserve">
+    <value>۷ روز گذشته</value>
+  </data>
+  <data name="Settings_StatMonth" xml:space="preserve">
+    <value>۳۰ روز گذشته</value>
+  </data>
+  <data name="Settings_SectionDaily" xml:space="preserve">
+    <value>۱۴ روز گذشته</value>
+  </data>
+  <data name="Settings_SectionConfidence" xml:space="preserve">
+    <value>اطمینان</value>
+  </data>
+  <data name="Settings_SectionAccuracy" xml:space="preserve">
+    <value>دقت و زمان</value>
+  </data>
+  <data name="Settings_SectionTopSenders" xml:space="preserve">
+    <value>بیشترین فرستنده‌های هرزنامه</value>
+  </data>
+  <data name="Settings_AccuracyValue" xml:space="preserve">
+    <value>{0} دقت</value>
+  </data>
+  <data name="Settings_AccuracyHint" xml:space="preserve">
+    <value>{0} مورد را به عنوان غیرهرزنامه بازگرداندید</value>
+  </data>
+  <data name="Settings_AccuracyNone" xml:space="preserve">
+    <value>هیچ موردی را به عنوان غیرهرزنامه بازنگرداندید</value>
+  </data>
+  <data name="Settings_BusiestValue" xml:space="preserve">
+    <value>بیشتر حدود {0}</value>
+  </data>
+  <data name="Settings_BusiestHint" xml:space="preserve">
+    <value>زمانی که بیشتر هرزنامه‌ها می‌رسند</value>
+  </data>
+  <data name="Settings_RestartTitle" xml:space="preserve">
+    <value>قیچی دوباره اجرا شود؟</value>
+  </data>
+  <data name="Settings_RestartMessage" xml:space="preserve">
+    <value>زبان جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
+  </data>
+  <data name="Settings_Restart" xml:space="preserve">
+    <value>اجرای دوباره</value>
+  </data>
+  <data name="Settings_ClearSpamNote" xml:space="preserve">
+    <value>آمار هرزنامه با پاک کردن هرزنامه‌ها حفظ می‌شود.</value>
+  </data>
+  <data name="Notification_HiddenContent" xml:space="preserve">
+    <value>پیام جدید</value>
+  </data>
+  <data name="Messages_NotDefaultTitle" xml:space="preserve">
+    <value>قیچی برنامه پیامک شما نیست</value>
+  </data>
+  <data name="Messages_NotDefaultText" xml:space="preserve">
+    <value>اندروید فقط به برنامه پیش‌فرض پیامک اجازه دریافت و مدیریت پیام‌ها را می‌دهد. برای دیدن صندوق، قیچی را پیش‌فرض کنید.</value>
+  </data>
+  <data name="Messages_NotDefaultAction" xml:space="preserve">
+    <value>تنظیم به عنوان پیش‌فرض</value>
   </data>
 </root>

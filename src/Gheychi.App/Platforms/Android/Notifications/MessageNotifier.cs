@@ -120,6 +120,12 @@ internal static class MessageNotifier
         builder.SetContentIntent(OpenIntent(context, threadId, address, name, subId));
         builder.AddAction(BuildReplyAction(context, threadId, address, subId));
         builder.AddAction(BuildMarkReadAction(context, threadId, address, subId));
+        if (!Gheychi.App.Services.AppPreferences.ShowContentOnLockScreen)
+        {
+            // Android shows the public version only where the phone's own lock-screen setting hides sensitive content.
+            builder.SetVisibility(NotificationCompat.VisibilityPrivate);
+            builder.SetPublicVersion(BuildPublicVersion(context, address, name));
+        }
 
         var notification = builder.Build();
         if (notification is null)
@@ -142,6 +148,17 @@ internal static class MessageNotifier
         foreach (var message in unread)
             style.AddMessage(new NotificationCompat.MessagingStyle.Message(message.Body, message.TimestampMillis, sender));
         return style;
+    }
+
+    private static Notification BuildPublicVersion(Context context, string address, string name)
+    {
+        var builder = new NotificationCompat.Builder(context, NotificationChannels.ChannelFor(context, address));
+        builder.SetSmallIcon(SmallIcon(context));
+        builder.SetColor(AccentColor);
+        builder.SetContentTitle(name);
+        builder.SetContentText(LocalizationManager.Instance["Notification_HiddenContent"]);
+        builder.SetCategory(NotificationCompat.CategoryMessage);
+        return builder.Build()!;
     }
 
     private static Notification BuildSummary(Context context, int conversations)

@@ -75,7 +75,12 @@ internal static class IncomingSmsHandler
                 DateTimeOffset.FromUnixTimeMilliseconds(timestampMillis).LocalDateTime, subId,
                 verdict.Score.Probability, verdict.Score.ModelVersion, verdict.Threshold);
             var id = await repository.AddAsync(message);
-            return id > 0 ? message with { Id = id } : null;
+            if (id <= 0)
+                return null;
+
+            if (services?.GetService<ISpamStatsRepository>() is { } stats)
+                await stats.AddAsync(SpamStats.From(message with { Id = id }));
+            return message with { Id = id };
         }
         catch (Exception ex)
         {

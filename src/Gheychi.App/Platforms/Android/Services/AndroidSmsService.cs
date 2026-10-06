@@ -40,6 +40,12 @@ public sealed class AndroidSmsService : ISmsService
         "sub_id"
     ];
 
+    public bool IsDefaultSmsApp()
+    {
+        var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+        return Telephony.Sms.GetDefaultSmsPackage(context) == context.PackageName;
+    }
+
     public Task<bool> EnsureDefaultSmsAppAsync()
     {
         if (OperatingSystem.IsAndroidVersionAtLeast(29))

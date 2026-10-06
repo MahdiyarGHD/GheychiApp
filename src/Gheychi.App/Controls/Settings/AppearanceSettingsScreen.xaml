@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<settings:SettingsScreen xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.AppearanceSettingsScreen">
+    <settings:SettingsScreen.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <settings:SettingsStyles />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </settings:SettingsScreen.Resources>
+
+    <Grid Style="{StaticResource ScreenBackground}" RowDefinitions="Auto,*">
+        <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+            <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                    </Image.Behaviors>
+                </Image>
+            </Border>
+            <Label Grid.Column="1" Text="{loc:Translate Settings_Appearance}" Style="{StaticResource ScreenTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="0,0,0,24">
+                <Label Text="{loc:Translate Settings_SectionTheme}" Style="{StaticResource SectionTitle}" Margin="26,4,16,8" />
+                <Border Style="{StaticResource Card}" Padding="10">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Border x:Name="ThemeSystem" Grid.Column="0" Style="{StaticResource SegmentOff}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnThemeTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{loc:Translate Settings_System}" Style="{StaticResource SegmentTitleOff}" />
+                    </Border>
+                    <Border x:Name="ThemeLight" Grid.Column="1" Style="{StaticResource SegmentOff}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnThemeTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{loc:Translate Settings_ThemeLight}" Style="{StaticResource SegmentTitleOff}" />
+                    </Border>
+                    <Border x:Name="ThemeDark" Grid.Column="2" Style="{StaticResource SegmentOff}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnThemeTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{loc:Translate Settings_ThemeDark}" Style="{StaticResource SegmentTitleOff}" />
+                    </Border>
+                    </Grid>
+                </Border>
+
+                <Label Text="{loc:Translate Settings_SectionLanguage}" Style="{StaticResource SectionTitle}" />
+                <Border Style="{StaticResource Card}" Padding="10">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Border x:Name="LanguageSystem" Grid.Column="0" Style="{StaticResource SegmentOff}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnLanguageTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{loc:Translate Settings_System}" Style="{StaticResource SegmentTitleOff}" />
+                    </Border>
+                    <Border x:Name="LanguageEnglish" Grid.Column="1" Style="{StaticResource SegmentOff}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnLanguageTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="English" Style="{StaticResource SegmentTitleOff}" />
+                    </Border>
+                    <Border x:Name="LanguagePersian" Grid.Column="2" Style="{StaticResource SegmentOff}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnLanguageTapped" />
+                        </Border.GestureRecognizers>
+                        <Label Text="فارسی" Style="{StaticResource SegmentTitleOff}" />
+                    </Border>
+                    </Grid>
+                </Border>
+                <Label Text="{loc:Translate Settings_LanguageHint}" Style="{StaticResource Note}" Margin="26,8,26,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</settings:SettingsScreen>

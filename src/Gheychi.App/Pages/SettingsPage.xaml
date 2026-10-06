@@ -4,392 +4,149 @@
              xmlns:loc="clr-namespace:Gheychi.App.Localization"
              xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
              xmlns:controls="clr-namespace:Gheychi.App.Controls"
+             xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
              xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
              x:Class="Gheychi.App.Pages.SettingsPage"
              Shell.NavBarIsVisible="False">
-
     <ContentPage.Resources>
-        <Style x:Key="SubPage" TargetType="Grid">
-            <Setter Property="IsVisible" Value="False" />
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}" />
-        </Style>
-
-        <Style x:Key="SubPageTitle" TargetType="Label">
-            <Setter Property="FontSize" Value="20" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-            <Setter Property="VerticalOptions" Value="Center" />
-        </Style>
-
-        <Style x:Key="BackButton" TargetType="Border">
-            <Setter Property="WidthRequest" Value="40" />
-            <Setter Property="HeightRequest" Value="40" />
-            <Setter Property="StrokeThickness" Value="0" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 20" />
-            <Setter Property="BackgroundColor" Value="Transparent" />
-            <Setter Property="VerticalOptions" Value="Center" />
-        </Style>
-
-        <Style x:Key="SectionTitle" TargetType="Label">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="TextTransform" Value="Uppercase" />
-            <Setter Property="CharacterSpacing" Value="0.6" />
-            <Setter Property="Margin" Value="26,20,16,8" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
-        </Style>
-
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="Margin" Value="16,0" />
-            <Setter Property="Padding" Value="0,4" />
-            <Setter Property="StrokeThickness" Value="0" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 22" />
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#EEF2EC, Dark=#14251B}" />
-        </Style>
-
-        <Style x:Key="Row" TargetType="Grid">
-            <Setter Property="Padding" Value="16,11" />
-            <Setter Property="ColumnSpacing" Value="14" />
-            <Setter Property="BackgroundColor" Value="Transparent" />
-        </Style>
-
-        <Style x:Key="Badge" TargetType="Border">
-            <Setter Property="WidthRequest" Value="40" />
-            <Setter Property="HeightRequest" Value="40" />
-            <Setter Property="StrokeThickness" Value="0" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 20" />
-            <Setter Property="VerticalOptions" Value="Center" />
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E0E8DF, Dark=#203328}" />
-        </Style>
-
-        <Style x:Key="BadgeIcon" TargetType="Image">
-            <Setter Property="WidthRequest" Value="19" />
-            <Setter Property="HeightRequest" Value="19" />
-            <Setter Property="HorizontalOptions" Value="Center" />
-            <Setter Property="VerticalOptions" Value="Center" />
-        </Style>
-
-        <Style x:Key="RowTitle" TargetType="Label">
-            <Setter Property="FontSize" Value="15" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
-            <Setter Property="LineBreakMode" Value="TailTruncation" />
-            <Setter Property="MaxLines" Value="1" />
-        </Style>
-
-        <Style x:Key="RowSubtitle" TargetType="Label">
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-            <Setter Property="LineBreakMode" Value="TailTruncation" />
-            <Setter Property="MaxLines" Value="1" />
-        </Style>
-
-        <Style x:Key="Chevron" TargetType="Image">
-            <Setter Property="Source" Value="chevron_right.png" />
-            <Setter Property="WidthRequest" Value="18" />
-            <Setter Property="HeightRequest" Value="18" />
-            <Setter Property="VerticalOptions" Value="Center" />
-        </Style>
-
-        <Style x:Key="Divider" TargetType="BoxView">
-            <Setter Property="HeightRequest" Value="1" />
-            <Setter Property="Margin" Value="70,0,16,0" />
-            <Setter Property="Color" Value="{AppThemeBinding Light=#E1E7DF, Dark=#203328}" />
-        </Style>
-
-        <Style x:Key="ValueChip" TargetType="Border">
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="StrokeThickness" Value="0" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
-            <Setter Property="VerticalOptions" Value="Center" />
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E0E8DF, Dark=#203328}" />
-        </Style>
-
-        <Style x:Key="ValueChipLabel" TargetType="Label">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
-            <Setter Property="VerticalOptions" Value="Center" />
-        </Style>
-
-        <Style x:Key="Segment" TargetType="Border">
-            <Setter Property="Padding" Value="6,10" />
-            <Setter Property="StrokeThickness" Value="0" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 14" />
-        </Style>
-
-        <Style x:Key="SegmentTitle" TargetType="Label">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
-            <Setter Property="HorizontalOptions" Value="Center" />
-            <Setter Property="LineBreakMode" Value="TailTruncation" />
-            <Setter Property="MaxLines" Value="1" />
-        </Style>
-
-        <Style x:Key="SegmentHint" TargetType="Label">
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
-            <Setter Property="HorizontalOptions" Value="Center" />
-        </Style>
-
-        <Style x:Key="Note" TargetType="Label">
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-        </Style>
-
-        <Style x:Key="ToggleSwitch" TargetType="Switch">
-            <Setter Property="InputTransparent" Value="True" />
-            <Setter Property="IsToggled" Value="True" />
-            <Setter Property="OnColor" Value="#2E6B4C" />
-            <Setter Property="VerticalOptions" Value="Center" />
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <settings:SettingsStyles />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid>
-        <!-- ===================== Main ===================== -->
-        <Grid RowDefinitions="Auto,Auto,*">
-            <Grid Grid.Row="0" Padding="18,8,6,8" HeightRequest="56">
-                <Label Text="Gheychi"
-                       FontSize="19"
-                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
-                       VerticalOptions="Center" />
-            </Grid>
-
-            <BoxView Grid.Row="1" HeightRequest="1" Color="{AppThemeBinding Light=#E8EDE6, Dark=#2A302C}" />
-
-            <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Padding="0,0,0,24">
-                    <Label Text="{loc:Translate Settings_PageTitle}"
-                           Margin="18,16,18,12"
-                           FontSize="22"
-                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                           TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
-
-                    <!-- Overview -->
-                    <Border Style="{StaticResource Card}" Padding="16">
-                        <VerticalStackLayout Spacing="14">
-                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                                <Border WidthRequest="52"
-                                        HeightRequest="52"
-                                        StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 16"
-                                        BackgroundColor="#16382A"
-                                        VerticalOptions="Center">
-                                    <Image Source="tabspam.png" WidthRequest="26" HeightRequest="26" HorizontalOptions="Center" VerticalOptions="Center">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="#8FE0BE" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                    <HorizontalStackLayout Spacing="8">
-                                        <Label Text="Gheychi"
-                                               FontSize="19"
-                                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                               TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
-                                               VerticalOptions="Center" />
-                                        <Border Padding="7,2"
-                                                StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 8"
-                                                BackgroundColor="{AppThemeBinding Light=#E0E8DF, Dark=#203328}"
-                                                VerticalOptions="Center">
-                                            <Label x:Name="HeroVersion"
-                                                   FontSize="11"
-                                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                                   TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-                                        </Border>
-                                    </HorizontalStackLayout>
-                                    <Label Text="{loc:Translate Settings_Tagline}"
-                                           FontSize="13"
-                                           TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}"
-                                           MaxLines="2" />
-                                </VerticalStackLayout>
-                            </Grid>
-
-                            <Border x:Name="DefaultChip"
-                                    Padding="10,6"
+    <!-- The screen behind each row is built when first opened and added over the overview, under the overlay -->
+    <Grid x:Name="Root">
+        <ScrollView VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="0,16,0,24">
+                <Border Style="{StaticResource Card}" Padding="16">
+                    <VerticalStackLayout Spacing="14">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <Border WidthRequest="56"
+                                    HeightRequest="56"
                                     StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 14"
-                                    HorizontalOptions="Start">
+                                    StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="#16382A"
+                                    VerticalOptions="Start">
+                                <Image Source="tabspam.png" WidthRequest="28" HeightRequest="28" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="#8FE0BE" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="Gheychi"
+                                           FontSize="20"
+                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                           TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                                           VerticalOptions="Center" />
+                                    <Border Padding="7,2"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 8"
+                                            BackgroundColor="{AppThemeBinding Light=#E0E8DF, Dark=#203328}"
+                                            VerticalOptions="Center">
+                                        <Label x:Name="HeroVersion"
+                                               FontSize="11"
+                                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                               TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                    </Border>
+                                </HorizontalStackLayout>
+                                <Label Text="{loc:Translate Settings_Tagline}" Style="{StaticResource Note}" FontSize="13" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <FlexLayout Wrap="Wrap" Margin="0,0,0,-8">
+                            <Border x:Name="DefaultChip" Style="{StaticResource ChipOk}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnDefaultChipTapped" />
                                 </Border.GestureRecognizers>
                                 <HorizontalStackLayout Spacing="7">
-                                    <BoxView x:Name="DefaultDot" WidthRequest="7" HeightRequest="7" CornerRadius="4" VerticalOptions="Center" />
-                                    <Label x:Name="DefaultLabel"
-                                           FontSize="12"
-                                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                           VerticalOptions="Center" />
+                                    <BoxView x:Name="DefaultDot" Style="{StaticResource ChipDotOk}" />
+                                    <Label x:Name="DefaultLabel" Style="{StaticResource ChipLabelOk}" />
                                 </HorizontalStackLayout>
                             </Border>
+                            <Border x:Name="NotificationsChip" Style="{StaticResource ChipOk}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnNotificationsChipTapped" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="7">
+                                    <BoxView x:Name="NotificationsDot" Style="{StaticResource ChipDotOk}" />
+                                    <Label x:Name="NotificationsLabel" Style="{StaticResource ChipLabelOk}" />
+                                </HorizontalStackLayout>
+                            </Border>
+                            <Border x:Name="ContactsChip" Style="{StaticResource ChipOk}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnContactsChipTapped" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="7">
+                                    <BoxView x:Name="ContactsDot" Style="{StaticResource ChipDotOk}" />
+                                    <Label x:Name="ContactsLabel" Style="{StaticResource ChipLabelOk}" />
+                                </HorizontalStackLayout>
+                            </Border>
+                        </FlexLayout>
 
-                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Border Grid.Column="0"
-                                        Padding="10"
-                                        StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 16"
-                                        BackgroundColor="{AppThemeBinding Light=#E3EAE2, Dark=#1D3026}">
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border WidthRequest="32"
-                                                HeightRequest="32"
-                                                StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 16"
-                                                BackgroundColor="{AppThemeBinding Light=#F7F9FF, Dark=#14251B}"
-                                                VerticalOptions="Center">
-                                            <Image Source="shield.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
-                                                <Image.Behaviors>
-                                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
-                                                </Image.Behaviors>
-                                            </Image>
-                                        </Border>
-                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                            <Label Text="{loc:Translate Settings_TileModel}"
-                                                   FontSize="11"
-                                                   TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}"
-                                                   LineBreakMode="TailTruncation"
-                                                   MaxLines="1" />
-                                            <Label x:Name="TileModelValue"
-                                                   FontSize="13"
-                                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                                   TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
-                                                   LineBreakMode="TailTruncation"
-                                                   MaxLines="1" />
-                                        </VerticalStackLayout>
-                                    </Grid>
-                                </Border>
-                                <Border Grid.Column="1"
-                                        Padding="10"
-                                        StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 16"
-                                        BackgroundColor="{AppThemeBinding Light=#E3EAE2, Dark=#1D3026}">
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border WidthRequest="32"
-                                                HeightRequest="32"
-                                                StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 16"
-                                                BackgroundColor="{AppThemeBinding Light=#F7F9FF, Dark=#14251B}"
-                                                VerticalOptions="Center">
-                                            <Image Source="tabspam.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
-                                                <Image.Behaviors>
-                                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#9A4A2A, Dark=#F0B79A}" />
-                                                </Image.Behaviors>
-                                            </Image>
-                                        </Border>
-                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                            <Label Text="{loc:Translate Settings_TileCaught}"
-                                                   FontSize="11"
-                                                   TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}"
-                                                   LineBreakMode="TailTruncation"
-                                                   MaxLines="1" />
-                                            <Label x:Name="TileCaughtValue"
-                                                   FontSize="13"
-                                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                                   TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
-                                                   LineBreakMode="TailTruncation"
-                                                   MaxLines="1" />
-                                        </VerticalStackLayout>
-                                    </Grid>
-                                </Border>
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <!-- Protection & messaging -->
-                    <Label Text="{loc:Translate Settings_SectionProtection}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSpamTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F5E4DA, Dark=#3A2A22}">
-                                    <Image Source="tabspam.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#9A4A2A, Dark=#F0B79A}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_Spam}" Style="{StaticResource RowTitle}" />
-                                    <Label x:Name="SpamHint" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Image Grid.Column="2" Style="{StaticResource Chevron}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="#8A8F98" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Grid>
-
-                            <VerticalStackLayout x:Name="SimsRow" IsVisible="False">
-                                <BoxView Style="{StaticResource Divider}" />
-                                <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnSimsTapped" />
-                                    </Grid.GestureRecognizers>
-                                    <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#D7EEDF, Dark=#1F4A35}">
-                                        <Image Source="sim_card.png" Style="{StaticResource BadgeIcon}">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Grid.Column="0" Style="{StaticResource Tile}">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <Border WidthRequest="32" HeightRequest="32" StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="{AppThemeBinding Light=#F7F9FF, Dark=#14251B}" VerticalOptions="Center">
+                                        <Image Source="shield.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
                                             <Image.Behaviors>
                                                 <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
                                             </Image.Behaviors>
                                         </Image>
                                     </Border>
-                                    <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                        <Label Text="{loc:Translate Settings_Sims}" Style="{StaticResource RowTitle}" />
-                                        <Label x:Name="SimsHint" Style="{StaticResource RowSubtitle}" />
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{loc:Translate Settings_TileModel}" Style="{StaticResource TileCaption}" />
+                                        <Label x:Name="TileModelValue" Style="{StaticResource TileValue}" />
                                     </VerticalStackLayout>
-                                    <Image Grid.Column="2" Style="{StaticResource Chevron}">
+                                </Grid>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource Tile}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnCaughtTapped" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <Border WidthRequest="32" HeightRequest="32" StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="{AppThemeBinding Light=#F7F9FF, Dark=#14251B}" VerticalOptions="Center">
+                                        <Image Source="chart.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
+                                            <Image.Behaviors>
+                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#9A4A2A, Dark=#F0B79A}" />
+                                            </Image.Behaviors>
+                                        </Image>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{loc:Translate Settings_TileCaught}" Style="{StaticResource TileCaption}" />
+                                        <Label x:Name="TileCaughtValue" Style="{StaticResource TileValue}" />
+                                    </VerticalStackLayout>
+                                    <Image Grid.Column="2" Style="{StaticResource Chevron}" WidthRequest="16" HeightRequest="16">
                                         <Image.Behaviors>
                                             <behaviors:IconTintBehavior TintColor="#8A8F98" />
                                         </Image.Behaviors>
                                     </Image>
                                 </Grid>
-                            </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
 
-                            <BoxView Style="{StaticResource Divider}" />
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnNotificationsTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="notifications.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_Notifications}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_NotificationsHint}" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Image Grid.Column="2" Style="{StaticResource Chevron}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="#8A8F98" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <!-- Personalization -->
-                    <Label Text="{loc:Translate Settings_SectionPersonal}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}">
+                <Label Text="{loc:Translate Settings_SectionProtection}" Style="{StaticResource SectionTitle}" />
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
                         <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
                             <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnAppearanceTapped" />
+                                <TapGestureRecognizer Tapped="OnSpamTapped" />
                             </Grid.GestureRecognizers>
-                            <Border Style="{StaticResource Badge}">
-                                <Image Source="palette.png" Style="{StaticResource BadgeIcon}">
+                            <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F5E4DA, Dark=#3A2A22}">
+                                <Image Source="tabspam.png" Style="{StaticResource BadgeIcon}">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#9A4A2A, Dark=#F0B79A}" />
                                     </Image.Behaviors>
                                 </Image>
                             </Border>
                             <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                <Label Text="{loc:Translate Settings_Appearance}" Style="{StaticResource RowTitle}" />
-                                <Label Text="{loc:Translate Settings_AppearanceHint}" Style="{StaticResource RowSubtitle}" />
+                                <Label Text="{loc:Translate Settings_Spam}" Style="{StaticResource RowTitle}" />
+                                <Label x:Name="SpamHint" Style="{StaticResource RowSubtitle}" />
                             </VerticalStackLayout>
                             <Image Grid.Column="2" Style="{StaticResource Chevron}">
                                 <Image.Behaviors>
@@ -397,261 +154,22 @@
                                 </Image.Behaviors>
                             </Image>
                         </Grid>
-                    </Border>
-
-                    <!-- Privacy & about -->
-                    <Label Text="{loc:Translate Settings_SectionPrivacy}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnPrivacyTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F4ECD4, Dark=#332D1C}">
-                                    <Image Source="lock.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A6A12, Dark=#E5C66B}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_Privacy}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_PrivacyHint}" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Image Grid.Column="2" Style="{StaticResource Chevron}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="#8A8F98" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Grid>
+                        <VerticalStackLayout x:Name="SimsRow" IsVisible="False">
                             <BoxView Style="{StaticResource Divider}" />
                             <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
                                 <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnAboutTapped" />
+                                    <TapGestureRecognizer Tapped="OnSimsTapped" />
                                 </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="info.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_About}" Style="{StaticResource RowTitle}" />
-                                    <Label x:Name="AboutHint" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Image Grid.Column="2" Style="{StaticResource Chevron}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="#8A8F98" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <VerticalStackLayout Margin="24,28,24,0" Spacing="4" HorizontalOptions="Center">
-                        <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
-                            <Image Source="shield.png" WidthRequest="15" HeightRequest="15" VerticalOptions="Center">
-                                <Image.Behaviors>
-                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#3A453D, Dark=#C9D2CB}" />
-                                </Image.Behaviors>
-                            </Image>
-                            <Label Text="{loc:Translate Settings_FooterTitle}"
-                                   FontSize="13"
-                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                   TextColor="{AppThemeBinding Light=#3A453D, Dark=#C9D2CB}"
-                                   VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                        <Label Text="{loc:Translate Settings_FooterText}"
-                               FontSize="12"
-                               TextColor="#8A8F98"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                </VerticalStackLayout>
-            </ScrollView>
-        </Grid>
-
-        <!-- ===================== Spam filter ===================== -->
-        <Grid x:Name="SpamScreen" Style="{StaticResource SubPage}" RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSubPageBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-                        </Image.Behaviors>
-                    </Image>
-                </Border>
-                <Label Grid.Column="1" Text="{loc:Translate Settings_Spam}" Style="{StaticResource SubPageTitle}" />
-            </Grid>
-
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Padding="0,4,0,24">
-                    <Border Style="{StaticResource Card}">
-                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                            </Grid.GestureRecognizers>
-                            <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F5E4DA, Dark=#3A2A22}">
-                                <Image Source="tabspam.png" Style="{StaticResource BadgeIcon}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#9A4A2A, Dark=#F0B79A}" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Border>
-                            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                <Label Text="{loc:Translate Settings_SpamFilter}" Style="{StaticResource RowTitle}" />
-                                <Label Text="{loc:Translate Settings_SpamFilterHint}" Style="{StaticResource RowSubtitle}" MaxLines="2" />
-                            </VerticalStackLayout>
-                            <Switch Grid.Column="2" Style="{StaticResource ToggleSwitch}" />
-                        </Grid>
-                    </Border>
-
-                    <Label Text="{loc:Translate Settings_SectionSensitivity}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}" Padding="14">
-                        <VerticalStackLayout Spacing="12">
-                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                                <Border x:Name="PresetRelaxed" Grid.Column="0" Style="{StaticResource Segment}">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnPresetTapped" />
-                                    </Border.GestureRecognizers>
-                                    <VerticalStackLayout Spacing="1">
-                                        <Label Text="{loc:Translate Settings_Relaxed}" Style="{StaticResource SegmentTitle}" />
-                                        <Label Style="{StaticResource SegmentHint}" />
-                                    </VerticalStackLayout>
-                                </Border>
-                                <Border x:Name="PresetBalanced" Grid.Column="1" Style="{StaticResource Segment}">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnPresetTapped" />
-                                    </Border.GestureRecognizers>
-                                    <VerticalStackLayout Spacing="1">
-                                        <Label Text="{loc:Translate Settings_Balanced}" Style="{StaticResource SegmentTitle}" />
-                                        <Label Style="{StaticResource SegmentHint}" />
-                                    </VerticalStackLayout>
-                                </Border>
-                                <Border x:Name="PresetStrict" Grid.Column="2" Style="{StaticResource Segment}">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnPresetTapped" />
-                                    </Border.GestureRecognizers>
-                                    <VerticalStackLayout Spacing="1">
-                                        <Label Text="{loc:Translate Settings_Strict}" Style="{StaticResource SegmentTitle}" />
-                                        <Label Style="{StaticResource SegmentHint}" />
-                                    </VerticalStackLayout>
-                                </Border>
-                            </Grid>
-
-                            <Grid ColumnDefinitions="*,Auto" Padding="2,0">
-                                <Label Text="{loc:Translate Settings_Threshold}"
-                                       FontSize="14"
-                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
-                                       VerticalOptions="Center" />
-                                <Label x:Name="SensitivityValue"
-                                       Grid.Column="1"
-                                       FontSize="14"
-                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                       TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
-                                       VerticalOptions="Center" />
-                            </Grid>
-                            <!-- Maximum before Minimum: a minimum above the default maximum of 1 throws -->
-                            <Slider x:Name="SensitivitySlider"
-                                    Maximum="99"
-                                    Minimum="50"
-                                    Margin="-6,-6"
-                                    MinimumTrackColor="#2E6B4C"
-                                    ThumbColor="#2E6B4C"
-                                    ValueChanged="OnSensitivityChanged" />
-                            <Label x:Name="SensitivityExplain" Style="{StaticResource Note}" Margin="2,0" />
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <Label Text="{loc:Translate Settings_SectionSpamList}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnAutoClearTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="history.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_AutoClear}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_AutoClearHint}" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Border Grid.Column="2" Style="{StaticResource ValueChip}">
-                                    <HorizontalStackLayout Spacing="6">
-                                        <Label x:Name="AutoClearValue" Style="{StaticResource ValueChipLabel}" />
-                                        <Image Source="unfold.png" WidthRequest="15" HeightRequest="15" VerticalOptions="Center">
-                                            <Image.Behaviors>
-                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-                                            </Image.Behaviors>
-                                        </Image>
-                                    </HorizontalStackLayout>
-                                </Border>
-                            </Grid>
-                            <BoxView Style="{StaticResource Divider}" />
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnTrustedTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="person.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_Trusted}" Style="{StaticResource RowTitle}" />
-                                    <Label x:Name="TrustedHint" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Image Grid.Column="2" Style="{StaticResource Chevron}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="#8A8F98" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <Label Text="{loc:Translate Settings_SectionModel}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*">
                                 <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#D7EEDF, Dark=#1F4A35}">
-                                    <Image Source="shield.png" Style="{StaticResource BadgeIcon}">
+                                    <Image Source="sim_card.png" Style="{StaticResource BadgeIcon}">
                                         <Image.Behaviors>
                                             <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
                                         </Image.Behaviors>
                                     </Image>
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label x:Name="ModelVersion" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_ModelHint}" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <BoxView Style="{StaticResource Divider}" />
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="download.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_ModelUpdate}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_ModelUpdateHint}" Style="{StaticResource RowSubtitle}" />
+                                    <Label Text="{loc:Translate Settings_Sims}" Style="{StaticResource RowTitle}" />
+                                    <Label x:Name="SimsHint" Style="{StaticResource RowSubtitle}" />
                                 </VerticalStackLayout>
                                 <Image Grid.Column="2" Style="{StaticResource Chevron}">
                                     <Image.Behaviors>
@@ -660,438 +178,125 @@
                                 </Image>
                             </Grid>
                         </VerticalStackLayout>
-                    </Border>
-                </VerticalStackLayout>
-            </ScrollView>
-        </Grid>
-
-        <!-- ===================== Trusted senders ===================== -->
-        <Grid x:Name="TrustedScreen" Style="{StaticResource SubPage}" RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSubPageBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-                        </Image.Behaviors>
-                    </Image>
-                </Border>
-                <Label Grid.Column="1" Text="{loc:Translate Settings_Trusted}" Style="{StaticResource SubPageTitle}" />
-            </Grid>
-
-            <CollectionView x:Name="TrustedList"
-                            Grid.Row="1"
-                            Margin="8,0"
-                            SelectionMode="None"
-                            VerticalScrollBarVisibility="Never">
-                <CollectionView.EmptyView>
-                    <Label Text="{loc:Translate Settings_TrustedEmpty}"
-                           Margin="24,48,24,0"
-                           Style="{StaticResource Note}"
-                           HorizontalTextAlignment="Center" />
-                </CollectionView.EmptyView>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TrustedSenderRow">
-                        <Grid Padding="10,8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnNotificationsTapped" />
+                            </Grid.GestureRecognizers>
                             <Border Style="{StaticResource Badge}">
-                                <Image Source="person.png" Style="{StaticResource BadgeIcon}">
+                                <Image Source="notifications.png" Style="{StaticResource BadgeIcon}">
                                     <Image.Behaviors>
                                         <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
                                     </Image.Behaviors>
                                 </Image>
                             </Border>
-                            <Label Grid.Column="1" Text="{Binding Display}" Style="{StaticResource RowTitle}" VerticalOptions="Center" />
-                            <Border Grid.Column="2"
-                                    WidthRequest="36"
-                                    HeightRequest="36"
-                                    StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 18"
-                                    BackgroundColor="Transparent"
-                                    VerticalOptions="Center"
-                                    SemanticProperties.Description="{loc:Translate Settings_TrustedRemove}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnTrustedRemoveTapped" />
-                                </Border.GestureRecognizers>
-                                <Image Source="close.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Border>
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </Grid>
-
-        <!-- ===================== SIM cards ===================== -->
-        <Grid x:Name="SimsScreen" Style="{StaticResource SubPage}" RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSubPageBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-                        </Image.Behaviors>
-                    </Image>
-                </Border>
-                <Label Grid.Column="1" Text="{loc:Translate Settings_Sims}" Style="{StaticResource SubPageTitle}" />
-            </Grid>
-
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Padding="0,0,0,24">
-                    <Label Text="{loc:Translate Settings_SectionSims}" Style="{StaticResource SectionTitle}" Margin="26,4,16,8" />
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout x:Name="SimList">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="vm:SimSettingsRow">
-                                    <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*">
-                                        <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#D7EEDF, Dark=#1F4A35}">
-                                            <Image Source="sim_card.png" Style="{StaticResource BadgeIcon}">
-                                                <Image.Behaviors>
-                                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
-                                                </Image.Behaviors>
-                                            </Image>
-                                        </Border>
-                                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                            <Label Text="{Binding Title}" Style="{StaticResource RowTitle}" />
-                                            <Label Text="{Binding Subtitle}" Style="{StaticResource RowSubtitle}" />
-                                        </VerticalStackLayout>
-                                    </Grid>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <Label Text="{loc:Translate Settings_SectionSending}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}">
-                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                            </Grid.GestureRecognizers>
-                            <VerticalStackLayout Grid.Column="0" Spacing="1" VerticalOptions="Center">
-                                <Label Text="{loc:Translate Settings_DefaultSim}" Style="{StaticResource RowTitle}" />
-                                <Label Text="{loc:Translate Settings_DefaultSimHint}" Style="{StaticResource RowSubtitle}" MaxLines="2" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                <Label Text="{loc:Translate Settings_Notifications}" Style="{StaticResource RowTitle}" />
+                                <Label Text="{loc:Translate Settings_NotificationsHint}" Style="{StaticResource RowSubtitle}" />
                             </VerticalStackLayout>
-                            <Border Grid.Column="1" Style="{StaticResource ValueChip}">
-                                <HorizontalStackLayout Spacing="6">
-                                    <Label Text="{loc:Translate Profile_SimPickerAutomatic}" Style="{StaticResource ValueChipLabel}" />
-                                    <Image Source="unfold.png" WidthRequest="15" HeightRequest="15" VerticalOptions="Center">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </HorizontalStackLayout>
-                            </Border>
+                            <Image Grid.Column="2" Style="{StaticResource Chevron}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="#8A8F98" />
+                                </Image.Behaviors>
+                            </Image>
                         </Grid>
-                    </Border>
-                </VerticalStackLayout>
-            </ScrollView>
-        </Grid>
-
-        <!-- ===================== Notifications ===================== -->
-        <Grid x:Name="NotificationsScreen" Style="{StaticResource SubPage}" RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSubPageBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-                        </Image.Behaviors>
-                    </Image>
+                    </VerticalStackLayout>
                 </Border>
-                <Label Grid.Column="1" Text="{loc:Translate Settings_Notifications}" Style="{StaticResource SubPageTitle}" />
-            </Grid>
 
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Padding="0,4,0,24">
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="lock.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_LockScreen}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_LockScreenHint}" Style="{StaticResource RowSubtitle}" MaxLines="2" />
-                                </VerticalStackLayout>
-                                <Switch Grid.Column="2" Style="{StaticResource ToggleSwitch}" />
-                            </Grid>
-                            <BoxView Style="{StaticResource Divider}" />
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnSystemNotificationsTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="notifications.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_SystemNotifications}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_SystemNotificationsHint}" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Image Grid.Column="2" Style="{StaticResource Chevron}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="#8A8F98" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Grid>
+                <Label Text="{loc:Translate Settings_SectionPersonal}" Style="{StaticResource SectionTitle}" />
+                <Border Style="{StaticResource Card}">
+                    <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnAppearanceTapped" />
+                        </Grid.GestureRecognizers>
+                        <Border Style="{StaticResource Badge}">
+                            <Image Source="palette.png" Style="{StaticResource BadgeIcon}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                            <Label Text="{loc:Translate Settings_Appearance}" Style="{StaticResource RowTitle}" />
+                            <Label Text="{loc:Translate Settings_AppearanceHint}" Style="{StaticResource RowSubtitle}" />
                         </VerticalStackLayout>
-                    </Border>
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}">
+                            <Image.Behaviors>
+                                <behaviors:IconTintBehavior TintColor="#8A8F98" />
+                            </Image.Behaviors>
+                        </Image>
+                    </Grid>
+                </Border>
 
-                    <Border Style="{StaticResource Card}" Margin="16,12,16,0">
-                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*">
-                            <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F5E4DA, Dark=#3A2A22}">
-                                <Image Source="tabspam.png" Style="{StaticResource BadgeIcon}">
+                <Label Text="{loc:Translate Settings_SectionPrivacy}" Style="{StaticResource SectionTitle}" />
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPrivacyTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F4ECD4, Dark=#332D1C}">
+                                <Image Source="lock.png" Style="{StaticResource BadgeIcon}">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#9A4A2A, Dark=#F0B79A}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A6A12, Dark=#E5C66B}" />
                                     </Image.Behaviors>
                                 </Image>
                             </Border>
                             <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                <Label Text="{loc:Translate Settings_SpamSilent}" Style="{StaticResource RowTitle}" />
-                                <Label Text="{loc:Translate Settings_SpamSilentHint}" Style="{StaticResource RowSubtitle}" MaxLines="2" />
+                                <Label Text="{loc:Translate Settings_Privacy}" Style="{StaticResource RowTitle}" />
+                                <Label Text="{loc:Translate Settings_PrivacyHint}" Style="{StaticResource RowSubtitle}" />
                             </VerticalStackLayout>
+                            <Image Grid.Column="2" Style="{StaticResource Chevron}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="#8A8F98" />
+                                </Image.Behaviors>
+                            </Image>
                         </Grid>
-                    </Border>
-                </VerticalStackLayout>
-            </ScrollView>
-        </Grid>
-
-        <!-- ===================== Appearance ===================== -->
-        <Grid x:Name="AppearanceScreen" Style="{StaticResource SubPage}" RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSubPageBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-                        </Image.Behaviors>
-                    </Image>
-                </Border>
-                <Label Grid.Column="1" Text="{loc:Translate Settings_Appearance}" Style="{StaticResource SubPageTitle}" />
-            </Grid>
-
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Padding="0,0,0,24">
-                    <Label Text="{loc:Translate Settings_SectionTheme}" Style="{StaticResource SectionTitle}" Margin="26,4,16,8" />
-                    <Border Style="{StaticResource Card}" Padding="10">
-                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                            <Border x:Name="ThemeSystem" Grid.Column="0" Style="{StaticResource Segment}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Border.GestureRecognizers>
-                                <Label Text="{loc:Translate Settings_System}" Style="{StaticResource SegmentTitle}" />
-                            </Border>
-                            <Border x:Name="ThemeLight" Grid.Column="1" Style="{StaticResource Segment}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Border.GestureRecognizers>
-                                <Label Text="{loc:Translate Settings_ThemeLight}" Style="{StaticResource SegmentTitle}" />
-                            </Border>
-                            <Border x:Name="ThemeDark" Grid.Column="2" Style="{StaticResource Segment}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Border.GestureRecognizers>
-                                <Label Text="{loc:Translate Settings_ThemeDark}" Style="{StaticResource SegmentTitle}" />
-                            </Border>
-                        </Grid>
-                    </Border>
-
-                    <Label Text="{loc:Translate Settings_SectionLanguage}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}" Padding="10">
-                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                            <Border x:Name="LanguageSystem" Grid.Column="0" Style="{StaticResource Segment}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Border.GestureRecognizers>
-                                <Label Text="{loc:Translate Settings_System}" Style="{StaticResource SegmentTitle}" />
-                            </Border>
-                            <Border x:Name="LanguageEnglish" Grid.Column="1" Style="{StaticResource Segment}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Border.GestureRecognizers>
-                                <Label Text="English" Style="{StaticResource SegmentTitle}" />
-                            </Border>
-                            <Border x:Name="LanguageFarsi" Grid.Column="2" Style="{StaticResource Segment}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Border.GestureRecognizers>
-                                <Label Text="فارسی" Style="{StaticResource SegmentTitle}" />
-                            </Border>
-                        </Grid>
-                    </Border>
-                    <Label Text="{loc:Translate Settings_LanguageHint}" Style="{StaticResource Note}" Margin="26,8,26,0" />
-                </VerticalStackLayout>
-            </ScrollView>
-        </Grid>
-
-        <!-- ===================== Privacy & storage ===================== -->
-        <Grid x:Name="PrivacyScreen" Style="{StaticResource SubPage}" RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSubPageBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-                        </Image.Behaviors>
-                    </Image>
-                </Border>
-                <Label Grid.Column="1" Text="{loc:Translate Settings_Privacy}" Style="{StaticResource SubPageTitle}" />
-            </Grid>
-
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Padding="0,4,0,24">
-                    <Border Style="{StaticResource Card}" Padding="16" BackgroundColor="{AppThemeBinding Light=#DDF0E4, Dark=#173527}">
-                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                            <Border Style="{StaticResource Badge}" VerticalOptions="Start" BackgroundColor="{AppThemeBinding Light=#F7F9FF, Dark=#14251B}">
-                                <Image Source="shield.png" Style="{StaticResource BadgeIcon}">
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnAboutTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border Style="{StaticResource Badge}">
+                                <Image Source="info.png" Style="{StaticResource BadgeIcon}">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
                                     </Image.Behaviors>
                                 </Image>
                             </Border>
-                            <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
-                                <Label Text="{loc:Translate Settings_PrivacyCardTitle}" Style="{StaticResource RowTitle}" MaxLines="2" />
-                                <Label Text="{loc:Translate Settings_PrivacyCardText}" Style="{StaticResource Note}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                <Label Text="{loc:Translate Settings_About}" Style="{StaticResource RowTitle}" />
+                                <Label x:Name="AboutHint" Style="{StaticResource RowSubtitle}" />
                             </VerticalStackLayout>
+                            <Image Grid.Column="2" Style="{StaticResource Chevron}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="#8A8F98" />
+                                </Image.Behaviors>
+                            </Image>
                         </Grid>
-                    </Border>
-
-                    <Label Text="{loc:Translate Settings_SectionData}" Style="{StaticResource SectionTitle}" />
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnClearSearchesTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}">
-                                    <Image Source="search.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_ClearSearches}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_ClearSearchesHint}" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                            </Grid>
-                            <BoxView Style="{StaticResource Divider}" />
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnClearSpamTapped" />
-                                </Grid.GestureRecognizers>
-                                <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#FBEAEA, Dark=#3A2323}">
-                                    <Image Source="trash.png" Style="{StaticResource BadgeIcon}">
-                                        <Image.Behaviors>
-                                            <behaviors:IconTintBehavior TintColor="#D64545" />
-                                        </Image.Behaviors>
-                                    </Image>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_ClearSpam}" Style="{StaticResource RowTitle}" TextColor="#D64545" />
-                                    <Label x:Name="ClearSpamHint" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
-                </VerticalStackLayout>
-            </ScrollView>
-        </Grid>
-
-        <!-- ===================== About ===================== -->
-        <Grid x:Name="AboutScreen" Style="{StaticResource SubPage}" RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSubPageBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Behaviors>
-                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
-                        </Image.Behaviors>
-                    </Image>
+                    </VerticalStackLayout>
                 </Border>
-                <Label Grid.Column="1" Text="{loc:Translate Settings_About}" Style="{StaticResource SubPageTitle}" />
-            </Grid>
 
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-                <VerticalStackLayout Padding="0,8,0,24">
-                    <Border WidthRequest="72"
-                            HeightRequest="72"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 22"
-                            BackgroundColor="#16382A"
-                            HorizontalOptions="Center">
-                        <Image Source="tabspam.png" WidthRequest="34" HeightRequest="34" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout Margin="24,28,24,0" Spacing="4" HorizontalOptions="Center">
+                    <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Image Source="shield.png" WidthRequest="15" HeightRequest="15" VerticalOptions="Center">
                             <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="#8FE0BE" />
+                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#3A453D, Dark=#C9D2CB}" />
                             </Image.Behaviors>
                         </Image>
-                    </Border>
-                    <Label Text="Gheychi"
-                           Margin="0,12,0,0"
-                           FontSize="22"
-                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                           TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
-                           HorizontalOptions="Center" />
-                    <Label Text="{loc:Translate Settings_Tagline}"
-                           Margin="32,2,32,20"
-                           Style="{StaticResource Note}"
+                        <Label Text="{loc:Translate Settings_FooterTitle}"
+                               FontSize="13"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#3A453D, Dark=#C9D2CB}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{loc:Translate Settings_FooterText}"
+                           FontSize="12"
+                           TextColor="#8A8F98"
                            HorizontalTextAlignment="Center" />
-
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
-                                <Label Text="{loc:Translate Settings_Version}" Style="{StaticResource RowTitle}" VerticalOptions="Center" />
-                                <Label x:Name="AboutVersion" Grid.Column="1" Style="{StaticResource ValueChipLabel}" />
-                            </Grid>
-                            <BoxView Style="{StaticResource Divider}" Margin="16,0" />
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
-                                <Label Text="{loc:Translate Settings_SectionModel}" Style="{StaticResource RowTitle}" VerticalOptions="Center" />
-                                <Label x:Name="AboutModel" Grid.Column="1" Style="{StaticResource ValueChipLabel}" />
-                            </Grid>
-                            <BoxView Style="{StaticResource Divider}" Margin="16,0" />
-                            <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnComingSoonTapped" />
-                                </Grid.GestureRecognizers>
-                                <VerticalStackLayout Spacing="1" VerticalOptions="Center">
-                                    <Label Text="{loc:Translate Settings_Licenses}" Style="{StaticResource RowTitle}" />
-                                    <Label Text="{loc:Translate Settings_LicensesHint}" Style="{StaticResource RowSubtitle}" />
-                                </VerticalStackLayout>
-                                <Image Grid.Column="1" Style="{StaticResource Chevron}">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="#8A8F98" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Grid>
-                        </VerticalStackLayout>
-                    </Border>
                 </VerticalStackLayout>
-            </ScrollView>
-        </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
 
         <controls:SpamOverlay x:Name="Overlay" />
     </Grid>

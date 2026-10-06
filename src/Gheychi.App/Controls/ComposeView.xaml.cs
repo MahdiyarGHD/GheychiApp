@@ -19,6 +19,7 @@ public partial class ComposeView : ContentView
     private string _recentKey = string.Empty;
     private IReadOnlyList<SimCardInfo> _sims = [];
     private int _simIndex;
+    private bool _simPicked;
     private bool _hasContactsPermission = true;
     private long _contactsLoadedTick;
     private long _lastChosenTick;
@@ -111,7 +112,8 @@ public partial class ComposeView : ContentView
         RecipientEntry.Unfocus();
         if (!string.IsNullOrEmpty(RecipientEntry.Text))
             RecipientEntry.Text = string.Empty;
-        _simIndex = 0;
+        _simPicked = false;
+        _simIndex = DefaultSimIndex();
         UpdateSimChip();
         UpdateCardFocus(false);
         ScrollToTop();
@@ -183,8 +185,8 @@ public partial class ComposeView : ContentView
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 _sims = sims;
-                if (_simIndex >= sims.Count)
-                    _simIndex = 0;
+                if (!_simPicked || _simIndex >= sims.Count)
+                    _simIndex = DefaultSimIndex();
                 UpdateSimChip();
             });
         }
@@ -427,12 +429,25 @@ public partial class ComposeView : ContentView
         RecipientEntry.Focus();
     }
 
+    private int DefaultSimIndex()
+    {
+        var subId = Services.AppPreferences.DefaultSubId;
+        for (var i = 0; i < _sims.Count; i++)
+        {
+            if (_sims[i].SubId == subId)
+                return i;
+        }
+
+        return 0;
+    }
+
     private void OnSimChipTapped(object? sender, TappedEventArgs e)
     {
         if (_sims.Count <= 1)
             return;
 
         _simIndex = (_simIndex + 1) % _sims.Count;
+        _simPicked = true;
         UpdateSimChip();
     }
 

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<settings:SettingsScreen xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.NotificationSettingsScreen">
+    <settings:SettingsScreen.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <settings:SettingsStyles />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </settings:SettingsScreen.Resources>
+
+    <Grid Style="{StaticResource ScreenBackground}" RowDefinitions="Auto,*">
+        <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+            <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                    </Image.Behaviors>
+                </Image>
+            </Border>
+            <Label Grid.Column="1" Text="{loc:Translate Settings_Notifications}" Style="{StaticResource ScreenTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="0,4,0,24">
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                            <Border Style="{StaticResource Badge}">
+                                <Image Source="lock.png" Style="{StaticResource BadgeIcon}">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                <Label Text="{loc:Translate Settings_LockScreen}" Style="{StaticResource RowTitle}" />
+                                <Label Text="{loc:Translate Settings_LockScreenHint}" Style="{StaticResource RowSubtitle}" />
+                            </VerticalStackLayout>
+                            <Switch x:Name="LockScreenSwitch" Grid.Column="2" Style="{StaticResource SettingSwitch}" Toggled="OnLockScreenToggled" />
+                        </Grid>
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSystemSettingsTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border Style="{StaticResource Badge}">
+                                <Image Source="notifications.png" Style="{StaticResource BadgeIcon}">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                <Label Text="{loc:Translate Settings_SystemNotifications}" Style="{StaticResource RowTitle}" />
+                                <Label Text="{loc:Translate Settings_SystemNotificationsHint}" Style="{StaticResource RowSubtitle}" />
+                            </VerticalStackLayout>
+                            <Image Grid.Column="2" Style="{StaticResource Chevron}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="#8A8F98" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="16,12,16,0">
+                    <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*">
+                        <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F5E4DA, Dark=#3A2A22}">
+                            <Image Source="tabspam.png" Style="{StaticResource BadgeIcon}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#9A4A2A, Dark=#F0B79A}" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                            <Label Text="{loc:Translate Settings_SpamSilent}" Style="{StaticResource RowTitle}" />
+                            <Label Text="{loc:Translate Settings_SpamSilentHint}" Style="{StaticResource RowSubtitle}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</settings:SettingsScreen>

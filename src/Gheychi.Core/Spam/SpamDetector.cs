@@ -11,7 +11,7 @@ public sealed class SpamDetector(ISpamClassifier classifier, ISpamSettings setti
     /// <summary>The verdict when the message is spam; null when it is not, or when it could not be classified.</summary>
     public async Task<SpamVerdict?> DetectAsync(string address, string body, bool fromContact, CancellationToken cancellationToken = default)
     {
-        if (fromContact || string.IsNullOrWhiteSpace(body) || trustedSenders.IsTrusted(address))
+        if (!settings.Enabled || fromContact || string.IsNullOrWhiteSpace(body) || trustedSenders.IsTrusted(address))
             return null;
 
         var threshold = settings.Threshold;

@@ -20,6 +20,7 @@ public sealed class SpamDetectorTests
 
     private sealed class FakeSettings(float threshold) : ISpamSettings
     {
+        public bool Enabled { get; set; } = true;
         public float Threshold { get; set; } = threshold;
         public int RetentionDays { get; set; } = SpamDetector.DefaultRetentionDays;
     }
@@ -71,6 +72,16 @@ public sealed class SpamDetectorTests
         var detector = Detector(classifier, 0.5f, "Bank");
 
         Assert.Null(await detector.DetectAsync("Bank", "win a prize", fromContact: false));
+        Assert.Equal(0, classifier.Calls);
+    }
+
+    [Fact]
+    public async Task FilterOff_IsNeverClassified()
+    {
+        var classifier = new FakeClassifier(new SpamScore(1f, 1));
+        var detector = new SpamDetector(classifier, new FakeSettings(0.5f) { Enabled = false }, new FakeTrustedSenders());
+
+        Assert.Null(await detector.DetectAsync("+989121234567", "win a prize", fromContact: false));
         Assert.Equal(0, classifier.Calls);
     }
 

@@ -33,9 +33,6 @@
   <data name="Spam_ClearAll" xml:space="preserve">
     <value>Clear all</value>
   </data>
-  <data name="Settings_PageTitle" xml:space="preserve">
-    <value>Settings</value>
-  </data>
   <data name="Spam_Placeholder" xml:space="preserve">
     <value>Blocked messages will appear here</value>
   </data>
@@ -586,19 +583,16 @@
     <value>Report as spam</value>
   </data>
   <data name="Settings_Tagline" xml:space="preserve">
-    <value>Calm, on-device spam filtering for your SMS</value>
+    <value>Your SMS inbox without the noise. Spam is caught and set aside right here, on your phone.</value>
   </data>
   <data name="Settings_Default" xml:space="preserve">
     <value>Default SMS app</value>
   </data>
   <data name="Settings_NotDefault" xml:space="preserve">
-    <value>Not the default SMS app · Set now</value>
+    <value>Not default SMS app</value>
   </data>
   <data name="Settings_TileModel" xml:space="preserve">
     <value>Spam model</value>
-  </data>
-  <data name="Settings_TileModelValue" xml:space="preserve">
-    <value>v{0} · on-device</value>
   </data>
   <data name="Settings_TileCaught" xml:space="preserve">
     <value>Spam caught</value>
@@ -739,13 +733,13 @@
     <value>Default SIM for new messages</value>
   </data>
   <data name="Settings_DefaultSimHint" xml:space="preserve">
-    <value>A chat's own SIM choice comes first</value>
+    <value>A new message starts on this SIM</value>
   </data>
   <data name="Settings_LockScreen" xml:space="preserve">
     <value>Show content on lock screen</value>
   </data>
   <data name="Settings_LockScreenHint" xml:space="preserve">
-    <value>When off, only the sender is shown</value>
+    <value>When off, only the sender is shown while your phone hides sensitive notifications</value>
   </data>
   <data name="Settings_SystemNotifications" xml:space="preserve">
     <value>System notification settings</value>
@@ -812,5 +806,95 @@
   </data>
   <data name="Settings_LicensesHint" xml:space="preserve">
     <value>Libraries this app is built on</value>
+  </data>
+  <data name="Settings_NotificationsOn" xml:space="preserve">
+    <value>Notifications on</value>
+  </data>
+  <data name="Settings_NotificationsOff" xml:space="preserve">
+    <value>Notifications off</value>
+  </data>
+  <data name="Settings_ContactsOn" xml:space="preserve">
+    <value>Contacts allowed</value>
+  </data>
+  <data name="Settings_ContactsOff" xml:space="preserve">
+    <value>No contacts access</value>
+  </data>
+  <data name="Settings_SpamFilterOffHint" xml:space="preserve">
+    <value>Off: every message goes to the inbox</value>
+  </data>
+  <data name="Settings_SpamOffHint" xml:space="preserve">
+    <value>Off · every message goes to the inbox</value>
+  </data>
+  <data name="Settings_Analytics" xml:space="preserve">
+    <value>Spam analytics</value>
+  </data>
+  <data name="Settings_AnalyticsHint" xml:space="preserve">
+    <value>What was caught, when, and how accurately</value>
+  </data>
+  <data name="Settings_AnalyticsEmpty" xml:space="preserve">
+    <value>No spam caught yet. The numbers fill in as spam arrives.</value>
+  </data>
+  <data name="Settings_StatTotal" xml:space="preserve">
+    <value>All time</value>
+  </data>
+  <data name="Settings_StatToday" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Settings_StatWeek" xml:space="preserve">
+    <value>Last 7 days</value>
+  </data>
+  <data name="Settings_StatMonth" xml:space="preserve">
+    <value>Last 30 days</value>
+  </data>
+  <data name="Settings_SectionDaily" xml:space="preserve">
+    <value>Last 14 days</value>
+  </data>
+  <data name="Settings_SectionConfidence" xml:space="preserve">
+    <value>Confidence</value>
+  </data>
+  <data name="Settings_SectionAccuracy" xml:space="preserve">
+    <value>Accuracy &amp; timing</value>
+  </data>
+  <data name="Settings_SectionTopSenders" xml:space="preserve">
+    <value>Top spam senders</value>
+  </data>
+  <data name="Settings_AccuracyValue" xml:space="preserve">
+    <value>{0} accurate</value>
+  </data>
+  <data name="Settings_AccuracyHint" xml:space="preserve">
+    <value>{0} restored by you as not spam</value>
+  </data>
+  <data name="Settings_AccuracyNone" xml:space="preserve">
+    <value>You haven't restored any as not spam</value>
+  </data>
+  <data name="Settings_BusiestValue" xml:space="preserve">
+    <value>Mostly around {0}</value>
+  </data>
+  <data name="Settings_BusiestHint" xml:space="preserve">
+    <value>When most spam arrives</value>
+  </data>
+  <data name="Settings_RestartTitle" xml:space="preserve">
+    <value>Restart Gheychi?</value>
+  </data>
+  <data name="Settings_RestartMessage" xml:space="preserve">
+    <value>The new language is applied after the app restarts.</value>
+  </data>
+  <data name="Settings_Restart" xml:space="preserve">
+    <value>Restart</value>
+  </data>
+  <data name="Settings_ClearSpamNote" xml:space="preserve">
+    <value>Spam analytics are kept when spam is cleared.</value>
+  </data>
+  <data name="Notification_HiddenContent" xml:space="preserve">
+    <value>New message</value>
+  </data>
+  <data name="Messages_NotDefaultTitle" xml:space="preserve">
+    <value>Gheychi isn't your SMS app</value>
+  </data>
+  <data name="Messages_NotDefaultText" xml:space="preserve">
+    <value>Android lets only the default SMS app receive and manage your messages. Set Gheychi as the default to see your inbox.</value>
+  </data>
+  <data name="Messages_NotDefaultAction" xml:space="preserve">
+    <value>Set as default</value>
   </data>
 </root>

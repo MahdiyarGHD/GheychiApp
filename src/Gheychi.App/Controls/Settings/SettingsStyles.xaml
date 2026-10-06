@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                    x:Class="Gheychi.App.Controls.Settings.SettingsStyles">
+
+    <Style x:Key="ScreenBackground" TargetType="Grid">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}" />
+    </Style>
+
+    <Style x:Key="ScreenTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="MaxLines" Value="1" />
+    </Style>
+
+    <Style x:Key="BackButton" TargetType="Border">
+        <Setter Property="WidthRequest" Value="40" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 20" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="SectionTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextTransform" Value="Uppercase" />
+        <Setter Property="CharacterSpacing" Value="0.6" />
+        <Setter Property="Margin" Value="26,20,16,8" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+    </Style>
+
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Margin" Value="16,0" />
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 22" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#EEF2EC, Dark=#14251B}" />
+    </Style>
+
+    <Style x:Key="Tile" TargetType="Border">
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E3EAE2, Dark=#1D3026}" />
+    </Style>
+
+    <Style x:Key="TileCaption" TargetType="Label">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="MaxLines" Value="1" />
+    </Style>
+
+    <Style x:Key="TileValue" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+        <Setter Property="MaxLines" Value="2" />
+    </Style>
+
+    <Style x:Key="BigNumber" TargetType="Label">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+    </Style>
+
+    <Style x:Key="Row" TargetType="Grid">
+        <Setter Property="Padding" Value="16,11" />
+        <Setter Property="ColumnSpacing" Value="14" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+    </Style>
+
+    <Style x:Key="Badge" TargetType="Border">
+        <Setter Property="WidthRequest" Value="40" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 20" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E0E8DF, Dark=#203328}" />
+    </Style>
+
+    <Style x:Key="BadgeIcon" TargetType="Image">
+        <Setter Property="WidthRequest" Value="19" />
+        <Setter Property="HeightRequest" Value="19" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="RowTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+        <Setter Property="MaxLines" Value="2" />
+    </Style>
+
+    <Style x:Key="RowSubtitle" TargetType="Label">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+        <Setter Property="MaxLines" Value="3" />
+    </Style>
+
+    <Style x:Key="Chevron" TargetType="Image">
+        <Setter Property="Source" Value="chevron_right.png" />
+        <Setter Property="WidthRequest" Value="18" />
+        <Setter Property="HeightRequest" Value="18" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="Divider" TargetType="BoxView">
+        <Setter Property="HeightRequest" Value="1" />
+        <Setter Property="Margin" Value="70,0,16,0" />
+        <Setter Property="Color" Value="{AppThemeBinding Light=#E1E7DF, Dark=#203328}" />
+    </Style>
+
+    <Style x:Key="ValueChip" TargetType="Border">
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E0E8DF, Dark=#203328}" />
+    </Style>
+
+    <Style x:Key="ValueChipLabel" TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="Note" TargetType="Label">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+    </Style>
+
+    <Style x:Key="SettingSwitch" TargetType="Switch">
+        <Setter Property="OnColor" Value="#2E6B4C" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <!-- Segmented choices: code swaps between the On and Off styles, so they follow the theme -->
+    <Style x:Key="SegmentOff" TargetType="Border">
+        <Setter Property="Padding" Value="6,10" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#E3EAE2, Dark=#1D3026}" />
+    </Style>
+
+    <Style x:Key="SegmentOn" TargetType="Border" BasedOn="{StaticResource SegmentOff}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#2E6B4C, Dark=#8FE0BE}" />
+    </Style>
+
+    <Style x:Key="SegmentTitleOff" TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}" />
+    </Style>
+
+    <Style x:Key="SegmentTitleOn" TargetType="Label" BasedOn="{StaticResource SegmentTitleOff}">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#FFFFFF, Dark=#0A1A11}" />
+    </Style>
+
+    <Style x:Key="SegmentHintOff" TargetType="Label">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyRegular}" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+    </Style>
+
+    <Style x:Key="SegmentHintOn" TargetType="Label" BasedOn="{StaticResource SegmentHintOff}">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#DDF3E8, Dark=#173527}" />
+    </Style>
+
+    <!-- Status chips on the overview: OK or needs attention -->
+    <Style x:Key="ChipOk" TargetType="Border">
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#DDF0E4, Dark=#1B3A2B}" />
+    </Style>
+
+    <Style x:Key="ChipWarn" TargetType="Border" BasedOn="{StaticResource ChipOk}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FCF2E1, Dark=#3A3020}" />
+    </Style>
+
+    <Style x:Key="ChipLabelOk" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontFamily" Value="{x:Static vm:ThreadItem.FontFamilyBold}" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+    </Style>
+
+    <Style x:Key="ChipLabelWarn" TargetType="Label" BasedOn="{StaticResource ChipLabelOk}">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#8A5A0E, Dark=#E8C27A}" />
+    </Style>
+
+    <Style x:Key="ChipDotOk" TargetType="BoxView">
+        <Setter Property="WidthRequest" Value="7" />
+        <Setter Property="HeightRequest" Value="7" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="Color" Value="#2E9B63" />
+    </Style>
+
+    <Style x:Key="ChipDotWarn" TargetType="BoxView" BasedOn="{StaticResource ChipDotOk}">
+        <Setter Property="Color" Value="#D08A16" />
+    </Style>
+</ResourceDictionary>

@@ -4,9 +4,17 @@ namespace Gheychi.App.Localization;
 
 public static class CultureService
 {
-    public static void ApplySystemCulture()
+    /// <summary>The language picked in Settings, else the phone's.</summary>
+    public static void ApplyCulture()
     {
-        var culture = CultureInfo.CurrentUICulture;
+        var culture = Services.AppPreferences.Language switch
+        {
+            Services.AppPreferences.LanguageEnglish => new CultureInfo("en-US"),
+            Services.AppPreferences.LanguagePersian => new CultureInfo("fa-IR"),
+            _ => CultureInfo.CurrentUICulture
+        };
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
     }

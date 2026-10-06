@@ -313,6 +313,50 @@
             </Image>
         </Border>
 
+        <!-- Not the default SMS app: Android keeps the inbox from working properly, so it is not shown -->
+        <Grid x:Name="NotDefaultScreen"
+              IsVisible="False"
+              BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}">
+            <VerticalStackLayout Padding="32,0" Spacing="10" VerticalOptions="Center">
+                <Border WidthRequest="64"
+                        HeightRequest="64"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 32"
+                        BackgroundColor="{AppThemeBinding Light=#FCF2E1, Dark=#3A3020}"
+                        HorizontalOptions="Center">
+                    <Image Source="chat.png" WidthRequest="28" HeightRequest="28" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Behaviors>
+                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A5A0E, Dark=#E8C27A}" />
+                        </Image.Behaviors>
+                    </Image>
+                </Border>
+                <Label Text="{loc:Translate Messages_NotDefaultTitle}"
+                       Margin="0,6,0,0"
+                       FontSize="18"
+                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                       TextColor="{AppThemeBinding Light=#1B1E24, Dark=#E8EAED}"
+                       HorizontalTextAlignment="Center" />
+                <Label Text="{loc:Translate Messages_NotDefaultText}"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}"
+                       HorizontalTextAlignment="Center" />
+                <Border Margin="0,12,0,0"
+                        Padding="22,12"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 22"
+                        BackgroundColor="#2E6B4C"
+                        HorizontalOptions="Center">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSetDefaultTapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="{loc:Translate Messages_NotDefaultAction}"
+                           FontSize="15"
+                           FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                           TextColor="White" />
+                </Border>
+            </VerticalStackLayout>
+        </Grid>
+
         </Grid>
 
         </Grid>

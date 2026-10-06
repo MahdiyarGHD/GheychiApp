@@ -145,9 +145,27 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         _ = OpenChatSafely(thread);
     }
 
+    private Window? _gateWindow;
+
+    private static Gheychi.Core.Services.ISmsService? SmsService =>
+        IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Services.ISmsService>();
+
+    // Back from the default-app prompt the answer is known only once the window is active again.
+    private void UpdateDefaultAppGate() =>
+        NotDefaultScreen.IsVisible = SmsService is { } sms && !sms.IsDefaultSmsApp();
+
+    private void OnGateWindowActivated(object? sender, EventArgs e) => UpdateDefaultAppGate();
+
+    private void OnSetDefaultTapped(object? sender, TappedEventArgs e) => _ = SmsService?.EnsureDefaultSmsAppAsync();
+
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        if (_gateWindow is not null)
+        {
+            _gateWindow.Activated -= OnGateWindowActivated;
+            _gateWindow = null;
+        }
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         if (ReferenceEquals(PageSwipe.Client, this))
             PageSwipe.Client = null;
@@ -156,6 +174,12 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        UpdateDefaultAppGate();
+        if (_gateWindow is null && Window is { } window)
+        {
+            _gateWindow = window;
+            window.Activated += OnGateWindowActivated;
+        }
         PageSwipe.Client = this;
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         ChatLaunchRequests.Requested += OnChatLaunchRequested;

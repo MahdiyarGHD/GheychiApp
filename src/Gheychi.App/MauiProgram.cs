@@ -13,7 +13,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        Localization.CultureService.ApplySystemCulture();
+        Localization.CultureService.ApplyCulture();
         SQLitePCL.Batteries_V2.Init();
 
         var builder = MauiApp.CreateBuilder();
@@ -36,6 +36,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISpamSettings, Services.PreferencesSpamSettings>();
         builder.Services.AddSingleton<ITrustedSenders, Services.PreferencesTrustedSenders>();
         builder.Services.AddSingleton<ISpamMessageRepository>(_ => new SpamMessageRepository(databasePath));
+        builder.Services.AddSingleton<ISpamStatsRepository>(_ => new SpamStatRepository(databasePath));
         builder.Services.AddSingleton(_ => new SpamModelStore(
             Path.Combine(FileSystem.AppDataDirectory, "spam-model"),
             name => FileSystem.OpenAppPackageFileAsync($"SpamModel/{name}")));

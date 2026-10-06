@@ -5,6 +5,7 @@ namespace Gheychi.Core.Services;
 public interface ISmsService
 {
     Task<bool> EnsureDefaultSmsAppAsync();
+    bool IsDefaultSmsApp();
     Task<bool> EnsurePermissionsAsync();
     Task<IReadOnlyList<SmsThread>> GetThreadsAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SmsMessage>> GetMessagesAsync(long threadId, int? limit = null, int offset = 0, CancellationToken cancellationToken = default);

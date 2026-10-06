@@ -12,6 +12,7 @@ namespace Gheychi.App.ViewModels;
 public sealed class SpamViewModel : INotifyPropertyChanged
 {
     private readonly ISpamMessageRepository _repository;
+    private readonly ISpamStatsRepository _stats;
     private readonly ISmsService _smsService;
     private readonly ISpamSettings _settings;
     private readonly ITrustedSenders _trustedSenders;
@@ -23,12 +24,14 @@ public sealed class SpamViewModel : INotifyPropertyChanged
 
     public SpamViewModel(
         ISpamMessageRepository repository,
+        ISpamStatsRepository stats,
         ISmsService smsService,
         ISpamSettings settings,
         ITrustedSenders trustedSenders,
         IDateFormattingService dateFormatter)
     {
         _repository = repository;
+        _stats = stats;
         _smsService = smsService;
         _settings = settings;
         _trustedSenders = trustedSenders;
@@ -85,6 +88,12 @@ public sealed class SpamViewModel : INotifyPropertyChanged
 
     public int CountSince(DateTime since) => _all.Count(i => i.Message.Timestamp >= since);
 
+    public async Task<SpamAnalytics> GetAnalyticsAsync()
+    {
+        var stats = await _stats.GetAllAsync();
+        return await Task.Run(() => SpamAnalytics.Compute(stats, DateTime.Now));
+    }
+
     /// <summary>Saves the new retention and drops what is now past it.</summary>
     public async Task SetRetentionDaysAsync(int days)
     {
@@ -109,6 +118,7 @@ public sealed class SpamViewModel : INotifyPropertyChanged
         if (trustSender)
             _trustedSenders.SetTrusted(message.Address, true);
 
+        await _stats.MarkRestoredAsync(message.Id);
         await _repository.DeleteAsync([message.Id]);
         Remove([item]);
         return true;
@@ -136,6 +146,8 @@ public sealed class SpamViewModel : INotifyPropertyChanged
             {
                 await _repository.DeleteOlderThanAsync(cutoff);
                 var messages = await _repository.GetAllAsync();
+                // Spam caught before the log existed, or whose log write failed in the receiver.
+                await _stats.AddMissingAsync(messages.Select(SpamStats.From).ToList());
                 var now = DateTime.Now;
                 var culture = CultureInfo.CurrentUICulture;
                 return messages.Select(m => ToItem(m, now, culture)).ToList();
