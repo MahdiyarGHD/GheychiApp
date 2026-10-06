@@ -46,6 +46,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         var viewModel = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
         InitializeComponent();
         BindingContext = viewModel;
+        ListTuning.UseFixedSize(ThreadsList);
 
         // Opened from a notification on a cold start: show the chat, not an inbox that is about to be covered.
         // The chat view is built now instead of after the first frame, and the inbox and tab bar stay out
@@ -197,23 +198,26 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         {
             await Task.Delay(2500);
             await WaitForQuietAsync();
-            _ = ChatOverlay;
+            await CollapseWhenParkedAsync(ChatOverlay, () => IsChatClosed);
 
             await Task.Delay(1000);
             await WaitForQuietAsync();
-            _ = SearchOverlay;
+            await CollapseWhenParkedAsync(SearchOverlay, () => IsSearchClosed);
 
             await Task.Delay(1000);
             await WaitForQuietAsync();
-            _ = ComposeOverlay.PreloadContactsAsync();
+            if (Vm is not null)
+                ComposeOverlay.SetRecent(BuildRecentRows());
+            await ComposeOverlay.PreloadContactsAsync();
+            await CollapseWhenParkedAsync(ComposeOverlay, () => IsComposeClosed);
 
             await Task.Delay(1000);
             await WaitForQuietAsync();
-            _ = ArchiveOverlay;
+            await CollapseWhenParkedAsync(ArchiveOverlay, () => !_archiveOpen && !_swipeDragging);
 
             await Task.Delay(1000);
             await WaitForQuietAsync();
-            _ = ProfileOverlay;
+            await CollapseWhenParkedAsync(ProfileOverlay, () => IsProfileClosed);
 
             // Reading chats ahead is background work that would compete with the screens above.
             await Task.Delay(1500);
@@ -224,6 +228,32 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         {
         }
     }
+
+    // An overlay is built visible so its first measure, layout and row inflation happen during the
+    // warm-up, then collapsed until it is opened (see Park/Unpark below).
+    private static async Task CollapseWhenParkedAsync(View overlay, Func<bool> isParked)
+    {
+        await EnsureOverlayReadyAsync(overlay);
+        await Task.Delay(250);
+        if (isParked())
+            overlay.IsVisible = false;
+    }
+
+    // Parked overlays are collapsed, not only moved off screen. A collapsed view is skipped by every
+    // measure and layout pass; a visible one, even 3000dp away, is re-measured whenever the page changes
+    // size (tab bar shown or hidden, keyboard), which made every open, close and keyboard pay for all
+    // five full-screen overlays at once.
+    private static void Unpark(View overlay) => overlay.IsVisible = true;
+
+    // While an overlay covers the whole screen the inbox under it is collapsed too, for the same
+    // reason: typing in a chat (keyboard resize) must not lay out the inbox list behind it.
+    private void CoverInbox()
+    {
+        if (!IsChatClosed || !IsSearchClosed || !IsComposeClosed)
+            InboxLayer.IsVisible = false;
+    }
+
+    private void UncoverInbox() => InboxLayer.IsVisible = true;
 
     private async Task WaitForQuietAsync()
     {
@@ -431,9 +461,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     /// <summary>Ends the cold-start hold (see the constructor); harmless when nothing was held.</summary>
     private void RevealInbox()
     {
-        InboxLayer.IsVisible = true;
         if (IsChatClosed)
         {
+            UncoverInbox();
             NativeTabBar.Release();
             Shell.SetTabBarIsVisible(this, true);
             NativeTabBar.Show();
@@ -559,6 +589,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
                 ChatOverlay.Vm?.SelectSim(sim.SlotIndex, sim.SubId);
             var distance = GetFallbackHeight();
             OverlayAnimator.SetTranslationY(ChatOverlay, animate ? distance : 0);
+            Unpark(ChatOverlay);
             ChatOverlay.InputTransparent = false;
             ChatPresence.ChatOpened(thread.ThreadId);
             Shell.SetTabBarIsVisible(this, false);
@@ -574,6 +605,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
                 await Task.Delay(30);
                 await OverlayAnimator.SlideYAsync(ChatOverlay, distance, 0, 260, decelerate: true);
             }
+
+            CoverInbox();
 
             // The list is filled once the chat has arrived. The slide's frames are produced on the UI
             // thread, so binding the rows before it delayed its start and binding them during it froze it.
@@ -603,6 +636,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         catch (InvalidOperationException)
         {
             OverlayAnimator.SetTranslationY(ChatOverlay, 0);
+            Unpark(ChatOverlay);
             Shell.SetTabBarIsVisible(this, false);
         }
         finally
@@ -619,6 +653,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         try
         {
             await ChatOverlay.Close();
+            UncoverInbox();
             NativeTabBar.Release();
             _ = RestoreTabBarSoonAsync();
 
@@ -632,6 +667,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         catch (InvalidOperationException)
         {
             ParkChatOverlay();
+            UncoverInbox();
             Shell.SetTabBarIsVisible(this, true);
         }
         finally
@@ -646,6 +682,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         ChatOverlay.InputTransparent = true;
         OverlayAnimator.SetTranslationY(ChatOverlay, OverlayAnimator.ParkedDistance);
         ChatOverlay.ResetAfterClose();
+        ChatOverlay.IsVisible = false;
     }
 
     // ---- Profile -------------------------------------------------------------------------------
@@ -680,6 +717,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
             var distance = GetFallbackHeight();
             OverlayAnimator.SetTranslationY(ProfileOverlay, distance);
+            Unpark(ProfileOverlay);
             ProfileOverlay.InputTransparent = false;
 
             await Task.Delay(30);
@@ -689,6 +727,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         catch (InvalidOperationException)
         {
             OverlayAnimator.SetTranslationY(ProfileOverlay, 0);
+            Unpark(ProfileOverlay);
         }
         finally
         {
@@ -721,6 +760,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         ProfileOverlay.InputTransparent = true;
         OverlayAnimator.SetTranslationY(ProfileOverlay, OverlayAnimator.ParkedDistance);
         ProfileOverlay.Reset();
+        ProfileOverlay.IsVisible = false;
     }
 
     private bool IsArchived(long threadId) => Vm?.ArchivedThreads.Any(t => t.ThreadId == threadId) == true;
@@ -799,20 +839,24 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             if (_searchOverlay is null)
                 await EnsureOverlayReadyAsync(SearchOverlay);
 
-            var searchVm = IPlatformApplication.Current?.Services.GetService<SearchViewModel>() ?? new SearchViewModel();
-            SearchOverlay.Initialize(searchVm);
+            // The overlay keeps its view model: a new one per open re-bound the whole screen (every list
+            // and binding) and re-read the recent searches and SIMs right before the slide. Park clears it.
+            SearchOverlay.Initialize();
             var distance = GetFallbackHeight();
             OverlayAnimator.SetTranslationY(SearchOverlay, distance);
+            Unpark(SearchOverlay);
             SearchOverlay.InputTransparent = false;
             Shell.SetTabBarIsVisible(this, false);
 
             await Task.Delay(30);
             await OverlayAnimator.SlideYAsync(SearchOverlay, distance, 0, 260, decelerate: true);
+            CoverInbox();
             SearchOverlay.FocusSearchInput();
         }
         catch (InvalidOperationException)
         {
             OverlayAnimator.SetTranslationY(SearchOverlay, 0);
+            Unpark(SearchOverlay);
             Shell.SetTabBarIsVisible(this, false);
         }
         finally
@@ -830,6 +874,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         {
             // The overlay leaves with what it shows; it is cleared once it is out of sight.
             SearchOverlay.UnfocusSearchInput();
+            UncoverInbox();
             _ = RestoreTabBarSoonAsync();
 
             await OverlayAnimator.SlideYAsync(SearchOverlay, 0, GetFallbackHeight(), 220, decelerate: false);
@@ -838,6 +883,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         catch (InvalidOperationException)
         {
             ParkSearchOverlay();
+            UncoverInbox();
             Shell.SetTabBarIsVisible(this, true);
         }
         finally
@@ -851,6 +897,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         SearchOverlay.InputTransparent = true;
         OverlayAnimator.SetTranslationY(SearchOverlay, OverlayAnimator.ParkedDistance);
         SearchOverlay.Reset();
+        SearchOverlay.IsVisible = false;
     }
 
     private void OnCloseSearchRequested(object? sender, EventArgs e)
@@ -951,15 +998,20 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             var compose = ComposeOverlay;
             var distance = GetFallbackHeight();
             compose.PrepareForOpen(BuildRecentRows(), distance);
+            Unpark(compose);
             compose.InputTransparent = false;
             Shell.SetTabBarIsVisible(this, false);
 
+            // Same settle as the other overlays: the tab bar leaving re-lays out the page.
+            await Task.Delay(30);
             await compose.SlideAsync(open: true, distance);
+            CoverInbox();
             compose.OnOpened();
         }
         catch (InvalidOperationException)
         {
             ComposeOverlay.SetTranslationY(0);
+            Unpark(ComposeOverlay);
             Shell.SetTabBarIsVisible(this, false);
         }
         finally
@@ -977,6 +1029,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         {
             var compose = ComposeOverlay;
             compose.PrepareForClose();
+            UncoverInbox();
             _ = RestoreTabBarSoonAsync();
 
             await compose.SlideAsync(open: false, GetFallbackHeight());
@@ -985,6 +1038,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         catch (InvalidOperationException)
         {
             ComposeOverlay.Park();
+            UncoverInbox();
             Shell.SetTabBarIsVisible(this, true);
         }
         finally
@@ -1130,6 +1184,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     public void OnSwipeStarted()
     {
         _swipeDragging = true;
+        Unpark(ArchiveOverlay);
         if (Vm != null)
             ArchiveOverlay.Initialize(Vm);
         ArchiveOverlay.InputTransparent = true;
@@ -1227,6 +1282,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             {
                 SetArchiveX(-OpenSwipeSign * OffscreenDistance);
                 ArchiveOverlay.ResetState();
+                if (!_swipeDragging)
+                    ArchiveOverlay.IsVisible = false;
             }
         }
         catch (InvalidOperationException)

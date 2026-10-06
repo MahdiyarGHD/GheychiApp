@@ -1,9 +1,11 @@
 namespace Gheychi.App.Gestures;
 
 /// <summary>
-/// Slides a full-screen overlay in and out. On Android the slide is a platform view-property animation,
-/// which the render thread drives: layout work during the slide (the tab bar hiding, the keyboard, a
-/// list being filled) cannot stall it the way MAUI's per-frame managed animation is stalled.
+/// Slides a full-screen overlay in and out. On Android the slide is a platform view-property animation:
+/// cheaper per frame than MAUI's managed animation (no managed code, no re-layout per frame), but its
+/// frames are still produced on the UI thread. Anything heavy on the UI thread (filling a list, a layout
+/// pass, a GC) delays the start or freezes the slide, so callers do that work before the slide starts
+/// only if it is cheap, and otherwise after it ends.
 /// </summary>
 public static class OverlayAnimator
 {

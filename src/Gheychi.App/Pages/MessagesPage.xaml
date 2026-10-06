@@ -159,7 +159,8 @@
         </Grid>
 
         <Grid Grid.Row="1">
-            <CollectionView Margin="8,4,8,0"
+            <CollectionView x:Name="ThreadsList"
+                            Margin="8,4,8,0"
                             ItemsSource="{Binding Threads}"
                             ItemSizingStrategy="MeasureFirstItem"
                             SelectionMode="None"

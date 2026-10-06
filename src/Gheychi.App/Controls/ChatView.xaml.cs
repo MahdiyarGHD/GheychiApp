@@ -47,7 +47,9 @@ public partial class ChatView : ContentView
                     lm.InitialPrefetchItemCount = 6;
                     lm.ItemPrefetchEnabled = true;
                 }
-                rv.HasFixedSize = false;
+                // The list fills a star row: an inserted or prepended row only re-lays out the list,
+                // not the whole window (see ListTuning).
+                rv.HasFixedSize = true;
                 rv.SetItemViewCacheSize(25);
                 // The default pool keeps 5 recycled rows per template; a chat shows about twice that, so
                 // every chat switch re-created rows. View types are small consecutive ints.

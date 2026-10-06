@@ -31,6 +31,7 @@ public partial class ComposeView : ContentView
     {
         InitializeComponent();
         ContactList.ItemsSource = _rows;
+        ListTuning.UseFixedSize(ContactList);
         UpdateStates(filtering: false, rowCount: 0);
         Loaded += OnViewLoaded;
     }
@@ -41,27 +42,55 @@ public partial class ComposeView : ContentView
     /// <summary>Reads the address book ahead of the first open so the list is there when the screen slides in.</summary>
     public Task PreloadContactsAsync() => EnsureContactsAsync(force: false);
 
-    /// <summary>Cheap work before the slide-in: suggestions, scroll to the top, start offscreen.</summary>
+    /// <summary>Sets the suggestions while the screen is parked (warm-up), so the first open has nothing to rebuild.</summary>
+    public void SetRecent(IReadOnlyList<ComposeRow> recent)
+    {
+        if (TakeRecent(recent))
+            Rebuild();
+    }
+
+    /// <summary>Cheap work before the slide-in: start offscreen. The list is already at the top (see ResetState).</summary>
     public void PrepareForOpen(IReadOnlyList<ComposeRow> recent, double distanceDp)
     {
         SetTranslationY(distanceDp);
 
-        var key = string.Join('|', recent.Select(r => r.Address + r.Name));
-        if (key != _recentKey)
+        // Re-binding the list is the expensive part of opening; with rows already there it waits for
+        // the slide and the screen arrives with the previous suggestions for a moment.
+        if (TakeRecent(recent))
         {
-            _recentKey = key;
-            _recent = recent;
-            Rebuild();
+            if (_rows.Count == 0)
+                Rebuild();
+            else
+                _rebuildAfterOpen = true;
         }
 
-        ScrollToTop();
         _ = LoadSimsAsync();
     }
 
     /// <summary>After the slide-in: a contact refresh must not compete with the animation. The keyboard stays closed until the field is tapped.</summary>
     public void OnOpened()
     {
+        if (_rebuildAfterOpen)
+        {
+            _rebuildAfterOpen = false;
+            Rebuild();
+        }
+
         _ = EnsureContactsAsync(force: false);
+    }
+
+    private bool _rebuildAfterOpen;
+
+    // True when the suggestions differ from the ones the list was built with.
+    private bool TakeRecent(IReadOnlyList<ComposeRow> recent)
+    {
+        var key = string.Join('|', recent.Select(r => r.Address + r.Name));
+        if (key == _recentKey)
+            return false;
+
+        _recentKey = key;
+        _recent = recent;
+        return true;
     }
 
     public void PrepareForClose() => RecipientEntry.Unfocus();
@@ -72,6 +101,9 @@ public partial class ComposeView : ContentView
         InputTransparent = true;
         SetTranslationY(OverlayAnimator.ParkedDistance);
         ResetState();
+
+        // Collapsed while parked so page resizes skip it; MessagesPage shows it again before the slide.
+        IsVisible = false;
     }
 
     public void ResetState()

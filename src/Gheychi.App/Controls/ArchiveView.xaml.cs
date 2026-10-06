@@ -21,6 +21,7 @@ public partial class ArchiveView : ContentView, IThreadRowHost
     {
         InitializeComponent();
         ArchiveList.ItemsSource = _visible;
+        ListTuning.UseFixedSize(ArchiveList);
         UpdateEmptyState();
     }
 
