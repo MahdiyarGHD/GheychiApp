@@ -1,15 +1,24 @@
 using Android.Content;
 using Android.Provider;
 using Gheychi.Core.Notifications;
+using Gheychi.Core.Spam;
 using Microsoft.Maui.ApplicationModel;
 
 namespace Gheychi.App.Platforms.Android.Notifications;
 
-/// <summary>What happens to a received SMS: store it, tell the open screens, then notify if the rules allow.</summary>
+/// <summary>What happens to a received SMS: quarantine it if it is spam; otherwise store it, tell the open screens, then notify if the rules allow.</summary>
 internal static class IncomingSmsHandler
 {
-    public static void Handle(Context context, string address, string body, long timestampMillis, int subId, Action<long> raiseReceived)
+    public static async Task HandleAsync(Context context, string address, string body, long timestampMillis, int subId,
+        Action<long> raiseReceived, Action<SpamMessage> raiseSpamReceived)
     {
+        var spam = await QuarantineIfSpamAsync(context, address, body, timestampMillis, subId);
+        if (spam is not null)
+        {
+            MainThread.BeginInvokeOnMainThread(() => raiseSpamReceived(spam));
+            return;
+        }
+
         var threadId = Store(context, address, body, timestampMillis, subId);
 
         MainThread.BeginInvokeOnMainThread(() => raiseReceived(threadId));
@@ -28,6 +37,37 @@ internal static class IncomingSmsHandler
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"SMS notification failed: {ex}");
+        }
+    }
+
+    /// <summary>
+    /// Spam goes only to the app's own database, never to the system SMS store, so it cannot show up in the inbox,
+    /// a conversation, search or a notification. Null when the message is not spam or could not be quarantined.
+    /// </summary>
+    private static async Task<SpamMessage?> QuarantineIfSpamAsync(Context context, string address, string body, long timestampMillis, int subId)
+    {
+        try
+        {
+            var services = IPlatformApplication.Current?.Services;
+            var detector = services?.GetService<SpamDetector>();
+            var repository = services?.GetService<ISpamMessageRepository>();
+            if (detector is null || repository is null)
+                return null;
+
+            var fromContact = ConversationReader.ReadContactName(context, address) is not null;
+            var score = await detector.DetectAsync(body, fromContact);
+            if (score is not { } s)
+                return null;
+
+            var message = new SpamMessage(0, address, body,
+                DateTimeOffset.FromUnixTimeMilliseconds(timestampMillis).LocalDateTime, subId, s.Probability, s.ModelVersion);
+            var id = await repository.AddAsync(message);
+            return id > 0 ? message with { Id = id } : null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Spam check failed: {ex}");
+            return null;
         }
     }
 

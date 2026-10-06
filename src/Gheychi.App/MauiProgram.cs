@@ -2,6 +2,9 @@
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
+using Gheychi.Core.Spam;
+using Gheychi.Infrastructure.Data;
+using Gheychi.Infrastructure.Spam;
 using Microsoft.Extensions.Logging;
 
 namespace Gheychi.App;
@@ -24,12 +27,25 @@ public static class MauiProgram
                 fonts.AddFont("Vazirmatn-SemiBold.ttf", "VazirmatnSemiBold");
             });
 
+        var databasePath = Path.Combine(FileSystem.AppDataDirectory, "gheychi.db");
         builder.Services.AddSingleton<IDateFormattingService, DateFormattingService>();
         builder.Services.AddSingleton<IMessageMetadataRepository>(_ =>
-            new Gheychi.Infrastructure.Data.MessageMetadataRepository(Path.Combine(FileSystem.AppDataDirectory, "gheychi.db")));
+            new Gheychi.Infrastructure.Data.MessageMetadataRepository(databasePath));
         builder.Services.AddSingleton<ISmsService, AndroidSmsService>();
 
-        // A new reason to hold back a notification (archived, snoozed, spam) is one more INotificationRule here.
+        builder.Services.AddSingleton<ISpamSettings, Services.PreferencesSpamSettings>();
+        builder.Services.AddSingleton<ISpamMessageRepository>(_ => new SpamMessageRepository(databasePath));
+        builder.Services.AddSingleton(_ => new SpamModelStore(
+            Path.Combine(FileSystem.AppDataDirectory, "spam-model"),
+            name => FileSystem.OpenAppPackageFileAsync($"SpamModel/{name}")));
+        builder.Services.AddSingleton<MlNetSpamClassifier>();
+        builder.Services.AddSingleton<ISpamClassifier>(sp => sp.GetRequiredService<MlNetSpamClassifier>());
+        builder.Services.AddSingleton<ISpamModelUpdater>(sp => sp.GetRequiredService<MlNetSpamClassifier>());
+        builder.Services.AddSingleton<SpamDetector>();
+        builder.Services.AddSingleton<SpamViewModel>();
+
+        // A new reason to hold back a notification (archived, snoozed) is one more INotificationRule here.
+        // Spam never gets this far: it is quarantined before the message is stored.
         builder.Services.AddSingleton<ActiveChatState>();
         builder.Services.AddSingleton<IActiveChatState>(sp => sp.GetRequiredService<ActiveChatState>());
         builder.Services.AddSingleton<IThreadSettings, Services.PreferencesThreadSettings>();

@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content;
 using Android.Provider;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.Core.Spam;
 
 namespace Gheychi.App.Platforms.Android.Receivers;
 
@@ -13,6 +14,9 @@ namespace Gheychi.App.Platforms.Android.Receivers;
 public class SmsDeliverReceiver : BroadcastReceiver
 {
     public static event Action<long>? SmsReceived;
+
+    /// <summary>A message was quarantined as spam. Raised on the main thread.</summary>
+    public static event Action<SpamMessage>? SpamReceived;
 
     public override void OnReceive(Context? context, Intent? intent)
     {
@@ -36,11 +40,11 @@ public class SmsDeliverReceiver : BroadcastReceiver
         // The provider write and the notification queries stay off the main thread. goAsync keeps the
         // process alive until they finish, without a service or a wake lock.
         var pending = GoAsync();
-        Task.Run(() =>
+        Task.Run(async () =>
         {
             try
             {
-                IncomingSmsHandler.Handle(context, address, body, timestamp, subId, RaiseSmsReceived);
+                await IncomingSmsHandler.HandleAsync(context, address, body, timestamp, subId, RaiseSmsReceived, RaiseSpamReceived);
             }
             catch (Exception ex)
             {
@@ -63,6 +67,18 @@ public class SmsDeliverReceiver : BroadcastReceiver
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"SmsReceived handler failed: {ex}");
+        }
+    }
+
+    private static void RaiseSpamReceived(SpamMessage message)
+    {
+        try
+        {
+            SpamReceived?.Invoke(message);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"SpamReceived handler failed: {ex}");
         }
     }
 

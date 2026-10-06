@@ -15,6 +15,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\..\src\Gheychi.App\Resources\Raw\SpamModel\**" LinkBase="SpamModel" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\..\src\Gheychi.Infrastructure\Gheychi.Infrastructure.csproj" />
     </ItemGroup>
 

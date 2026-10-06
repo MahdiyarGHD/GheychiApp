@@ -4,15 +4,61 @@
              xmlns:loc="clr-namespace:Gheychi.App.Localization"
              xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
              x:Class="Gheychi.App.Pages.SpamPage"
+             x:DataType="vm:SpamViewModel"
              Shell.NavBarIsVisible="False">
 
-    <VerticalStackLayout Padding="20,24" Spacing="8">
-        <Label Text="{loc:Translate Spam_PageTitle}"
+    <Grid RowDefinitions="Auto,*">
+        <Label Grid.Row="0"
+               Margin="20,24,20,12"
+               Text="{loc:Translate Spam_PageTitle}"
                FontSize="26"
                FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
-        <Label Text="{loc:Translate Spam_Placeholder}"
-               FontSize="15"
-               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9AA0AB}" />
-    </VerticalStackLayout>
+
+        <CollectionView x:Name="SpamList"
+                        Grid.Row="1"
+                        Margin="8,0,8,0"
+                        ItemsSource="{Binding Items}"
+                        SelectionMode="None"
+                        VerticalScrollBarVisibility="Never">
+            <CollectionView.EmptyView>
+                <Label Margin="12,8"
+                       Text="{loc:Translate Spam_Placeholder}"
+                       FontSize="15"
+                       TextColor="{AppThemeBinding Light=#6B7280, Dark=#9AA0AB}" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:SpamItem">
+                    <Grid Padding="12,10"
+                          ColumnDefinitions="*,Auto"
+                          RowDefinitions="Auto,Auto"
+                          ColumnSpacing="12"
+                          RowSpacing="3">
+                        <Label Grid.Row="0"
+                               Grid.Column="0"
+                               Text="{Binding Sender}"
+                               FontSize="14"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="1" />
+                        <Label Grid.Row="0"
+                               Grid.Column="1"
+                               Text="{Binding Time}"
+                               FontSize="11"
+                               TextColor="#8A8F98"
+                               VerticalOptions="Center" />
+                        <Label Grid.Row="1"
+                               Grid.Column="0"
+                               Grid.ColumnSpan="2"
+                               Text="{Binding Preview}"
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#5C6370, Dark=#9AA0AB}"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="2" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>
