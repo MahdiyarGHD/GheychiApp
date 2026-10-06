@@ -12,5 +12,6 @@ public sealed record SmsMessage(
     int SubId,
     bool IsRead = true,
     bool IsStarred = false,
-    string? Reaction = null
+    string? Reaction = null,
+    bool IsSent = false
 );

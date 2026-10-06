@@ -311,10 +311,29 @@ public sealed class ChatMessage : INotifyPropertyChanged
         }
     }
 
-    public bool IsSending => IsOutgoing && !IsDelivered && !HasFailed;
+    private bool _isSent;
+    /// <summary>The carrier accepted the message; <see cref="IsDelivered"/> follows when a delivery report confirms it.</summary>
+    public bool IsSent
+    {
+        get => _isSent;
+        set
+        {
+            if (SetField(ref _isSent, value))
+            {
+                OnPropertyChanged(nameof(IsSending));
+                OnPropertyChanged(nameof(StatusGlyph));
+            }
+        }
+    }
 
-    // The double tick once delivered; sending shows a spinner and failure the retry row.
-    public string StatusGlyph => IsOutgoing && IsDelivered ? "✓✓" : string.Empty;
+    public bool IsSending => IsOutgoing && !IsSent && !IsDelivered && !HasFailed;
+
+    // One tick once the carrier has it, two once it reached the phone; sending shows a spinner and failure the retry row.
+    public string StatusGlyph =>
+        !IsOutgoing || HasFailed ? string.Empty
+        : IsDelivered ? "✓✓"
+        : IsSent ? "✓"
+        : string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

@@ -985,6 +985,7 @@ public sealed class AndroidSmsService : ISmsService
                         DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - dateMs > StaleOutboxMs;
                     var hasFailed = staleOutbox || SmsStatusHelper.HasFailed(type, status);
                     var isDelivered = !staleOutbox && SmsStatusHelper.IsDelivered(type, status);
+                    var isSent = !staleOutbox && SmsStatusHelper.IsSent(type, status);
                     var isRead = read != 0 || isOutgoing;
 
                     messages.Add(new SmsMessage(
@@ -997,7 +998,8 @@ public sealed class AndroidSmsService : ISmsService
                         isDelivered,
                         hasFailed,
                         subId,
-                        isRead));
+                        isRead,
+                        IsSent: isSent));
                 }
 
                 if (_metadataRepo != null && messages.Count > 0)
@@ -1100,7 +1102,7 @@ public sealed class AndroidSmsService : ISmsService
             if (finalOk is { } ok)
             {
                 values.Put(Telephony.Sms.InterfaceConsts.Type, ok ? (int)SmsMessageType.Sent : (int)SmsMessageType.Failed);
-                values.Put(Telephony.Sms.InterfaceConsts.Status, ok ? 0 : 64);
+                values.Put(Telephony.Sms.InterfaceConsts.Status, ok ? SmsStatusHelper.StatusPending : SmsStatusHelper.StatusFailed);
             }
             else
             {
@@ -1130,7 +1132,8 @@ public sealed class AndroidSmsService : ISmsService
 
             var values = new ContentValues();
             values.Put(Telephony.Sms.InterfaceConsts.Type, ok ? (int)SmsMessageType.Sent : (int)SmsMessageType.Failed);
-            values.Put(Telephony.Sms.InterfaceConsts.Status, ok ? 0 : 64);
+            // Accepted by the carrier is not delivered: the row waits (Pending) for the delivery report.
+            values.Put(Telephony.Sms.InterfaceConsts.Status, ok ? SmsStatusHelper.StatusPending : SmsStatusHelper.StatusFailed);
 
             var where = onlyIfPending
                 ? $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Outbox}"
@@ -1143,6 +1146,37 @@ public sealed class AndroidSmsService : ISmsService
 
         InvalidateSearchCaches();
         SmsSendTracker.RaiseOutgoingUpdated(rowId, ok);
+    }
+
+    /// <summary>A delivery report confirmed the message reached the phone.</summary>
+    internal static void MarkDelivered(Context context, long rowId)
+    {
+        long threadId = 0;
+        try
+        {
+            var smsUri = Telephony.Sms.ContentUri;
+            if (smsUri == null)
+                return;
+
+            var values = new ContentValues();
+            values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusComplete);
+            var updated = context.ContentResolver?.Update(smsUri, values,
+                $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Sent}",
+                [rowId.ToString()]) ?? 0;
+            if (updated == 0)
+                return;
+
+            var rowUri = ContentUris.WithAppendedId(smsUri, rowId);
+            using var cursor = context.ContentResolver?.Query(rowUri, [Telephony.Sms.InterfaceConsts.ThreadId], null, null, null);
+            if (cursor is not null && cursor.MoveToFirst())
+                threadId = cursor.GetLong(0);
+        }
+        catch (Exception)
+        {
+            return;
+        }
+
+        SmsSendTracker.RaiseDelivered(rowId, threadId);
     }
 
     private static void SetOutgoingPending(Context context, long rowId)

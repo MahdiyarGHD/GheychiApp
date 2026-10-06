@@ -12,11 +12,15 @@ namespace Gheychi.App.Platforms.Android.Services;
 internal static class SmsSendTracker
 {
     public const string ActionSmsSent = "com.evergreen.gheychiapp.SMS_SENT";
+    public const string ActionSmsDelivered = "com.evergreen.gheychiapp.SMS_DELIVERED";
     public const string ExtraToken = "com.evergreen.gheychiapp.SMS_TOKEN";
     public const string ExtraRowId = "com.evergreen.gheychiapp.SMS_ROW_ID";
 
-    /// <summary>Raised when a stored outgoing message reaches its final state (rowId, success).</summary>
+    /// <summary>Raised when the carrier accepted or rejected a stored outgoing message (rowId, success).</summary>
     public static event Action<long, bool>? OutgoingUpdated;
+
+    /// <summary>Raised when a delivery report confirmed a stored outgoing message reached the phone (rowId, threadId).</summary>
+    public static event Action<long, long>? Delivered;
 
     private static int _requestCodeSeed = Random.Shared.Next(1 << 20, 1 << 30);
 
@@ -40,6 +44,42 @@ internal static class SmsSendTracker
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"OutgoingUpdated handler failed: {ex}");
+        }
+    }
+
+    public static void RaiseDelivered(long rowId, long threadId)
+    {
+        try
+        {
+            Delivered?.Invoke(rowId, threadId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Delivered handler failed: {ex}");
+        }
+    }
+
+    private static PendingIntent? CreateDeliveryIntent(Context context, long rowId)
+    {
+        if (rowId <= 0)
+            return null;
+
+        try
+        {
+            var intent = new Intent(ActionSmsDelivered);
+            intent.SetPackage(context.PackageName);
+            intent.PutExtra(ExtraRowId, rowId);
+            var requestCode = Interlocked.Increment(ref _requestCodeSeed);
+            // Mutable: the platform adds the status report ("pdu", "format") to this intent.
+            return PendingIntent.GetBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Mutable);
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -70,12 +110,15 @@ internal static class SmsSendTracker
     {
         var multipart = parts != null && parts.Count > 1;
         var token = Register(multipart ? parts!.Count : 1);
+        var deliveryIntent = CreateDeliveryIntent(context, rowId);
 
         try
         {
             if (multipart)
             {
                 var sentIntents = new List<PendingIntent>(parts!.Count);
+                // Only the last part asks for a report: it is the one that completes the message on the phone.
+                var deliveryIntents = new List<PendingIntent?>(parts.Count);
                 foreach (var _ in parts)
                 {
                     var sentIntent = CreateSentIntent(context, token, rowId);
@@ -85,9 +128,10 @@ internal static class SmsSendTracker
                         return Task.FromResult(false);
                     }
                     sentIntents.Add(sentIntent);
+                    deliveryIntents.Add(deliveryIntents.Count == parts.Count - 1 ? deliveryIntent : null);
                 }
 
-                smsManager.SendMultipartTextMessage(address, null, parts, sentIntents, null);
+                smsManager.SendMultipartTextMessage(address, null, parts, sentIntents, deliveryIntent is null ? null : deliveryIntents!);
             }
             else
             {
@@ -98,7 +142,7 @@ internal static class SmsSendTracker
                     return Task.FromResult(false);
                 }
 
-                smsManager.SendTextMessage(address, null, text, sentIntent, null);
+                smsManager.SendTextMessage(address, null, text, sentIntent, deliveryIntent);
             }
         }
         catch

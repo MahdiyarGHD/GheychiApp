@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
+using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
@@ -37,6 +38,12 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
         NotificationActionReceiver.ThreadsChanged += OnSmsReceived;
+        // A delivery report usually arrives after the chat was closed; its cached page would still show one tick.
+        SmsSendTracker.Delivered += (_, threadId) =>
+        {
+            if (threadId > 0)
+                ChatViewModel.InvalidateThread(threadId);
+        };
     }
 
     private Task<BuiltThreads> StartSnapshotLoad()

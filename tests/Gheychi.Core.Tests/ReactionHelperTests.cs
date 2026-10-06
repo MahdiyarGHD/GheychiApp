@@ -55,12 +55,11 @@ public sealed class ReactionHelperTests
     }
 
     [Fact]
-    public void FormatReactionSms_LongMessage_TruncatesSnippet()
+    public void FormatReactionSms_LongMultilineMessage_QuotesWholeMessage()
     {
-        var longBody = "This is a very long message that definitely exceeds the snippet length limit of one hundred characters in total length so it will be truncated nicely";
+        var longBody = "This is a very long message that definitely exceeds one hundred characters in total length\nand it continues on a second line\r\nand a third one.";
         var result = ReactionHelper.FormatReactionSms("❤️", longBody);
-        Assert.StartsWith("Loved “", result);
-        Assert.True(result.Length <= 120);
+        Assert.Equal("Loved “" + longBody.Replace("\r\n", "\n") + "”", result);
     }
 
     [Fact]

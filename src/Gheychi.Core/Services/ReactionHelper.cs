@@ -33,8 +33,9 @@ public static partial class ReactionHelper
         var verb = MapEmojiToVerb(emoji);
         if (string.IsNullOrEmpty(verb))
             throw new ArgumentException($"Unsupported reaction emoji: '{emoji}'. Only Tapback-verb emoji can be sent.", nameof(emoji));
-        var snippet = GetSnippet(messageBody);
-        return $"{verb} {CurlyOpen}{snippet}{CurlyClose}";
+        // The whole message, never a cut: iPhone links the reaction only when the quote matches the original text,
+        // so a reaction to a long message quoting just its start was shown as a plain message there.
+        return $"{verb} {CurlyOpen}{CleanQuote(messageBody)}{CurlyClose}";
     }
 
     /// <summary>Maps a reaction emoji to its Apple Tapback verb, or null for the generic fallback.</summary>
@@ -53,19 +54,25 @@ public static partial class ReactionHelper
         };
     }
 
+    /// <summary>The start of a message, as older versions of this app quoted it; used to match their reactions.</summary>
     public static string GetSnippet(string body)
     {
-        if (string.IsNullOrWhiteSpace(body))
-            return string.Empty;
-
-        // Preserve newlines: iPhone/Google match the snippet verbatim against the
-        // original message (observed on-device: "Liked “line1\nline2”"). Collapsing
-        // \n to a space breaks that match, so only normalize CRLF -> LF and trim.
-        var clean = body.Trim().Replace("\r\n", "\n").Replace('\r', '\n');
+        var clean = CleanQuote(body);
         if (clean.Length <= MaxSnippetLength)
             return clean;
 
         return clean[..MaxSnippetLength].TrimEnd();
+    }
+
+    private static string CleanQuote(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return string.Empty;
+
+        // Preserve newlines: iPhone/Google match the quote verbatim against the
+        // original message (observed on-device: "Liked “line1\nline2”"). Collapsing
+        // \n to a space breaks that match, so only normalize CRLF -> LF and trim.
+        return body.Trim().Replace("\r\n", "\n").Replace('\r', '\n');
     }
 
     /// <summary>

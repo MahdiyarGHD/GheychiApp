@@ -377,6 +377,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 BodyBeforeLink = bodyBefore,
                 Link = link,
                 IsOutgoing = msg.IsOutgoing,
+                IsSent = msg.IsSent,
                 IsDelivered = msg.IsDelivered,
                 HasFailed = msg.HasFailed,
                 Time = timeStr,
@@ -832,6 +833,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public async void Retry(ChatMessage message)
     {
         message.HasFailed = false;
+        message.IsSent = false;
         message.IsDelivered = false;
         var text = string.IsNullOrEmpty(message.Link) ? message.BodyBeforeLink : $"{message.BodyBeforeLink}{message.Link}";
 
@@ -873,7 +875,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         switch (result)
         {
             case SmsSendResult.Sent:
-                message.IsDelivered = true;
+                message.IsSent = true;
                 break;
             case SmsSendResult.Failed:
                 message.HasFailed = true;
@@ -890,8 +892,23 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 if (message.Id != rowId)
                     continue;
 
-                message.IsDelivered = ok;
+                message.IsSent = ok;
                 message.HasFailed = !ok;
+                break;
+            }
+        });
+    }
+
+    private void OnDelivered(long rowId, long threadId)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var message in Messages)
+            {
+                if (message.Id != rowId)
+                    continue;
+
+                message.IsDelivered = true;
                 break;
             }
         });
@@ -914,6 +931,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _live = true;
         SmsDeliverReceiver.SmsReceived += OnIncomingSms;
         SmsSendTracker.OutgoingUpdated += OnOutgoingUpdated;
+        SmsSendTracker.Delivered += OnDelivered;
     }
 
     public void StopLiveUpdates()
@@ -924,6 +942,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _live = false;
         SmsDeliverReceiver.SmsReceived -= OnIncomingSms;
         SmsSendTracker.OutgoingUpdated -= OnOutgoingUpdated;
+        SmsSendTracker.Delivered -= OnDelivered;
     }
 
     private void OnIncomingSms(long threadId)

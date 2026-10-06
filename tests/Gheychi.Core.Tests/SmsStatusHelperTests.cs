@@ -61,4 +61,21 @@ public sealed class SmsStatusHelperTests
     {
         Assert.Equal(MessageInfoStatus.Sent, SmsStatusHelper.GetInfoStatus(true, false, false, false));
     }
+
+    [Fact]
+    public void SentAwaitingDeliveryReport_IsSentButNotDelivered()
+    {
+        Assert.True(SmsStatusHelper.IsSent(SmsStatusHelper.TypeSent, SmsStatusHelper.StatusPending));
+        Assert.False(SmsStatusHelper.IsDelivered(SmsStatusHelper.TypeSent, SmsStatusHelper.StatusPending));
+    }
+
+    [Theory]
+    [InlineData(SmsStatusHelper.TypeOutbox, SmsStatusHelper.StatusPending)]
+    [InlineData(SmsStatusHelper.TypeFailed, SmsStatusHelper.StatusFailed)]
+    [InlineData(SmsStatusHelper.TypeSent, SmsStatusHelper.StatusFailed)]
+    [InlineData(SmsStatusHelper.TypeInbox, SmsStatusHelper.StatusNone)]
+    public void NotAcceptedByCarrier_IsNotSent(int type, int status)
+    {
+        Assert.False(SmsStatusHelper.IsSent(type, status));
+    }
 }
