@@ -6,4 +6,7 @@ public interface ITrustedSenders
     bool IsTrusted(string address);
 
     void SetTrusted(string address, bool trusted);
+
+    /// <summary>The trusted senders' lookup keys.</summary>
+    IReadOnlyList<string> GetAll();
 }

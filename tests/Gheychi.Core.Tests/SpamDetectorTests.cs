@@ -31,6 +31,8 @@ public sealed class SpamDetectorTests
         public void SetTrusted(string address, bool isTrusted)
         {
         }
+
+        public IReadOnlyList<string> GetAll() => trusted;
     }
 
     private static SpamDetector Detector(FakeClassifier classifier, float threshold, params string[] trusted) =>

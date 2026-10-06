@@ -32,6 +32,18 @@ public partial class SpamPage : ContentPage
         return true;
     }
 
+    private async void OnSettingsTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("//settings?section=spam");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Opening spam settings failed: {ex}");
+        }
+    }
+
     private void OnSearchTapped(object? sender, TappedEventArgs e)
     {
         AppHeader.IsVisible = false;

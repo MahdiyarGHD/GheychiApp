@@ -435,11 +435,21 @@ public sealed class SearchViewModel : INotifyPropertyChanged
 
         LoadRecentSearches();
         PopulateDefaultFilterPills();
+        RecentSearchesCleared += LoadRecentSearches;
     }
 
     private Task? _initializeTask;
 
     public Task InitializeAsync() => _initializeTask ??= LoadSimFiltersAsync();
+
+    /// <summary>Raised when the saved queries were wiped from outside the search page.</summary>
+    public static event Action? RecentSearchesCleared;
+
+    public static void ClearSavedRecentSearches()
+    {
+        Preferences.Default.Remove(RecentSearchesKey);
+        RecentSearchesCleared?.Invoke();
+    }
 
     public void AddRecentSearch(string query)
     {

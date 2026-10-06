@@ -36,9 +36,6 @@
   <data name="Settings_PageTitle" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="Settings_Placeholder" xml:space="preserve">
-    <value>Settings will appear here</value>
-  </data>
   <data name="Spam_Placeholder" xml:space="preserve">
     <value>Blocked messages will appear here</value>
   </data>
@@ -587,5 +584,233 @@
   </data>
   <data name="Chat_ReportSpam" xml:space="preserve">
     <value>Report as spam</value>
+  </data>
+  <data name="Settings_Tagline" xml:space="preserve">
+    <value>Calm, on-device spam filtering for your SMS</value>
+  </data>
+  <data name="Settings_Default" xml:space="preserve">
+    <value>Default SMS app</value>
+  </data>
+  <data name="Settings_NotDefault" xml:space="preserve">
+    <value>Not the default SMS app · Set now</value>
+  </data>
+  <data name="Settings_TileModel" xml:space="preserve">
+    <value>Spam model</value>
+  </data>
+  <data name="Settings_TileModelValue" xml:space="preserve">
+    <value>v{0} · on-device</value>
+  </data>
+  <data name="Settings_TileCaught" xml:space="preserve">
+    <value>Spam caught</value>
+  </data>
+  <data name="Settings_TileCaughtValue" xml:space="preserve">
+    <value>{0} this week</value>
+  </data>
+  <data name="Settings_SectionProtection" xml:space="preserve">
+    <value>Protection &amp; messaging</value>
+  </data>
+  <data name="Settings_SectionPersonal" xml:space="preserve">
+    <value>Personalization</value>
+  </data>
+  <data name="Settings_SectionPrivacy" xml:space="preserve">
+    <value>Privacy &amp; about</value>
+  </data>
+  <data name="Settings_Spam" xml:space="preserve">
+    <value>Spam filter</value>
+  </data>
+  <data name="Settings_SpamHint" xml:space="preserve">
+    <value>Sensitivity {0} · Auto-clear {1}</value>
+  </data>
+  <data name="Settings_Sims" xml:space="preserve">
+    <value>SIM cards</value>
+  </data>
+  <data name="Settings_Notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Settings_NotificationsHint" xml:space="preserve">
+    <value>Lock screen, sound and vibration</value>
+  </data>
+  <data name="Settings_Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings_AppearanceHint" xml:space="preserve">
+    <value>Theme and language</value>
+  </data>
+  <data name="Settings_Privacy" xml:space="preserve">
+    <value>Privacy &amp; storage</value>
+  </data>
+  <data name="Settings_PrivacyHint" xml:space="preserve">
+    <value>On-device only, clear saved data</value>
+  </data>
+  <data name="Settings_About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Settings_AboutHint" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="Settings_FooterTitle" xml:space="preserve">
+    <value>100% on-device processing</value>
+  </data>
+  <data name="Settings_FooterText" xml:space="preserve">
+    <value>Your messages never leave this phone</value>
+  </data>
+  <data name="Settings_ComingSoon" xml:space="preserve">
+    <value>Coming soon</value>
+  </data>
+  <data name="Settings_Days" xml:space="preserve">
+    <value>{0} days</value>
+  </data>
+  <data name="Settings_SpamFilter" xml:space="preserve">
+    <value>Spam filtering</value>
+  </data>
+  <data name="Settings_SpamFilterHint" xml:space="preserve">
+    <value>Checks messages from senders not in your contacts</value>
+  </data>
+  <data name="Settings_SectionSensitivity" xml:space="preserve">
+    <value>Sensitivity</value>
+  </data>
+  <data name="Settings_Relaxed" xml:space="preserve">
+    <value>Relaxed</value>
+  </data>
+  <data name="Settings_Balanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="Settings_Strict" xml:space="preserve">
+    <value>Strict</value>
+  </data>
+  <data name="Settings_Threshold" xml:space="preserve">
+    <value>Threshold</value>
+  </data>
+  <data name="Settings_SensitivityExplain" xml:space="preserve">
+    <value>Messages scored {0} or higher go to Spam. A lower threshold catches more spam, but may catch real messages too.</value>
+  </data>
+  <data name="Settings_SectionSpamList" xml:space="preserve">
+    <value>Spam list</value>
+  </data>
+  <data name="Settings_AutoClear" xml:space="preserve">
+    <value>Auto-clear</value>
+  </data>
+  <data name="Settings_AutoClearHint" xml:space="preserve">
+    <value>Delete spam older than this</value>
+  </data>
+  <data name="Settings_AutoClearTitle" xml:space="preserve">
+    <value>Auto-clear spam after</value>
+  </data>
+  <data name="Settings_Trusted" xml:space="preserve">
+    <value>Trusted senders</value>
+  </data>
+  <data name="Settings_TrustedHint" xml:space="preserve">
+    <value>{0} senders skip the check</value>
+  </data>
+  <data name="Settings_TrustedNone" xml:space="preserve">
+    <value>None yet</value>
+  </data>
+  <data name="Settings_TrustedEmpty" xml:space="preserve">
+    <value>No trusted senders yet. Use "Restore &amp; trust" on a spam message, or the switch on a chat's profile.</value>
+  </data>
+  <data name="Settings_TrustedRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Settings_SectionModel" xml:space="preserve">
+    <value>Detection model</value>
+  </data>
+  <data name="Settings_ModelHint" xml:space="preserve">
+    <value>Runs entirely on this phone</value>
+  </data>
+  <data name="Settings_ModelNone" xml:space="preserve">
+    <value>Not loaded yet</value>
+  </data>
+  <data name="Settings_ModelUpdate" xml:space="preserve">
+    <value>Check for updates</value>
+  </data>
+  <data name="Settings_ModelUpdateHint" xml:space="preserve">
+    <value>Get a newer detection model</value>
+  </data>
+  <data name="Settings_SectionSims" xml:space="preserve">
+    <value>Active SIM cards</value>
+  </data>
+  <data name="Settings_SimNoName" xml:space="preserve">
+    <value>No carrier name</value>
+  </data>
+  <data name="Settings_SectionSending" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="Settings_DefaultSim" xml:space="preserve">
+    <value>Default SIM for new messages</value>
+  </data>
+  <data name="Settings_DefaultSimHint" xml:space="preserve">
+    <value>A chat's own SIM choice comes first</value>
+  </data>
+  <data name="Settings_LockScreen" xml:space="preserve">
+    <value>Show content on lock screen</value>
+  </data>
+  <data name="Settings_LockScreenHint" xml:space="preserve">
+    <value>When off, only the sender is shown</value>
+  </data>
+  <data name="Settings_SystemNotifications" xml:space="preserve">
+    <value>System notification settings</value>
+  </data>
+  <data name="Settings_SystemNotificationsHint" xml:space="preserve">
+    <value>Sound, vibration and importance</value>
+  </data>
+  <data name="Settings_SpamSilent" xml:space="preserve">
+    <value>Spam stays silent</value>
+  </data>
+  <data name="Settings_SpamSilentHint" xml:space="preserve">
+    <value>Messages sent to Spam never notify you</value>
+  </data>
+  <data name="Settings_SectionTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Settings_System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Settings_SectionLanguage" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings_LanguageHint" xml:space="preserve">
+    <value>The app restarts to apply a new language.</value>
+  </data>
+  <data name="Settings_PrivacyCardTitle" xml:space="preserve">
+    <value>Everything stays on this phone</value>
+  </data>
+  <data name="Settings_PrivacyCardText" xml:space="preserve">
+    <value>Spam is detected by a model that runs on this phone. Your messages are never uploaded.</value>
+  </data>
+  <data name="Settings_SectionData" xml:space="preserve">
+    <value>Saved data</value>
+  </data>
+  <data name="Settings_ClearSearches" xml:space="preserve">
+    <value>Clear recent searches</value>
+  </data>
+  <data name="Settings_ClearSearchesHint" xml:space="preserve">
+    <value>Remove saved search queries</value>
+  </data>
+  <data name="Settings_ClearSearchesDone" xml:space="preserve">
+    <value>Recent searches cleared</value>
+  </data>
+  <data name="Settings_ClearSpam" xml:space="preserve">
+    <value>Clear spam now</value>
+  </data>
+  <data name="Settings_ClearSpamHint" xml:space="preserve">
+    <value>{0} messages in Spam</value>
+  </data>
+  <data name="Settings_ClearSpamNone" xml:space="preserve">
+    <value>Spam is empty</value>
+  </data>
+  <data name="Settings_Version" xml:space="preserve">
+    <value>App version</value>
+  </data>
+  <data name="Settings_Licenses" xml:space="preserve">
+    <value>Open-source licenses</value>
+  </data>
+  <data name="Settings_LicensesHint" xml:space="preserve">
+    <value>Libraries this app is built on</value>
   </data>
 </root>

@@ -27,6 +27,9 @@
                     BackgroundColor="Transparent"
                     VerticalOptions="Center"
                     SemanticProperties.Description="{loc:Translate Tab_Settings}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSettingsTapped" />
+                </Border.GestureRecognizers>
                 <Image Source="tabsettings.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
                     <Image.Behaviors>
                         <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />

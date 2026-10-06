@@ -80,6 +80,16 @@ internal static class NotificationChannels
         context.StartActivity(intent);
     }
 
+    /// <summary>Opens the system's notification settings for the whole app.</summary>
+    public static void OpenAppSettings(Context context)
+    {
+        Ensure(context);
+        var intent = new Intent(Settings.ActionAppNotificationSettings);
+        intent.PutExtra(Settings.ExtraAppPackage, context.PackageName);
+        intent.AddFlags(ActivityFlags.NewTask);
+        context.StartActivity(intent);
+    }
+
     private static string EnsureConversationChannel(Context context, string address, string displayName)
     {
         var id = ConversationChannelId(address);

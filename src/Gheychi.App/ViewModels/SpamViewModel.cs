@@ -47,6 +47,10 @@ public sealed class SpamViewModel : INotifyPropertyChanged
 
     public string Subtitle => string.Format(LocalizationManager.Instance["Spam_Subtitle"], _settings.RetentionDays);
 
+    public int Count => _all.Count;
+
+    public int RetentionDays => _settings.RetentionDays;
+
     public string SearchText
     {
         get => _searchText;
@@ -76,6 +80,23 @@ public sealed class SpamViewModel : INotifyPropertyChanged
     public bool IsTrusted(string address) => _trustedSenders.IsTrusted(address);
 
     public void SetTrusted(string address, bool trusted) => _trustedSenders.SetTrusted(address, trusted);
+
+    public IReadOnlyList<string> TrustedSenders() => _trustedSenders.GetAll();
+
+    public int CountSince(DateTime since) => _all.Count(i => i.Message.Timestamp >= since);
+
+    /// <summary>Saves the new retention and drops what is now past it.</summary>
+    public async Task SetRetentionDaysAsync(int days)
+    {
+        _settings.RetentionDays = days;
+        OnPropertyChanged(nameof(Subtitle));
+
+        var cutoff = DateTime.Now.AddDays(-days);
+        await _repository.DeleteOlderThanAsync(cutoff);
+        var expired = _all.Where(i => i.Message.Timestamp < cutoff).ToList();
+        if (expired.Count > 0)
+            Remove(expired);
+    }
 
     /// <summary>Moves the message back to the inbox; with <paramref name="trustSender"/> its sender also skips the spam check from now on.</summary>
     public async Task<bool> RestoreAsync(SpamItem item, bool trustSender)

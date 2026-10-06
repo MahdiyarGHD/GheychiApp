@@ -37,6 +37,12 @@ public sealed class PreferencesTrustedSenders : ITrustedSenders
             return key.Length > 0 && _keys.Contains(key);
     }
 
+    public IReadOnlyList<string> GetAll()
+    {
+        lock (_gate)
+            return [.. _keys];
+    }
+
     public void SetTrusted(string address, bool trusted)
     {
         var key = PhoneNumberNormalizer.ToLookupKey(address);

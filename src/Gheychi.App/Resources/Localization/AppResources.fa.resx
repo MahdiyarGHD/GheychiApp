@@ -36,9 +36,6 @@
   <data name="Settings_PageTitle" xml:space="preserve">
     <value>تنظیمات</value>
   </data>
-  <data name="Settings_Placeholder" xml:space="preserve">
-    <value>تنظیمات اینجا نمایش داده می‌شود</value>
-  </data>
   <data name="Spam_Placeholder" xml:space="preserve">
     <value>پیام‌های مسدودشده اینجا نمایش داده می‌شود</value>
   </data>
@@ -587,5 +584,233 @@
   </data>
   <data name="Chat_ReportSpam" xml:space="preserve">
     <value>گزارش به عنوان هرزنامه</value>
+  </data>
+  <data name="Settings_Tagline" xml:space="preserve">
+    <value>فیلتر آرام هرزنامه پیامک، روی همین گوشی</value>
+  </data>
+  <data name="Settings_Default" xml:space="preserve">
+    <value>برنامه پیش‌فرض پیامک</value>
+  </data>
+  <data name="Settings_NotDefault" xml:space="preserve">
+    <value>برنامه پیش‌فرض پیامک نیست · تنظیم</value>
+  </data>
+  <data name="Settings_TileModel" xml:space="preserve">
+    <value>مدل هرزنامه</value>
+  </data>
+  <data name="Settings_TileModelValue" xml:space="preserve">
+    <value>نسخه {0} · روی گوشی</value>
+  </data>
+  <data name="Settings_TileCaught" xml:space="preserve">
+    <value>هرزنامه گرفته‌شده</value>
+  </data>
+  <data name="Settings_TileCaughtValue" xml:space="preserve">
+    <value>{0} در این هفته</value>
+  </data>
+  <data name="Settings_SectionProtection" xml:space="preserve">
+    <value>محافظت و پیام‌رسانی</value>
+  </data>
+  <data name="Settings_SectionPersonal" xml:space="preserve">
+    <value>شخصی‌سازی</value>
+  </data>
+  <data name="Settings_SectionPrivacy" xml:space="preserve">
+    <value>حریم خصوصی و درباره</value>
+  </data>
+  <data name="Settings_Spam" xml:space="preserve">
+    <value>فیلتر هرزنامه</value>
+  </data>
+  <data name="Settings_SpamHint" xml:space="preserve">
+    <value>حساسیت {0} · پاک‌سازی {1}</value>
+  </data>
+  <data name="Settings_Sims" xml:space="preserve">
+    <value>سیم‌کارت‌ها</value>
+  </data>
+  <data name="Settings_Notifications" xml:space="preserve">
+    <value>اعلان‌ها</value>
+  </data>
+  <data name="Settings_NotificationsHint" xml:space="preserve">
+    <value>صفحه قفل، صدا و لرزش</value>
+  </data>
+  <data name="Settings_Appearance" xml:space="preserve">
+    <value>ظاهر</value>
+  </data>
+  <data name="Settings_AppearanceHint" xml:space="preserve">
+    <value>پوسته و زبان</value>
+  </data>
+  <data name="Settings_Privacy" xml:space="preserve">
+    <value>حریم خصوصی و ذخیره‌سازی</value>
+  </data>
+  <data name="Settings_PrivacyHint" xml:space="preserve">
+    <value>فقط روی گوشی، پاک کردن داده‌ها</value>
+  </data>
+  <data name="Settings_About" xml:space="preserve">
+    <value>درباره</value>
+  </data>
+  <data name="Settings_AboutHint" xml:space="preserve">
+    <value>نسخه {0}</value>
+  </data>
+  <data name="Settings_FooterTitle" xml:space="preserve">
+    <value>پردازش کامل روی گوشی</value>
+  </data>
+  <data name="Settings_FooterText" xml:space="preserve">
+    <value>پیام‌های شما هرگز از این گوشی خارج نمی‌شوند</value>
+  </data>
+  <data name="Settings_ComingSoon" xml:space="preserve">
+    <value>به‌زودی</value>
+  </data>
+  <data name="Settings_Days" xml:space="preserve">
+    <value>{0} روز</value>
+  </data>
+  <data name="Settings_SpamFilter" xml:space="preserve">
+    <value>تشخیص هرزنامه</value>
+  </data>
+  <data name="Settings_SpamFilterHint" xml:space="preserve">
+    <value>پیام فرستنده‌هایی که در مخاطبان نیستند بررسی می‌شود</value>
+  </data>
+  <data name="Settings_SectionSensitivity" xml:space="preserve">
+    <value>حساسیت</value>
+  </data>
+  <data name="Settings_Relaxed" xml:space="preserve">
+    <value>ملایم</value>
+  </data>
+  <data name="Settings_Balanced" xml:space="preserve">
+    <value>متعادل</value>
+  </data>
+  <data name="Settings_Strict" xml:space="preserve">
+    <value>سخت‌گیر</value>
+  </data>
+  <data name="Settings_Threshold" xml:space="preserve">
+    <value>آستانه</value>
+  </data>
+  <data name="Settings_SensitivityExplain" xml:space="preserve">
+    <value>پیام‌هایی با امتیاز {0} یا بیشتر به هرزنامه می‌روند. آستانه پایین‌تر هرزنامه بیشتری می‌گیرد، اما ممکن است پیام‌های واقعی را هم بگیرد.</value>
+  </data>
+  <data name="Settings_SectionSpamList" xml:space="preserve">
+    <value>فهرست هرزنامه</value>
+  </data>
+  <data name="Settings_AutoClear" xml:space="preserve">
+    <value>پاک‌سازی خودکار</value>
+  </data>
+  <data name="Settings_AutoClearHint" xml:space="preserve">
+    <value>هرزنامه‌های قدیمی‌تر پاک می‌شوند</value>
+  </data>
+  <data name="Settings_AutoClearTitle" xml:space="preserve">
+    <value>پاک‌سازی خودکار هرزنامه پس از</value>
+  </data>
+  <data name="Settings_Trusted" xml:space="preserve">
+    <value>فرستنده‌های مورد اعتماد</value>
+  </data>
+  <data name="Settings_TrustedHint" xml:space="preserve">
+    <value>{0} فرستنده بررسی نمی‌شوند</value>
+  </data>
+  <data name="Settings_TrustedNone" xml:space="preserve">
+    <value>هنوز هیچ</value>
+  </data>
+  <data name="Settings_TrustedEmpty" xml:space="preserve">
+    <value>هنوز فرستنده مورد اعتمادی نیست. از «بازگردانی و اعتماد» روی یک هرزنامه یا گزینه پروفایل گفتگو استفاده کنید.</value>
+  </data>
+  <data name="Settings_TrustedRemove" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Settings_SectionModel" xml:space="preserve">
+    <value>مدل تشخیص</value>
+  </data>
+  <data name="Settings_ModelHint" xml:space="preserve">
+    <value>کاملاً روی همین گوشی اجرا می‌شود</value>
+  </data>
+  <data name="Settings_ModelNone" xml:space="preserve">
+    <value>هنوز بارگذاری نشده</value>
+  </data>
+  <data name="Settings_ModelUpdate" xml:space="preserve">
+    <value>بررسی به‌روزرسانی</value>
+  </data>
+  <data name="Settings_ModelUpdateHint" xml:space="preserve">
+    <value>دریافت مدل تشخیص جدیدتر</value>
+  </data>
+  <data name="Settings_SectionSims" xml:space="preserve">
+    <value>سیم‌کارت‌های فعال</value>
+  </data>
+  <data name="Settings_SimNoName" xml:space="preserve">
+    <value>بدون نام اپراتور</value>
+  </data>
+  <data name="Settings_SectionSending" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Settings_DefaultSim" xml:space="preserve">
+    <value>سیم پیش‌فرض پیام‌های جدید</value>
+  </data>
+  <data name="Settings_DefaultSimHint" xml:space="preserve">
+    <value>انتخاب سیم هر گفتگو اولویت دارد</value>
+  </data>
+  <data name="Settings_LockScreen" xml:space="preserve">
+    <value>نمایش متن در صفحه قفل</value>
+  </data>
+  <data name="Settings_LockScreenHint" xml:space="preserve">
+    <value>وقتی خاموش است، فقط فرستنده نمایش داده می‌شود</value>
+  </data>
+  <data name="Settings_SystemNotifications" xml:space="preserve">
+    <value>تنظیمات اعلان سیستم</value>
+  </data>
+  <data name="Settings_SystemNotificationsHint" xml:space="preserve">
+    <value>صدا، لرزش و اهمیت</value>
+  </data>
+  <data name="Settings_SpamSilent" xml:space="preserve">
+    <value>هرزنامه بی‌صدا می‌ماند</value>
+  </data>
+  <data name="Settings_SpamSilentHint" xml:space="preserve">
+    <value>پیام‌هایی که به هرزنامه می‌روند اعلان نمی‌دهند</value>
+  </data>
+  <data name="Settings_SectionTheme" xml:space="preserve">
+    <value>پوسته</value>
+  </data>
+  <data name="Settings_System" xml:space="preserve">
+    <value>سیستم</value>
+  </data>
+  <data name="Settings_ThemeLight" xml:space="preserve">
+    <value>روشن</value>
+  </data>
+  <data name="Settings_ThemeDark" xml:space="preserve">
+    <value>تیره</value>
+  </data>
+  <data name="Settings_SectionLanguage" xml:space="preserve">
+    <value>زبان</value>
+  </data>
+  <data name="Settings_LanguageHint" xml:space="preserve">
+    <value>برای اعمال زبان جدید، برنامه دوباره اجرا می‌شود.</value>
+  </data>
+  <data name="Settings_PrivacyCardTitle" xml:space="preserve">
+    <value>همه‌چیز روی همین گوشی می‌ماند</value>
+  </data>
+  <data name="Settings_PrivacyCardText" xml:space="preserve">
+    <value>هرزنامه با مدلی روی همین گوشی تشخیص داده می‌شود. پیام‌های شما هرگز بارگذاری نمی‌شوند.</value>
+  </data>
+  <data name="Settings_SectionData" xml:space="preserve">
+    <value>داده‌های ذخیره‌شده</value>
+  </data>
+  <data name="Settings_ClearSearches" xml:space="preserve">
+    <value>پاک کردن جستجوهای اخیر</value>
+  </data>
+  <data name="Settings_ClearSearchesHint" xml:space="preserve">
+    <value>حذف عبارت‌های جستجوی ذخیره‌شده</value>
+  </data>
+  <data name="Settings_ClearSearchesDone" xml:space="preserve">
+    <value>جستجوهای اخیر پاک شد</value>
+  </data>
+  <data name="Settings_ClearSpam" xml:space="preserve">
+    <value>پاک کردن هرزنامه‌ها</value>
+  </data>
+  <data name="Settings_ClearSpamHint" xml:space="preserve">
+    <value>{0} پیام در هرزنامه</value>
+  </data>
+  <data name="Settings_ClearSpamNone" xml:space="preserve">
+    <value>هرزنامه خالی است</value>
+  </data>
+  <data name="Settings_Version" xml:space="preserve">
+    <value>نسخه برنامه</value>
+  </data>
+  <data name="Settings_Licenses" xml:space="preserve">
+    <value>مجوزهای متن‌باز</value>
+  </data>
+  <data name="Settings_LicensesHint" xml:space="preserve">
+    <value>کتابخانه‌های به‌کاررفته در برنامه</value>
   </data>
 </root>
