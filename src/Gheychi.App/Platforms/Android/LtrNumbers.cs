@@ -30,10 +30,15 @@ internal static partial class LtrNumbers
 
     /// <summary>
     /// Applies to every label whose whole text is a number. The native text is watched rather than the Text mapping
-    /// alone: other label mappings (text transform, text type) write the text to the view again after it, which
-    /// undid the wrapping and left the numbers reversed.
+    /// alone, as other label mappings (text transform, text type) write the text to the view again after it.
     /// </summary>
-    public static void Register() =>
+    public static void Register()
+    {
+        // Label's static constructor replaces the handler's Text mapping with its own. It runs when the first label is
+        // made, after this, so it threw away a mapping appended here and numbers were never wrapped. Running it first
+        // makes this append to the mapping that stays.
+        RuntimeHelpers.RunClassConstructor(typeof(Label).TypeHandle);
+
         LabelHandler.Mapper.AppendToMapping(nameof(ILabel.Text), (handler, label) =>
         {
             if (!IsRightToLeft || label is not Label control || handler.PlatformView is not TextView view)
@@ -47,6 +52,7 @@ internal static partial class LtrNumbers
             });
             Apply(view, control);
         });
+    }
 
     /// <summary>For a number placed inside other text, such as a notification title or "Send to {0}".</summary>
     public static string Wrap(string text) =>
