@@ -52,11 +52,18 @@ public sealed class AppUpdates
                 return GetAvailable();
 
             var releases = await _source.GetReleasesAsync(cancellationToken);
+            AppRelease? found = null;
+            foreach (var release in releases.Where(IsNewer).OrderByDescending(r => r.Version))
+            {
+                if (await _source.HasApkAsync(release, cancellationToken))
+                {
+                    found = release;
+                    break;
+                }
+            }
+
             _state.LastCheckedUtc = now;
-            SetAvailable(releases
-                .Where(IsNewer)
-                .OrderByDescending(r => r.Version)
-                .FirstOrDefault());
+            SetAvailable(found);
             return _state.Available;
         }
         finally

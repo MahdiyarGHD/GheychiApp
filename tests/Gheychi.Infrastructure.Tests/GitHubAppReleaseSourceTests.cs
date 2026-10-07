@@ -1,3 +1,4 @@
+using System.Net;
 using System.Xml.Linq;
 using Gheychi.Core.Updates;
 using Gheychi.Infrastructure.Updates;
@@ -39,5 +40,39 @@ public sealed class GitHubAppReleaseSourceTests
                     "https://github.com/MahdiyarGHD/GheychiApp/releases/download/v1.2.0/Gheychi-1.2.0.apk")
             ],
             releases);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Found, true)]
+    [InlineData(HttpStatusCode.OK, true)]
+    [InlineData(HttpStatusCode.NotFound, false)]
+    public async Task HasApk_ReadsTheDownloadStatus(HttpStatusCode status, bool expected)
+    {
+        var handler = new StatusHandler(status);
+        var source = new GitHubAppReleaseSource(new HttpClient(handler));
+        var release = new AppRelease("v1.2.0", "https://example.test/tag/v1.2.0", "https://example.test/Gheychi-1.2.0.apk");
+
+        Assert.Equal(expected, await source.HasApkAsync(release));
+        Assert.Equal(HttpMethod.Head, handler.Method);
+    }
+
+    [Fact]
+    public async Task HasApk_ServerError_Throws()
+    {
+        var source = new GitHubAppReleaseSource(new HttpClient(new StatusHandler(HttpStatusCode.BadGateway)));
+        var release = new AppRelease("v1.2.0", "https://example.test/tag/v1.2.0", "https://example.test/Gheychi-1.2.0.apk");
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => source.HasApkAsync(release));
+    }
+
+    private sealed class StatusHandler(HttpStatusCode status) : HttpMessageHandler
+    {
+        public HttpMethod? Method { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Method = request.Method;
+            return Task.FromResult(new HttpResponseMessage(status));
+        }
     }
 }

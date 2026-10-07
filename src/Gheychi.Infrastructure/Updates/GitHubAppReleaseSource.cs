@@ -29,6 +29,22 @@ public sealed class GitHubAppReleaseSource : IAppReleaseSource
         return Parse(await XDocument.LoadAsync(feed, LoadOptions.None, cancellationToken));
     }
 
+    public async Task<bool> HasApkAsync(AppRelease release, CancellationToken cancellationToken = default)
+    {
+        if (release.DownloadUrl is null)
+            return false;
+
+        // Only the headers: GitHub answers a missing asset with 404 and a published one with a redirect to the file.
+        using var request = new HttpRequestMessage(HttpMethod.Head, release.DownloadUrl);
+        using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return false;
+        if ((int)response.StatusCode >= 400)
+            throw new HttpRequestException($"Checking {release.DownloadUrl} returned {(int)response.StatusCode}.");
+
+        return true;
+    }
+
     // The feed holds only the newest releases (10), which is all a check needs.
     public static IReadOnlyList<AppRelease> Parse(XDocument feed)
     {

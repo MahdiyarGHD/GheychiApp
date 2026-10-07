@@ -233,7 +233,17 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         try
         {
-            await Task.Delay(2500);
+            // The other tabs first, as they are often opened right after launch: Shell builds a tab only when it is
+            // first opened otherwise, which made the first switch to it slow. The inbox has loaded by now.
+            await Task.Delay(800);
+            await WaitForQuietAsync();
+            await KeepTabsShellItemRenderer.PrebuildAsync("spam");
+
+            await Task.Delay(500);
+            await WaitForQuietAsync();
+            await KeepTabsShellItemRenderer.PrebuildAsync("settings");
+
+            await Task.Delay(1000);
             await WaitForQuietAsync();
             await CollapseWhenParkedAsync(ChatOverlay, () => IsChatClosed);
 

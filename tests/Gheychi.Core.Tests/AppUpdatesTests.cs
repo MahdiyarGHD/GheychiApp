@@ -31,6 +31,24 @@ public sealed class AppUpdatesTests
     }
 
     [Fact]
+    public async Task Check_NewestHasNoApkYet_OffersTheNewestThatHasOne()
+    {
+        _source.Releases = [Release("1.2.0"), Release("1.3.0"), Release("1.4.0")];
+        _source.WithoutApk = ["1.4.0"];
+
+        Assert.Equal(Release("1.3.0"), await Create("1.2.0").CheckAsync(force: false));
+    }
+
+    [Fact]
+    public async Task Check_OnlyNewerHasNoApkYet_IsNotAvailable()
+    {
+        _source.Releases = [Release("1.2.0"), Release("1.3.0")];
+        _source.WithoutApk = ["1.3.0"];
+
+        Assert.Null(await Create("1.2.0").CheckAsync(force: false));
+    }
+
+    [Fact]
     public async Task Check_Stable_IsNotOfferedCandidates()
     {
         _source.Releases = [Release("1.2.0"), Release("1.3.0-rc.1")];
@@ -114,12 +132,16 @@ public sealed class AppUpdatesTests
         public IReadOnlyList<AppRelease> Releases { get; set; } = [];
         public bool Fail { get; set; }
         public int Calls { get; private set; }
+        public IReadOnlyList<string> WithoutApk { get; set; } = [];
 
         public Task<IReadOnlyList<AppRelease>> GetReleasesAsync(CancellationToken cancellationToken = default)
         {
             Calls++;
             return Fail ? throw new HttpRequestException("offline") : Task.FromResult(Releases);
         }
+
+        public Task<bool> HasApkAsync(AppRelease release, CancellationToken cancellationToken = default) =>
+            Task.FromResult(!WithoutApk.Contains(release.Tag));
     }
 
     private sealed class FakeState : IAppUpdateState
