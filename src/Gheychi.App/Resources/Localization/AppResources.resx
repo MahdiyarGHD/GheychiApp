@@ -661,7 +661,7 @@
     <value>Check for app updates</value>
   </data>
   <data name="Settings_AppUpdateHint" xml:space="preserve">
-    <value>Checked automatically once a day</value>
+    <value>Checked automatically every hour</value>
   </data>
   <data name="Settings_AppUpdateAvailable" xml:space="preserve">
     <value>New version available</value>

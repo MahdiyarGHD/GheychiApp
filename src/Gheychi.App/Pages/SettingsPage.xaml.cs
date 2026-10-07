@@ -299,7 +299,8 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
     {
         try
         {
-            ModelUpdateDot.IsVisible = _modelUpdates is not null && await _modelUpdates.GetAvailableAsync() is not null;
+            // Off the UI thread: it reads the saved release (JSON) and the model files.
+            ModelUpdateDot.IsVisible = _modelUpdates is { } updates && await Task.Run(() => updates.GetAvailableAsync()) is not null;
         }
         catch (Exception ex)
         {

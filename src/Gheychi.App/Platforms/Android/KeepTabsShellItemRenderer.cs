@@ -35,28 +35,41 @@ internal sealed class KeepTabsShellItemRenderer : ShellItemRenderer
     /// <summary>
     /// Builds a tab that has not been opened yet, so opening it the first time does not build its page then. Shell
     /// builds a tab only when it is shown: the page, its views and the first layout all ran on the tap.
+    /// False when it could not be done yet (the tab bar is not up, or the app is not in front) and is worth retrying.
     /// </summary>
-    public static Task PrebuildAsync(string route) =>
-        _instance is not null && _instance.TryGetTarget(out var renderer) ? renderer.PrebuildTabAsync(route) : Task.CompletedTask;
+    public static Task<bool> PrebuildAsync(string route) =>
+        _instance is not null && _instance.TryGetTarget(out var renderer) ? renderer.PrebuildTabAsync(route) : Task.FromResult(false);
 
-    private async Task PrebuildTabAsync(string route)
+    private async Task<bool> PrebuildTabAsync(string route)
     {
-        if (!IsAdded || View is null
-            || FragmentMapField?.GetValue(this) is not Dictionary<Element, IShellObservableFragment> fragments
-            || CurrentFragmentField is null
-            || ShellItem?.Items.FirstOrDefault(s => s.CurrentItem?.Route == route) is not { } section
-            || fragments.ContainsKey(section))
-            return;
+        if (FragmentMapField?.GetValue(this) is not Dictionary<Element, IShellObservableFragment> fragments || CurrentFragmentField is null)
+            return true;
+
+        // Not resumed: behind a system prompt or in the background, where the tab would not be laid out.
+        if (!IsAdded || !IsResumed || View is null || ShellItem is null)
+            return false;
+
+        if (ShellItem.Items.FirstOrDefault(s => s.CurrentItem?.Route == route) is not { } section || fragments.ContainsKey(section))
+            return true;
 
         var target = GetOrCreateFragmentForTab(section);
+        try
+        {
+            // Added visible but not drawn: a hidden (gone) tab is never laid out, and its page is only created by the
+            // tab's pager during layout.
+            ChildFragmentManager.BeginTransaction().Add(GetNavigationTarget().Id, target.Fragment).CommitNowAllowingStateLoss();
+        }
+        catch (Exception ex)
+        {
+            // Not recorded, so opening the tab adds it the usual way.
+            System.Diagnostics.Debug.WriteLine($"Building the {route} tab failed: {ex}");
+            return true;
+        }
+
         fragments[section] = target;
         _added.Add(target.Fragment);
-
-        // Added visible but not drawn: a hidden (gone) tab is never laid out, and its page is only created by the
-        // tab's pager during layout.
-        ChildFragmentManager.BeginTransaction().Add(GetNavigationTarget().Id, target.Fragment).CommitNowAllowingStateLoss();
         if (target.Fragment.View is not { } view)
-            return;
+            return true;
         view.Visibility = ViewStates.Invisible;
 
         for (var waited = 0; waited < 3000 && !IsLaidOut(section); waited += 50)
@@ -65,9 +78,10 @@ internal sealed class KeepTabsShellItemRenderer : ShellItemRenderer
 
         // Opened while it was being built: it is the visible tab now.
         if (ReferenceEquals(CurrentFragmentField.GetValue(this), target) || !target.Fragment.IsAdded)
-            return;
+            return true;
 
         ChildFragmentManager.BeginTransaction().Hide(target.Fragment).CommitAllowingStateLoss();
+        return true;
     }
 
     private static bool IsLaidOut(ShellSection section) =>

@@ -6,7 +6,9 @@ namespace Gheychi.Core.Updates;
 /// </summary>
 public sealed class AppUpdates
 {
-    public static readonly TimeSpan CheckInterval = TimeSpan.FromDays(1);
+    // Hourly: the check is one small feed request, and with a daily one a release could go unnoticed for a day,
+    // longer when a check by hand had just reset the interval.
+    public static readonly TimeSpan CheckInterval = TimeSpan.FromHours(1);
 
     private readonly IAppReleaseSource _source;
     private readonly IAppUpdateState _state;

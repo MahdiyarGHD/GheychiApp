@@ -42,6 +42,35 @@ public sealed class SpamModelStore
         return null;
     }
 
+    /// <summary>
+    /// The version <see cref="LoadActiveAsync"/> would start from, read without loading a model: the newest installed
+    /// one, or the bundled one when that is newer. Null when there is neither.
+    /// </summary>
+    public async Task<int?> PeekActiveVersionAsync(CancellationToken cancellationToken = default)
+    {
+        var newest = 0;
+        try
+        {
+            newest = InstalledVersions().DefaultIfEmpty(0).First();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading installed spam models failed: {ex}");
+        }
+
+        try
+        {
+            await using var stream = await _openBundledFile(SpamModelManifest.FileName);
+            newest = Math.Max(newest, SpamModelManifest.Parse(await ReadAllAsync(stream, cancellationToken)).Version);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or IOException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bundled spam model unavailable: {ex}");
+        }
+
+        return newest > 0 ? newest : null;
+    }
+
     /// <summary>Writes the package, loads it, and only then makes it an installed version. Null when it is rejected.</summary>
     public async Task<SpamModel?> InstallAsync(Stream manifest, Stream model, int activeVersion, CancellationToken cancellationToken = default)
     {

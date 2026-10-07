@@ -3,7 +3,9 @@ namespace Gheychi.Core.Spam;
 /// <summary>Replaces the bundled spam model with a newer one, e.g. a downloaded update.</summary>
 public interface ISpamModelUpdater
 {
-    /// <summary>Version of the model in use; null when none could be loaded.</summary>
+    /// <summary>
+    /// Version of the model in use, or of the one that will be loaded while none is yet; null when none could be loaded.
+    /// </summary>
     Task<int?> GetActiveVersionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>

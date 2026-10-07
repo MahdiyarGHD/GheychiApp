@@ -17,6 +17,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
     private bool _overlaysWarmedUp;
+    private bool _tabsPrebuildStarted;
+    private bool _inboxShown;
     private ChatView? _chatOverlay;
     private SearchView? _searchOverlay;
     private ComposeView? _composeOverlay;
@@ -174,6 +176,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        _inboxShown = false;
         if (_gateWindow is not null)
         {
             _gateWindow.Activated -= OnGateWindowActivated;
@@ -187,6 +190,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _inboxShown = true;
         UpdateDefaultAppGate();
         if (_gateWindow is null && Window is { } window)
         {
@@ -207,6 +211,13 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         // in the middle of a resume loses against the Shell's own resume work and the bar comes back.
         if (ChatPresence.IsAppVisible)
             await OpenRequestedChatAsync();
+
+        // Not after the inbox has initialised: that waits for the default-app and permission prompts.
+        if (!_tabsPrebuildStarted)
+        {
+            _tabsPrebuildStarted = true;
+            _ = PrebuildTabsAsync();
+        }
 
         try
         {
@@ -233,37 +244,27 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         try
         {
-            // The other tabs first, as they are often opened right after launch: Shell builds a tab only when it is
-            // first opened otherwise, which made the first switch to it slow. The inbox has loaded by now.
-            await Task.Delay(800);
-            await WaitForQuietAsync();
-            await KeepTabsShellItemRenderer.PrebuildAsync("spam");
-
-            await Task.Delay(500);
-            await WaitForQuietAsync();
-            await KeepTabsShellItemRenderer.PrebuildAsync("settings");
-
-            await Task.Delay(1000);
-            await WaitForQuietAsync();
+            await Task.Delay(2500);
+            await WaitForInboxQuietAsync();
             await CollapseWhenParkedAsync(ChatOverlay, () => IsChatClosed);
 
             await Task.Delay(1000);
-            await WaitForQuietAsync();
+            await WaitForInboxQuietAsync();
             await CollapseWhenParkedAsync(SearchOverlay, () => IsSearchClosed);
 
             await Task.Delay(1000);
-            await WaitForQuietAsync();
+            await WaitForInboxQuietAsync();
             if (Vm is not null)
                 ComposeOverlay.SetRecent(BuildRecentRows());
             await ComposeOverlay.PreloadContactsAsync();
             await CollapseWhenParkedAsync(ComposeOverlay, () => IsComposeClosed);
 
             await Task.Delay(1000);
-            await WaitForQuietAsync();
+            await WaitForInboxQuietAsync();
             await CollapseWhenParkedAsync(ArchiveOverlay, () => !_archiveOpen && !_swipeDragging);
 
             await Task.Delay(1000);
-            await WaitForQuietAsync();
+            await WaitForInboxQuietAsync();
             await CollapseWhenParkedAsync(ProfileOverlay, () => IsProfileClosed);
 
             // Reading chats ahead is background work that would compete with the screens above.
@@ -309,7 +310,53 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
 
     private async Task WaitForQuietAsync()
     {
-        while (Environment.TickCount64 - _lastScrollTime < 500 || !UserActivity.IsIdle(700))
+        while (!IsQuiet)
+            await Task.Delay(200);
+    }
+
+    private bool IsQuiet => Environment.TickCount64 - _lastScrollTime >= 500 && UserActivity.IsIdle(700);
+
+    // Building a screen is one long UI-thread step. Done while another tab is up, it froze the tab the user had just
+    // opened; and an overlay of a hidden inbox is never laid out, so it would be built without being ready either.
+    private async Task WaitForInboxQuietAsync()
+    {
+        while (!_inboxShown || !IsQuiet)
+            await Task.Delay(200);
+    }
+
+    // Shell builds a tab when it is first opened, which froze that first switch for as long as the page took to build.
+    // The other tabs are built here instead, as soon as the inbox has drawn and is left alone.
+    private async Task PrebuildTabsAsync()
+    {
+        try
+        {
+            await Task.Delay(600);
+            foreach (var route in (string[])["spam", "settings"])
+            {
+                // Retried while the Shell's tab renderer is not up yet, or the app is behind a system prompt.
+                for (var attempt = 0; attempt < 40; attempt++)
+                {
+                    await WaitForTabPrebuildAsync();
+                    if (await KeepTabsShellItemRenderer.PrebuildAsync(route))
+                        break;
+                    await Task.Delay(250);
+                }
+
+                await Task.Delay(300);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Building the other tabs failed: {ex}");
+        }
+    }
+
+    // Not while an overlay hides the tab bar (the tab would be laid out at the wrong height and again when shown), nor
+    // while the inbox is still filling its list.
+    private async Task WaitForTabPrebuildAsync()
+    {
+        while (!_inboxShown || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || _archiveOpen
+               || ChatLaunchRequests.HasPending || Vm?.IsLoading == true || !IsQuiet)
             await Task.Delay(200);
     }
 

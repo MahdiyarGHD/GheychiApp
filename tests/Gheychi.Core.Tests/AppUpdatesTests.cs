@@ -91,7 +91,7 @@ public sealed class AppUpdatesTests
     [Fact]
     public async Task Check_WithinInterval_DoesNotAskTheSource()
     {
-        _state.LastCheckedUtc = Now.AddHours(-2);
+        _state.LastCheckedUtc = Now.AddMinutes(-30);
 
         await Create("1.0.0").CheckAsync(force: false);
 
@@ -101,7 +101,7 @@ public sealed class AppUpdatesTests
     [Fact]
     public async Task Check_Forced_AsksEvenWithinInterval()
     {
-        _state.LastCheckedUtc = Now.AddHours(-2);
+        _state.LastCheckedUtc = Now.AddMinutes(-30);
 
         await Create("1.0.0").CheckAsync(force: true);
 

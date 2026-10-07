@@ -85,7 +85,8 @@ public partial class SpamSettingsScreen : SettingsScreen
     {
         try
         {
-            _available = _modelUpdates is null ? null : await _modelUpdates.GetAvailableAsync();
+            // Off the UI thread: it reads the saved release (JSON) and the model files.
+            _available = _modelUpdates is not { } updates ? null : await Task.Run(() => updates.GetAvailableAsync());
         }
         catch (Exception ex)
         {

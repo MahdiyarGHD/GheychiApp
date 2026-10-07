@@ -8,6 +8,7 @@ public sealed class MlNetSpamClassifier : ISpamClassifier, ISpamModelUpdater
     private readonly SemaphoreSlim _gate = new(1, 1);
     private SpamModel? _model;
     private bool _loadAttempted;
+    private volatile bool _loadFailed;
 
     public MlNetSpamClassifier(SpamModelStore store)
     {
@@ -33,8 +34,17 @@ public sealed class MlNetSpamClassifier : ISpamClassifier, ISpamModelUpdater
 
     public Task WarmUpAsync(CancellationToken cancellationToken = default) => GetModelAsync(cancellationToken);
 
-    public async Task<int?> GetActiveVersionAsync(CancellationToken cancellationToken = default) =>
-        (await GetModelAsync(cancellationToken))?.Version;
+    // Read without loading the model when it is not loaded yet: a load takes seconds, and the Settings tab asks for the
+    // version as soon as it appears.
+    public async Task<int?> GetActiveVersionAsync(CancellationToken cancellationToken = default)
+    {
+        if (Volatile.Read(ref _model) is { } model)
+            return model.Version;
+        if (_loadFailed)
+            return null;
+
+        return await Task.Run(() => _store.PeekActiveVersionAsync(cancellationToken));
+    }
 
     public async Task<bool> InstallAsync(Stream manifest, Stream model, CancellationToken cancellationToken = default)
     {
@@ -42,13 +52,13 @@ public sealed class MlNetSpamClassifier : ISpamClassifier, ISpamModelUpdater
         try
         {
             var active = await LoadOnceAsync(cancellationToken);
-            var installed = await _store.InstallAsync(manifest, model, active?.Version ?? 0, cancellationToken);
+            var installed = await Task.Run(() => _store.InstallAsync(manifest, model, active?.Version ?? 0, cancellationToken));
             if (installed is null)
                 return false;
 
             // A score already running on the old model finishes on it; the old model is dropped, not disposed.
             Volatile.Write(ref _model, installed);
-            _store.DeleteOlderThan(installed.Version);
+            await Task.Run(() => _store.DeleteOlderThan(installed.Version));
             return true;
         }
         finally
@@ -81,7 +91,16 @@ public sealed class MlNetSpamClassifier : ISpamClassifier, ISpamModelUpdater
         {
             _loadAttempted = true;
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            Volatile.Write(ref _model, await _store.LoadActiveAsync(cancellationToken));
+            try
+            {
+                // Never on the caller's thread, which can be the UI: the store's awaits would bring the load back to it.
+                Volatile.Write(ref _model, await Task.Run(() => _store.LoadActiveAsync(cancellationToken)));
+            }
+            finally
+            {
+                _loadFailed = _model is null;
+            }
+
             System.Diagnostics.Debug.WriteLine($"Spam model {_model?.Version.ToString() ?? "none"} loaded in {watch.ElapsedMilliseconds} ms");
         }
 

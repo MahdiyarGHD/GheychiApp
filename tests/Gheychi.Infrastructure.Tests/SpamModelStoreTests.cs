@@ -83,9 +83,29 @@ public sealed class SpamModelStoreTests : IDisposable
             Assert.True(await first.InstallAsync(manifest, model));
 
         var afterRestart = new MlNetSpamClassifier(CreateStore());
+        await afterRestart.WarmUpAsync();
 
         Assert.Equal(Bundled.Version + 2, await afterRestart.GetActiveVersionAsync());
         Assert.False(Directory.Exists(Path.Combine(_root, VersionName(Bundled.Version))));
+    }
+
+    [Fact]
+    public async Task ActiveVersion_BeforeTheModelIsLoaded_IsReadWithoutInstallingIt()
+    {
+        var classifier = new MlNetSpamClassifier(CreateStore());
+
+        Assert.Equal(Bundled.Version, await classifier.GetActiveVersionAsync());
+        Assert.False(Directory.Exists(Path.Combine(_root, VersionName(Bundled.Version))));
+    }
+
+    [Fact]
+    public async Task ActiveVersion_BeforeTheModelIsLoaded_PrefersANewerInstalledOne()
+    {
+        await using (var manifest = Manifest(Bundled.Version + 3))
+        await using (var model = BundledModel())
+            Assert.True(await new MlNetSpamClassifier(CreateStore()).InstallAsync(manifest, model));
+
+        Assert.Equal(Bundled.Version + 3, await new MlNetSpamClassifier(CreateStore()).GetActiveVersionAsync());
     }
 
     [Fact]

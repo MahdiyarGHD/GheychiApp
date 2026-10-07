@@ -661,7 +661,7 @@
     <value>بررسی به‌روزرسانی برنامه</value>
   </data>
   <data name="Settings_AppUpdateHint" xml:space="preserve">
-    <value>روزی یک بار خودکار بررسی می‌شود</value>
+    <value>هر ساعت خودکار بررسی می‌شود</value>
   </data>
   <data name="Settings_AppUpdateAvailable" xml:space="preserve">
     <value>نسخه جدید موجود است</value>

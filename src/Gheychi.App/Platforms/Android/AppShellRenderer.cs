@@ -25,12 +25,14 @@ internal sealed class AppShellRenderer : ShellRenderer
         {
             base.SetAppearance(bottomView, appearance);
             TabBarFont.Attach(bottomView);
+            SettingsTabBadge.Attach(bottomView);
         }
 
         public override void ResetAppearance(BottomNavigationView bottomView)
         {
             base.ResetAppearance(bottomView);
             TabBarFont.Attach(bottomView);
+            SettingsTabBadge.Attach(bottomView);
         }
     }
 }
