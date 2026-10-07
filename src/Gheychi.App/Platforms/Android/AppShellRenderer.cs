@@ -30,6 +30,24 @@ internal sealed class AppShellRenderer : ShellRenderer
     }
 }
 
+/// <summary>The app's own font (Vazirmatn in Persian), for native views MAUI does not style.</summary>
+internal static class AppTypeface
+{
+    private static global::Android.Graphics.Typeface? _typeface;
+
+    public static global::Android.Graphics.Typeface? Get()
+    {
+        if (_typeface is not null)
+            return _typeface;
+
+        if (Application.Current?.Resources.TryGetValue("AppFontFamily", out var family) != true || family is not string name
+            || IPlatformApplication.Current?.Services.GetService<IFontManager>() is not { } fonts)
+            return null;
+
+        return _typeface = fonts.GetTypeface(Microsoft.Maui.Font.OfSize(name, 0));
+    }
+}
+
 internal static class TabBarFont
 {
     private static readonly ConditionalWeakTable<BottomNavigationView, Relayout> Attached = new();
@@ -52,7 +70,7 @@ internal static class TabBarFont
     {
         try
         {
-            if (Typeface() is not { } typeface)
+            if (AppTypeface.Get() is not { } typeface)
                 return;
 
             ApplyTo(view, typeface);
@@ -80,20 +98,6 @@ internal static class TabBarFont
                     ApplyTo(child, typeface);
             }
         }
-    }
-
-    private static global::Android.Graphics.Typeface? _typeface;
-
-    private static global::Android.Graphics.Typeface? Typeface()
-    {
-        if (_typeface is not null)
-            return _typeface;
-
-        if (Application.Current?.Resources.TryGetValue("AppFontFamily", out var family) != true || family is not string name
-            || IPlatformApplication.Current?.Services.GetService<IFontManager>() is not { } fonts)
-            return null;
-
-        return _typeface = fonts.GetTypeface(Microsoft.Maui.Font.OfSize(name, 0));
     }
 
     private sealed class Relayout : Java.Lang.Object, AView.IOnLayoutChangeListener

@@ -1,5 +1,10 @@
+using Android.Text;
+using Android.Views;
+using Android.Widget;
 using Gheychi.App.Localization;
+using Gheychi.App.Platforms.Android;
 using Gheychi.Core.Spam;
+using AlertDialog = AndroidX.AppCompat.App.AlertDialog;
 
 namespace Gheychi.App.Controls;
 
@@ -7,47 +12,89 @@ namespace Gheychi.App.Controls;
 internal static class SpamReport
 {
     /// <summary>
-    /// Asks before anything leaves the phone, then sends each body as its own report in the background and tells the
-    /// user how it went. False when the user cancelled.
+    /// Shows the message in an editable box so the user can take out anything personal before it leaves the phone,
+    /// then sends what is left in the background and tells the user how it went. False when the user cancelled.
     /// </summary>
-    public static async Task<bool> SubmitAsync(IEnumerable<string> bodies, bool isSpam)
+    public static async Task<bool> SubmitAsync(string body, bool isSpam)
     {
-        var texts = bodies.Where(b => !string.IsNullOrWhiteSpace(b)).ToList();
-        if (texts.Count == 0 || IPlatformApplication.Current?.Services.GetService<ISpamReporter>() is not { } reporter)
+        if (string.IsNullOrWhiteSpace(body) || IPlatformApplication.Current?.Services.GetService<ISpamReporter>() is not { } reporter)
             return false;
 
-        var loc = LocalizationManager.Instance;
-        var title = texts.Count == 1
-            ? loc[isSpam ? "Spam_ReportSpamConfirmTitle" : "Spam_ReportHamConfirmTitle"]
-            : string.Format(loc[isSpam ? "Spam_ReportSpamConfirmTitleMany" : "Spam_ReportHamConfirmTitleMany"], texts.Count);
+        string? text;
         try
         {
             // Called from async void tap handlers: nothing here may throw.
-            if (Shell.Current is not { } shell
-                || !await shell.DisplayAlertAsync(title, loc["Spam_ReportConfirmMessage"], loc["Spam_ReportConfirmSend"], loc["Chat_Cancel"]))
-                return false;
+            text = await EditAsync(body, isSpam);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Asking to send the spam report failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Showing the spam report dialog failed: {ex}");
             return false;
         }
 
-        _ = SendAsync(reporter, texts, isSpam);
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        _ = SendAsync(reporter, text, isSpam);
         return true;
     }
 
-    private static async Task SendAsync(ISpamReporter reporter, List<string> texts, bool isSpam)
+    /// <summary>The text to send, or null when the user cancelled.</summary>
+    private static Task<string?> EditAsync(string body, bool isSpam)
+    {
+        if (Platform.CurrentActivity is not { } activity)
+            return Task.FromResult<string?>(null);
+
+        var loc = LocalizationManager.Instance;
+        var density = activity.Resources?.DisplayMetrics?.Density ?? 1;
+        var result = new TaskCompletionSource<string?>();
+
+        var input = new EditText(activity)
+        {
+            Text = body,
+            InputType = InputTypes.ClassText | InputTypes.TextFlagMultiLine | InputTypes.TextFlagNoSuggestions,
+            Gravity = GravityFlags.Top | GravityFlags.Start,
+            VerticalScrollBarEnabled = true
+        };
+        input.SetMinLines(3);
+        input.SetMaxLines(8);
+        input.SetTextSize(Android.Util.ComplexUnitType.Sp, 15);
+        if (AppTypeface.Get() is { } typeface)
+            input.Typeface = typeface;
+
+        var frame = new FrameLayout(activity);
+        var side = (int)(22 * density);
+        frame.SetPadding(side, (int)(4 * density), side, 0);
+        frame.AddView(input, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent));
+
+        var dialog = new AlertDialog.Builder(activity)
+            .SetTitle(loc[isSpam ? "Spam_ReportSpamConfirmTitle" : "Spam_ReportHamConfirmTitle"])!
+            .SetMessage(loc["Spam_ReportConfirmMessage"])!
+            .SetView(frame)!
+            .SetPositiveButton(loc["Spam_ReportConfirmSend"], (_, _) => result.TrySetResult(input.Text))!
+            .SetNegativeButton(loc["Chat_Cancel"], (_, _) => result.TrySetResult(null))!
+            .Create();
+        dialog.DismissEvent += (_, _) => result.TrySetResult(null);
+        dialog.Show();
+
+        // Nothing to send once the user has removed everything.
+        var send = dialog.GetButton((int)Android.Content.DialogButtonType.Positive);
+        input.TextChanged += (_, _) =>
+        {
+            if (send is not null)
+                send.Enabled = !string.IsNullOrWhiteSpace(input.Text);
+        };
+
+        return result.Task;
+    }
+
+    private static async Task SendAsync(ISpamReporter reporter, string text, bool isSpam)
     {
         var loc = LocalizationManager.Instance;
         string result;
         try
         {
-            await Task.Run(async () =>
-            {
-                foreach (var text in texts)
-                    await reporter.ReportAsync(text, isSpam);
-            });
+            await Task.Run(() => reporter.ReportAsync(text, isSpam));
             result = loc["Spam_ReportThanks"];
         }
         catch (Exception ex)

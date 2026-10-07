@@ -1194,26 +1194,7 @@ public partial class ChatView : ContentView
         var msg = _targetMessage;
         await DismissSelectionOverlayAsync();
         if (msg is not null)
-            await SpamReport.SubmitAsync([$"{msg.BodyBeforeLink}{msg.Link}"], isSpam: true);
-    }
-
-    private async void OnReportSelectedTapped(object? sender, EventArgs e)
-    {
-        try
-        {
-            if (Vm is not { SelectedCount: > 0 } vm)
-                return;
-
-            if (!await SpamReport.SubmitAsync(vm.GetSelectedMessageBodies(), isSpam: true))
-                return;
-
-            TriggerLightHaptic();
-            vm.ExitSelectionMode();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Reporting the selected messages failed: {ex}");
-        }
+            await SpamReport.SubmitAsync($"{msg.BodyBeforeLink}{msg.Link}", isSpam: true);
     }
 
     private async void OnStarSelectedTapped(object? sender, EventArgs e)

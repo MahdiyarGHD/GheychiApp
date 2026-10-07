@@ -583,19 +583,13 @@
     <value>گزارش ارسال نشد. اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.</value>
   </data>
   <data name="Spam_ReportSpamConfirmTitle" xml:space="preserve">
-    <value>گزارش به‌عنوان هرزنامه؟</value>
-  </data>
-  <data name="Spam_ReportSpamConfirmTitleMany" xml:space="preserve">
-    <value>{0} پیام به‌عنوان هرزنامه گزارش شود؟</value>
+    <value>گزارش به‌عنوان هرزنامه</value>
   </data>
   <data name="Spam_ReportHamConfirmTitle" xml:space="preserve">
-    <value>گزارش به‌عنوان پیام معمولی؟</value>
-  </data>
-  <data name="Spam_ReportHamConfirmTitleMany" xml:space="preserve">
-    <value>{0} پیام به‌عنوان پیام معمولی گزارش شود؟</value>
+    <value>گزارش به‌عنوان پیام معمولی</value>
   </data>
   <data name="Spam_ReportConfirmMessage" xml:space="preserve">
-    <value>متن پیام برای بهبود تشخیص هرزنامه ارسال می‌شود. شماره‌تلفن‌ها، لینک‌ها و دیگر اعداد پیش از ارسال حذف می‌شوند.</value>
+    <value>این متن برای بهبود تشخیص هرزنامه ارسال می‌شود. پیش از ارسال، هر چیز شخصی مثل نام، کد یا نشانی را از آن پاک کنید. شماره‌تلفن‌ها و لینک‌ها خودکار حذف می‌شوند.</value>
   </data>
   <data name="Spam_ReportConfirmSend" xml:space="preserve">
     <value>ارسال گزارش</value>

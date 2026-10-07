@@ -583,19 +583,13 @@
     <value>Couldn't send the report. Check your connection and try again.</value>
   </data>
   <data name="Spam_ReportSpamConfirmTitle" xml:space="preserve">
-    <value>Report as spam?</value>
-  </data>
-  <data name="Spam_ReportSpamConfirmTitleMany" xml:space="preserve">
-    <value>Report {0} messages as spam?</value>
+    <value>Report as spam</value>
   </data>
   <data name="Spam_ReportHamConfirmTitle" xml:space="preserve">
-    <value>Report as not spam?</value>
-  </data>
-  <data name="Spam_ReportHamConfirmTitleMany" xml:space="preserve">
-    <value>Report {0} messages as not spam?</value>
+    <value>Report as not spam</value>
   </data>
   <data name="Spam_ReportConfirmMessage" xml:space="preserve">
-    <value>The message text is sent to help improve spam detection. Phone numbers, links and other numbers are removed first.</value>
+    <value>This text is sent to improve spam detection. Remove anything personal, such as names, codes or addresses, before sending. Phone numbers and links are removed automatically.</value>
   </data>
   <data name="Spam_ReportConfirmSend" xml:space="preserve">
     <value>Send report</value>

@@ -594,7 +594,7 @@
                 <!-- Selection Contextual Header -->
                 <Grid IsVisible="{Binding IsSelectionMode}"
                       Padding="12,10,12,10"
-                      ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto"
+                      ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto"
                       ColumnSpacing="14"
                       BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}">
                     <Grid Grid.Column="0" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
@@ -663,21 +663,6 @@
                         </Grid.GestureRecognizers>
                     </Grid>
                     <Grid Grid.Column="5" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
-                        <Image Source="report.png"
-                               WidthRequest="19"
-                               HeightRequest="19"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center"
-                               SemanticProperties.Description="{loc:Translate Chat_ReportSpam}">
-                            <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
-                            </Image.Behaviors>
-                        </Image>
-                        <Grid.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnReportSelectedTapped" />
-                        </Grid.GestureRecognizers>
-                    </Grid>
-                    <Grid Grid.Column="6" WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
                         <Image Source="trash.png"
                                WidthRequest="20"
                                HeightRequest="20"
