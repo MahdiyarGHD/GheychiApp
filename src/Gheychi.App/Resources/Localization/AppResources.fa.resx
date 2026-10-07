@@ -972,4 +972,46 @@
   <data name="Settings_Megabytes" xml:space="preserve">
     <value>{0} مگابایت</value>
   </data>
+  <data name="Notification_ChannelSpamDigest" xml:space="preserve">
+    <value>خلاصهٔ هرزنامه</value>
+  </data>
+  <data name="Notification_ChannelSpamDigestDescription" xml:space="preserve">
+    <value>یادداشتی بی‌صدا، روزی یک بار، از هرزنامه‌های شناسایی‌شده</value>
+  </data>
+  <data name="Spam_DigestTitleTodayOne" xml:space="preserve">
+    <value>امروز ۱ پیامک هرزنامه شناسایی شد</value>
+  </data>
+  <data name="Spam_DigestTitleToday" xml:space="preserve">
+    <value>امروز {0} پیامک هرزنامه شناسایی شد</value>
+  </data>
+  <data name="Spam_DigestTitleOne" xml:space="preserve">
+    <value>در ۲۴ ساعت گذشته ۱ پیامک هرزنامه شناسایی شد</value>
+  </data>
+  <data name="Spam_DigestTitle" xml:space="preserve">
+    <value>در ۲۴ ساعت گذشته {0} پیامک هرزنامه شناسایی شد</value>
+  </data>
+  <data name="Spam_DigestFromOne" xml:space="preserve">
+    <value>از {0}</value>
+  </data>
+  <data name="Spam_DigestFromTwo" xml:space="preserve">
+    <value>از {0} و {1}</value>
+  </data>
+  <data name="Spam_DigestFromMany" xml:space="preserve">
+    <value>از {0}، {1} و {2} فرستندهٔ دیگر</value>
+  </data>
+  <data name="Settings_SectionDigest" xml:space="preserve">
+    <value>خلاصهٔ روزانه</value>
+  </data>
+  <data name="Settings_Digest" xml:space="preserve">
+    <value>خلاصهٔ روزانهٔ هرزنامه</value>
+  </data>
+  <data name="Settings_DigestHint" xml:space="preserve">
+    <value>اعلانی بی‌صدا در روزهایی که هرزنامه شناسایی شده</value>
+  </data>
+  <data name="Settings_DigestTime" xml:space="preserve">
+    <value>زمان خلاصه</value>
+  </data>
+  <data name="Settings_DigestTimeHint" xml:space="preserve">
+    <value>ممکن است اندروید آن را چند دقیقه دیرتر نشان دهد</value>
+  </data>
 </root>

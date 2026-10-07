@@ -15,6 +15,8 @@ public sealed class SpamItem
     public required string Sender { get; init; }
     public required string Confidence { get; init; }
     public required string Time { get; init; }
+    /// <summary>Time of day alone, for the Spam tab where the day is in the header above the row.</summary>
+    public required string Clock { get; init; }
     public string Preview => Message.Body;
 
     public bool IsVeryLikely => SpamConfidence.Level(Message.Score) == SpamConfidenceLevel.VeryLikely;

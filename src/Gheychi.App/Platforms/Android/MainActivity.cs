@@ -37,6 +37,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         // base.OnCreate builds the first page, which has to know a notified chat is coming.
         ChatLaunchRequests.FromIntent(Intent);
+        SpamTabRequests.FromIntent(Intent);
 
         base.OnCreate(savedInstanceState);
         Window?.SetSoftInputMode(SoftInput.AdjustResize);
@@ -50,6 +51,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnNewIntent(intent);
         ChatLaunchRequests.FromIntent(intent);
+        SpamTabRequests.FromIntent(intent);
     }
 
     protected override void OnResume()
@@ -57,6 +59,7 @@ public class MainActivity : MauiAppCompatActivity
         base.OnResume();
         ChatPresence.AppVisibilityChanged(true);
         ChatLaunchRequests.RaiseIfPending();
+        SpamTabRequests.RaiseIfPending();
     }
 
     protected override void OnPause()

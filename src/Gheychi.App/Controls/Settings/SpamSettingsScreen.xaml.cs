@@ -1,5 +1,9 @@
+using System.Globalization;
 using Gheychi.App.Localization;
+using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Services;
 using Gheychi.App.ViewModels;
+using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
 
 namespace Gheychi.App.Controls.Settings;
@@ -48,9 +52,11 @@ public partial class SpamSettingsScreen : SettingsScreen
         _binding = true;
         FilterSwitch.IsToggled = _settings?.Enabled ?? true;
         SensitivitySlider.Value = ThresholdPercent;
+        DigestSwitch.IsToggled = SpamDigestPreferences.Enabled;
         _binding = false;
 
         ShowFilterState();
+        ShowDigestState();
         ShowSensitivity(ThresholdPercent);
         AutoClearValue.Text = SettingsUi.Days(RetentionDays);
 
@@ -112,6 +118,53 @@ public partial class SpamSettingsScreen : SettingsScreen
 
         _settings.Enabled = e.Value;
         ShowFilterState();
+        RescheduleDigest();
+    }
+
+    private void ShowDigestState()
+    {
+        DigestTimeValue.Text = new DateFormattingService().FormatMessageTime(
+            DateTime.Today.AddMinutes(SpamDigestPreferences.MinuteOfDay), CultureInfo.CurrentUICulture);
+        DigestTimeRow.Opacity = DigestSwitch.IsToggled ? 1 : 0.45;
+        DigestTimeRow.InputTransparent = !DigestSwitch.IsToggled;
+    }
+
+    private static void RescheduleDigest()
+    {
+        var context = Platform.AppContext;
+        _ = Task.Run(() => SpamDigestNotifier.Schedule(context));
+    }
+
+    private void OnDigestToggled(object? sender, ToggledEventArgs e)
+    {
+        if (_binding)
+            return;
+
+        SpamDigestPreferences.Enabled = e.Value;
+        ShowDigestState();
+        RescheduleDigest();
+    }
+
+    private void OnDigestTimeTapped(object? sender, TappedEventArgs e)
+    {
+        if (Platform.CurrentActivity is not { } activity)
+            return;
+
+        try
+        {
+            var minute = SpamDigestPreferences.MinuteOfDay;
+            var is24Hour = SettingsUi.IsPersian || Android.Text.Format.DateFormat.Is24HourFormat(activity);
+            new Android.App.TimePickerDialog(activity, (_, picked) =>
+            {
+                SpamDigestPreferences.MinuteOfDay = picked.HourOfDay * 60 + picked.Minute;
+                ShowDigestState();
+                RescheduleDigest();
+            }, minute / 60, minute % 60, is24Hour).Show();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Picking the spam summary time failed: {ex}");
+        }
     }
 
     private void ShowSensitivity(int percent)

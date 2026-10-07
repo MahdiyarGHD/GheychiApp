@@ -47,6 +47,19 @@ public class DateFormattingServiceTests
     }
 
     [Fact]
+    public void FormatDayHeader_ReturnsDayWithoutTime()
+    {
+        var now = new DateTime(2026, 9, 28, 14, 30, 0);
+        var en = CultureInfo.GetCultureInfo("en-US");
+        var fa = CultureInfo.GetCultureInfo("fa-IR");
+
+        Assert.Equal("Today", _sut.FormatDayHeader(new DateTime(2026, 9, 28, 1, 0, 0), now, en));
+        Assert.Equal("دیروز", _sut.FormatDayHeader(new DateTime(2026, 9, 27, 23, 0, 0), now, fa));
+        Assert.Equal("Thu · Sep 24", _sut.FormatDayHeader(new DateTime(2026, 9, 24, 9, 0, 0), now, en));
+        Assert.Equal("Dec 30, 2025", _sut.FormatDayHeader(new DateTime(2025, 12, 30, 9, 0, 0), now, en));
+    }
+
+    [Fact]
     public void ToPersianDigits_ConvertsCorrectly()
     {
         var result = DateFormattingService.ToPersianDigits("0123456789");

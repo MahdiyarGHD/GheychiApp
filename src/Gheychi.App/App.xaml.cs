@@ -15,6 +15,8 @@ public partial class App : Application
 	{
 		var window = new Window(new AppShell());
 		window.Activated += (_, _) => _ = Services.UpdateAutoCheck.RunAsync();
+		// The alarm is gone after a force stop, and an app update can leave it unset.
+		_ = Task.Run(() => Platforms.Android.Notifications.SpamDigestNotifier.Schedule(Platform.AppContext));
 		return window;
 	}
 

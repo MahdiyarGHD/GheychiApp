@@ -11,6 +11,7 @@ internal static class NotificationChannels
     private const string ConversationPrefix = "chat_";
 
     private static volatile bool _created;
+    private static volatile bool _spamDigestCreated;
 
     public static void Ensure(Context context)
     {
@@ -34,6 +35,27 @@ internal static class NotificationChannels
 
         manager.CreateNotificationChannel(channel);
         _created = true;
+    }
+
+    /// <summary>Low importance: shown in the shade without a sound, a vibration or a pop-up.</summary>
+    public static void EnsureSpamDigest(Context context)
+    {
+        if (_spamDigestCreated || !OperatingSystem.IsAndroidVersionAtLeast(26))
+            return;
+
+        if (context.GetSystemService(Context.NotificationService) is not NotificationManager manager)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        var channel = new NotificationChannel(NotificationIds.ChannelSpamDigest, loc["Notification_ChannelSpamDigest"], NotificationImportance.Low)
+        {
+            Description = loc["Notification_ChannelSpamDigestDescription"],
+            LockscreenVisibility = NotificationVisibility.Private
+        };
+        channel.SetShowBadge(false);
+
+        manager.CreateNotificationChannel(channel);
+        _spamDigestCreated = true;
     }
 
     /// <summary>

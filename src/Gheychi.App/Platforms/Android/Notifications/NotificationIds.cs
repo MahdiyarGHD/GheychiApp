@@ -6,10 +6,15 @@ internal static class NotificationIds
     public const string GroupKey = "com.evergreen.gheychiapp.MESSAGES";
     public const int SummaryId = 1;
 
+    public const string ChannelSpamDigest = "spam_digest";
+    public const string SpamDigestGroupKey = "com.evergreen.gheychiapp.SPAM_DIGEST";
+    public const int SpamDigestId = 2;
+
     public const string ExtraThreadId = "com.evergreen.gheychiapp.THREAD_ID";
     public const string ExtraAddress = "com.evergreen.gheychiapp.ADDRESS";
     public const string ExtraName = "com.evergreen.gheychiapp.NAME";
     public const string ExtraSubId = "com.evergreen.gheychiapp.SUB_ID";
+    public const string ExtraOpenSpamTab = "com.evergreen.gheychiapp.OPEN_SPAM_TAB";
 
     private const int ThreadIdBase = 1000;
     private const int ThreadIdRange = 100_000_000;

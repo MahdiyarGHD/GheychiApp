@@ -972,4 +972,46 @@
   <data name="Settings_Megabytes" xml:space="preserve">
     <value>{0} MB</value>
   </data>
+  <data name="Notification_ChannelSpamDigest" xml:space="preserve">
+    <value>Spam summary</value>
+  </data>
+  <data name="Notification_ChannelSpamDigestDescription" xml:space="preserve">
+    <value>A quiet daily note of the spam that was caught</value>
+  </data>
+  <data name="Spam_DigestTitleTodayOne" xml:space="preserve">
+    <value>1 spam message detected today</value>
+  </data>
+  <data name="Spam_DigestTitleToday" xml:space="preserve">
+    <value>{0} spam messages detected today</value>
+  </data>
+  <data name="Spam_DigestTitleOne" xml:space="preserve">
+    <value>1 spam message detected in the last day</value>
+  </data>
+  <data name="Spam_DigestTitle" xml:space="preserve">
+    <value>{0} spam messages detected in the last day</value>
+  </data>
+  <data name="Spam_DigestFromOne" xml:space="preserve">
+    <value>From {0}</value>
+  </data>
+  <data name="Spam_DigestFromTwo" xml:space="preserve">
+    <value>From {0} and {1}</value>
+  </data>
+  <data name="Spam_DigestFromMany" xml:space="preserve">
+    <value>From {0}, {1} and {2} more</value>
+  </data>
+  <data name="Settings_SectionDigest" xml:space="preserve">
+    <value>Daily summary</value>
+  </data>
+  <data name="Settings_Digest" xml:space="preserve">
+    <value>Daily spam summary</value>
+  </data>
+  <data name="Settings_DigestHint" xml:space="preserve">
+    <value>A silent notification on days spam was caught</value>
+  </data>
+  <data name="Settings_DigestTime" xml:space="preserve">
+    <value>Summary time</value>
+  </data>
+  <data name="Settings_DigestTimeHint" xml:space="preserve">
+    <value>Android may show it a few minutes late</value>
+  </data>
 </root>

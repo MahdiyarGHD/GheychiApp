@@ -44,7 +44,8 @@ public sealed class SpamViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public FastObservableCollection<SpamItem> Items { get; } = new();
+    /// <summary>The shown rows, newest first: <see cref="SpamItem"/>s under a <see cref="DateSeparatorItem"/> per day.</summary>
+    public FastObservableCollection<object> Items { get; } = new();
 
     public bool HasAny => _all.Count > 0;
 
@@ -178,7 +179,17 @@ public sealed class SpamViewModel : INotifyPropertyChanged
         var item = ToItem(message, DateTime.Now, CultureInfo.CurrentUICulture);
         _all.Insert(0, item);
         if (Matches(item, SearchTextHelper.BuildVariants(_searchText)))
-            Items.Insert(0, item);
+        {
+            if (Items.Count > 1 && Items[1] is SpamItem newest && newest.Message.Timestamp.Date == item.Message.Timestamp.Date)
+            {
+                Items.Insert(1, item);
+            }
+            else
+            {
+                Items.Insert(0, item);
+                Items.Insert(0, Header(item.Message.Timestamp));
+            }
+        }
         RaiseChanged();
     }
 
@@ -187,7 +198,14 @@ public sealed class SpamViewModel : INotifyPropertyChanged
         foreach (var item in items)
         {
             _all.Remove(item);
-            Items.Remove(item);
+            var index = Items.IndexOf(item);
+            if (index < 0)
+                continue;
+
+            Items.RemoveAt(index);
+            // A day whose last row just went keeps no empty header.
+            if (Items[index - 1] is DateSeparatorItem && (index == Items.Count || Items[index] is DateSeparatorItem))
+                Items.RemoveAt(index - 1);
         }
 
         RaiseChanged();
@@ -196,8 +214,27 @@ public sealed class SpamViewModel : INotifyPropertyChanged
     private void ApplyFilter()
     {
         var needles = SearchTextHelper.BuildVariants(_searchText);
-        Items.Reset(needles.Count == 0 ? _all : _all.Where(i => Matches(i, needles)));
+        Items.Reset(WithDayHeaders(needles.Count == 0 ? _all : _all.Where(i => Matches(i, needles))));
     }
+
+    private IEnumerable<object> WithDayHeaders(IEnumerable<SpamItem> items)
+    {
+        DateTime? day = null;
+        foreach (var item in items)
+        {
+            var date = item.Message.Timestamp.Date;
+            if (date != day)
+            {
+                day = date;
+                yield return Header(item.Message.Timestamp);
+            }
+
+            yield return item;
+        }
+    }
+
+    private DateSeparatorItem Header(DateTime timestamp) =>
+        new(_dateFormatter.FormatDayHeader(timestamp, DateTime.Now, CultureInfo.CurrentUICulture));
 
     private static bool Matches(SpamItem item, IReadOnlyList<string> needles) =>
         needles.Count == 0
@@ -225,7 +262,8 @@ public sealed class SpamViewModel : INotifyPropertyChanged
             Sender = PhoneNumberNormalizer.FormatDisplay(message.Address),
             Confidence = LocalizationManager.Instance[
                 SpamConfidence.Level(message.Score) == SpamConfidenceLevel.VeryLikely ? "Spam_VeryLikely" : "Spam_Likely"],
-            Time = _dateFormatter.FormatThreadTime(message.Timestamp, now, culture)
+            Time = _dateFormatter.FormatThreadTime(message.Timestamp, now, culture),
+            Clock = _dateFormatter.FormatMessageTime(message.Timestamp, culture)
         };
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>

@@ -1,6 +1,7 @@
 using Gheychi.App.Controls;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.ViewModels;
 
 namespace Gheychi.App.Pages;
@@ -20,6 +21,13 @@ public partial class SpamPage : ContentPage
             BindingContext = viewModel;
             _ = viewModel.EnsureLoadedAsync();
         }
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        var context = Platform.AppContext;
+        _ = Task.Run(() => SpamDigestNotifier.MarkSeen(context));
     }
 
     protected override bool OnBackButtonPressed()

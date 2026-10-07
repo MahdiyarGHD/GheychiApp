@@ -74,6 +74,22 @@ public sealed class DateFormattingService : IDateFormattingService
             return isFa ? $"دیروز · {time}" : $"Yesterday · {time}";
         }
 
+        return FormatDay(timestamp, now, isFa);
+    }
+
+    public string FormatDayHeader(DateTime timestamp, DateTime now, CultureInfo culture)
+    {
+        var isFa = culture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase);
+        return (now.Date - timestamp.Date).TotalDays switch
+        {
+            0 => isFa ? "امروز" : "Today",
+            1 => isFa ? "دیروز" : "Yesterday",
+            _ => FormatDay(timestamp, now, isFa)
+        };
+    }
+
+    private static string FormatDay(DateTime timestamp, DateTime now, bool isFa)
+    {
         if (isFa)
         {
             var year = Pc.GetYear(timestamp);

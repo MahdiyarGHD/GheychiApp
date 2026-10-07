@@ -159,81 +159,94 @@
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="vm:SpamItem">
-                    <Grid RowDefinitions="Auto,1">
-                        <Grid Grid.Row="0"
-                              Padding="6,10,0,10"
-                              ColumnDefinitions="Auto,*,Auto"
-                              ColumnSpacing="12">
-                            <Border Grid.Column="0"
-                                    WidthRequest="38"
-                                    HeightRequest="38"
-                                    StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 19"
-                                    BackgroundColor="{AppThemeBinding Light=#E7EEE6, Dark=#2A332D}"
-                                    VerticalOptions="Start"
-                                    Margin="0,2,0,0">
-                                <Image Source="spamrow.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Border>
+                <vm:SpamTemplateSelector>
+                    <vm:SpamTemplateSelector.DateSeparatorTemplate>
+                        <DataTemplate x:DataType="vm:DateSeparatorItem">
+                            <Label Text="{Binding Text}"
+                                   Padding="6,14,0,4"
+                                   FontSize="12"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}" />
+                        </DataTemplate>
+                    </vm:SpamTemplateSelector.DateSeparatorTemplate>
+                    <vm:SpamTemplateSelector.SpamTemplate>
+                        <DataTemplate x:DataType="vm:SpamItem">
+                            <Grid RowDefinitions="Auto,1">
+                                <Grid Grid.Row="0"
+                                      Padding="6,10,0,10"
+                                      ColumnDefinitions="Auto,*,Auto"
+                                      ColumnSpacing="12">
+                                    <Border Grid.Column="0"
+                                            WidthRequest="38"
+                                            HeightRequest="38"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 19"
+                                            BackgroundColor="{AppThemeBinding Light=#E7EEE6, Dark=#2A332D}"
+                                            VerticalOptions="Start"
+                                            Margin="0,2,0,0">
+                                        <Image Source="spamrow.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
+                                            <Image.Behaviors>
+                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                            </Image.Behaviors>
+                                        </Image>
+                                    </Border>
 
-                            <!-- The sender gives way first; the confidence and time are always shown whole -->
-                            <Grid Grid.Column="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="2">
-                                <Label Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="{Binding Sender}"
-                                       FontSize="14"
-                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                       TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
-                                       LineBreakMode="TailTruncation"
-                                       MaxLines="1"
-                                       VerticalOptions="Center" />
-                                <Label Grid.Row="0"
-                                       Grid.Column="1"
-                                       Text="{Binding Confidence}"
-                                       FontSize="11"
-                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                       TextColor="{Binding ConfidenceColor}"
-                                       VerticalOptions="Center" />
-                                <Label Grid.Row="0"
-                                       Grid.Column="2"
-                                       Text="{Binding Time}"
-                                       FontSize="11"
-                                       TextColor="#8A8F98"
-                                       VerticalOptions="Center" />
-                                <Label Grid.Row="1"
-                                       Grid.Column="0"
-                                       Grid.ColumnSpan="3"
-                                       Text="{Binding Preview}"
-                                       FontSize="13"
-                                       TextColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}"
-                                       LineBreakMode="TailTruncation"
-                                       MaxLines="2" />
+                                    <!-- The sender gives way first; the confidence and time are always shown whole -->
+                                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="2">
+                                        <Label Grid.Row="0"
+                                               Grid.Column="0"
+                                               Text="{Binding Sender}"
+                                               FontSize="14"
+                                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                               TextColor="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1"
+                                               VerticalOptions="Center" />
+                                        <Label Grid.Row="0"
+                                               Grid.Column="1"
+                                               Text="{Binding Confidence}"
+                                               FontSize="11"
+                                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                               TextColor="{Binding ConfidenceColor}"
+                                               VerticalOptions="Center" />
+                                        <Label Grid.Row="0"
+                                               Grid.Column="2"
+                                               Text="{Binding Clock}"
+                                               FontSize="11"
+                                               TextColor="#8A8F98"
+                                               VerticalOptions="Center" />
+                                        <Label Grid.Row="1"
+                                               Grid.Column="0"
+                                               Grid.ColumnSpan="3"
+                                               Text="{Binding Preview}"
+                                               FontSize="13"
+                                               TextColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="2" />
+                                    </Grid>
+
+                                    <Border Grid.Column="2"
+                                            WidthRequest="34"
+                                            HeightRequest="34"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 17"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnMoreTapped" />
+                                        </Border.GestureRecognizers>
+                                        <Image Source="more.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
+                                            <Image.Behaviors>
+                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#9AA0AB}" />
+                                            </Image.Behaviors>
+                                        </Image>
+                                    </Border>
+                                </Grid>
+                                <BoxView Grid.Row="1" Margin="56,0,8,0" Color="{AppThemeBinding Light=#EEF1EC, Dark=#24292A}" />
                             </Grid>
-
-                            <Border Grid.Column="2"
-                                    WidthRequest="34"
-                                    HeightRequest="34"
-                                    StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 17"
-                                    BackgroundColor="Transparent"
-                                    VerticalOptions="Center">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnMoreTapped" />
-                                </Border.GestureRecognizers>
-                                <Image Source="more.png" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
-                                    <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#9AA0AB}" />
-                                    </Image.Behaviors>
-                                </Image>
-                            </Border>
-                        </Grid>
-                        <BoxView Grid.Row="1" Margin="56,0,8,0" Color="{AppThemeBinding Light=#EEF1EC, Dark=#24292A}" />
-                    </Grid>
-                </DataTemplate>
+                        </DataTemplate>
+                    </vm:SpamTemplateSelector.SpamTemplate>
+                </vm:SpamTemplateSelector>
             </CollectionView.ItemTemplate>
         </CollectionView>
 

@@ -106,6 +106,53 @@
                             <Label x:Name="SensitivityExplain" Style="{StaticResource Note}" Margin="2,0" />
                         </VerticalStackLayout>
                     </Border>
+
+                    <Label Text="{loc:Translate Settings_SectionDigest}" Style="{StaticResource SectionTitle}" />
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                                <Border Style="{StaticResource Badge}">
+                                    <Image Source="notifications.png" Style="{StaticResource BadgeIcon}">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="{loc:Translate Settings_Digest}" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{loc:Translate Settings_DigestHint}" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <Switch x:Name="DigestSwitch" Grid.Column="2" Style="{StaticResource SettingSwitch}" Toggled="OnDigestToggled" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid x:Name="DigestTimeRow" Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnDigestTimeTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border Style="{StaticResource Badge}">
+                                    <Image Source="history.png" Style="{StaticResource BadgeIcon}">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                    <Label Text="{loc:Translate Settings_DigestTime}" Style="{StaticResource RowTitle}" />
+                                    <Label Text="{loc:Translate Settings_DigestTimeHint}" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="2" Style="{StaticResource ValueChip}">
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label x:Name="DigestTimeValue" Style="{StaticResource ValueChipLabel}" />
+                                        <Image Source="unfold.png" WidthRequest="15" HeightRequest="15" VerticalOptions="Center">
+                                            <Image.Behaviors>
+                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                            </Image.Behaviors>
+                                        </Image>
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
                 </VerticalStackLayout>
 
                 <Label Text="{loc:Translate Settings_SectionSpamList}" Style="{StaticResource SectionTitle}" />
