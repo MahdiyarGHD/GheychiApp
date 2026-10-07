@@ -51,7 +51,8 @@ public partial class AboutSettingsScreen : SettingsScreen
         {
             if (updates.GetAvailable() is { } release)
             {
-                await Launcher.Default.OpenAsync(new Uri(release.PageUrl));
+                // An update found before direct links were stored has only its page.
+                await Launcher.Default.OpenAsync(new Uri(release.DownloadUrl ?? release.PageUrl));
                 return;
             }
 

@@ -33,8 +33,10 @@ public sealed class GitHubAppReleaseSourceTests
 
         Assert.Equal(
             [
-                new AppRelease("1.3.0-rc.1", "https://github.com/MahdiyarGHD/GheychiApp/releases/tag/1.3.0-rc.1"),
-                new AppRelease("v1.2.0", "https://github.com/MahdiyarGHD/GheychiApp/releases/tag/v1.2.0")
+                new AppRelease("1.3.0-rc.1", "https://github.com/MahdiyarGHD/GheychiApp/releases/tag/1.3.0-rc.1",
+                    "https://github.com/MahdiyarGHD/GheychiApp/releases/download/1.3.0-rc.1/Gheychi-1.3.0-rc.1.apk"),
+                new AppRelease("v1.2.0", "https://github.com/MahdiyarGHD/GheychiApp/releases/tag/v1.2.0",
+                    "https://github.com/MahdiyarGHD/GheychiApp/releases/download/v1.2.0/Gheychi-1.2.0.apk")
             ],
             releases);
     }

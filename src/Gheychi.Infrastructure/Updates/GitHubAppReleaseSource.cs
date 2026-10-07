@@ -47,9 +47,19 @@ public sealed class GitHubAppReleaseSource : IAppReleaseSource
 
             var tag = Uri.UnescapeDataString(segments[^1]);
             if (AppVersion.Parse(tag) is not null)
-                releases.Add(new AppRelease(tag, uri.AbsoluteUri));
+                releases.Add(new AppRelease(tag, uri.AbsoluteUri, ApkUrl(tag)));
         }
 
         return releases;
+    }
+
+    /// <summary>
+    /// The APK the release workflow attaches: "Gheychi-{version}.apk", the version being the tag without a leading "v".
+    /// A direct link, so the browser downloads it instead of showing the release page.
+    /// </summary>
+    public static string ApkUrl(string tag)
+    {
+        var version = tag.StartsWith('v') ? tag[1..] : tag;
+        return $"https://github.com/{Repository}/releases/download/{Uri.EscapeDataString(tag)}/Gheychi-{Uri.EscapeDataString(version)}.apk";
     }
 }
