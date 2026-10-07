@@ -7,9 +7,14 @@ using AView = Android.Views.View;
 
 namespace Gheychi.App.Platforms.Android;
 
-/// <summary>Shell has no font setting for its tab titles, which were drawn in the system font; this gives them the app's.</summary>
+/// <summary>
+/// Shell has no font setting for its tab titles, which were drawn in the system font; this gives them the app's.
+/// Tabs also stay built across tab switches (<see cref="KeepTabsShellItemRenderer"/>).
+/// </summary>
 internal sealed class AppShellRenderer : ShellRenderer
 {
+    protected override IShellItemRenderer CreateShellItemRenderer(ShellItem shellItem) => new KeepTabsShellItemRenderer(this);
+
     protected override IShellBottomNavViewAppearanceTracker CreateBottomNavViewAppearanceTracker(ShellItem shellItem) =>
         new TabBarAppearanceTracker(this, shellItem);
 

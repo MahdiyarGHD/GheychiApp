@@ -43,6 +43,15 @@ public sealed class AndroidSmsService : ISmsService
     public bool IsDefaultSmsApp()
     {
         var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+
+        // From Android 10 the SMS role is what the user grants, and what EnsureDefaultSmsAppAsync asks for. Telephony's
+        // answer did not always follow it: the app held the role but still showed "not your SMS app", and the button
+        // did nothing because the role was already held.
+        if (OperatingSystem.IsAndroidVersionAtLeast(29)
+            && context.GetSystemService(Context.RoleService) is RoleManager roles
+            && roles.IsRoleHeld(RoleManager.RoleSms))
+            return true;
+
         return Telephony.Sms.GetDefaultSmsPackage(context) == context.PackageName;
     }
 
