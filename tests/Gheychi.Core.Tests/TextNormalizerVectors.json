@@ -1,0 +1,74 @@
+[
+  {
+    "input": "",
+    "expected": ""
+  },
+  {
+    "input": "   ",
+    "expected": ""
+  },
+  {
+    "input": "سلام عزیزم، شب میای خونه؟",
+    "expected": "سلام عزیزم، شب میای خونه؟"
+  },
+  {
+    "input": "تخفیف ویژه 70 درصد فقط امروز! برای خرید روی لینک کلیک کنید lnkd.ir/abc لغو11",
+    "expected": "تخفیف ویژه [RANDOM_NUMBER] درصد فقط امروز! برای خرید روی لینک کلیک کنید [LINK_REMOVED] "
+  },
+  {
+    "input": "ثبت نام در https://example.com/register?id=42 و www.shop.ir",
+    "expected": "ثبت نام در [LINK_REMOVED] و [LINK_REMOVED]"
+  },
+  {
+    "input": "با شماره 09121234567 یا +98 912 123 4567 تماس بگیرید",
+    "expected": "با شماره [MASKED_NUMBER] یا [MASKED_NUMBER] تماس بگیرید"
+  },
+  {
+    "input": "کد تایید شما: ۴۸۲۹۱۵",
+    "expected": "کد تایید شما: [RANDOM_NUMBER]"
+  },
+  {
+    "input": "کد ورود ٣٤٥٦",
+    "expected": "کد ورود [RANDOM_NUMBER]"
+  },
+  {
+    "input": "جلسه 1402/05/12 ساعت 14:30 برگزار می‌شود",
+    "expected": "جلسه [DATE] ساعت [TIME] برگزار می شود"
+  },
+  {
+    "input": "قرار ساعت ۹:۱۵ ص",
+    "expected": "قرار ساعت [TIME] ص"
+  },
+  {
+    "input": "Meeting at 9:30 PM",
+    "expected": "[ENGLISH] [ENGLISH] [TIME] [ENGLISH]"
+  },
+  {
+    "input": "برای فعال‌سازی *123*4# را شماره‌گیری کنید",
+    "expected": "برای فعال سازی [USSD_REMOVED] را شماره گیری کنید"
+  },
+  {
+    "input": "كيك و ميوه با هديه",
+    "expected": "کیک و میوه با هدیه"
+  },
+  {
+    "input": "عالی بود \uD83D\uDE00\uD83D\uDC4D ممنون ❤",
+    "expected": "عالی بود ممنون"
+  },
+  {
+    "input": "خط   اول\nخط‌دوم\t\tپایان",
+    "expected": "خط اول خط دوم پایان"
+  },
+  {
+    "input": "Your OTP is 552211. Do not share it.",
+    "expected": "[ENGLISH] [ENGLISH] [ENGLISH] [RANDOM_NUMBER]. [ENGLISH] [ENGLISH] [ENGLISH] [ENGLISH]."
+  },
+  {
+    "input": "[NAME] عزیز، سفارش شما ارسال شد",
+    "expected": "[NAME] عزیز، سفارش شما ارسال شد"
+  },
+  {
+    "input": "لغو11",
+    "expected": ""
+  }
+]

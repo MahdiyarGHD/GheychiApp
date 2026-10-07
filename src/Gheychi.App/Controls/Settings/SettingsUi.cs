@@ -16,6 +16,9 @@ internal static class SettingsUi
 
     public static string Days(int days) => string.Format(LocalizationManager.Instance["Settings_Days"], Number(days));
 
+    public static string Megabytes(long bytes) =>
+        string.Format(LocalizationManager.Instance["Settings_Megabytes"], Digits((bytes / 1048576.0).ToString("0.0", CultureInfo.InvariantCulture)));
+
     public static void MirrorChevrons(Element root, ResourceDictionary resources)
     {
         if (!IsRightToLeft || !resources.TryGetValue("Chevron", out var style))

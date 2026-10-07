@@ -648,9 +648,6 @@
   <data name="Settings_FooterText" xml:space="preserve">
     <value>Your messages never leave this phone</value>
   </data>
-  <data name="Settings_ComingSoon" xml:space="preserve">
-    <value>Coming soon</value>
-  </data>
   <data name="Settings_Days" xml:space="preserve">
     <value>{0} days</value>
   </data>
@@ -908,5 +905,32 @@
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
     <value>The app restarts to apply a new theme or language.</value>
+  </data>
+  <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
+    <value>Update available</value>
+  </data>
+  <data name="Settings_ModelUpdateAvailableHint" xml:space="preserve">
+    <value>Version {0} · {1} · tap to install</value>
+  </data>
+  <data name="Settings_ModelChecking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="Settings_ModelUpToDate" xml:space="preserve">
+    <value>You have the latest model</value>
+  </data>
+  <data name="Settings_ModelCheckFailed" xml:space="preserve">
+    <value>Couldn't check for updates. Try again later.</value>
+  </data>
+  <data name="Settings_ModelDownloading" xml:space="preserve">
+    <value>Downloading {0}…</value>
+  </data>
+  <data name="Settings_ModelInstalled" xml:space="preserve">
+    <value>Spam model updated to version {0}</value>
+  </data>
+  <data name="Settings_ModelInstallFailed" xml:space="preserve">
+    <value>The update couldn't be installed. Try again later.</value>
+  </data>
+  <data name="Settings_Megabytes" xml:space="preserve">
+    <value>{0} MB</value>
   </data>
 </root>

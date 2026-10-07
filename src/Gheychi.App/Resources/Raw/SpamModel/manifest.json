@@ -1,7 +1,0 @@
-{
-  "version": 1,
-  "model": "spam-v1.mlnet",
-  "textColumn": "عاشقان اباعبدالله ع نوای محمدرضاطاهری حسین جانم",
-  "labelColumn": "true",
-  "spamLabel": "true"
-}

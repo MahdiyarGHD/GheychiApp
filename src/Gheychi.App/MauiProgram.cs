@@ -43,6 +43,14 @@ public static class MauiProgram
         builder.Services.AddSingleton<MlNetSpamClassifier>();
         builder.Services.AddSingleton<ISpamClassifier>(sp => sp.GetRequiredService<MlNetSpamClassifier>());
         builder.Services.AddSingleton<ISpamModelUpdater>(sp => sp.GetRequiredService<MlNetSpamClassifier>());
+        builder.Services.AddSingleton<ISpamModelSource>(_ => new GitHubSpamModelSource(
+            new HttpClient { Timeout = TimeSpan.FromMinutes(2) },
+            FileSystem.CacheDirectory));
+        builder.Services.AddSingleton<ISpamModelUpdateState, Services.PreferencesSpamModelUpdateState>();
+        builder.Services.AddSingleton(sp => new SpamModelUpdates(
+            sp.GetRequiredService<ISpamModelSource>(),
+            sp.GetRequiredService<ISpamModelUpdater>(),
+            sp.GetRequiredService<ISpamModelUpdateState>()));
         builder.Services.AddSingleton<SpamDetector>();
         builder.Services.AddSingleton<SpamViewModel>();
 

@@ -648,9 +648,6 @@
   <data name="Settings_FooterText" xml:space="preserve">
     <value>پیام‌های شما هرگز از این گوشی خارج نمی‌شوند</value>
   </data>
-  <data name="Settings_ComingSoon" xml:space="preserve">
-    <value>به‌زودی</value>
-  </data>
   <data name="Settings_Days" xml:space="preserve">
     <value>{0} روز</value>
   </data>
@@ -908,5 +905,32 @@
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
     <value>برای اعمال پوسته یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
+  </data>
+  <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
+    <value>به‌روزرسانی موجود است</value>
+  </data>
+  <data name="Settings_ModelUpdateAvailableHint" xml:space="preserve">
+    <value>نسخه {0} · {1} · برای نصب بزنید</value>
+  </data>
+  <data name="Settings_ModelChecking" xml:space="preserve">
+    <value>در حال بررسی…</value>
+  </data>
+  <data name="Settings_ModelUpToDate" xml:space="preserve">
+    <value>آخرین نسخه مدل را دارید</value>
+  </data>
+  <data name="Settings_ModelCheckFailed" xml:space="preserve">
+    <value>بررسی به‌روزرسانی ممکن نشد. بعداً دوباره امتحان کنید.</value>
+  </data>
+  <data name="Settings_ModelDownloading" xml:space="preserve">
+    <value>در حال دریافت {0}…</value>
+  </data>
+  <data name="Settings_ModelInstalled" xml:space="preserve">
+    <value>مدل هرزنامه به نسخه {0} به‌روز شد</value>
+  </data>
+  <data name="Settings_ModelInstallFailed" xml:space="preserve">
+    <value>به‌روزرسانی نصب نشد. بعداً دوباره امتحان کنید.</value>
+  </data>
+  <data name="Settings_Megabytes" xml:space="preserve">
+    <value>{0} مگابایت</value>
   </data>
 </root>

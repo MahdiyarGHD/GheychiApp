@@ -252,6 +252,9 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             await WaitForQuietAsync();
             if (IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Spam.ISpamClassifier>() is { } spamClassifier)
                 await Task.Run(() => spamClassifier.WarmUpAsync());
+
+            if (IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Spam.SpamModelUpdates>() is { } modelUpdates)
+                await Task.Run(() => modelUpdates.CheckAsync(force: false));
         }
         catch
         {

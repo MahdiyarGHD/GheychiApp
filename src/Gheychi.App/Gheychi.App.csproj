@@ -53,4 +53,14 @@
         <ProjectReference Include="..\Gheychi.Infrastructure\Gheychi.Infrastructure.csproj" />
     </ItemGroup>
 
+    <Import Project="..\..\build\SpamModel.targets" />
+
+    <!-- A model fetched during this build missed the Resources\Raw glob, which was evaluated before it existed. -->
+    <Target Name="IncludeFetchedSpamModel" AfterTargets="FetchSpamModel" Condition="'$(SpamModelFetched)' == 'true'">
+        <ItemGroup>
+            <_FetchedSpamModel Include="Resources\Raw\**" Exclude="@(MauiAsset)" />
+            <MauiAsset Include="@(_FetchedSpamModel)" LogicalName="%(_FetchedSpamModel.RecursiveDir)%(_FetchedSpamModel.Filename)%(_FetchedSpamModel.Extension)" />
+        </ItemGroup>
+    </Target>
+
 </Project>

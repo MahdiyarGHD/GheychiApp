@@ -1,3 +1,4 @@
+using Gheychi.Core.Spam;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 
@@ -9,12 +10,14 @@ public sealed class SpamModel
     private readonly object _gate = new();
     private readonly PredictionEngine<ModelInput, ModelOutput> _engine;
     private readonly int _spamIndex;
+    private readonly bool _normalize;
 
-    private SpamModel(int version, PredictionEngine<ModelInput, ModelOutput> engine, int spamIndex)
+    private SpamModel(int version, PredictionEngine<ModelInput, ModelOutput> engine, int spamIndex, bool normalize)
     {
         Version = version;
         _engine = engine;
         _spamIndex = spamIndex;
+        _normalize = normalize;
     }
 
     public int Version { get; }
@@ -41,7 +44,7 @@ public sealed class SpamModel
             if (spamIndex < 0)
                 throw new InvalidDataException($"Label '{manifest.SpamLabel}' is not one of the model's labels.");
 
-            var model = new SpamModel(manifest.Version, engine, spamIndex);
+            var model = new SpamModel(manifest.Version, engine, spamIndex, manifest.Normalizer > 0);
             model.Score(string.Empty);
             return model;
         }
@@ -56,7 +59,7 @@ public sealed class SpamModel
         // PredictionEngine is not thread-safe.
         lock (_gate)
         {
-            var output = _engine.Predict(new ModelInput { Text = text });
+            var output = _engine.Predict(new ModelInput { Text = _normalize ? TextNormalizer.Normalize(text) : text });
             if (_spamIndex >= output.Score.Length)
                 throw new InvalidDataException("The model's scores do not match its labels.");
             return output.Score[_spamIndex];

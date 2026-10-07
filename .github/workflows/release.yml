@@ -79,6 +79,22 @@ jobs:
       - name: Core tests
         run: dotnet test tests/Gheychi.Core.Tests -c Release
 
+      # The spam model is not in git: bundle the latest one the dataset repository released, whatever is on disk.
+      - name: Fetch latest spam model
+        id: model
+        shell: bash
+        env:
+          MODEL_REPO: MahdiyarGHD/sms-spam-dataset
+        run: |
+          dir=src/Gheychi.App/Resources/Raw/SpamModel
+          rm -rf "$dir" && mkdir -p "$dir"
+          curl -fsSL --retry 3 -o "$dir/manifest.json" "https://github.com/$MODEL_REPO/releases/latest/download/manifest.json"
+          version=$(jq -er .version "$dir/manifest.json")
+          model=$(jq -er .model "$dir/manifest.json")
+          curl -fsSL --retry 3 -o "$dir/$model" "https://github.com/$MODEL_REPO/releases/download/model-v$version/$model"
+          echo "$(jq -er .sha256 "$dir/manifest.json")  $dir/$model" | sha256sum -c -
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Decode signing keystore
         id: keystore
         shell: bash
@@ -162,7 +178,7 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" "$APK.sha256" --clobber
           else
-            flags=(--verify-tag --generate-notes --title "$TAG")
+            flags=(--verify-tag --generate-notes --title "$TAG" --notes "Bundled spam model v${{ steps.model.outputs.version }}")
             if [[ "${{ steps.tag.outputs.prerelease }}" == "true" ]]; then
               flags+=(--prerelease)
             else

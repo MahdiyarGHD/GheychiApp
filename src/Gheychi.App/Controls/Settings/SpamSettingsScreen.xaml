@@ -213,8 +213,8 @@
                                 </Image>
                             </Border>
                             <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                                <Label Text="{loc:Translate Settings_ModelUpdate}" Style="{StaticResource RowTitle}" />
-                                <Label Text="{loc:Translate Settings_ModelUpdateHint}" Style="{StaticResource RowSubtitle}" />
+                                <Label x:Name="ModelUpdateTitle" Style="{StaticResource RowTitle}" />
+                                <Label x:Name="ModelUpdateHint" Style="{StaticResource RowSubtitle}" />
                             </VerticalStackLayout>
                             <Image Grid.Column="2" Style="{StaticResource Chevron}">
                                 <Image.Behaviors>

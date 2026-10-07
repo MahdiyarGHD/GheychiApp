@@ -22,4 +22,13 @@
         <ProjectReference Include="..\..\src\Gheychi.Infrastructure\Gheychi.Infrastructure.csproj" />
     </ItemGroup>
 
+    <Import Project="..\..\build\SpamModel.targets" />
+
+    <Target Name="IncludeFetchedSpamModel" AfterTargets="FetchSpamModel" Condition="'$(SpamModelFetched)' == 'true'">
+        <ItemGroup>
+            <_FetchedSpamModel Include="$(SpamModelDirectory)*" />
+            <None Include="@(_FetchedSpamModel)" Link="SpamModel\%(_FetchedSpamModel.Filename)%(_FetchedSpamModel.Extension)" CopyToOutputDirectory="PreserveNewest" />
+        </ItemGroup>
+    </Target>
+
 </Project>

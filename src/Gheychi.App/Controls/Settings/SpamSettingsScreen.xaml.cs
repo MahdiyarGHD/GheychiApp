@@ -12,9 +12,12 @@ public partial class SpamSettingsScreen : SettingsScreen
 
     private readonly ISpamSettings? _settings;
     private readonly ISpamModelUpdater? _models;
+    private readonly SpamModelUpdates? _modelUpdates;
     private readonly SpamViewModel? _spam;
     private readonly (Border Segment, int Percent)[] _presets;
     private bool _binding;
+    private bool _updating;
+    private SpamModelRelease? _available;
 
     public SpamSettingsScreen()
     {
@@ -24,6 +27,9 @@ public partial class SpamSettingsScreen : SettingsScreen
         var services = IPlatformApplication.Current?.Services;
         _settings = services?.GetService<ISpamSettings>();
         _models = services?.GetService<ISpamModelUpdater>();
+        _modelUpdates = services?.GetService<SpamModelUpdates>();
+        if (_modelUpdates is not null)
+            _modelUpdates.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(() => _ = ShowModelUpdateAsync());
         _spam = services?.GetService<SpamViewModel>();
 
         _presets = [(PresetRelaxed, 95), (PresetBalanced, 85), (PresetStrict, 70)];
@@ -53,6 +59,7 @@ public partial class SpamSettingsScreen : SettingsScreen
 
         ModelVersion.Text = loc["Settings_ModelNone"];
         _ = ShowModelVersionAsync();
+        _ = ShowModelUpdateAsync();
     }
 
     private async Task ShowModelVersionAsync()
@@ -66,6 +73,28 @@ public partial class SpamSettingsScreen : SettingsScreen
         {
             System.Diagnostics.Debug.WriteLine($"Reading the spam model version failed: {ex}");
         }
+    }
+
+    private async Task ShowModelUpdateAsync()
+    {
+        try
+        {
+            _available = _modelUpdates is null ? null : await _modelUpdates.GetAvailableAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading the spam model update failed: {ex}");
+            _available = null;
+        }
+
+        if (_updating)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        ModelUpdateTitle.Text = loc[_available is null ? "Settings_ModelUpdate" : "Settings_ModelUpdateAvailable"];
+        ModelUpdateHint.Text = _available is { } release
+            ? string.Format(loc["Settings_ModelUpdateAvailableHint"], SettingsUi.Number(release.Version), SettingsUi.Megabytes(release.Size))
+            : loc["Settings_ModelUpdateHint"];
     }
 
     private void ShowFilterState()
@@ -149,7 +178,41 @@ public partial class SpamSettingsScreen : SettingsScreen
 
     private void OnAnalyticsTapped(object? sender, TappedEventArgs e) => RequestOpen(SettingsScreenKind.Analytics);
 
-    // TODO: download a newer model through ISpamModelUpdater.InstallAsync once there is a server to get it from.
-    private void OnModelUpdateTapped(object? sender, TappedEventArgs e) =>
-        Toast.Show(LocalizationManager.Instance["Settings_ComingSoon"]);
+    private async void OnModelUpdateTapped(object? sender, TappedEventArgs e)
+    {
+        if (_modelUpdates is not { } updates || _updating)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        var release = _available;
+        _updating = true;
+        try
+        {
+            if (release is null)
+            {
+                ModelUpdateHint.Text = loc["Settings_ModelChecking"];
+                if (await Task.Run(() => updates.CheckAsync(force: true)) is null)
+                    Toast.Show(loc["Settings_ModelUpToDate"]);
+            }
+            else
+            {
+                ModelUpdateHint.Text = string.Format(loc["Settings_ModelDownloading"], SettingsUi.Megabytes(release.Size));
+                var installed = await Task.Run(() => updates.InstallAsync(release));
+                Toast.Show(installed
+                    ? string.Format(loc["Settings_ModelInstalled"], SettingsUi.Number(release.Version))
+                    : loc["Settings_ModelInstallFailed"]);
+                await ShowModelVersionAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Spam model update failed: {ex}");
+            Toast.Show(loc[release is null ? "Settings_ModelCheckFailed" : "Settings_ModelInstallFailed"]);
+        }
+        finally
+        {
+            _updating = false;
+            await ShowModelUpdateAsync();
+        }
+    }
 }

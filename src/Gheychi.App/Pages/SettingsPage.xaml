@@ -98,6 +98,9 @@
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0" Style="{StaticResource Tile}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnModelTileTapped" />
+                                </Border.GestureRecognizers>
                                 <VerticalStackLayout Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Border WidthRequest="32" HeightRequest="32" StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="{AppThemeBinding Light=#F6F8F4, Dark=#14251B}" HorizontalOptions="Start">
@@ -107,6 +110,7 @@
                                                 </Image.Behaviors>
                                             </Image>
                                         </Border>
+                                        <BoxView x:Name="ModelUpdateDot" Grid.Column="1" Style="{StaticResource ChipDotOk}" WidthRequest="9" HeightRequest="9" CornerRadius="5" VerticalOptions="Start" IsVisible="False" />
                                     </Grid>
                                     <VerticalStackLayout Spacing="1">
                                         <Label Text="{loc:Translate Settings_TileModel}" Style="{StaticResource TileCaption}" />

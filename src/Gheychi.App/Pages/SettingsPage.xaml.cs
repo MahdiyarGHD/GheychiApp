@@ -18,6 +18,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
     private readonly ISmsService? _sms;
     private readonly ISpamSettings? _spamSettings;
     private readonly ISpamModelUpdater? _models;
+    private readonly SpamModelUpdates? _modelUpdates;
     private readonly SpamViewModel? _spam;
     private readonly Dictionary<SettingsScreenKind, SettingsScreen> _screens = new();
     private readonly Stack<SettingsScreen> _open = new();
@@ -35,6 +36,9 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         _sms = services?.GetService<ISmsService>();
         _spamSettings = services?.GetService<ISpamSettings>();
         _models = services?.GetService<ISpamModelUpdater>();
+        _modelUpdates = services?.GetService<SpamModelUpdates>();
+        if (_modelUpdates is not null)
+            _modelUpdates.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(() => _ = ShowModelUpdateAsync());
         _spam = services?.GetService<SpamViewModel>();
         if (_spam is not null)
             _spam.Changed += UpdateSpamSummary;
@@ -64,6 +68,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         UpdateSpamSummary();
         if (!_modelShown)
             _ = ShowModelVersionAsync();
+        _ = ShowModelUpdateAsync();
         if (!_simsShown)
             _ = ShowSimsAsync();
 
@@ -143,9 +148,15 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
 
         screen.IsVisible = false;
         if (_open.TryPeek(out var below))
+        {
             below.OnShown();
+        }
         else
+        {
             UpdateSpamSummary();
+            _ = ShowModelVersionAsync();
+            _ = ShowModelUpdateAsync();
+        }
     }
 
     private void OnSpamTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Spam);
@@ -161,6 +172,8 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
     private void OnAboutTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.About);
 
     private void OnCaughtTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Analytics);
+
+    private void OnModelTileTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Spam);
 
     // ---- Status --------------------------------------------------------------------------------
 
@@ -265,6 +278,18 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Reading the spam model version failed: {ex}");
+        }
+    }
+
+    private async Task ShowModelUpdateAsync()
+    {
+        try
+        {
+            ModelUpdateDot.IsVisible = _modelUpdates is not null && await _modelUpdates.GetAvailableAsync() is not null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading the spam model update failed: {ex}");
         }
     }
 
