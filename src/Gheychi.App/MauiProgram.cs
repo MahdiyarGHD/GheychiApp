@@ -3,8 +3,10 @@ using Gheychi.App.ViewModels;
 using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
+using Gheychi.Core.Updates;
 using Gheychi.Infrastructure.Data;
 using Gheychi.Infrastructure.Spam;
+using Gheychi.Infrastructure.Updates;
 using Microsoft.Extensions.Logging;
 
 namespace Gheychi.App;
@@ -25,7 +27,9 @@ public static class MauiProgram
                 fonts.AddFont("PlusJakartaSans-SemiBold.ttf", "PlusJakartaSansSemiBold");
                 fonts.AddFont("Vazirmatn-Regular.ttf", "Vazirmatn");
                 fonts.AddFont("Vazirmatn-SemiBold.ttf", "VazirmatnSemiBold");
-            });
+            })
+            .ConfigureMauiHandlers(handlers => handlers.AddHandler<Shell, Platforms.Android.AppShellRenderer>());
+        Platforms.Android.LtrNumbers.Register();
 
         var databasePath = Path.Combine(FileSystem.AppDataDirectory, "gheychi.db");
         builder.Services.AddSingleton<IDateFormattingService, DateFormattingService>();
@@ -46,6 +50,12 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISpamModelSource>(_ => new GitHubSpamModelSource(
             new HttpClient { Timeout = TimeSpan.FromMinutes(2) },
             FileSystem.CacheDirectory));
+        builder.Services.AddSingleton<IAppReleaseSource>(_ => new GitHubAppReleaseSource(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+        builder.Services.AddSingleton<IAppUpdateState, Services.PreferencesAppUpdateState>();
+        builder.Services.AddSingleton(sp => new AppUpdates(
+            sp.GetRequiredService<IAppReleaseSource>(),
+            sp.GetRequiredService<IAppUpdateState>(),
+            AppInfo.Current.VersionString));
         builder.Services.AddSingleton<ISpamReporter>(_ => new GoogleFormSpamReporter(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
         builder.Services.AddSingleton<ISpamModelUpdateState, Services.PreferencesSpamModelUpdateState>();
         builder.Services.AddSingleton(sp => new SpamModelUpdates(

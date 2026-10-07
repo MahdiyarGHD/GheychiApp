@@ -404,7 +404,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         var lastSep = newItems.OfType<DateSeparatorItem>().LastOrDefault();
         var sticky = lastSep?.Text ?? _dateFormatter.FormatStickyDate(now, now, culture);
-        var threadSlot = (thread.SubId > 0 && slotMap != null && slotMap.TryGetValue(thread.SubId, out var s)) ? s : 1;
+        // A conversation that has not used a SIM yet (a new one) starts on the default SIM from Settings.
+        var threadSlot = SlotOf(thread.SubId, slotMap) ?? SlotOf(Services.AppPreferences.DefaultSubId, slotMap) ?? 1;
 
         // Reaction SMS are folded away, so paging has to count the provider rows that were read.
         return new PreparedChatData(newItems, newMessages, sticky, threadSlot, firstUnreadIndex, SmsMessagePage.RawCountOf(rawMessages));
@@ -428,6 +429,16 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _prefetchOffset = -1;
         _prefetchThreadId = 0;
         FirstUnreadIndex = null;
+        _simChosenForOpen = false;
+    }
+
+    // Set when the chat was opened with a SIM the user picked (compose): the messages arriving after must not replace it.
+    private bool _simChosenForOpen;
+
+    public void ChooseSim(int slot, int subId)
+    {
+        _simChosenForOpen = true;
+        SelectSim(slot, subId);
     }
 
     public void StartPrefetchOlder(int? offsetOverride = null)
@@ -542,6 +553,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
     }
 
+    private static int? SlotOf(int subId, IReadOnlyDictionary<int, int>? map) =>
+        subId > 0 && map != null && map.TryGetValue(subId, out var slot) ? slot : null;
+
     private static int ResolveSlot(int subId, IReadOnlyDictionary<int, int>? map)
     {
         if (subId <= 0)
@@ -570,7 +584,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public void ApplyMessages(PreparedChatData data, int rawCount)
     {
         var threadSubId = Thread.SubId > 0 ? Thread.SubId : 0;
-        SelectSim(data.SimSlot, threadSubId);
+        if (!_simChosenForOpen)
+            SelectSim(data.SimSlot, threadSubId);
 
         FirstUnreadIndex = data.FirstUnreadIndex;
         _loadedCount = rawCount;
@@ -782,7 +797,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     private void ApplyPreferredSim()
     {
         var preferred = _threadSettings?.GetPreferredSubId(Thread.ThreadId) ?? 0;
-        if (preferred <= 0)
+        if (preferred <= 0 || _simChosenForOpen)
             return;
 
         var sim = ActiveSims.FirstOrDefault(s => s.SubId == preferred);

@@ -945,7 +945,7 @@
                         SemanticProperties.Description="{loc:Translate Chat_Sim}">
                     <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
                         <Label Text="{Binding SimText}"
-                               Margin="0,-2,0,0"
+                               TranslationY="{DynamicResource BadgeDigitOffsetY}"
                                FontSize="13"
                                FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
                                TextColor="White"

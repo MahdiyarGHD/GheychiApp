@@ -1,15 +1,16 @@
 using Gheychi.Core.Spam;
+using Gheychi.Core.Updates;
 
 namespace Gheychi.App.Services;
 
 /// <summary>
-/// Looks for a newer spam model each time the app comes to the front. <see cref="SpamModelUpdates"/> still asks the
-/// source at most once per <see cref="SpamModelUpdates.CheckInterval"/>; this only keeps a source that cannot be
-/// reached from being asked again on every return to the app.
+/// Looks for a newer app version and spam model each time the app comes to the front. <see cref="AppUpdates"/> and
+/// <see cref="SpamModelUpdates"/> still ask their source at most once per check interval; this only keeps a source
+/// that cannot be reached from being asked again on every return to the app.
 /// </summary>
-internal static class SpamModelAutoCheck
+internal static class UpdateAutoCheck
 {
-    // Out of the way of the first inbox frames: a check that finds a release loads the model to compare versions.
+    // Out of the way of the first inbox frames: a model check that finds a release loads the model to compare versions.
     private static readonly TimeSpan StartDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan RetryAfter = TimeSpan.FromMinutes(15);
 
@@ -26,20 +27,34 @@ internal static class SpamModelAutoCheck
             if (_lastAttemptTick is { } last && Environment.TickCount64 - last < RetryAfter.TotalMilliseconds)
                 return;
 
-            if (IPlatformApplication.Current?.Services.GetService<SpamModelUpdates>() is not { } updates)
+            var services = IPlatformApplication.Current?.Services;
+            if (services is null)
                 return;
 
             await Task.Delay(StartDelay);
             _lastAttemptTick = Environment.TickCount64;
-            await Task.Run(() => updates.CheckAsync(force: false));
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Automatic spam model check failed: {ex}");
+
+            // One failing does not keep the other from being checked.
+            if (services.GetService<AppUpdates>() is { } app)
+                await CheckAsync("app", () => app.CheckAsync(force: false));
+            if (services.GetService<SpamModelUpdates>() is { } model)
+                await CheckAsync("spam model", () => model.CheckAsync(force: false));
         }
         finally
         {
             Volatile.Write(ref _running, 0);
+        }
+    }
+
+    private static async Task CheckAsync(string what, Func<Task> check)
+    {
+        try
+        {
+            await Task.Run(check);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Automatic {what} update check failed: {ex}");
         }
     }
 }

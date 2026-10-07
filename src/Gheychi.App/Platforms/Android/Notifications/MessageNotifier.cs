@@ -100,14 +100,16 @@ internal static class MessageNotifier
 
         var name = ConversationReader.ReadContactName(context, address)
                    ?? (PhoneNumberNormalizer.IsAlphanumeric(address) ? address : PhoneNumberNormalizer.FormatDisplay(address));
+        // Drawn by the system in the phone's direction; the plain name still goes into the open intent below.
+        var shownName = LtrNumbers.Wrap(name);
         var last = unread[^1];
 
         var builder = new NotificationCompat.Builder(context, NotificationChannels.ChannelFor(context, address));
         builder.SetSmallIcon(SmallIcon(context));
         builder.SetColor(AccentColor);
-        builder.SetContentTitle(name);
+        builder.SetContentTitle(shownName);
         builder.SetContentText(last.Body);
-        builder.SetStyle(BuildStyle(name, address, unread));
+        builder.SetStyle(BuildStyle(shownName, address, unread));
         builder.SetCategory(NotificationCompat.CategoryMessage);
         builder.SetPriority(NotificationCompat.PriorityHigh);
         builder.SetDefaults(NotificationCompat.DefaultAll);
@@ -124,7 +126,7 @@ internal static class MessageNotifier
         {
             // Android shows the public version only where the phone's own lock-screen setting hides sensitive content.
             builder.SetVisibility(NotificationCompat.VisibilityPrivate);
-            builder.SetPublicVersion(BuildPublicVersion(context, address, name));
+            builder.SetPublicVersion(BuildPublicVersion(context, address, shownName));
         }
 
         var notification = builder.Build();

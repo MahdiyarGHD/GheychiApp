@@ -582,6 +582,24 @@
   <data name="Spam_ReportFailed" xml:space="preserve">
     <value>Couldn't send the report. Check your connection and try again.</value>
   </data>
+  <data name="Spam_ReportSpamConfirmTitle" xml:space="preserve">
+    <value>Report as spam?</value>
+  </data>
+  <data name="Spam_ReportSpamConfirmTitleMany" xml:space="preserve">
+    <value>Report {0} messages as spam?</value>
+  </data>
+  <data name="Spam_ReportHamConfirmTitle" xml:space="preserve">
+    <value>Report as not spam?</value>
+  </data>
+  <data name="Spam_ReportHamConfirmTitleMany" xml:space="preserve">
+    <value>Report {0} messages as not spam?</value>
+  </data>
+  <data name="Spam_ReportConfirmMessage" xml:space="preserve">
+    <value>The message text is sent to help improve spam detection. Phone numbers, links and other numbers are removed first.</value>
+  </data>
+  <data name="Spam_ReportConfirmSend" xml:space="preserve">
+    <value>Send report</value>
+  </data>
   <data name="Chat_ReportSpam" xml:space="preserve">
     <value>Report as spam</value>
   </data>
@@ -644,6 +662,24 @@
   </data>
   <data name="Settings_AboutHint" xml:space="preserve">
     <value>Version {0}</value>
+  </data>
+  <data name="Settings_AppUpdate" xml:space="preserve">
+    <value>Check for app updates</value>
+  </data>
+  <data name="Settings_AppUpdateHint" xml:space="preserve">
+    <value>Checked automatically once a day</value>
+  </data>
+  <data name="Settings_AppUpdateAvailable" xml:space="preserve">
+    <value>New version available</value>
+  </data>
+  <data name="Settings_AppUpdateAvailableHint" xml:space="preserve">
+    <value>Version {0} · tap to download</value>
+  </data>
+  <data name="Settings_AppUpToDate" xml:space="preserve">
+    <value>You have the latest version</value>
+  </data>
+  <data name="Settings_AboutUpdateHint" xml:space="preserve">
+    <value>Version {0} · update available</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
     <value>100% on-device processing</value>

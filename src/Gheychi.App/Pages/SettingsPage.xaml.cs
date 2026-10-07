@@ -4,6 +4,7 @@ using Gheychi.App.Platforms.Android;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
+using Gheychi.Core.Updates;
 
 namespace Gheychi.App.Pages;
 
@@ -19,6 +20,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
     private readonly ISpamSettings? _spamSettings;
     private readonly ISpamModelUpdater? _models;
     private readonly SpamModelUpdates? _modelUpdates;
+    private readonly AppUpdates? _appUpdates;
     private readonly SpamViewModel? _spam;
     private readonly Dictionary<SettingsScreenKind, SettingsScreen> _screens = new();
     private readonly Stack<SettingsScreen> _open = new();
@@ -40,14 +42,16 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         _modelUpdates = services?.GetService<SpamModelUpdates>();
         if (_modelUpdates is not null)
             _modelUpdates.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(() => _ = ShowModelUpdateAsync());
+        _appUpdates = services?.GetService<AppUpdates>();
+        if (_appUpdates is not null)
+            _appUpdates.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowAboutHint);
         _spam = services?.GetService<SpamViewModel>();
         if (_spam is not null)
             _spam.Changed += UpdateSpamSummary;
 
         var loc = LocalizationManager.Instance;
-        var version = SettingsUi.Digits(AppInfo.Current.VersionString);
-        HeroVersion.Text = $"v{version}";
-        AboutHint.Text = string.Format(loc["Settings_AboutHint"], version);
+        HeroVersion.Text = $"v{SettingsUi.Digits(AppInfo.Current.VersionString)}";
+        ShowAboutHint();
         TileModelValue.Text = loc["Settings_ModelNone"];
         TileCaughtValue.Text = string.Format(loc["Settings_TileCaughtValue"], SettingsUi.Number(0));
     }
@@ -67,6 +71,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         base.OnAppearing();
         UpdateStatus();
         UpdateSpamSummary();
+        ShowAboutHint();
         if (!_modelShown)
             _ = ShowModelVersionAsync();
         _ = ShowModelUpdateAsync();
@@ -155,6 +160,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         else
         {
             UpdateSpamSummary();
+            ShowAboutHint();
             _ = ShowModelVersionAsync();
             _ = ShowModelUpdateAsync();
         }
@@ -264,6 +270,13 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         {
             System.Diagnostics.Debug.WriteLine($"Reading spam analytics failed: {ex}");
         }
+    }
+
+    private void ShowAboutHint()
+    {
+        var loc = LocalizationManager.Instance;
+        var version = SettingsUi.Digits(AppInfo.Current.VersionString);
+        AboutHint.Text = string.Format(loc[_appUpdates?.GetAvailable() is null ? "Settings_AboutHint" : "Settings_AboutUpdateHint"], version);
     }
 
     private async Task ShowModelVersionAsync()

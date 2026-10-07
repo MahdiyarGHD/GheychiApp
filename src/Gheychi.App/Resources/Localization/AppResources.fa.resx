@@ -445,7 +445,7 @@
     <value>سفارشی</value>
   </data>
   <data name="Profile_Snooze" xml:space="preserve">
-    <value>به‌تعویق انداختن گفتگو</value>
+    <value>بی‌صدا کردن موقت گفتگو</value>
   </data>
   <data name="Profile_SnoozeOff" xml:space="preserve">
     <value>غیرفعال</value>
@@ -582,6 +582,24 @@
   <data name="Spam_ReportFailed" xml:space="preserve">
     <value>گزارش ارسال نشد. اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.</value>
   </data>
+  <data name="Spam_ReportSpamConfirmTitle" xml:space="preserve">
+    <value>گزارش به‌عنوان هرزنامه؟</value>
+  </data>
+  <data name="Spam_ReportSpamConfirmTitleMany" xml:space="preserve">
+    <value>{0} پیام به‌عنوان هرزنامه گزارش شود؟</value>
+  </data>
+  <data name="Spam_ReportHamConfirmTitle" xml:space="preserve">
+    <value>گزارش به‌عنوان پیام معمولی؟</value>
+  </data>
+  <data name="Spam_ReportHamConfirmTitleMany" xml:space="preserve">
+    <value>{0} پیام به‌عنوان پیام معمولی گزارش شود؟</value>
+  </data>
+  <data name="Spam_ReportConfirmMessage" xml:space="preserve">
+    <value>متن پیام برای بهبود تشخیص هرزنامه ارسال می‌شود. شماره‌تلفن‌ها، لینک‌ها و دیگر اعداد پیش از ارسال حذف می‌شوند.</value>
+  </data>
+  <data name="Spam_ReportConfirmSend" xml:space="preserve">
+    <value>ارسال گزارش</value>
+  </data>
   <data name="Chat_ReportSpam" xml:space="preserve">
     <value>گزارش به عنوان هرزنامه</value>
   </data>
@@ -644,6 +662,24 @@
   </data>
   <data name="Settings_AboutHint" xml:space="preserve">
     <value>نسخه {0}</value>
+  </data>
+  <data name="Settings_AppUpdate" xml:space="preserve">
+    <value>بررسی به‌روزرسانی برنامه</value>
+  </data>
+  <data name="Settings_AppUpdateHint" xml:space="preserve">
+    <value>روزی یک بار خودکار بررسی می‌شود</value>
+  </data>
+  <data name="Settings_AppUpdateAvailable" xml:space="preserve">
+    <value>نسخه جدید موجود است</value>
+  </data>
+  <data name="Settings_AppUpdateAvailableHint" xml:space="preserve">
+    <value>نسخه {0} · برای دانلود بزنید</value>
+  </data>
+  <data name="Settings_AppUpToDate" xml:space="preserve">
+    <value>آخرین نسخه برنامه را دارید</value>
+  </data>
+  <data name="Settings_AboutUpdateHint" xml:space="preserve">
+    <value>نسخه {0} · به‌روزرسانی موجود است</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
     <value>پردازش کامل روی گوشی</value>

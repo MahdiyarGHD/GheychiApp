@@ -629,7 +629,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             // on a worker thread meanwhile.
             var cached = ChatOverlay.PrepareForTransition(thread);
             if (sim is not null)
-                ChatOverlay.Vm?.SelectSim(sim.SlotIndex, sim.SubId);
+                ChatOverlay.Vm?.ChooseSim(sim.SlotIndex, sim.SubId);
             var distance = GetFallbackHeight();
             OverlayAnimator.SetTranslationY(ChatOverlay, animate ? distance : 0);
             Unpark(ChatOverlay);

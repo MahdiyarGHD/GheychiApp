@@ -14,7 +14,7 @@ public partial class App : Application
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
 		var window = new Window(new AppShell());
-		window.Activated += (_, _) => _ = Services.SpamModelAutoCheck.RunAsync();
+		window.Activated += (_, _) => _ = Services.UpdateAutoCheck.RunAsync();
 		return window;
 	}
 
@@ -24,5 +24,9 @@ public partial class App : Application
 
 		Resources["AppFontFamily"] = isPersian ? "Vazirmatn" : "PlusJakartaSans";
 		Resources["AppFontFamilyBold"] = isPersian ? "VazirmatnSemiBold" : "PlusJakartaSansSemiBold";
+
+		// A 13sp digit centred by its line box is not centred by its ink: from the fonts' metrics, Plus Jakarta Sans
+		// digits sit 0.12em below the middle and Vazirmatn digits 0.088em above it. Used to centre the SIM badge digit.
+		Resources["BadgeDigitOffsetY"] = isPersian ? 1.1 : -1.6;
 	}
 }

@@ -144,7 +144,7 @@ public partial class SpamOverlay : ContentView
         var item = _item;
         await CloseAsync();
         if (item is not null)
-            SpamReport.Submit([item.Message.Body], isSpam: false);
+            await SpamReport.SubmitAsync([item.Message.Body], isSpam: false);
     }
 
     private void OnRestoreTapped(object? sender, TappedEventArgs e) => _ = RestoreAsync(trustSender: false);

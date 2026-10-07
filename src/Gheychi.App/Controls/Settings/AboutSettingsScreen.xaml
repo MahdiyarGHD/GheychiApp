@@ -62,6 +62,21 @@
                         </Grid>
                         <BoxView Style="{StaticResource Divider}" Margin="16,0" />
                         <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnAppUpdateTapped" />
+                            </Grid.GestureRecognizers>
+                            <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                                <Label x:Name="AppUpdateTitle" Style="{StaticResource RowTitle}" />
+                                <Label x:Name="AppUpdateHint" Style="{StaticResource RowSubtitle}" />
+                            </VerticalStackLayout>
+                            <Image Grid.Column="1" Style="{StaticResource Chevron}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="#8A8F98" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Grid>
+                        <BoxView Style="{StaticResource Divider}" Margin="16,0" />
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
                             <Label Text="{loc:Translate Settings_SectionModel}" Style="{StaticResource RowTitle}" VerticalOptions="Center" />
                             <Label x:Name="ModelValue" Grid.Column="1" Style="{StaticResource ValueChipLabel}" />
                         </Grid>

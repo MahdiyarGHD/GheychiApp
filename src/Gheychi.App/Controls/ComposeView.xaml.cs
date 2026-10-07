@@ -264,7 +264,7 @@ public partial class ComposeView : ContentView
                 ContactName = contact.Name,
                 Address = contact.Number,
                 Initials = letter == ContactListBuilder.OtherLetter ? string.Empty : ThreadItem.GenerateInitials(contact.Name),
-                Subtitle = $"{contact.Label} · {PhoneNumberNormalizer.FormatDisplay(contact.Number)}"
+                Subtitle = $"{contact.Label} · {Platforms.Android.LtrNumbers.Wrap(PhoneNumberNormalizer.FormatDisplay(contact.Number))}"
             };
         }
 
@@ -301,7 +301,7 @@ public partial class ComposeView : ContentView
             {
                 Kind = ComposeRowKind.Typed,
                 Address = typed,
-                Name = string.Format(loc["Compose_SendTo"], PhoneNumberNormalizer.FormatDisplay(typed)),
+                Name = string.Format(loc["Compose_SendTo"], Platforms.Android.LtrNumbers.Wrap(PhoneNumberNormalizer.FormatDisplay(typed))),
                 Subtitle = loc["Compose_NewNumber"]
             });
         }
