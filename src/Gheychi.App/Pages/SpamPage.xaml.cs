@@ -1,5 +1,6 @@
 using Gheychi.App.Controls;
 using Gheychi.App.Localization;
+using Gheychi.App.Platforms.Android;
 using Gheychi.App.ViewModels;
 
 namespace Gheychi.App.Pages;
@@ -11,6 +12,7 @@ public partial class SpamPage : ContentPage
     public SpamPage()
     {
         InitializeComponent();
+        TabPageInsets.Attach(this);
         ListTuning.UseFixedSize(SpamList);
 
         if (IPlatformApplication.Current?.Services.GetService<SpamViewModel>() is { } viewModel)

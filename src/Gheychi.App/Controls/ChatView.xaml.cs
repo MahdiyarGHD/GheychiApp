@@ -144,6 +144,8 @@ public partial class ChatView : ContentView
 
     private double _keyboardOffset;
     private long _lastKeyboardMeasure;
+    private bool _trailingMeasureQueued;
+    private readonly int[] _chatLocation = new int[2];
 
     private void MeasureKeyboardOffset()
     {
@@ -153,11 +155,23 @@ public partial class ChatView : ContentView
             return;
 
         // Throttle: OnGlobalLayout fires on every layout pass — measuring costs
-        // a frame query, so cap it to ~20Hz (smooth ride-up with the keyboard,
-        // ending on a final correct value).
+        // a frame query, so cap it to ~20Hz (smooth ride-up with the keyboard).
+        // A skipped measure is run once the window is quiet, so the offset always
+        // ends on the final value instead of the one from mid-animation.
         var now = Environment.TickCount64;
         if (now - _lastKeyboardMeasure < 50)
+        {
+            if (!_trailingMeasureQueued)
+            {
+                _trailingMeasureQueued = true;
+                root.PostDelayed(() =>
+                {
+                    _trailingMeasureQueued = false;
+                    MeasureKeyboardOffset();
+                }, 60);
+            }
             return;
+        }
         _lastKeyboardMeasure = now;
 
         try
@@ -167,11 +181,17 @@ public partial class ChatView : ContentView
             if (metrics.Density <= 0)
                 return;
 
-            var viewHeightPx = root.Height;
-            if (viewHeightPx <= 0)
+            if (Handler?.PlatformView is not Android.Views.View chat || chat.Height <= 0)
                 return;
 
-            var occludedDip = Math.Max(0, (viewHeightPx - frame.Bottom) / metrics.Density);
+            // Measured from the chat's own bottom edge, not the window's: the page around it may still be padded
+            // for the navigation bar while the keyboard is up (MAUI holds inset updates back during the keyboard
+            // animation), and lifting the input by the full window distance then left a strip of the page's green
+            // background between the input and the keyboard. The slide translation is not part of the resting place.
+            chat.GetLocationOnScreen(_chatLocation);
+            var chatBottomPx = _chatLocation[1] - chat.TranslationY + chat.Height;
+
+            var occludedDip = Math.Max(0, (chatBottomPx - frame.Bottom) / metrics.Density);
             // Ignore tiny occlusions (nav bar, tooltips) to avoid jitter.
             if (occludedDip < 100)
                 occludedDip = 0;
@@ -1182,7 +1202,7 @@ public partial class ChatView : ContentView
         if (Vm is null || Vm.SelectedCount == 0)
             return;
 
-        SpamReport.Submit([Vm.GetSelectedMessagesText()], isSpam: true);
+        SpamReport.Submit(Vm.GetSelectedMessageBodies(), isSpam: true);
         TriggerLightHaptic();
         Vm.ExitSelectionMode();
     }

@@ -579,6 +579,9 @@
   <data name="Spam_ReportThanks" xml:space="preserve">
     <value>ممنون! گزارش شما به بهبود تشخیص هرزنامه کمک می‌کند.</value>
   </data>
+  <data name="Spam_ReportFailed" xml:space="preserve">
+    <value>گزارش ارسال نشد. اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.</value>
+  </data>
   <data name="Chat_ReportSpam" xml:space="preserve">
     <value>گزارش به عنوان هرزنامه</value>
   </data>

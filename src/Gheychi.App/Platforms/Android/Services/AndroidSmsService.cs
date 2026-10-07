@@ -50,11 +50,14 @@ public sealed class AndroidSmsService : ISmsService
     {
         if (OperatingSystem.IsAndroidVersionAtLeast(29))
         {
-            var roleManager = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.GetSystemService(Context.RoleService) as RoleManager;
-            if (roleManager != null && !roleManager.IsRoleHeld(RoleManager.RoleSms))
+            var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
+            var roleManager = activity?.GetSystemService(Context.RoleService) as RoleManager;
+            if (activity != null && roleManager != null && !roleManager.IsRoleHeld(RoleManager.RoleSms))
             {
+                // The role dialog closes at once, showing nothing, unless it can see who asked: that is only
+                // known to an activity started for a result.
                 var intent = roleManager.CreateRequestRoleIntent(RoleManager.RoleSms);
-                Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.StartActivity(intent);
+                activity.StartActivityForResult(intent, MainActivity.DefaultSmsRequestCode);
                 return Task.FromResult(false);
             }
             return Task.FromResult(true);

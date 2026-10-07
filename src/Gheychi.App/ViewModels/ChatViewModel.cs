@@ -1330,11 +1330,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         return success;
     }
 
-    public string GetSelectedMessagesText()
-    {
-        var selected = Messages.Where(m => m.IsSelected).OrderBy(m => m.Timestamp).ToList();
-        return string.Join(Environment.NewLine, selected.Select(m => m.FullBody));
-    }
+    public string GetSelectedMessagesText() => string.Join(Environment.NewLine, GetSelectedMessageBodies());
+
+    public List<string> GetSelectedMessageBodies() =>
+        Messages.Where(m => m.IsSelected).OrderBy(m => m.Timestamp).Select(m => m.FullBody).ToList();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

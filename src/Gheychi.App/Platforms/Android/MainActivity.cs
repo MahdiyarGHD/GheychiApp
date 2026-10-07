@@ -23,6 +23,7 @@ namespace Gheychi.App;
 public class MainActivity : MauiAppCompatActivity
 {
     public const int VoiceSearchRequestCode = 7301;
+    public const int DefaultSmsRequestCode = 7302;
 
     /// <summary>Raised with the recognised text, or null when the user cancelled / nothing was heard.</summary>
     public static event Action<string?>? VoiceSearchCompleted;

@@ -46,6 +46,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISpamModelSource>(_ => new GitHubSpamModelSource(
             new HttpClient { Timeout = TimeSpan.FromMinutes(2) },
             FileSystem.CacheDirectory));
+        builder.Services.AddSingleton<ISpamReporter>(_ => new GoogleFormSpamReporter(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
         builder.Services.AddSingleton<ISpamModelUpdateState, Services.PreferencesSpamModelUpdateState>();
         builder.Services.AddSingleton(sp => new SpamModelUpdates(
             sp.GetRequiredService<ISpamModelSource>(),

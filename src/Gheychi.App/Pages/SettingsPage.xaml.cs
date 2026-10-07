@@ -30,6 +30,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
     public SettingsPage()
     {
         InitializeComponent();
+        TabPageInsets.Attach(this);
         SettingsUi.MirrorChevrons(this, Resources);
 
         var services = IPlatformApplication.Current?.Services;

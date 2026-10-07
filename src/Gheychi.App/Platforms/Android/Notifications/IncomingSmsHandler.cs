@@ -11,9 +11,14 @@ internal static class IncomingSmsHandler
 {
     private static readonly TimeSpan SpamCheckBudget = TimeSpan.FromSeconds(4);
 
-    public static async Task HandleAsync(Context context, string address, string body, long timestampMillis, int subId,
+    /// <param name="sentMillis">When the sender's carrier says it was sent (the PDU timestamp).</param>
+    public static async Task HandleAsync(Context context, string address, string body, long sentMillis, int subId,
         Action<long> raiseReceived, Action<SpamMessage> raiseSpamReceived)
     {
+        // Ordered by arrival, as the stock messaging app does: the carrier's clock can be minutes or hours off, which
+        // put a new message before older ones and made the notification show an older message as the latest.
+        var timestampMillis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
         var spam = await QuarantineIfSpamAsync(context, address, body, timestampMillis, subId);
         if (spam is not null)
         {
@@ -21,7 +26,7 @@ internal static class IncomingSmsHandler
             return;
         }
 
-        var threadId = Store(context, address, body, timestampMillis, subId);
+        var threadId = Store(context, address, body, timestampMillis, subId, sentMillis: sentMillis);
 
         MainThread.BeginInvokeOnMainThread(() => raiseReceived(threadId));
 
@@ -90,12 +95,14 @@ internal static class IncomingSmsHandler
     }
 
     /// <summary>Writes the message to the inbox and returns its thread id, or 0 when it could not be stored.</summary>
-    internal static long Store(Context context, string address, string body, long timestampMillis, int subId, bool read = false)
+    internal static long Store(Context context, string address, string body, long timestampMillis, int subId, bool read = false, long sentMillis = 0)
     {
         var values = new ContentValues();
         values.Put(Telephony.Sms.InterfaceConsts.Address, address);
         values.Put(Telephony.Sms.InterfaceConsts.Body, body);
         values.Put(Telephony.Sms.InterfaceConsts.Date, timestampMillis);
+        if (sentMillis > 0)
+            values.Put(Telephony.Sms.InterfaceConsts.DateSent, sentMillis);
         values.Put(Telephony.Sms.InterfaceConsts.Read, read ? 1 : 0);
         values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Inbox);
 

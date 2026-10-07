@@ -45,6 +45,7 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
         // while the XAML below is inflated.
         var viewModel = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
         InitializeComponent();
+        TabPageInsets.Attach(this);
         BindingContext = viewModel;
         ListTuning.UseFixedSize(ThreadsList);
 
@@ -150,13 +151,25 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     private static Gheychi.Core.Services.ISmsService? SmsService =>
         IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Services.ISmsService>();
 
+    private bool IsDefaultAppGateShown => NotDefaultScreen.IsVisible;
+
     // Back from the default-app prompt the answer is known only once the window is active again.
-    private void UpdateDefaultAppGate() =>
-        NotDefaultScreen.IsVisible = SmsService is { } sms && !sms.IsDefaultSmsApp();
+    // The rows handle their touches natively, under any MAUI view on top, so the list is collapsed
+    // while the gate covers it rather than only hidden behind it.
+    private void UpdateDefaultAppGate()
+    {
+        var gated = SmsService is { } sms && !sms.IsDefaultSmsApp();
+        NotDefaultScreen.IsVisible = gated;
+        ThreadsList.IsVisible = !gated;
+    }
 
     private void OnGateWindowActivated(object? sender, EventArgs e) => UpdateDefaultAppGate();
 
     private void OnSetDefaultTapped(object? sender, TappedEventArgs e) => _ = SmsService?.EnsureDefaultSmsAppAsync();
+
+    private void OnNotDefaultTapEater(object? sender, TappedEventArgs e)
+    {
+    }
 
     protected override void OnDisappearing()
     {
@@ -252,9 +265,6 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
             await WaitForQuietAsync();
             if (IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Spam.ISpamClassifier>() is { } spamClassifier)
                 await Task.Run(() => spamClassifier.WarmUpAsync());
-
-            if (IPlatformApplication.Current?.Services.GetService<Gheychi.Core.Spam.SpamModelUpdates>() is { } modelUpdates)
-                await Task.Run(() => modelUpdates.CheckAsync(force: false));
         }
         catch
         {
@@ -1241,7 +1251,8 @@ public partial class MessagesPage : ContentPage, IThreadRowHost, IPageSwipeClien
     {
         get
         {
-            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true)
+            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true
+                || IsDefaultAppGateShown)
                 return 0;
 
             if (_archiveOpen)

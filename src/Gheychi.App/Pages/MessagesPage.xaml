@@ -317,6 +317,10 @@
         <Grid x:Name="NotDefaultScreen"
               IsVisible="False"
               BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkBackground}}">
+            <!-- A background alone does not stop touches on Android; without this, taps reached the compose button under it -->
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnNotDefaultTapEater" />
+            </Grid.GestureRecognizers>
             <VerticalStackLayout Padding="32,0" Spacing="10" VerticalOptions="Center">
                 <Border WidthRequest="64"
                         HeightRequest="64"
