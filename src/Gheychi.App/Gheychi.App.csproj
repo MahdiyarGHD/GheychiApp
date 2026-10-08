@@ -28,8 +28,9 @@
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <RunAOTCompilation>true</RunAOTCompilation>
         <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-        <!-- Since .NET 9 only the 64-bit ABIs are built by default; older and low-end phones are 32-bit ARM. -->
-        <RuntimeIdentifiers>android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
+        <!-- Since .NET 9 only the 64-bit ABIs are built by default; older and low-end phones are 32-bit ARM.
+             Not with -r: the SDK packages every ABI in RuntimeIdentifiers whenever it is set, ignoring the -r one. -->
+        <RuntimeIdentifiers Condition="'$(RuntimeIdentifier)' == ''">android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>

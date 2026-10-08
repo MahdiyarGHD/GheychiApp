@@ -157,8 +157,9 @@ jobs:
           out="$RUNNER_TEMP/apks"
           mkdir -p "$out"
 
+          # $1 publish directory, $2 release file name, $3 the ABIs the APK must hold (sorted, space separated).
           collect() {
-            local apk
+            local apk abis
             apk=$(ls "$1"/*-Signed.apk 2>/dev/null | head -n 1 || true)
             if [[ -z "$apk" ]]; then
               apk=$(ls "$1"/*.apk 2>/dev/null | head -n 1 || true)
@@ -167,14 +168,19 @@ jobs:
               echo "::error::No APK found in $1"
               exit 1
             fi
+            abis=$(zipinfo -1 "$apk" | { grep '^lib/' || true; } | cut -d/ -f2 | sort -u | xargs)
+            if [[ "$abis" != "$3" ]]; then
+              echo "::error::$2 holds the ABIs '$abis', not '$3'"
+              exit 1
+            fi
             cp "$apk" "$out/$2"
             (cd "$out" && sha256sum "$2" > "$2.sha256")
           }
 
           # The in-app updater downloads the universal APK by this name (GitHubAppReleaseSource.ApkUrl).
-          collect "$bin/publish" "Gheychi-$version.apk"
+          collect "$bin/publish" "Gheychi-$version.apk" "$(for pair in $ANDROID_ABIS; do echo "${pair#*:}"; done | sort | xargs)"
           for pair in $ANDROID_ABIS; do
-            collect "$bin/${pair%%:*}/publish" "Gheychi-$version-${pair#*:}.apk"
+            collect "$bin/${pair%%:*}/publish" "Gheychi-$version-${pair#*:}.apk" "${pair#*:}"
           done
 
           echo "dir=$out" >> "$GITHUB_OUTPUT"
