@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Reactive;
 
 namespace Gheychi.App.Platforms.Android;
 
@@ -32,11 +34,11 @@ internal static partial class LtrNumbers
         if (!IsRightToLeft)
             return;
 
-        TextBlock.TextProperty.Changed.AddClassHandler<TextBlock>((block, e) =>
+        TextBlock.TextProperty.Changed.Subscribe(new AnonymousObserver<AvaloniaPropertyChangedEventArgs<string?>>(e =>
         {
-            if (e.NewValue is string text && NeedsWrap(text))
+            if (e.Sender is TextBlock block && e.NewValue.GetValueOrDefault() is { } text && NeedsWrap(text))
                 block.SetCurrentValue(TextBlock.TextProperty, Wrap(text));
-        });
+        }));
     }
 
     /// <summary>For a number placed inside other text, such as a notification title or "Send to {0}".</summary>
