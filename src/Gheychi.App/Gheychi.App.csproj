@@ -35,6 +35,10 @@
 
     <ItemGroup>
         <Using Include="Gheychi.App" />
+        <!-- Avalonia has its own Application, Button, Window...; the Android names are spelled out where used. -->
+        <Using Remove="Android.App" />
+        <Using Remove="Android.Widget" />
+        <Using Remove="Android.Views" />
     </ItemGroup>
 
     <!-- The MAUI sources still waiting to be ported. -->

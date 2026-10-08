@@ -23,7 +23,7 @@ public static class IconCatalog
             var stem = Path.GetFileNameWithoutExtension(imageName);
             var key = "Icon." + string.Concat(stem.Split('_').Select(part => part.Length == 0 ? part : char.ToUpperInvariant(part[0]) + part[1..]));
             Geometry? geometry = null;
-            if (Application.Current?.TryFindResource(key, out var resource) == true)
+            if (Application.Current?.TryGetResource(key, null, out var resource) == true)
                 geometry = resource as Geometry;
 
             return Cache[imageName] = geometry;
