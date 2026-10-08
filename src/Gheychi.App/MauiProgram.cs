@@ -39,6 +39,7 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<ISpamSettings, Services.PreferencesSpamSettings>();
         builder.Services.AddSingleton<ITrustedSenders, Services.PreferencesTrustedSenders>();
+        builder.Services.AddSingleton<IBlockedSenders, Services.PreferencesBlockedSenders>();
         builder.Services.AddSingleton<ISpamMessageRepository>(_ => new SpamMessageRepository(databasePath));
         builder.Services.AddSingleton<ISpamStatsRepository>(_ => new SpamStatRepository(databasePath));
         builder.Services.AddSingleton(_ => new SpamModelStore(

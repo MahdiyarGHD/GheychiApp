@@ -171,6 +171,28 @@
                                 </Image.Behaviors>
                             </Image>
                         </Grid>
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBlockedTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F7E3E1, Dark=#3A2224}">
+                                <Image Source="block.png" Style="{StaticResource BadgeIcon}">
+                                    <Image.Behaviors>
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#B3261E, Dark=#F2B8B5}" />
+                                    </Image.Behaviors>
+                                </Image>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                <Label Text="{loc:Translate Settings_Blocked}" Style="{StaticResource RowTitle}" />
+                                <Label x:Name="BlockedHint" Style="{StaticResource RowSubtitle}" />
+                            </VerticalStackLayout>
+                            <Image Grid.Column="2" Style="{StaticResource Chevron}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="#8A8F98" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Grid>
                         <VerticalStackLayout x:Name="SimsRow" IsVisible="False">
                             <BoxView Style="{StaticResource Divider}" />
                             <Grid Style="{StaticResource Row}" ColumnDefinitions="Auto,*,Auto">

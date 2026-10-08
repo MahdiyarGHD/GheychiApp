@@ -16,6 +16,7 @@ public partial class ProfileView : ContentView
     private readonly IThreadSettings? _settings;
     private readonly IDateFormattingService _dates;
     private readonly SpamViewModel? _spam;
+    private readonly IBlockedSenders? _blocked;
     private IReadOnlyList<SpamItem> _spamItems = [];
 
     private ThreadItem _thread = ThreadItem.Empty;
@@ -38,6 +39,7 @@ public partial class ProfileView : ContentView
         _spam = services?.GetService<SpamViewModel>();
         if (_spam is not null)
             _spam.Changed += UpdateSpam;
+        _blocked = services?.GetService<IBlockedSenders>();
 
         // The chevrons point along the reading direction.
         if (CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft)
@@ -75,6 +77,7 @@ public partial class ProfileView : ContentView
         ApplyActions();
         BindNumber();
         BindArchive();
+        BindBlocked();
         UpdateSnooze();
         UpdateNotificationState();
         UpdateSpam();
@@ -511,6 +514,50 @@ public partial class ProfileView : ContentView
     }
 
     private void OnArchiveTapped(object? sender, TappedEventArgs e) => ArchiveRequested?.Invoke(this, !_isArchived);
+
+    // ---- Block ---------------------------------------------------------------------------------
+
+    private void BindBlocked()
+    {
+        BlockRow.IsVisible = _blocked is not null && !string.IsNullOrWhiteSpace(_sendAddress);
+        if (!BlockRow.IsVisible)
+            return;
+
+        var blocked = _blocked!.IsBlocked(_sendAddress);
+        var loc = LocalizationManager.Instance;
+        BlockTitle.Text = loc[blocked ? "Profile_Unblock" : "Profile_Block"];
+        BlockHint.Text = loc[blocked ? "Profile_UnblockHint" : "Profile_BlockHint"];
+        if (blocked)
+            BlockTitle.ClearValue(Label.TextColorProperty);
+        else
+            BlockTitle.SetAppThemeColor(Label.TextColorProperty, Color.FromArgb("#B3261E"), Color.FromArgb("#F2B8B5"));
+    }
+
+    private async void OnBlockTapped(object? sender, TappedEventArgs e)
+    {
+        if (_blocked is null || string.IsNullOrWhiteSpace(_sendAddress))
+            return;
+
+        var loc = LocalizationManager.Instance;
+        var address = _sendAddress;
+        if (_blocked.IsBlocked(address))
+        {
+            _blocked.SetBlocked(address, false);
+            Toast.Show(loc["Profile_Unblocked"]);
+        }
+        else
+        {
+            var title = string.Format(loc["Profile_BlockConfirmTitle"], _thread.Name);
+            if (!await SpamPopup.ConfirmAsync(title, loc["Profile_BlockConfirmMessage"], loc["Profile_BlockConfirm"]))
+                return;
+
+            _blocked.SetBlocked(address, true);
+            Toast.Show(loc["Profile_Blocked"]);
+        }
+
+        if (address == _sendAddress)
+            BindBlocked();
+    }
 
     // ---- Quick actions -------------------------------------------------------------------------
 

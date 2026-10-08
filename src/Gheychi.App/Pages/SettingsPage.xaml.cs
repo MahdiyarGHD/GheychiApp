@@ -23,6 +23,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
     private readonly SpamModelUpdates? _modelUpdates;
     private readonly AppUpdates? _appUpdates;
     private readonly SpamViewModel? _spam;
+    private readonly IBlockedSenders? _blocked;
     private readonly Dictionary<SettingsScreenKind, SettingsScreen> _screens = new();
     private readonly Stack<SettingsScreen> _open = new();
     private bool _modelShown;
@@ -49,6 +50,9 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         _spam = services?.GetService<SpamViewModel>();
         if (_spam is not null)
             _spam.Changed += UpdateSpamSummary;
+        _blocked = services?.GetService<IBlockedSenders>();
+        if (_blocked is not null)
+            _blocked.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowBlockedHint);
 
         var loc = LocalizationManager.Instance;
         HeroVersion.Text = $"v{SettingsUi.Digits(AppInfo.Current.VersionString)}";
@@ -73,6 +77,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         UpdateStatus();
         UpdateSpamSummary();
         ShowAboutHint();
+        ShowBlockedHint();
         if (!_modelShown)
             _ = ShowModelVersionAsync();
         _ = ShowModelUpdateAsync();
@@ -119,6 +124,7 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         {
             SettingsScreenKind.Spam => new SpamSettingsScreen(),
             SettingsScreenKind.Trusted => new TrustedSendersScreen(),
+            SettingsScreenKind.Blocked => new BlockedSendersScreen(),
             SettingsScreenKind.Sims => new SimSettingsScreen(),
             SettingsScreenKind.Notifications => new NotificationSettingsScreen(),
             SettingsScreenKind.Appearance => new AppearanceSettingsScreen(),
@@ -162,12 +168,15 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         {
             UpdateSpamSummary();
             ShowAboutHint();
+            ShowBlockedHint();
             _ = ShowModelVersionAsync();
             _ = ShowModelUpdateAsync();
         }
     }
 
     private void OnSpamTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Spam);
+
+    private void OnBlockedTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Blocked);
 
     private void OnSimsTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Sims);
 
@@ -290,6 +299,15 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
         {
             System.Diagnostics.Debug.WriteLine($"Reading spam analytics failed: {ex}");
         }
+    }
+
+    private void ShowBlockedHint()
+    {
+        var loc = LocalizationManager.Instance;
+        var count = _blocked?.GetAll().Count ?? 0;
+        BlockedHint.Text = count == 0
+            ? loc["Settings_BlockedNone"]
+            : string.Format(loc["Settings_BlockedHint"], SettingsUi.Number(count));
     }
 
     private void ShowAboutHint()
