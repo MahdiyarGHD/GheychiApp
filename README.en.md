@@ -17,7 +17,7 @@
 
 <p align="center">
   <img src="design/badges/android.svg" alt="Android 7.0+">
-  <img src="design/badges/maui.svg" alt=".NET MAUI 10">
+  <img src="design/badges/avalonia.svg" alt="Avalonia 12">
   <img src="design/badges/mlnet.svg" alt="ML.NET on-device">
   <a href="LICENSE"><img src="design/badges/license.svg" alt="License: GPL-3.0"></a>
 </p>
@@ -77,7 +77,7 @@ Reports sent from the app help improve the dataset and future versions of the mo
 
 ## 🛠️ Building from source
 
-Requirements: .NET 10 SDK and the Android workload (`dotnet workload install maui-android`).
+Requirements: .NET 10 SDK and the Android workload (`dotnet workload install android`) and a JDK 17.
 
 ```bash
 git clone https://github.com/MahdiyarGHD/GheychiApp.git
@@ -97,7 +97,7 @@ dotnet test tests/Gheychi.Core.Tests
 
 | Folder | What's in it |
 |---|---|
-| `src/Gheychi.App` | The .NET MAUI app: pages, controls and Android-specific code |
+| `src/Gheychi.App` | The Avalonia app: pages, controls and Android-specific code |
 | `src/Gheychi.Core` | Platform-independent logic: spam decisions, search, dates, notifications and updates |
 | `src/Gheychi.Infrastructure` | The ML.NET model, SQLite storage, update sources and reports |
 | `tests/` | Unit tests for Core and Infrastructure |

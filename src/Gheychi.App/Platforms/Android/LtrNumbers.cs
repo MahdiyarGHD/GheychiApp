@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Avalonia.Controls;
 
 namespace Gheychi.App.Platforms.Android;
 
@@ -21,6 +22,22 @@ internal static partial class LtrNumbers
     private static partial Regex PhoneNumber();
 
     private static bool IsRightToLeft => CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft;
+
+    /// <summary>
+    /// Applies to every label whose whole text is a number, in a right-to-left language. Only what is drawn changes:
+    /// the bound text, used to send, dial and compare, stays as it is.
+    /// </summary>
+    public static void Register()
+    {
+        if (!IsRightToLeft)
+            return;
+
+        TextBlock.TextProperty.Changed.AddClassHandler<TextBlock>((block, e) =>
+        {
+            if (e.NewValue is string text && NeedsWrap(text))
+                block.SetCurrentValue(TextBlock.TextProperty, Wrap(text));
+        });
+    }
 
     /// <summary>For a number placed inside other text, such as a notification title or "Send to {0}".</summary>
     public static string Wrap(string text) =>
