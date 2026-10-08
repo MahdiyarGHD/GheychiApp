@@ -19,7 +19,7 @@
 
 <p align="center">
   <img src="design/badges/android.svg" alt="Android 7.0+">
-  <img src="design/badges/maui.svg" alt=".NET MAUI 10">
+  <img src="design/badges/avalonia.svg" alt="Avalonia 12">
   <img src="design/badges/mlnet.svg" alt="ML.NET on-device">
   <a href="LICENSE"><img src="design/badges/license.svg" alt="License: GPL-3.0"></a>
 </p>
@@ -90,7 +90,7 @@
 پیش‌نیازها:
 
 * .NET SDK 10
-* workload اندروید (`dotnet workload install maui-android`)
+* workload اندروید (`dotnet workload install android`) و JDK 17
 
 </div>
 
@@ -118,7 +118,7 @@ dotnet test tests/Gheychi.Core.Tests
 
 | پوشه                         | محتوا                                                                            |
 | ---------------------------- | -------------------------------------------------------------------------------- |
-| `src/Gheychi.App`            | خود برنامه‌ی .NET MAUI؛ صفحه‌ها، کنترل‌ها و کدهای مخصوص اندروید                  |
+| `src/Gheychi.App`            | خود برنامه‌ی Avalonia؛ صفحه‌ها، کنترل‌ها و کدهای مخصوص اندروید                  |
 | `src/Gheychi.Core`           | منطق اصلی و مستقل از پلتفرم؛ تشخیص هرزنامه، جستجو، تاریخ، اعلان‌ها و به‌روزرسانی |
 | `src/Gheychi.Infrastructure` | مدل ML.NET، دیتابیس SQLite، دریافت به‌روزرسانی‌ها و ارسال گزارش‌ها               |
 | `tests/`                     | تست‌های واحد                                                                     |
