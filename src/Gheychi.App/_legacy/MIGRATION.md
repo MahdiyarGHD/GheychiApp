@@ -17,8 +17,12 @@ run on the render thread. Behaviour and look must stay the same as the MAUI app.
 - Do not commit, push, or run `git checkout/reset/stash`. Do not modify files outside your assignment (tell the lead instead).
 
 ## Build
-`dotnet build src/Gheychi.App/Gheychi.App.csproj -c Debug -p:RestoreConfigFile=<scratchpad>\nuget.config -p:AndroidSdkDirectory=...` (the lead tells you the exact command).
-Errors: `error AVLN####` = XAML, `CS####` = C#. Fix all errors in your files; warnings about your files too.
+You work in your OWN git worktree (path given in your task), so builds never collide with other workers. From that worktree root:
+`C:/Users/m.ghanad/.android-build/build.sh src/Gheychi.App/Gheychi.App.csproj -c Debug 2>&1 | grep -E "error|warning (AVLN|CS8)|Build succeeded" | sort -u`
+(real Android build, JDK/SDK preconfigured, ~1-2 min, restore is already done there). If you add/change a package: `dotnet restore src/Gheychi.App/Gheychi.App.csproj -p:RestoreConfigFile=C:/Users/M2062~1.GHA/AppData/Local/Temp/claude/C--Users-m-ghanad-source-repos-GheychiApp/f16bf0dd-3426-419f-83d2-416c3b39b9b1/scratchpad/nuget.config` (the default feed answers 402).
+Errors: `error AVLN####` = XAML, `CS####` = C#. Your worktree contains ALL the other not-yet-ported screens in `_legacy` (excluded), so the build only contains finished code: ports of screens you depend on are NOT there. If your view needs a type another worker is porting (e.g. ChatView needs nothing else; MessagesPage needs everything) raise an event/callback exactly as legacy did instead of referencing it.
+Fix all errors and any warnings in your files. A green build is required, but it cannot show layout bugs: re-read your XAML against the legacy XAML property by property (sizes, margins, spacing, colours, corner radii, font sizes, visibility triggers, template/row heights) before reporting.
+When done, do NOT commit. Reply with: the list of files you added/changed/deleted (paths relative to repo root), public API differences from legacy, anything the lead must merge into shared files (App.axaml / Base.axaml / csproj / MainView), and risks you could not verify.
 
 ## Available shims (namespace `Gheychi.App`, already imported everywhere via a global using)
 `Platform.AppContext` / `Platform.CurrentActivity`, `IPlatformApplication.Current?.Services` (DI container),
@@ -61,9 +65,21 @@ Extra xmlns you will want: `xmlns:vm="clr-namespace:Gheychi.App.ViewModels"`, `x
 - `Toast.Show(text)` stays (`Gheychi.App.Ui.Toast`, Android toast).
 - Visual tree depth/size is the cost: avoid wrapper Borders/Grids that add nothing, avoid `Opacity`/`Effect`/`Clip` on big areas, avoid `DynamicResource` in rows.
 
+## Infrastructure that already exists (namespace `Gheychi.App.Ui` unless noted)
+- `OverlayAnimator`: `SlideYAsync(Control, fromDip, toDip, TimeSpan, decelerate)`, `SlideXAsync`, `FadeAsync(Control, from, to, TimeSpan)`, `SetTranslation(Control, x, y)` (park/drag), `OpenDuration`/`CloseDuration`, `SettleAsync()`.
+  They drive the composition `Translation`/`Opacity` on the render thread. Use them for every overlay slide. Never `DispatcherTimer`-animate. A parked overlay is `IsVisible=false`.
+- `Dialogs.AlertAsync(title, message, accept, cancel?)` -> bool, `Dialogs.ActionSheetAsync(title, cancel, destruction, params string[] buttons)` -> chosen text (native dialogs).
+- `Toast.Show(text)`. NOTE: inside files that import `Android.Widget` write `Ui.Toast.Show` (name clash).
+- `Controls/SpamReport.cs` (ported, namespace `Gheychi.App.Controls`): `SpamReport.SubmitAsync(body, isSpam)`.
+- `Icon` control + `IconCatalog.Find("bank.png")` + `IconFileConverter.Instance` for view-model properties that still carry an image file name (`ThreadItem.IconFile`, `FilterPillItem.IconSource`, `LinkResultItem.IconSource`).
+- Platform: `Platforms/Android/{ChatLaunchRequests,ChatPresence,SpamTabRequests,AppStatus,ProfileLauncher,LtrNumbers.Wrap,...}` are ported and compile; `Localization/LocalizedNumbers`.
+- View models are ported (`ViewModels/`); brush-typed properties keep their old `...Color` names. `SnippetRun` replaces the MAUI FormattedString for search snippets. `RelayCommand` exists for commands.
+- `Styles/Base.axaml` has `TextBox.plain` (chrome-less input). Put your own area styles in your own `Styles/<Area>.axaml` or in the control's `UserControl.Styles`; do not edit `Styles/Base.axaml`, `App.axaml` or the csproj (the lead merges them; tell the lead what to add).
+- The template selectors (`ChatTemplateSelector`, `ComposeRowTemplateSelector`, `SpamTemplateSelector`) are in `_legacy/ViewModels/`: port them to `IDataTemplate` implementations (or `FuncDataTemplate`) in the same namespace.
+- Back button: pages/overlays implement `bool HandleBack()` (true = consumed); the lead's `MainView` calls the top-most one from `TopLevel.BackRequested`.
+
 ## Animations
-Overlay slides and fades use the composition API (`ElementComposition.GetElementVisual(control)`, `CompositionAnimation`/implicit animations on `Offset`/`Opacity`): they run on the render thread and do not wait for the UI thread.
-The lead provides `Ui.OverlayAnimator` (SlideYAsync / SlideXAsync / FadeAsync) with the same durations as the legacy `OverlayAnimator`. Do not use `DispatcherTimer` loops for animation.
+Overlay slides and fades use the composition API through `OverlayAnimator` (runs on the render thread; it does not wait for the UI thread). Do not use `DispatcherTimer` loops for animation.
 
 ## Performance rules from the MAUI app that still hold (see /PERFORMANCE.md): cheap work before a slide, list fill after it; never `Reset` a list when a few rows changed;
 colours/brushes are static or cached (`Palette`), never created in getters; reads/SQLite/text processing in `Task.Run`; compiled bindings everywhere.

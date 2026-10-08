@@ -1,7 +1,18 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Style Selector="TextBlock">
-        <Setter Property="TextTrimming" Value="None" />
+    <!-- A text box with no chrome, for inputs that sit inside a rounded bar of their own. -->
+    <Style Selector="TextBox.plain">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBox.plain:pointerover /template/ Border#PART_BorderElement, TextBox.plain:focus /template/ Border#PART_BorderElement, TextBox.plain:disabled /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
 </Styles>
