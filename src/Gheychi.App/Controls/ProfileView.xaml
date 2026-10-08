@@ -430,27 +430,49 @@
                     <!-- Conversation actions -->
                     <Label Text="{loc:Translate Profile_SectionActions}" Style="{StaticResource SectionTitle}" />
                     <Border Style="{StaticResource Card}">
-                        <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnArchiveTapped" />
-                            </Grid.GestureRecognizers>
-                            <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
-                                <Image x:Name="ArchiveIcon" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                        <VerticalStackLayout>
+                            <Grid Padding="20,14" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnArchiveTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border Grid.Column="0" Style="{StaticResource RowIconBadge}">
+                                    <Image x:Name="ArchiveIcon" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Image.Behaviors>
+                                            <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        </Image.Behaviors>
+                                    </Image>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label x:Name="ArchiveTitle" Style="{StaticResource RowTitle}" />
+                                    <Label x:Name="ArchiveHint" Style="{StaticResource RowSubtitle}" />
+                                </VerticalStackLayout>
+                                <Image x:Name="ArchiveChevron" Grid.Column="2" Source="chevron_right.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
                                     <Image.Behaviors>
-                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#33443C, Dark=#D9E3DD}" />
+                                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
                                     </Image.Behaviors>
                                 </Image>
-                            </Border>
-                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                <Label x:Name="ArchiveTitle" Style="{StaticResource RowTitle}" />
-                                <Label x:Name="ArchiveHint" Style="{StaticResource RowSubtitle}" />
+                            </Grid>
+
+                            <VerticalStackLayout x:Name="BlockRow" IsVisible="False">
+                                <BoxView Style="{StaticResource Divider}" />
+                                <Grid Padding="20,14" ColumnDefinitions="Auto,*" ColumnSpacing="14" BackgroundColor="Transparent">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnBlockTapped" />
+                                    </Grid.GestureRecognizers>
+                                    <Border Grid.Column="0" Style="{StaticResource RowIconBadge}" BackgroundColor="{AppThemeBinding Light=#F7E3E1, Dark=#3A2224}">
+                                        <Image Source="block.png" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                                            <Image.Behaviors>
+                                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#B3261E, Dark=#F2B8B5}" />
+                                            </Image.Behaviors>
+                                        </Image>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label x:Name="BlockTitle" Style="{StaticResource RowTitle}" />
+                                        <Label x:Name="BlockHint" Style="{StaticResource RowSubtitle}" />
+                                    </VerticalStackLayout>
+                                </Grid>
                             </VerticalStackLayout>
-                            <Image x:Name="ArchiveChevron" Grid.Column="2" Source="chevron_right.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
-                                <Image.Behaviors>
-                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}" />
-                                </Image.Behaviors>
-                            </Image>
-                        </Grid>
+                        </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
             </ScrollView>

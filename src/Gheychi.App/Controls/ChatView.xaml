@@ -548,13 +548,28 @@
                                LineBreakMode="TailTruncation"
                                MaxLines="1"
                                HorizontalOptions="Fill" />
-                        <Label Grid.Row="1"
-                               Text="{Binding Thread.Phone}"
-                               FontSize="12"
-                               TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
-                               LineBreakMode="TailTruncation"
-                               MaxLines="1"
-                               HorizontalOptions="Fill" />
+                        <Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                            <Label Text="{Binding Thread.Phone}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1"
+                                   VerticalOptions="Center" />
+                            <Border x:Name="HeaderBlocked"
+                                    Grid.Column="1"
+                                    IsVisible="False"
+                                    Padding="6,1"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 6"
+                                    BackgroundColor="{AppThemeBinding Light=#F7E3E1, Dark=#3A2224}"
+                                    HorizontalOptions="Start"
+                                    VerticalOptions="Center">
+                                <Label Text="{loc:Translate Chat_Blocked}"
+                                       FontSize="10"
+                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                       TextColor="{AppThemeBinding Light=#B3261E, Dark=#F2B8B5}" />
+                            </Border>
+                        </Grid>
                     </Grid>
                     <Grid Grid.Column="3" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
                               IsVisible="{Binding Thread.CanCall}"

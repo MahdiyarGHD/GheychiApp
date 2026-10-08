@@ -1014,4 +1014,52 @@
   <data name="Settings_DigestTimeHint" xml:space="preserve">
     <value>Android may show it a few minutes late</value>
   </data>
+  <data name="Profile_Block" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="Profile_BlockHint" xml:space="preserve">
+    <value>Drop their messages without a notification</value>
+  </data>
+  <data name="Profile_Unblock" xml:space="preserve">
+    <value>Unblock</value>
+  </data>
+  <data name="Profile_UnblockHint" xml:space="preserve">
+    <value>Blocked: their messages are dropped</value>
+  </data>
+  <data name="Profile_BlockConfirmTitle" xml:space="preserve">
+    <value>Block {0}?</value>
+  </data>
+  <data name="Profile_BlockConfirmMessage" xml:space="preserve">
+    <value>Their new messages will be dropped as they arrive: not saved, not shown anywhere and no notification. This conversation stays, and calls are not blocked.</value>
+  </data>
+  <data name="Profile_BlockConfirm" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="Profile_Blocked" xml:space="preserve">
+    <value>Blocked</value>
+  </data>
+  <data name="Profile_Unblocked" xml:space="preserve">
+    <value>Unblocked</value>
+  </data>
+  <data name="Chat_Blocked" xml:space="preserve">
+    <value>Blocked</value>
+  </data>
+  <data name="Settings_Blocked" xml:space="preserve">
+    <value>Blocked senders</value>
+  </data>
+  <data name="Settings_BlockedHint" xml:space="preserve">
+    <value>{0} blocked</value>
+  </data>
+  <data name="Settings_BlockedNone" xml:space="preserve">
+    <value>No one is blocked</value>
+  </data>
+  <data name="Settings_BlockedNote" xml:space="preserve">
+    <value>Messages from these senders are dropped as they arrive, without a notification. Calls are not blocked.</value>
+  </data>
+  <data name="Settings_BlockedEmpty" xml:space="preserve">
+    <value>No blocked senders. You can block someone from their profile.</value>
+  </data>
+  <data name="Settings_BlockedUnblock" xml:space="preserve">
+    <value>Unblock</value>
+  </data>
 </root>

@@ -5,6 +5,7 @@ public enum SettingsScreenKind
 {
     Spam,
     Trusted,
+    Blocked,
     Sims,
     Notifications,
     Appearance,

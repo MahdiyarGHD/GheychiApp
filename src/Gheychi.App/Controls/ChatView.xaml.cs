@@ -23,6 +23,8 @@ public partial class ChatView : ContentView
     private const int OlderTriggerAhead = 12;
     private int _olderTriggerIndex = OlderTriggerAhead;
 
+    private readonly IBlockedSenders? _blocked;
+
     public ICommand OpenSelectionMenuCommand { get; }
     private ChatMessage? _targetMessage;
 
@@ -33,6 +35,9 @@ public partial class ChatView : ContentView
         var initialVm = new ChatViewModel();
         initialVm.SafeDispatcher = SafePrependItems;
         BindingContext = initialVm;
+        _blocked = IPlatformApplication.Current?.Services.GetService<IBlockedSenders>();
+        if (_blocked is not null)
+            _blocked.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(RefreshBlocked);
 
 #if ANDROID
         MessagesList.HandlerChanged += (s, e) =>
@@ -428,6 +433,7 @@ public partial class ChatView : ContentView
 
         vm.ResetForOpen();
         vm.Thread = thread;
+        RefreshBlocked();
         vm.SafeDispatcher = SafePrependItems;
         vm.Items.Clear();
         vm.Messages.Clear();
@@ -490,7 +496,11 @@ public partial class ChatView : ContentView
         HideSkeleton();
         HideScrollToBottomButton();
         BindingContext = vm;
+        RefreshBlocked();
     }
+
+    private void RefreshBlocked() =>
+        HeaderBlocked.IsVisible = _blocked is not null && Vm?.Thread.Phone is { Length: > 0 } phone && _blocked.IsBlocked(phone);
 
     public void ScrollToBottom()
     {

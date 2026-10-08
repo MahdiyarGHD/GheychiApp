@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<settings:SettingsScreen xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:behaviors="clr-namespace:Gheychi.App.Behaviors"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.BlockedSendersScreen">
+    <settings:SettingsScreen.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <settings:SettingsStyles />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </settings:SettingsScreen.Resources>
+
+    <Grid Style="{StaticResource ScreenBackground}" RowDefinitions="Auto,Auto,*">
+        <Grid Grid.Row="0" Padding="12,0,16,0" HeightRequest="56" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+            <Border Style="{StaticResource BackButton}" SemanticProperties.Description="{loc:Translate Chat_Back}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <Image Source="back.png" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image.Behaviors>
+                        <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#2C342E, Dark=#E8EAED}" />
+                    </Image.Behaviors>
+                </Image>
+            </Border>
+            <Label Grid.Column="1" Text="{loc:Translate Settings_Blocked}" Style="{StaticResource ScreenTitle}" />
+        </Grid>
+
+        <Label Grid.Row="1" Text="{loc:Translate Settings_BlockedNote}" Style="{StaticResource Note}" Margin="26,0,26,12" />
+
+        <CollectionView x:Name="BlockedList"
+                        Grid.Row="2"
+                        Margin="8,0"
+                        SelectionMode="None"
+                        VerticalScrollBarVisibility="Never">
+            <CollectionView.EmptyView>
+                <Label Text="{loc:Translate Settings_BlockedEmpty}"
+                       Margin="24,48,24,0"
+                       Style="{StaticResource Note}"
+                       HorizontalTextAlignment="Center" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:BlockedSenderRow">
+                    <Grid Padding="10,8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                        <Border Style="{StaticResource Badge}" BackgroundColor="{AppThemeBinding Light=#F7E3E1, Dark=#3A2224}">
+                            <Image Source="block.png" Style="{StaticResource BadgeIcon}">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#B3261E, Dark=#F2B8B5}" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                            <Label Text="{Binding Title}" Style="{StaticResource RowTitle}" />
+                            <Label Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" Style="{StaticResource RowSubtitle}" />
+                        </VerticalStackLayout>
+                        <Border Grid.Column="2"
+                                WidthRequest="36"
+                                HeightRequest="36"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 18"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                SemanticProperties.Description="{loc:Translate Settings_BlockedUnblock}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnUnblockTapped" />
+                            </Border.GestureRecognizers>
+                            <Image Source="close.png" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#59615A, Dark=#9AA0AB}" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</settings:SettingsScreen>

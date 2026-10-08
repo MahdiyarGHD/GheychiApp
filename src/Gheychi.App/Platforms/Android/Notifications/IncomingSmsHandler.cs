@@ -1,12 +1,13 @@
 using Android.Content;
 using Android.Provider;
 using Gheychi.Core.Notifications;
+using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
 using Microsoft.Maui.ApplicationModel;
 
 namespace Gheychi.App.Platforms.Android.Notifications;
 
-/// <summary>What happens to a received SMS: quarantine it if it is spam; otherwise store it, tell the open screens, then notify if the rules allow.</summary>
+/// <summary>What happens to a received SMS: drop it if the sender is blocked, quarantine it if it is spam; otherwise store it, tell the open screens, then notify if the rules allow.</summary>
 internal static class IncomingSmsHandler
 {
     private static readonly TimeSpan SpamCheckBudget = TimeSpan.FromSeconds(4);
@@ -18,6 +19,9 @@ internal static class IncomingSmsHandler
         // Ordered by arrival, as the stock messaging app does: the carrier's clock can be minutes or hours off, which
         // put a new message before older ones and made the notification show an older message as the latest.
         var timestampMillis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        if (IPlatformApplication.Current?.Services.GetService<IBlockedSenders>()?.IsBlocked(address) == true)
+            return;
 
         var spam = await QuarantineIfSpamAsync(context, address, body, timestampMillis, subId);
         if (spam is not null)
