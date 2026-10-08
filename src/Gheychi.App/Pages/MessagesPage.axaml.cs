@@ -289,13 +289,16 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         }
     }
 
-    // An overlay that is being warmed is visible but counts as closed; a real open ends the warm-up first.
-    private void EndWarm()
+    // An overlay that is being warmed is visible but counts as closed; a real open ends the warm-up first. A different
+    // overlay than the one opening goes back to parked, so it does not stay on screen under or over it.
+    private void EndWarm(Control opening)
     {
         if (_warming is not { } warming)
             return;
 
         _warming = null;
+        if (!ReferenceEquals(warming, opening))
+            warming.IsVisible = false;
         warming.Opacity = 1;
         warming.IsHitTestVisible = true;
     }
@@ -586,7 +589,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _animating = true;
         try
         {
-            EndWarm();
+            EndWarm(ChatOverlay);
 
             // Yield SQLite to the opening chat immediately: stop list warm-up
             // queries so page 1 + its history prefetch run uncontended.
@@ -710,7 +713,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _animating = true;
         try
         {
-            EndWarm();
+            EndWarm(ProfileOverlay);
             var profile = ProfileOverlay;
             ChatOverlay.ReleaseInputFocus();
             profile.Bind(thread, IsArchived(thread.ThreadId));
@@ -829,7 +832,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         {
             // The overlay keeps its view model: a new one per open re-bound the whole screen (every list
             // and binding) and re-read the recent searches and SIMs right before the slide. Park clears it.
-            EndWarm();
+            EndWarm(SearchOverlay);
             var search = SearchOverlay;
             search.Initialize();
             var distance = OverlayDistance;
@@ -953,7 +956,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _animating = true;
         try
         {
-            EndWarm();
+            EndWarm(ComposeOverlay);
             var compose = ComposeOverlay;
             var distance = OverlayDistance;
             compose.PrepareForOpen(BuildRecentRows(), distance);
@@ -1129,7 +1132,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     public void OnSwipeStarted()
     {
         _swipeDragging = true;
-        EndWarm();
+        EndWarm(ArchiveOverlay);
         var archive = ArchiveOverlay;
         if (Vm != null)
             archive.Initialize(Vm);
@@ -1189,7 +1192,14 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private async Task SettleArchiveAsync(bool open, double fromProgress, double velocity)
     {
         if (_animating)
+        {
+            // Something else is animating (a chat opened from a notification): put the drag back where it began.
+            SetArchiveProgress(_archiveOpen ? 1 : 0);
+            ArchiveOverlay.IsHitTestVisible = true;
+            if (!_archiveOpen)
+                Park(ArchiveOverlay);
             return;
+        }
         _animating = true;
         try
         {
@@ -1227,6 +1237,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         {
             _archiveOpen = open;
             SetArchiveProgress(open ? 1 : 0);
+            ArchiveOverlay.IsHitTestVisible = true;
         }
         finally
         {

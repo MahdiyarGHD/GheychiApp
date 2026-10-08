@@ -1,5 +1,6 @@
 using Android.App;
 using Android.Runtime;
+using AndroidX.AppCompat.App;
 using Avalonia.Android;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Notifications;
@@ -20,6 +21,13 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
     {
         CultureService.ApplyCulture();
         ThemeState.Resolve();
+        // The system's dialogs (delete confirms, pickers) follow the app's theme choice, not the phone's.
+        AppCompatDelegate.DefaultNightMode = Services.AppPreferences.Theme switch
+        {
+            AppTheme.Light => AppCompatDelegate.ModeNightNo,
+            AppTheme.Dark => AppCompatDelegate.ModeNightYes,
+            _ => AppCompatDelegate.ModeNightFollowSystem
+        };
         SQLitePCL.Batteries_V2.Init();
         IPlatformApplication.Current = new PlatformApplication(AppServices.Build());
 
