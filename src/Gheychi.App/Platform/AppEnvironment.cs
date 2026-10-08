@@ -59,9 +59,7 @@ public sealed class Launcher
         try
         {
             var intent = new Intent(Intent.ActionView, Uri.Parse(uri.OriginalString)).AddFlags(ActivityFlags.NewTask);
-            if (intent.ResolveActivity(Platform.AppContext.PackageManager!) is null)
-                return Task.FromResult(false);
-
+            // No ResolveActivity check: from Android 11 it returns null for every app without a <queries> entry.
             Platform.AppContext.StartActivity(intent);
             return Task.FromResult(true);
         }

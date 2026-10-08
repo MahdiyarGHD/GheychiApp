@@ -108,7 +108,6 @@ public partial class ComposeView : UserControl
     /// <summary>Moves the finished screen out of the way and forgets what the user did in it.</summary>
     public void Park()
     {
-        IsHitTestVisible = false;
         ResetState();
 
         // Collapsed while parked so page layout skips it; MessagesPage shows it again before the slide.

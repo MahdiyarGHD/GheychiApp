@@ -48,6 +48,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private ArchiveView? _archiveOverlay;
     private ProfileView? _profileOverlay;
     private SpamOverlay? _spamPopup;
+    private Control? _warming;
 
     private MessagesViewModel? Vm => DataContext as MessagesViewModel;
 
@@ -58,10 +59,10 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private ComposeView ComposeOverlay => _composeOverlay ??= CreateComposeOverlay();
     private ArchiveView ArchiveOverlay => _archiveOverlay ??= CreateArchiveOverlay();
     private ProfileView ProfileOverlay => _profileOverlay ??= CreateProfileOverlay();
-    private bool IsChatClosed => _chatOverlay is null || !_chatOverlay.IsVisible;
-    private bool IsSearchClosed => _searchOverlay is null || !_searchOverlay.IsVisible;
-    private bool IsComposeClosed => _composeOverlay is null || !_composeOverlay.IsVisible;
-    private bool IsProfileClosed => _profileOverlay is null || !_profileOverlay.IsVisible;
+    private bool IsChatClosed => _chatOverlay is null || !_chatOverlay.IsVisible || ReferenceEquals(_chatOverlay, _warming);
+    private bool IsSearchClosed => _searchOverlay is null || !_searchOverlay.IsVisible || ReferenceEquals(_searchOverlay, _warming);
+    private bool IsComposeClosed => _composeOverlay is null || !_composeOverlay.IsVisible || ReferenceEquals(_composeOverlay, _warming);
+    private bool IsProfileClosed => _profileOverlay is null || !_profileOverlay.IsVisible || ReferenceEquals(_profileOverlay, _warming);
 
     private static Panel Overlays => MainView.Current!.Overlays;
 
@@ -267,23 +268,36 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     // A parked overlay is collapsed, so measure and layout skip it. It is shown once, invisibly, so that its first
     // measure, layout and row creation happen now and not on the tap that opens it.
-    private static async Task WarmAsync(Control overlay, Func<bool> isParked)
+    private async Task WarmAsync(Control overlay, Func<bool> isParked)
     {
         if (!isParked())
             return;
 
+        _warming = overlay;
         overlay.Opacity = 0;
         overlay.IsHitTestVisible = false;
         overlay.IsVisible = true;
         await Task.Delay(250);
-        if (isParked())
-        {
-            overlay.IsVisible = false;
-            OverlayAnimator.SetTranslation(overlay, 0, 0);
-        }
 
-        overlay.Opacity = 1;
-        overlay.IsHitTestVisible = true;
+        // A real open during the wait has already taken the overlay over (EndWarm); otherwise it goes back to parked.
+        if (ReferenceEquals(_warming, overlay))
+        {
+            _warming = null;
+            overlay.IsVisible = false;
+            overlay.Opacity = 1;
+            overlay.IsHitTestVisible = true;
+        }
+    }
+
+    // An overlay that is being warmed is visible but counts as closed; a real open ends the warm-up first.
+    private void EndWarm()
+    {
+        if (_warming is not { } warming)
+            return;
+
+        _warming = null;
+        warming.Opacity = 1;
+        warming.IsHitTestVisible = true;
     }
 
     // While an overlay covers the whole screen the inbox under it is collapsed too: typing in a chat must not lay out
@@ -572,6 +586,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _animating = true;
         try
         {
+            EndWarm();
+
             // Yield SQLite to the opening chat immediately: stop list warm-up
             // queries so page 1 + its history prefetch run uncontended.
             ChatViewModel.CancelPreload();
@@ -694,6 +710,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _animating = true;
         try
         {
+            EndWarm();
             var profile = ProfileOverlay;
             ChatOverlay.ReleaseInputFocus();
             profile.Bind(thread, IsArchived(thread.ThreadId));
@@ -812,6 +829,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         {
             // The overlay keeps its view model: a new one per open re-bound the whole screen (every list
             // and binding) and re-read the recent searches and SIMs right before the slide. Park clears it.
+            EndWarm();
             var search = SearchOverlay;
             search.Initialize();
             var distance = OverlayDistance;
@@ -935,6 +953,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _animating = true;
         try
         {
+            EndWarm();
             var compose = ComposeOverlay;
             var distance = OverlayDistance;
             compose.PrepareForOpen(BuildRecentRows(), distance);
@@ -1086,8 +1105,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     // Finger direction that opens the archive: toward the leading edge's opposite side, so the
     // archive page sits past the trailing edge and mirrors in right-to-left languages.
-    private static int OpenSwipeSign =>
-        Localization.CultureService.GetFlowDirection() == FlowDirection.RightToLeft ? 1 : -1;
+    // MainView is mirrored in right-to-left languages, so pointer positions and translations are already in mirrored
+    // coordinates and the sign is the same in every language.
+    private const int OpenSwipeSign = -1;
 
     private double PageWidth => Bounds.Width > 0 ? Bounds.Width : 360;
 
@@ -1109,6 +1129,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     public void OnSwipeStarted()
     {
         _swipeDragging = true;
+        EndWarm();
         var archive = ArchiveOverlay;
         if (Vm != null)
             archive.Initialize(Vm);

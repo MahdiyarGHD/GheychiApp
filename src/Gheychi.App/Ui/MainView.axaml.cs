@@ -32,6 +32,7 @@ public partial class MainView : UserControl
     private int _selected = -1;
     private TopLevel? _topLevel;
     private double _safeBottom;
+    private bool _detached;
 
     private HorizontalSwipeTracker? _swipe;
     private IPageSwipeClient? _swipeClient;
@@ -46,6 +47,8 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
         Current = this;
+        // Insets are applied by ApplyInsets, which lets Root paint under the system bars.
+        TopLevel.SetAutoSafeAreaPadding(this, false);
         FontFamily = AppFonts.Regular;
         FlowDirection = CultureService.GetFlowDirection();
 
@@ -73,7 +76,11 @@ public partial class MainView : UserControl
 
         _topLevel.BackRequested += OnBackRequested;
         if (_topLevel.InsetsManager is { } insets)
+        {
+            // Below Android 15 the bars have a colour of their own, which would show against the other theme.
+            insets.SystemBarColor = Color.Parse(ThemeState.IsDark ? "#0A1A11" : "#F6F8F4");
             insets.SafeAreaChanged += OnInsetsChanged;
+        }
         if (_topLevel.InputPane is { } pane)
             pane.StateChanged += OnInsetsChanged;
         ApplyInsets();
@@ -83,6 +90,13 @@ public partial class MainView : UserControl
         MainActivity.Resumed += OnAppResumed;
         SubscribeUpdates();
         OnAppResumed();
+
+        if (_detached)
+        {
+            _detached = false;
+            if (_selected >= 0 && _pages[_selected] is { } shown)
+                NotifyShown(shown);
+        }
     }
 
     private static void OnAppResumed() => _ = Services.UpdateAutoCheck.RunAsync();
@@ -94,6 +108,14 @@ public partial class MainView : UserControl
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         SpamTabRequests.Requested -= OnSpamTabRequested;
         MainActivity.Resumed -= OnAppResumed;
+        // The pages subscribe to static events while shown; an activity that is gone must not keep answering them.
+        _detached = true;
+        foreach (var page in _pages)
+        {
+            if (page is not null)
+                NotifyHidden(page);
+        }
+
         if (_topLevel is not null)
         {
             _topLevel.BackRequested -= OnBackRequested;
@@ -269,7 +291,9 @@ public partial class MainView : UserControl
 
         var safe = _topLevel.InsetsManager?.SafeAreaPadding ?? default;
         var keyboard = 0.0;
-        if (_topLevel.InputPane is { State: InputPaneState.Open } pane)
+        // Before Android 15 the system shrinks the window for the keyboard itself (AdjustResize); only an edge-to-edge
+        // window has to make room for it.
+        if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true && _topLevel.InputPane is { State: InputPaneState.Open } pane)
             keyboard = Math.Max(0, _topLevel.Bounds.Height - pane.OccludedRect.Top);
 
         // The keyboard covers the navigation bar, so while it is up it alone sets the bottom edge.
