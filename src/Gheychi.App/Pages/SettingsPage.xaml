@@ -312,6 +312,28 @@
                            TextColor="#8A8F98"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
+
+                <Border Margin="0,22,0,0"
+                        Padding="14,7"
+                        HorizontalOptions="Center"
+                        StrokeThickness="1"
+                        Stroke="{AppThemeBinding Light=#DCE5DB, Dark=#22392C}"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{AppThemeBinding Light=#EEF2EC, Dark=#14251B}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCreditTapped" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="{loc:Translate Settings_CreditMadeWith}" FontSize="12" TextColor="#8A8F98" VerticalOptions="Center" />
+                        <Label x:Name="CreditHeart" Text="💚" FontSize="13" VerticalOptions="Center" />
+                        <Label Text="{loc:Translate Settings_CreditBy}" FontSize="12" TextColor="#8A8F98" VerticalOptions="Center" />
+                        <Label Text="MahdiyarGHD"
+                               FontSize="12"
+                               FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                               TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 

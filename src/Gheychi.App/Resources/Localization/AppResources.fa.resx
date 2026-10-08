@@ -681,6 +681,12 @@
   <data name="Settings_FooterText" xml:space="preserve">
     <value>پیام‌های شما هرگز از این گوشی خارج نمی‌شوند</value>
   </data>
+  <data name="Settings_CreditMadeWith" xml:space="preserve">
+    <value>ساخته‌شده با</value>
+  </data>
+  <data name="Settings_CreditBy" xml:space="preserve">
+    <value>توسط</value>
+  </data>
   <data name="Settings_Days" xml:space="preserve">
     <value>{0} روز</value>
   </data>

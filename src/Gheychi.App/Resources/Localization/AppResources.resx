@@ -681,6 +681,12 @@
   <data name="Settings_FooterText" xml:space="preserve">
     <value>Your messages never leave this phone</value>
   </data>
+  <data name="Settings_CreditMadeWith" xml:space="preserve">
+    <value>Made with</value>
+  </data>
+  <data name="Settings_CreditBy" xml:space="preserve">
+    <value>by</value>
+  </data>
   <data name="Settings_Days" xml:space="preserve">
     <value>{0} days</value>
   </data>

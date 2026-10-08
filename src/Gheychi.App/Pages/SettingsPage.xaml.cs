@@ -15,6 +15,7 @@ namespace Gheychi.App.Pages;
 public partial class SettingsPage : ContentPage, IQueryAttributable
 {
     private const uint SlideMs = 160;
+    private const string AuthorProfileUrl = "https://github.com/MahdiyarGHD";
 
     private readonly ISmsService? _sms;
     private readonly ISpamSettings? _spamSettings;
@@ -181,6 +182,25 @@ public partial class SettingsPage : ContentPage, IQueryAttributable
     private void OnCaughtTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Analytics);
 
     private void OnModelTileTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Spam);
+
+    private async void OnCreditTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            _ = PulseHeartAsync();
+            await Launcher.Default.OpenAsync(new Uri(AuthorProfileUrl));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Opening the author's profile failed: {ex}");
+        }
+    }
+
+    private async Task PulseHeartAsync()
+    {
+        await CreditHeart.ScaleToAsync(1.35, 110, Easing.CubicOut);
+        await CreditHeart.ScaleToAsync(1, 160, Easing.CubicIn);
+    }
 
     // ---- Status --------------------------------------------------------------------------------
 
