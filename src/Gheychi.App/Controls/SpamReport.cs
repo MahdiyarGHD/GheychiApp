@@ -2,7 +2,7 @@ using Android.Text;
 using Android.Views;
 using Android.Widget;
 using Gheychi.App.Localization;
-using Gheychi.App.Platforms.Android;
+using Gheychi.App.Ui;
 using Gheychi.Core.Spam;
 using AlertDialog = AndroidX.AppCompat.App.AlertDialog;
 
@@ -59,8 +59,6 @@ internal static class SpamReport
         input.SetMinLines(3);
         input.SetMaxLines(8);
         input.SetTextSize(Android.Util.ComplexUnitType.Sp, 15);
-        if (AppTypeface.Get() is { } typeface)
-            input.Typeface = typeface;
 
         var frame = new FrameLayout(activity);
         var side = (int)(22 * density);
@@ -103,6 +101,6 @@ internal static class SpamReport
             result = loc["Spam_ReportFailed"];
         }
 
-        MainThread.BeginInvokeOnMainThread(() => Toast.Show(result));
+        MainThread.BeginInvokeOnMainThread(() => Ui.Toast.Show(result));
     }
 }
