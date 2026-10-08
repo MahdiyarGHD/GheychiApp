@@ -1,0 +1,69 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:local="clr-namespace:Gheychi.App"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.AboutSettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_About}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,8,0,24">
+                <Border Width="72" Height="72" CornerRadius="22" Background="#16382A" HorizontalAlignment="Center">
+                    <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="34" Height="34" Foreground="#8FE0BE"
+                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="Gheychi"
+                           Margin="0,12,0,0"
+                           FontSize="22"
+                           FontFamily="{x:Static local:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="{loc:Translate Settings_Tagline}"
+                           Margin="32,4,32,20"
+                           Classes="note"
+                           TextAlignment="Center" />
+
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <TextBlock Text="{loc:Translate Settings_Version}" Classes="rowTitle" VerticalAlignment="Center" />
+                                <TextBlock x:Name="VersionValue" Grid.Column="1" Classes="valueChipLabel" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" Margin="16,0" />
+                        <Border Classes="row" Tapped="OnAppUpdateTapped">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock x:Name="AppUpdateTitle" Classes="rowTitle" />
+                                    <TextBlock x:Name="AppUpdateHint" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="1" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" Margin="16,0" />
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <TextBlock Text="{loc:Translate Settings_SectionModel}" Classes="rowTitle" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ModelValue" Grid.Column="1" Classes="valueChipLabel" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" Margin="16,0" />
+                        <Border Classes="row" Tapped="OnLicensesTapped">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Licenses}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_LicensesHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="1" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

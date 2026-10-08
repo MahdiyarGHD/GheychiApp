@@ -1,0 +1,277 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             xmlns:ti="using:Avalonia.Input.TextInput"
+             x:Class="Gheychi.App.Controls.ComposeView"
+             Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+
+    <UserControl.Resources>
+        <vm:ComposeRowTemplateSelector x:Key="RowSelector">
+            <!-- Section title: a letter or "Recent" -->
+            <vm:ComposeRowTemplateSelector.Header>
+                <DataTemplate x:DataType="vm:ComposeRow">
+                    <TextBlock Text="{Binding Letter, Mode=OneTime}"
+                               Margin="20,10,16,2"
+                               FontSize="11"
+                               LetterSpacing="0.8"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}" />
+                </DataTemplate>
+            </vm:ComposeRowTemplateSelector.Header>
+
+            <!-- A person: avatar with initials, name, "Mobile · number" -->
+            <vm:ComposeRowTemplateSelector.Contact>
+                <DataTemplate x:DataType="vm:ComposeRow">
+                    <Grid Height="50" ColumnDefinitions="Auto,*" Background="Transparent">
+                        <Border Width="40" Height="40" Margin="16,0,12,0" CornerRadius="20"
+                                Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#35423C}">
+                            <TextBlock Text="{Binding Initials, Mode=OneTime}"
+                                       FontSize="13"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" Spacing="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}" />
+                            <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
+                                       IsVisible="{Binding HasSubtitle, Mode=OneTime}"
+                                       FontSize="12"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{theme:ThemeBrush Light=#646C65, Dark=#9AA0AB}" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </vm:ComposeRowTemplateSelector.Contact>
+
+            <!-- A person without letters in the name: a person icon instead of initials -->
+            <vm:ComposeRowTemplateSelector.ContactIcon>
+                <DataTemplate x:DataType="vm:ComposeRow">
+                    <Grid Height="50" ColumnDefinitions="Auto,*" Background="Transparent">
+                        <Border Width="40" Height="40" Margin="16,0,12,0" CornerRadius="20"
+                                Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#35423C}">
+                            <ui:Icon Data="{StaticResource Icon.Person}"
+                                     Width="18" Height="18"
+                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" Spacing="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}" />
+                            <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
+                                       IsVisible="{Binding HasSubtitle, Mode=OneTime}"
+                                       FontSize="12"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{theme:ThemeBrush Light=#646C65, Dark=#9AA0AB}" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </vm:ComposeRowTemplateSelector.ContactIcon>
+
+            <!-- "Send to 0903…": the number typed in the To field -->
+            <vm:ComposeRowTemplateSelector.Typed>
+                <DataTemplate x:DataType="vm:ComposeRow">
+                    <Grid Height="50" ColumnDefinitions="Auto,*" Background="Transparent">
+                        <Border Width="40" Height="40" Margin="16,0,12,0" CornerRadius="20"
+                                Background="{StaticResource PrimaryBrush}">
+                            <ui:Icon Data="{StaticResource Icon.Send}"
+                                     Width="18" Height="18"
+                                     Foreground="White" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" Spacing="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}" />
+                            <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
+                                       FontSize="12"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </vm:ComposeRowTemplateSelector.Typed>
+
+            <vm:ComposeRowTemplateSelector.FooterSpace>
+                <DataTemplate x:DataType="vm:ComposeRow">
+                    <Panel Height="24" />
+                </DataTemplate>
+            </vm:ComposeRowTemplateSelector.FooterSpace>
+        </vm:ComposeRowTemplateSelector>
+    </UserControl.Resources>
+
+    <Grid x:Name="Root" RowDefinitions="Auto,Auto,*" Focusable="True">
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Height="48" ColumnDefinitions="Auto,*" ColumnSpacing="4">
+            <Border x:Name="BackButton"
+                    Width="40" Height="40"
+                    Margin="8,0,0,0"
+                    CornerRadius="20"
+                    Background="Transparent"
+                    VerticalAlignment="Center"
+                    Tapped="OnBackTapped"
+                    AutomationProperties.Name="{loc:Translate Chat_Back}">
+                <ui:Icon Data="{StaticResource Icon.Back}"
+                         Width="20" Height="20"
+                         Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+            </Border>
+            <TextBlock Grid.Column="1"
+                       Margin="0,0,12,0"
+                       Text="{loc:Translate Compose_Title}"
+                       FontSize="18"
+                       FontFamily="{x:Static app:AppFonts.Bold}"
+                       Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}"
+                       VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Recipient field -->
+        <Border x:Name="RecipientCard"
+                Grid.Row="1"
+                Margin="12,0,12,6"
+                Padding="14,0,6,0"
+                Height="42"
+                BorderThickness="1.5"
+                BorderBrush="Transparent"
+                CornerRadius="21"
+                Background="{theme:ThemeBrush Light=#EAF0E8, Dark=#1E2320}">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                <TextBlock Grid.Column="0"
+                           Text="{loc:Translate Compose_To}"
+                           FontSize="13"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}"
+                           VerticalAlignment="Center" />
+                <TextBox x:Name="RecipientEntry"
+                         Grid.Column="1"
+                         Classes="plain"
+                         PlaceholderText="{loc:Translate Compose_Hint}"
+                         PlaceholderForeground="{theme:ThemeBrush Light=#7C857D, Dark=#7F8791}"
+                         Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}"
+                         FontSize="14"
+                         ti:TextInputOptions.ReturnKeyType="Go"
+                         VerticalAlignment="Center"
+                         TextChanged="OnRecipientTextChanged"
+                         KeyDown="OnRecipientKeyDown"
+                         GotFocus="OnRecipientFocusChanged"
+                         LostFocus="OnRecipientFocusChanged" />
+                <Border x:Name="ClearButton"
+                        Grid.Column="2"
+                        IsVisible="False"
+                        Width="30" Height="30"
+                        CornerRadius="15"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnClearTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Cancel}">
+                    <ui:Icon Data="{StaticResource Icon.Close}"
+                             Width="14" Height="14"
+                             Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                </Border>
+                <Border x:Name="SimChip"
+                        Grid.Column="3"
+                        IsVisible="False"
+                        Padding="9,0"
+                        Height="28"
+                        CornerRadius="14"
+                        Background="{theme:ThemeBrush Light=#D9E4D7, Dark=#2A332D}"
+                        VerticalAlignment="Center"
+                        Tapped="OnSimChipTapped"
+                        AutomationProperties.Name="{loc:Translate Compose_Sim}">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <ui:Icon Data="{StaticResource Icon.SimCard}"
+                                 Width="13" Height="13"
+                                 Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}"
+                                 VerticalAlignment="Center" />
+                        <TextBlock x:Name="SimLabel"
+                                   FontSize="11"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#34443A, Dark=#CFE5D8}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Suggestions and contacts -->
+        <Panel Grid.Row="2">
+            <ItemsControl x:Name="ContactList"
+                          ItemTemplate="{StaticResource RowSelector}"
+                          Tapped="OnRowTapped">
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer x:Name="PART_Scroller"
+                                      VerticalScrollBarVisibility="Hidden"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <ItemsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <ProgressBar x:Name="LoadingIndicator"
+                         IsVisible="False"
+                         IsIndeterminate="False"
+                         Width="120"
+                         Margin="0,56,0,0"
+                         VerticalAlignment="Top"
+                         HorizontalAlignment="Center" />
+
+            <StackPanel x:Name="EmptyState"
+                        IsVisible="False"
+                        Spacing="8"
+                        Margin="36,48,36,0"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Center">
+                <Border Width="64" Height="64"
+                        CornerRadius="32"
+                        Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#1E2320}"
+                        HorizontalAlignment="Center">
+                    <ui:Icon Data="{StaticResource Icon.Person}"
+                             Width="26" Height="26"
+                             Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}" />
+                </Border>
+                <TextBlock x:Name="EmptyTitle"
+                           FontSize="16"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}" />
+                <TextBlock x:Name="EmptyHint"
+                           FontSize="13"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="{theme:ThemeBrush Light=#646C65, Dark=#9AA0AB}" />
+                <Border x:Name="EmptyAction"
+                        IsVisible="False"
+                        Margin="0,10,0,0"
+                        Padding="22,11"
+                        CornerRadius="22"
+                        Background="{StaticResource PrimaryBrush}"
+                        HorizontalAlignment="Center"
+                        Tapped="OnEmptyActionTapped">
+                    <TextBlock Text="{loc:Translate Compose_OpenSettings}"
+                               FontSize="14"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="White" />
+                </Border>
+            </StackPanel>
+        </Panel>
+    </Grid>
+</UserControl>

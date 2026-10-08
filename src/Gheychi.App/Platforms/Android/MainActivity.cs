@@ -5,6 +5,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Speech;
 using Android.Views;
+using AndroidX.Core.View;
 using Avalonia.Android;
 using Gheychi.App.Gestures;
 using Gheychi.App.Platforms.Android.Notifications;
@@ -27,6 +28,9 @@ public class MainActivity : AvaloniaMainActivity
     public const int VoiceSearchRequestCode = 7301;
     public const int DefaultSmsRequestCode = 7302;
 
+    /// <summary>Raised whenever the app comes back to the front, e.g. from a system prompt such as the default-SMS-app dialog.</summary>
+    public static event Action? Resumed;
+
     /// <summary>Raised with the recognised text, or null when the user cancelled / nothing was heard.</summary>
     public static event Action<string?>? VoiceSearchCompleted;
 
@@ -38,6 +42,18 @@ public class MainActivity : AvaloniaMainActivity
 
         Platform.CurrentActivity = this;
         base.OnCreate(savedInstanceState);
+        ApplySystemBarIcons();
+    }
+
+    // The bars are drawn over the app's own background, so their icons follow the theme in use.
+    private void ApplySystemBarIcons()
+    {
+        if (Window is not { DecorView: { } decor } window)
+            return;
+
+        var controller = WindowCompat.GetInsetsController(window, decor);
+        controller.AppearanceLightStatusBars = !ThemeState.IsDark;
+        controller.AppearanceLightNavigationBars = !ThemeState.IsDark;
     }
 
     protected override void OnNewIntent(Intent? intent)
@@ -54,6 +70,7 @@ public class MainActivity : AvaloniaMainActivity
         ChatPresence.AppVisibilityChanged(true);
         ChatLaunchRequests.RaiseIfPending();
         SpamTabRequests.RaiseIfPending();
+        Resumed?.Invoke();
     }
 
     protected override void OnPause()

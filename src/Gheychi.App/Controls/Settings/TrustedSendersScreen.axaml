@@ -1,0 +1,43 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.TrustedSendersScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Trusted}" />
+
+        <ScrollViewer Grid.Row="1" Margin="8,0" VerticalScrollBarVisibility="Hidden">
+            <ItemsControl x:Name="TrustedList">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TrustedSenderRow">
+                        <Grid Margin="10,8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Classes="badge">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Person}"
+                                         Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="{Binding Display}" Classes="rowTitle" VerticalAlignment="Center" />
+                            <Border Grid.Column="2" Width="36" Height="36" CornerRadius="18" Background="Transparent"
+                                    VerticalAlignment="Center" Tapped="OnRemoveTapped"
+                                    AutomationProperties.Name="{loc:Translate Settings_TrustedRemove}">
+                                <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                                         Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock x:Name="EmptyNote" Grid.Row="1" Text="{loc:Translate Settings_TrustedEmpty}" Margin="24,48,24,0"
+                   Classes="note" TextAlignment="Center" VerticalAlignment="Top" IsVisible="False" />
+    </Grid>
+</settings:SettingsScreen>

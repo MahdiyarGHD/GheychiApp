@@ -1,0 +1,137 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:local="clr-namespace:Gheychi.App"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.SpamAnalyticsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Analytics}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,4,0,24">
+                <Grid Margin="16,0" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                    <Border Grid.Column="0" Grid.Row="0" Classes="tile">
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="TotalValue" Classes="bigNumber" />
+                            <TextBlock x:Name="TotalCaption" Classes="tileCaption" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Grid.Row="0" Classes="tile">
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="TodayValue" Classes="bigNumber" />
+                            <TextBlock Text="{loc:Translate Settings_StatToday}" Classes="tileCaption" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="0" Grid.Row="1" Classes="tile">
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="WeekValue" Classes="bigNumber" />
+                            <TextBlock Text="{loc:Translate Settings_StatWeek}" Classes="tileCaption" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Grid.Row="1" Classes="tile">
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="MonthValue" Classes="bigNumber" />
+                            <TextBlock Text="{loc:Translate Settings_StatMonth}" Classes="tileCaption" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <TextBlock x:Name="EmptyNote"
+                           Text="{loc:Translate Settings_AnalyticsEmpty}"
+                           Margin="26,20,26,0"
+                           Classes="note"
+                           TextAlignment="Center"
+                           IsVisible="False" />
+
+                <StackPanel x:Name="Details">
+                    <TextBlock Text="{settings:UpperTranslate Settings_SectionDaily}" Classes="sectionTitle" />
+                    <Border Classes="card" Padding="14,16,14,10">
+                        <Grid Height="118" RowDefinitions="*,Auto">
+                            <settings:BarChart x:Name="DailyChart" />
+                            <Grid x:Name="DailyLabels" Grid.Row="1" ColumnSpacing="4" />
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="{settings:UpperTranslate Settings_SectionConfidence}" Classes="sectionTitle" />
+                    <Border Classes="card" Padding="16,14">
+                        <StackPanel Spacing="10">
+                            <Border CornerRadius="5" Height="10" ClipToBounds="True">
+                                <Grid x:Name="ConfidenceBar">
+                                    <Border Grid.Column="0" Background="#D64545" />
+                                    <Border Grid.Column="1" Background="#C7841A" />
+                                </Grid>
+                            </Border>
+                            <Grid ColumnDefinitions="*,*">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Border Width="8" Height="8" CornerRadius="4" Background="#D64545" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="VeryLikelyLegend" Classes="note" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                    <Border Width="8" Height="8" CornerRadius="4" Background="#C7841A" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="LikelyLegend" Classes="note" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="{settings:UpperTranslate Settings_SectionAccuracy}" Classes="sectionTitle" />
+                    <Border Classes="card">
+                        <StackPanel>
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
+                                        <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
+                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock x:Name="AccuracyValue" Classes="rowTitle" />
+                                        <TextBlock x:Name="AccuracyHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" />
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                    <Border Classes="badge">
+                                        <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.History}"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock x:Name="BusiestValue" Classes="rowTitle" />
+                                        <TextBlock Text="{loc:Translate Settings_BusiestHint}" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel x:Name="TopSendersSection">
+                        <TextBlock Text="{settings:UpperTranslate Settings_SectionTopSenders}" Classes="sectionTitle" />
+                        <Border Classes="card">
+                            <ItemsControl x:Name="TopSenderList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:TopSenderRow">
+                                        <Border Classes="row">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                                <Border Classes="badge">
+                                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SpamRow}"
+                                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="{Binding Display}" Classes="rowTitle" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2" Text="{Binding Count}" Classes="valueChipLabel"
+                                                           FontFamily="{x:Static local:AppFonts.Bold}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

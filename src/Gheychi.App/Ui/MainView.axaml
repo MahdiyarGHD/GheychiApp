@@ -1,5 +1,65 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
              x:Class="Gheychi.App.Ui.MainView">
-    <TextBlock Text="Gheychi" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+    <Border x:Name="Root" Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}">
+    <Panel>
+
+        <Grid RowDefinitions="*,Auto">
+            <Panel x:Name="PageHost" />
+
+            <Border x:Name="TabBar"
+                    Grid.Row="1"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#1C2B22}"
+                    Background="{theme:ThemeBrush Light=#F0F4EC, Dark=#0F2218}">
+                <Grid ColumnDefinitions="*,*,*" Height="64">
+
+                    <Panel x:Name="MessagesTab" Grid.Column="0" Background="Transparent" Tapped="OnTabTapped">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" IsHitTestVisible="False">
+                            <Panel Width="60" Height="30" HorizontalAlignment="Center">
+                                <Border x:Name="MessagesPill" CornerRadius="15" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}" />
+                                <ui:Icon x:Name="MessagesIcon" Data="{StaticResource Icon.TabMessages}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Panel>
+                            <TextBlock x:Name="MessagesLabel" Text="{loc:Translate Tab_Messages}" FontSize="12" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Panel>
+
+                    <Panel x:Name="SpamTab" Grid.Column="1" Background="Transparent" Tapped="OnTabTapped">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" IsHitTestVisible="False">
+                            <Panel Width="60" Height="30" HorizontalAlignment="Center">
+                                <Border x:Name="SpamPill" CornerRadius="15" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}" />
+                                <ui:Icon x:Name="SpamIcon" Data="{StaticResource Icon.TabSpam}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Panel>
+                            <TextBlock x:Name="SpamLabel" Text="{loc:Translate Tab_Spam}" FontSize="12" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Panel>
+
+                    <Panel x:Name="SettingsTab" Grid.Column="2" Background="Transparent" Tapped="OnTabTapped">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" IsHitTestVisible="False">
+                            <Panel Width="60" Height="30" HorizontalAlignment="Center">
+                                <Border x:Name="SettingsPill" CornerRadius="15" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}" />
+                                <ui:Icon x:Name="SettingsIcon" Data="{StaticResource Icon.TabSettings}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Ellipse x:Name="SettingsBadge"
+                                         Width="9"
+                                         Height="9"
+                                         Margin="0,1,14,0"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Top"
+                                         Fill="{StaticResource DangerBrush}"
+                                         IsVisible="False" />
+                            </Panel>
+                            <TextBlock x:Name="SettingsLabel" Text="{loc:Translate Tab_Settings}" FontSize="12" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Panel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Panel x:Name="OverlayHost" />
+    </Panel>
+    </Border>
 </UserControl>

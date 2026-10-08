@@ -1,0 +1,63 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.NotificationSettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Notifications}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,4,0,24">
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Lock}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_LockScreen}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_LockScreenHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ToggleButton x:Name="LockScreenSwitch" Grid.Column="2" Classes="setting"
+                                              IsCheckedChanged="OnLockScreenToggled" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnSystemSettingsTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_SystemNotifications}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_SystemNotificationsHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card" Margin="16,12,16,0">
+                    <Border Classes="row">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <Border Classes="badge" Background="{theme:ThemeBrush Light=#F5E4DA, Dark=#3A2A22}">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.TabSpam}"
+                                         Foreground="{theme:ThemeBrush Light=#9A4A2A, Dark=#F0B79A}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{loc:Translate Settings_SpamSilent}" Classes="rowTitle" />
+                                <TextBlock Text="{loc:Translate Settings_SpamSilentHint}" Classes="rowSubtitle" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>
