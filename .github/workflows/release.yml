@@ -20,6 +20,8 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   APP_PROJECT: src/Gheychi.App/Gheychi.App.csproj
+  # rid:abi of each single-ABI APK released next to the universal one; the RuntimeIdentifiers of the app project.
+  ANDROID_ABIS: android-arm:armeabi-v7a android-arm64:arm64-v8a android-x86:x86 android-x64:x86_64
 
 jobs:
   release:
@@ -102,7 +104,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [[ -z "$KEYSTORE_BASE64" ]]; then
-            echo "::warning::ANDROID_KEYSTORE_BASE64 secret is not set. The APK will be signed with the debug key, which cannot be upgraded by a differently signed build."
+            echo "::warning::ANDROID_KEYSTORE_BASE64 secret is not set. The APKs will be signed with the debug key, which cannot be upgraded by a differently signed build."
             echo "path=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -110,7 +112,7 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 --decode > "$path"
           echo "path=$path" >> "$GITHUB_OUTPUT"
 
-      - name: Publish APK
+      - name: Publish APKs
         shell: bash
         env:
           KEYSTORE_PATH: ${{ steps.keystore.outputs.path }}
@@ -139,50 +141,68 @@ jobs:
             )
           fi
 
+          # The universal APK first, then one per ABI. All share the version code, so the in-app update to the next
+          # universal APK installs over any of them.
           dotnet publish "$APP_PROJECT" "${args[@]}"
+          for pair in $ANDROID_ABIS; do
+            dotnet publish "$APP_PROJECT" "${args[@]}" -r "${pair%%:*}"
+          done
 
-      - name: Collect APK
+      - name: Collect APKs
         id: apk
         shell: bash
         run: |
-          dir=src/Gheychi.App/bin/Release/net10.0-android/publish
-          apk=$(ls "$dir"/*-Signed.apk 2>/dev/null | head -n 1 || true)
-          if [[ -z "$apk" ]]; then
-            apk=$(ls "$dir"/*.apk 2>/dev/null | head -n 1 || true)
-          fi
-          if [[ -z "$apk" ]]; then
-            echo "::error::No APK found in $dir"
-            exit 1
-          fi
+          version="${{ steps.tag.outputs.version }}"
+          bin=src/Gheychi.App/bin/Release/net10.0-android
+          out="$RUNNER_TEMP/apks"
+          mkdir -p "$out"
 
-          out="$RUNNER_TEMP/Gheychi-${{ steps.tag.outputs.version }}.apk"
-          cp "$apk" "$out"
-          (cd "$RUNNER_TEMP" && sha256sum "$(basename "$out")" > "$(basename "$out").sha256")
-          echo "path=$out" >> "$GITHUB_OUTPUT"
+          collect() {
+            local apk
+            apk=$(ls "$1"/*-Signed.apk 2>/dev/null | head -n 1 || true)
+            if [[ -z "$apk" ]]; then
+              apk=$(ls "$1"/*.apk 2>/dev/null | head -n 1 || true)
+            fi
+            if [[ -z "$apk" ]]; then
+              echo "::error::No APK found in $1"
+              exit 1
+            fi
+            cp "$apk" "$out/$2"
+            (cd "$out" && sha256sum "$2" > "$2.sha256")
+          }
+
+          # The in-app updater downloads the universal APK by this name (GitHubAppReleaseSource.ApkUrl).
+          collect "$bin/publish" "Gheychi-$version.apk"
+          for pair in $ANDROID_ABIS; do
+            collect "$bin/${pair%%:*}/publish" "Gheychi-$version-${pair#*:}.apk"
+          done
+
+          echo "dir=$out" >> "$GITHUB_OUTPUT"
 
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
           name: Gheychi-${{ steps.tag.outputs.version }}
-          path: |
-            ${{ steps.apk.outputs.path }}
-            ${{ steps.apk.outputs.path }}.sha256
+          path: ${{ steps.apk.outputs.dir }}
 
       - name: Publish GitHub release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-          APK: ${{ steps.apk.outputs.path }}
+          DIR: ${{ steps.apk.outputs.dir }}
         run: |
+          files=("$DIR"/*)
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$APK" "$APK.sha256" --clobber
+            gh release upload "$TAG" "${files[@]}" --clobber
           else
-            flags=(--verify-tag --generate-notes --title "$TAG" --notes "Bundled spam model v${{ steps.model.outputs.version }}")
+            notes="Bundled spam model v${{ steps.model.outputs.version }}"
+            notes+=$'\n\n'"Gheychi-${{ steps.tag.outputs.version }}.apk installs on any phone. The others are smaller, each for one processor type: arm64-v8a for most phones, armeabi-v7a for older 32-bit ones, x86_64 and x86 for emulators."
+            flags=(--verify-tag --generate-notes --title "$TAG" --notes "$notes")
             if [[ "${{ steps.tag.outputs.prerelease }}" == "true" ]]; then
               flags+=(--prerelease)
             else
               flags+=(--latest)
             fi
-            gh release create "$TAG" "$APK" "$APK.sha256" "${flags[@]}"
+            gh release create "$TAG" "${files[@]}" "${flags[@]}"
           fi

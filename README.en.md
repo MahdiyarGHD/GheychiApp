@@ -70,7 +70,7 @@ Reports sent from the app help improve the dataset and future versions of the mo
 ## 📲 Install
 
 - **Requires** Android 7.0 or newer.
-- Download the APK from the [releases page](https://github.com/MahdiyarGHD/GheychiApp/releases/latest) and install it.
+- Download `Gheychi-x.y.z.apk` from the [releases page](https://github.com/MahdiyarGHD/GheychiApp/releases/latest) and install it; it runs on any phone. The smaller APKs each target one processor type: `arm64-v8a` for most phones, `armeabi-v7a` for older ones.
 - On first launch, set Gheychi as the default SMS app: Android lets only the default SMS app receive and manage messages.
 - New versions are checked for automatically once a day.
 
