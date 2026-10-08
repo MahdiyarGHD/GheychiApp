@@ -3,10 +3,14 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Avalonia.Media;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
+
+/// <summary>One piece of a search-result snippet: the matched text is bold and highlighted, the rest plain.</summary>
+public sealed record SnippetRun(string Text, bool IsMatch, IBrush Foreground);
 
 public sealed class RecentSearchItem
 {
@@ -33,7 +37,7 @@ public sealed class FilterPillItem : INotifyPropertyChanged
     public SearchFilterKind FilterKind { get; set; } = SearchFilterKind.None;
     public int? SimSlot { get; set; }
     public string IconSource { get; set; } = string.Empty;
-    public Color IconTint { get; set; } = Colors.Gray;
+    public IBrush IconTint { get; set; } = Palette.Brush("#FF808080");
 
     private bool _isVisible = true;
     public bool IsVisible
@@ -107,25 +111,22 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
     public int? SimSlot { get; set; }
     public bool ShowBadge { get; set; }
 
-    private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
+    private static readonly IBrush SelectedBackground = Palette.Pick("#386948", "#34D399");
+    private static readonly IBrush NormalBackground = Palette.Pick("#ECE1D3", "#1E2320");
+    private static readonly IBrush SelectedText = Palette.Pick("#FFFFFFFF", "#121413");
+    private static readonly IBrush NormalText = Palette.Pick("#59615A", "#DCE5DB");
+    private static readonly IBrush SelectedBadgeBackground = Palette.Pick("#33FFFFFF", "#33000000");
+    private static readonly IBrush NormalBadgeBackground = Palette.Pick("#1F000000", "#33FFFFFF");
 
-    public Color BackgroundColor => IsSelected
-        ? (IsDark ? Color.FromArgb("#34D399") : Color.FromArgb("#386948"))
-        : (IsDark ? Color.FromArgb("#1E2320") : Color.FromArgb("#ECE1D3"));
+    public IBrush BackgroundColor => IsSelected ? SelectedBackground : NormalBackground;
 
-    public Color TextColor => IsSelected
-        ? (IsDark ? Color.FromArgb("#121413") : Colors.White)
-        : (IsDark ? Color.FromArgb("#DCE5DB") : Color.FromArgb("#59615A"));
+    public IBrush TextColor => IsSelected ? SelectedText : NormalText;
 
-    public Color BadgeBgColor => IsSelected
-        ? (IsDark ? Color.FromArgb("#33000000") : Color.FromArgb("#33FFFFFF"))
-        : (IsDark ? Color.FromArgb("#33FFFFFF") : Color.FromArgb("#1F000000"));
+    public IBrush BadgeBgColor => IsSelected ? SelectedBadgeBackground : NormalBadgeBackground;
 
-    public Color BadgeTextColor => TextColor;
+    public IBrush BadgeTextColor => TextColor;
 
-    public string FontFamily => IsSelected
-        ? ThreadItem.FontFamilyBold
-        : ThreadItem.FontFamilyRegular;
+    public FontFamily FontFamily => IsSelected ? AppFonts.Bold : AppFonts.Regular;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -143,24 +144,16 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
 
 public sealed class SearchResultItem
 {
-    private static readonly Color NameLight = Color.FromArgb("#2C342E");
-    private static readonly Color NameDark = Color.FromArgb("#E8EAED");
-    private static readonly Color TimeUnreadLight = Color.FromArgb("#386948");
-    private static readonly Color TimeUnreadDark = Color.FromArgb("#34D399");
-    private static readonly Color TimeLight = Color.FromArgb("#747D75");
-    private static readonly Color TimeDark = Color.FromArgb("#8A8F98");
-    private static readonly Color AvatarBgLight = Color.FromArgb("#E3E9E4");
-    private static readonly Color AvatarBgDark = Color.FromArgb("#35423C");
-    private static readonly Color AvatarTextLight = Color.FromArgb("#1B5E43");
-    private static readonly Color AvatarTextDark = Color.FromArgb("#8FE0BE");
-    private static readonly Color MatchBgLight = Color.FromArgb("#ECE1D3");
-    private static readonly Color MatchBgDark = Color.FromArgb("#332E27");
-    private static readonly Color MatchTextLight = Color.FromArgb("#665E53");
-    private static readonly Color MatchTextDark = Color.FromArgb("#DED3C5");
+    private static readonly IBrush NameBrush = Palette.Pick("#2C342E", "#E8EAED");
+    private static readonly IBrush TimeUnreadBrush = Palette.Pick("#386948", "#34D399");
+    private static readonly IBrush TimeBrush = Palette.Pick("#747D75", "#8A8F98");
+    private static readonly IBrush AvatarBgBrush = Palette.Pick("#E3E9E4", "#35423C");
+    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#8FE0BE");
+    private static readonly IBrush MatchBgBrush = Palette.Pick("#ECE1D3", "#332E27");
+    private static readonly IBrush MatchTextBrush = Palette.Pick("#665E53", "#DED3C5");
 
     // Same as the search page background, so the chip reads as cut out of the avatar.
-    private static readonly Color RingLight = Color.FromArgb("#F7FAF4");
-    private static readonly Color RingDark = Color.FromArgb("#121413");
+    private static readonly IBrush RingBrush = Palette.Pick("#F7FAF4", "#121413");
 
     private static string? _spamTag;
     private static string? _archivedTag;
@@ -175,8 +168,8 @@ public sealed class SearchResultItem
     public int SimSlot { get; init; } = 1;
     public string SimSlotText => SimSlot.ToString();
     public bool ShowSimBadge { get; init; }
-    public Color SimBadgeBgColor => ChatMessage.SimTintBackground(SimSlot);
-    public Color SimBadgeTextColor => ChatMessage.SimTintText(SimSlot);
+    public IBrush SimBadgeBgColor => ChatMessage.SimTintBackground(SimSlot);
+    public IBrush SimBadgeTextColor => ChatMessage.SimTintText(SimSlot);
     public string Time { get; init; } = string.Empty;
     public bool IsUnread { get; init; }
     public bool IsStarred { get; init; }
@@ -191,8 +184,8 @@ public sealed class SearchResultItem
     public string? QueryText { get; init; }
 
     // Built on first bind, so only the rows that are actually shown pay for it.
-    private FormattedString? _formattedSnippet;
-    public FormattedString FormattedSnippet => _formattedSnippet ??= SearchViewModel.BuildFormattedSnippet(Snippet, QueryText);
+    private SnippetRun[]? _snippetRuns;
+    public SnippetRun[] SnippetRuns => _snippetRuns ??= SearchViewModel.BuildSnippetRuns(Snippet, QueryText);
     public string SnippetKey { get; init; } = string.Empty;
     public bool IsArchived { get; init; }
     public bool IsSpam { get; init; }
@@ -202,19 +195,15 @@ public sealed class SearchResultItem
         ? (_spamTag ??= Localization.LocalizationManager.Instance["Search_Tag_Spam"])
         : (_archivedTag ??= Localization.LocalizationManager.Instance["Search_Tag_Archived"]);
 
-    private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
+    public IBrush NameColor => NameBrush;
+    public IBrush SimBadgeRingColor => RingBrush;
 
-    public Color NameColor => IsDark ? NameDark : NameLight;
-    public Color SimBadgeRingColor => IsDark ? RingDark : RingLight;
+    public IBrush TimeColor => IsUnread ? TimeUnreadBrush : TimeBrush;
 
-    public Color TimeColor => IsUnread
-        ? (IsDark ? TimeUnreadDark : TimeUnreadLight)
-        : (IsDark ? TimeDark : TimeLight);
-
-    public Color AvatarBgColor => IsDark ? AvatarBgDark : AvatarBgLight;
-    public Color AvatarTextColor => IsDark ? AvatarTextDark : AvatarTextLight;
-    public Color MatchBgColor => IsDark ? MatchBgDark : MatchBgLight;
-    public Color MatchTextColor => IsDark ? MatchTextDark : MatchTextLight;
+    public IBrush AvatarBgColor => AvatarBgBrush;
+    public IBrush AvatarTextColor => AvatarTextBrush;
+    public IBrush MatchBgColor => MatchBgBrush;
+    public IBrush MatchTextColor => MatchTextBrush;
 
     public bool HasSameContent(SearchResultItem other) =>
         ThreadId == other.ThreadId &&
@@ -234,12 +223,9 @@ public sealed class SearchResultItem
 /// <summary>One link or place found in a message (Links / Places search results).</summary>
 public sealed class LinkResultItem
 {
-    private static readonly Color TitleLight = Color.FromArgb("#1B5E43");
-    private static readonly Color TitleDark = Color.FromArgb("#8FE0BE");
-    private static readonly Color MutedLight = Color.FromArgb("#747D75");
-    private static readonly Color MutedDark = Color.FromArgb("#8A8F98");
-    private static readonly Color IconBgLight = Color.FromArgb("#E3E9E4");
-    private static readonly Color IconBgDark = Color.FromArgb("#35423C");
+    private static readonly IBrush TitleBrush = Palette.Pick("#1B5E43", "#8FE0BE");
+    private static readonly IBrush MutedBrush = Palette.Pick("#747D75", "#8A8F98");
+    private static readonly IBrush IconBgBrush = Palette.Pick("#E3E9E4", "#35423C");
 
     public long ThreadId { get; init; }
     public long MessageId { get; init; }
@@ -257,11 +243,9 @@ public sealed class LinkResultItem
     public string ChatLine => $"{ChatName} - {Time}";
     public string IconSource => IsPlace ? "location_on.png" : "link.png";
 
-    private static bool IsDark => Application.Current?.RequestedTheme == AppTheme.Dark;
-
-    public Color TitleColor => IsDark ? TitleDark : TitleLight;
-    public Color MutedColor => IsDark ? MutedDark : MutedLight;
-    public Color IconBgColor => IsDark ? IconBgDark : IconBgLight;
+    public IBrush TitleColor => TitleBrush;
+    public IBrush MutedColor => MutedBrush;
+    public IBrush IconBgColor => IconBgBrush;
 
     public bool HasSameContent(LinkResultItem other) =>
         ThreadId == other.ThreadId &&
@@ -909,30 +893,20 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             CategoryTabs[0].IsSelected = true;
     }
 
-    public static FormattedString BuildFormattedSnippet(string snippet, string? queryText)
-    {
-        var fs = new FormattedString();
-        var isDark = Application.Current?.RequestedTheme == AppTheme.Dark;
-        var normalColor = isDark ? Color.FromArgb("#9AA0AB") : Color.FromArgb("#59615A");
-        var highlightText = isDark ? Color.FromArgb("#FAD998") : Color.FromArgb("#946300");
+    private static readonly IBrush SnippetNormalBrush = Palette.Pick("#59615A", "#9AA0AB");
+    private static readonly IBrush SnippetMatchBrush = Palette.Pick("#946300", "#FAD998");
 
+    public static SnippetRun[] BuildSnippetRuns(string snippet, string? queryText)
+    {
         if (string.IsNullOrWhiteSpace(snippet))
-        {
-            return fs;
-        }
+            return [];
 
         var cleanSnippet = snippet.Replace('\r', ' ').Replace('\n', ' ').Trim();
 
         if (string.IsNullOrWhiteSpace(queryText))
         {
             var truncated = cleanSnippet.Length > 60 ? cleanSnippet.Substring(0, 60) + "..." : cleanSnippet;
-            fs.Spans.Add(new Span
-            {
-                Text = truncated,
-                TextColor = normalColor,
-                FontSize = 13
-            });
-            return fs;
+            return [new SnippetRun(truncated, false, SnippetNormalBrush)];
         }
 
         var cleanQuery = queryText.Trim();
@@ -940,13 +914,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         if (idx < 0)
         {
             var truncated = cleanSnippet.Length > 60 ? cleanSnippet.Substring(0, 60) + "..." : cleanSnippet;
-            fs.Spans.Add(new Span
-            {
-                Text = truncated,
-                TextColor = normalColor,
-                FontSize = 13
-            });
-            return fs;
+            return [new SnippetRun(truncated, false, SnippetNormalBrush)];
         }
 
         var start = Math.Max(0, idx - 18);
@@ -967,46 +935,21 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         var suffix = (maxSuffixLen > 0 ? cleanSnippet.Substring(suffixStart, maxSuffixLen) : string.Empty) +
                      (suffixStart + maxSuffixLen < cleanSnippet.Length ? "..." : "");
 
+        var runs = new List<SnippetRun>(3);
         if (!string.IsNullOrEmpty(prefix))
-        {
-            fs.Spans.Add(new Span
-            {
-                Text = prefix,
-                TextColor = normalColor,
-                FontSize = 13
-            });
-        }
+            runs.Add(new SnippetRun(prefix, false, SnippetNormalBrush));
 
-        fs.Spans.Add(new Span
-        {
-            Text = match,
-            TextColor = highlightText,
-            FontSize = 13,
-            FontAttributes = FontAttributes.Bold,
-            FontFamily = ThreadItem.FontFamilyBold
-        });
+        runs.Add(new SnippetRun(match, true, SnippetMatchBrush));
 
         if (!string.IsNullOrEmpty(suffix))
-        {
-            fs.Spans.Add(new Span
-            {
-                Text = suffix,
-                TextColor = normalColor,
-                FontSize = 13
-            });
-        }
+            runs.Add(new SnippetRun(suffix, false, SnippetNormalBrush));
 
-        return fs;
+        return [.. runs];
     }
 
-    private static Color PrimaryColor =>
-        Application.Current?.RequestedTheme == AppTheme.Dark ? Color.FromArgb("#34D399") : Color.FromArgb("#386948");
-
-    private static Color SecondaryColor =>
-        Application.Current?.RequestedTheme == AppTheme.Dark ? Color.FromArgb("#9AA0AB") : Color.FromArgb("#665E53");
-
-    private static Color TertiaryColor =>
-        Application.Current?.RequestedTheme == AppTheme.Dark ? Color.FromArgb("#EBCB8B") : Color.FromArgb("#745C27");
+    private static readonly IBrush PrimaryColor = Palette.Pick("#386948", "#34D399");
+    private static readonly IBrush SecondaryColor = Palette.Pick("#665E53", "#9AA0AB");
+    private static readonly IBrush TertiaryColor = Palette.Pick("#745C27", "#EBCB8B");
 
     private void PopulateDefaultFilterPills()
     {
@@ -1084,12 +1027,12 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             _isDualSim = await _smsService.IsDualSimAsync();
             _simSlotMap = await _smsService.GetSimSlotMapAsync();
 
-            var simColors = new[]
-            {
+            IBrush[] simColors =
+            [
                 PrimaryColor,
                 TertiaryColor,
                 SecondaryColor
-            };
+            ];
 
             MainThread.BeginInvokeOnMainThread(() =>
             {

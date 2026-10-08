@@ -1,13 +1,10 @@
+using Avalonia.Media;
+
 namespace Gheychi.App.ViewModels;
 
 public sealed record DateSeparatorItem(string Text)
 {
-    private static readonly Color SepBgDark = Color.FromArgb("#1C1F24");
-    private static readonly Color SepBgLight = Color.FromArgb("#E8EDE6");
-    private static readonly Color SepText = Color.FromArgb("#8A8F98");
+    public static IBrush Background { get; } = Palette.Pick("#E8EDE6", "#1C1F24");
 
-    public static Color Background =>
-        Application.Current?.RequestedTheme == AppTheme.Dark ? SepBgDark : SepBgLight;
-
-    public static Color TextColor => SepText;
+    public static IBrush TextColor { get; } = Palette.Brush("#8A8F98");
 }

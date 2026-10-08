@@ -9,7 +9,7 @@ public sealed class LocalizationManager : INotifyPropertyChanged
     public static LocalizationManager Instance { get; } = new();
 
     private static readonly ResourceManager ResourceManager =
-        new("Gheychi.App.Resources.Localization.AppResources", typeof(LocalizationManager).Assembly);
+        new("Gheychi.App.Localization.AppResources", typeof(LocalizationManager).Assembly);
 
     private LocalizationManager()
     {

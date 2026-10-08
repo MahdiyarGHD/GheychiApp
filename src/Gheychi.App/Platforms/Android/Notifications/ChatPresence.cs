@@ -1,5 +1,4 @@
 using Gheychi.Core.Notifications;
-using Microsoft.Maui.ApplicationModel;
 
 namespace Gheychi.App.Platforms.Android.Notifications;
 

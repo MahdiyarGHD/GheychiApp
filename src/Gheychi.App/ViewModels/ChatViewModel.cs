@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Avalonia.Media;
 using Gheychi.App.Gestures;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
@@ -121,17 +122,17 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public Action<Action>? SafeDispatcher { get; set; }
 
-    private static readonly Color[] SimBadgePalette =
+    private static readonly IBrush[] SimBadgePalette =
     [
-        Color.FromArgb("#0F766E"), // Teal
-        Color.FromArgb("#B45309"), // Amber
-        Color.FromArgb("#4338CA"), // Indigo
-        Color.FromArgb("#7C3AED"), // Purple
+        Palette.Brush("#0F766E"), // Teal
+        Palette.Brush("#B45309"), // Amber
+        Palette.Brush("#4338CA"), // Indigo
+        Palette.Brush("#7C3AED"), // Purple
     ];
 
     public string SimText => _simSlot.ToString();
 
-    public Color SimBadgeColor => SimBadgePalette[Math.Max(0, (_simSlot - 1) % SimBadgePalette.Length)];
+    public IBrush SimBadgeColor => SimBadgePalette[Math.Max(0, (_simSlot - 1) % SimBadgePalette.Length)];
 
     public bool HasMore => _hasMore;
 
@@ -225,7 +226,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public static Task<int> PrepareLaunchAsync(ChatLaunchRequest request) =>
         Task.Run(async () =>
         {
-            var unread = ConversationReader.CountUnread(Microsoft.Maui.ApplicationModel.Platform.AppContext, request.ThreadId);
+            var unread = ConversationReader.CountUnread(Platform.AppContext, request.ThreadId);
 
             var services = IPlatformApplication.Current?.Services;
             var smsService = services?.GetService<ISmsService>();

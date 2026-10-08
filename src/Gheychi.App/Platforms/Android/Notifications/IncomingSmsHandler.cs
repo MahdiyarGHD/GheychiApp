@@ -3,7 +3,6 @@ using Android.Provider;
 using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
-using Microsoft.Maui.ApplicationModel;
 
 namespace Gheychi.App.Platforms.Android.Notifications;
 

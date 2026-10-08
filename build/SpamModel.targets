@@ -2,13 +2,13 @@
     <!-- The spam model is not kept in git. The sms-spam-dataset repository trains it and publishes it as its latest
          release; a build without a model fetches that, and the release workflow always replaces it with the latest. -->
     <PropertyGroup>
-        <SpamModelDirectory>$(MSBuildThisFileDirectory)..\src\Gheychi.App\Resources\Raw\SpamModel\</SpamModelDirectory>
+        <SpamModelDirectory>$(MSBuildThisFileDirectory)..\src\Gheychi.App\Assets\SpamModel\</SpamModelDirectory>
         <SpamModelReleaseUrl>https://github.com/MahdiyarGHD/sms-spam-dataset/releases/latest/download</SpamModelReleaseUrl>
     </PropertyGroup>
 
     <!-- The manifest last, so an interrupted download leaves no manifest and the next build fetches again. -->
     <Target Name="FetchSpamModel"
-            BeforeTargets="BeforeBuild;ResizetizeCollectItems"
+            BeforeTargets="BeforeBuild"
             Condition="!Exists('$(SpamModelDirectory)manifest.json')">
         <DownloadFile SourceUrl="$(SpamModelReleaseUrl)/spam.mlnet" DestinationFolder="$(SpamModelDirectory)" />
         <DownloadFile SourceUrl="$(SpamModelReleaseUrl)/manifest.json" DestinationFolder="$(SpamModelDirectory)" />

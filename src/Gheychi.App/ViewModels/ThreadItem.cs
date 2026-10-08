@@ -1,39 +1,24 @@
 using System.ComponentModel;
-using System.Globalization;
 using System.Runtime.CompilerServices;
+using Avalonia;
+using Avalonia.Media;
 
 namespace Gheychi.App.ViewModels;
 
 public sealed class ThreadItem : INotifyPropertyChanged
 {
-    private static readonly Color DangerColor = Color.FromArgb("#D64545");
-    private static readonly Color TimeNormalColor = Color.FromArgb("#8A8F98");
-    private static readonly Color PreviewDarkColor = Color.FromArgb("#9AA0AB");
-    private static readonly Color PreviewLightColor = Color.FromArgb("#5E665F");
-    private static readonly Color AvatarBgDarkColor = Color.FromArgb("#35423C");
-    private static readonly Color AvatarBgLightColor = Color.FromArgb("#E3E9E4");
-    private static readonly Color AvatarTextDarkColor = Color.FromArgb("#8FE0BE");
-    private static readonly Color AvatarTextLightColor = Color.FromArgb("#1B5E43");
-    private static readonly Color IconTintDark = Color.FromArgb("#D9E3DD");
-    private static readonly Color IconTintLight = Color.FromArgb("#33443C");
-    private static readonly Color SelectedRowLight = Color.FromArgb("#142E6B4C");
-    private static readonly Color SelectedRowDark = Color.FromArgb("#262E6B4C");
+    private static readonly IBrush DangerBrush = Palette.Brush("#D64545");
+    private static readonly IBrush TimeNormalBrush = Palette.Brush("#8A8F98");
+    private static readonly IBrush PreviewBrush = Palette.Pick("#5E665F", "#9AA0AB");
+    private static readonly IBrush AvatarBgBrush = Palette.Pick("#E3E9E4", "#35423C");
+    private static readonly IBrush AvatarBgSelectedBrush = Palette.Brush("#2E6B4C");
+    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#8FE0BE");
+    private static readonly IBrush IconTintBrush = Palette.Pick("#33443C", "#D9E3DD");
+    private static readonly IBrush SelectedRowBrush = Palette.Pick("#142E6B4C", "#262E6B4C");
 
-    private static readonly string CachedFontFamilyBold =
-        CultureInfo.CurrentUICulture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
-            ? "VazirmatnSemiBold"
-            : "PlusJakartaSansSemiBold";
+    private static readonly Thickness FailedPreviewMargin = new(20, 0, 0, 0);
 
-    private static readonly string CachedFontFamilyRegular =
-        CultureInfo.CurrentUICulture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
-            ? "Vazirmatn"
-            : "PlusJakartaSans";
-
-    private static bool IsDarkTheme => Application.Current?.RequestedTheme == AppTheme.Dark;
-
-    public static string FontFamilyBold => CachedFontFamilyBold;
-    public static string FontFamilyRegular => CachedFontFamilyRegular;
-    public static Color IconTintColor => IsDarkTheme ? IconTintDark : IconTintLight;
+    public static IBrush IconTintColor => IconTintBrush;
 
     public long ThreadId { get; init; }
     public int SubId { get; init; }
@@ -93,9 +78,9 @@ public sealed class ThreadItem : INotifyPropertyChanged
     // Row visuals as plain bindings: a trigger per row (each with its own theme binding) was the costly way to do this.
     public bool ShowIcon => HasIcon && !_isSelected;
     public bool ShowInitials => HasNoIcon && !_isSelected;
-    public Color RowBackgroundColor => _isSelected ? (IsDarkTheme ? SelectedRowDark : SelectedRowLight) : Colors.Transparent;
+    public IBrush RowBackgroundColor => _isSelected ? SelectedRowBrush : Palette.Transparent;
     public string CountText => Count > 0 ? Count.ToString() : string.Empty;
-    public Thickness PreviewMargin => HasFailed ? new Thickness(20, 0, 0, 0) : new Thickness(0);
+    public Thickness PreviewMargin => HasFailed ? FailedPreviewMargin : default;
     public bool HasIcon => !string.IsNullOrEmpty(IconFile);
     public bool HasNoIcon => string.IsNullOrEmpty(IconFile);
     public bool IsNotFailed => !HasFailed;
@@ -103,12 +88,10 @@ public sealed class ThreadItem : INotifyPropertyChanged
     /// <summary>False for sender names and short codes, which cannot be dialled.</summary>
     public bool CanCall => Gheychi.Core.Services.ThreadProfileActions.CanCall(Gheychi.Core.Services.PhoneNumberNormalizer.ToSendAddress(Phone));
 
-    public Color TimeColor => HasFailed ? DangerColor : TimeNormalColor;
-    public Color PreviewColor => HasFailed ? DangerColor : (IsDarkTheme ? PreviewDarkColor : PreviewLightColor);
-    public Color AvatarBgColor => IsSelected
-        ? Color.FromArgb("#2E6B4C")
-        : (IsDarkTheme ? AvatarBgDarkColor : AvatarBgLightColor);
-    public Color AvatarTextColor => IsDarkTheme ? AvatarTextDarkColor : AvatarTextLightColor;
+    public IBrush TimeColor => HasFailed ? DangerBrush : TimeNormalBrush;
+    public IBrush PreviewColor => HasFailed ? DangerBrush : PreviewBrush;
+    public IBrush AvatarBgColor => IsSelected ? AvatarBgSelectedBrush : AvatarBgBrush;
+    public IBrush AvatarTextColor => AvatarTextBrush;
 
     public bool HasSameContent(ThreadItem other) =>
         ThreadId == other.ThreadId &&

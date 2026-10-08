@@ -1,8 +1,6 @@
 using Android.Content;
 using AndroidX.Core.App;
 using Gheychi.App.Platforms.Android.Notifications;
-using Gheychi.App.Platforms.Android.Permissions;
-using Microsoft.Maui.ApplicationModel;
 
 namespace Gheychi.App.Platforms.Android;
 
@@ -13,17 +11,17 @@ internal static class AppStatus
     public static bool NotificationsEnabled() => NotificationManagerCompat.From(Platform.AppContext).AreNotificationsEnabled();
 
     public static async Task<bool> ContactsAllowedAsync() =>
-        await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ContactsPermission>() == PermissionStatus.Granted;
+        await Permissions.CheckStatusAsync<ContactsPermission>() == PermissionStatus.Granted;
 
     // When Android will not show its prompt any more (denied twice, or turned off by hand), the system settings are opened instead.
     public static async Task RequestNotificationsAsync()
     {
         if (OperatingSystem.IsAndroidVersionAtLeast(33)
-            && await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<NotificationsPermission>() != PermissionStatus.Granted)
+            && await Permissions.CheckStatusAsync<NotificationsPermission>() != PermissionStatus.Granted)
         {
             await Task.Run(() => NotificationChannels.Ensure(Platform.AppContext));
-            if (await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<NotificationsPermission>() == PermissionStatus.Granted
-                || Microsoft.Maui.ApplicationModel.Permissions.ShouldShowRationale<NotificationsPermission>())
+            if (await Permissions.RequestAsync<NotificationsPermission>() == PermissionStatus.Granted
+                || Permissions.ShouldShowRationale<NotificationsPermission>())
                 return;
         }
 
@@ -33,8 +31,8 @@ internal static class AppStatus
 
     public static async Task RequestContactsAsync()
     {
-        if (await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ContactsPermission>() != PermissionStatus.Granted
-            && !Microsoft.Maui.ApplicationModel.Permissions.ShouldShowRationale<ContactsPermission>())
+        if (await Permissions.RequestAsync<ContactsPermission>() != PermissionStatus.Granted
+            && !Permissions.ShouldShowRationale<ContactsPermission>())
             AppInfo.Current.ShowSettingsUI();
     }
 

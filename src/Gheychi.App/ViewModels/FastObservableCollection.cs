@@ -83,8 +83,7 @@ public class FastObservableCollection<T> : ObservableCollection<T>
 
         OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
         OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
-        // Single range-insert at 0: RecyclerView shifts existing rows instead of
-        // rebinding the whole list (what Reset/notifyDataSetChanged forces).
+        // Single range-insert at 0: the list shifts existing rows instead of rebinding all of them (what Reset forces).
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, (System.Collections.IList)items, 0));
     }
 }
