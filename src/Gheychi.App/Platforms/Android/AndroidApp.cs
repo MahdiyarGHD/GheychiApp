@@ -1,6 +1,5 @@
 using Android.App;
 using Android.Runtime;
-using Avalonia;
 using Avalonia.Android;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Notifications;
@@ -29,7 +28,4 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
         // The alarm is gone after a force stop, and an app update can leave it unset.
         _ = Task.Run(() => SpamDigestNotifier.Schedule(Platform.AppContext));
     }
-
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) =>
-        base.CustomizeAppBuilder(builder).UseSkia().UseHarfBuzz();
 }

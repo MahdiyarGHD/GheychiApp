@@ -28,17 +28,25 @@ public sealed class Preferences
         if (!Store.Contains(key))
             return defaultValue;
 
-        object? value = defaultValue switch
-        {
-            string s => Store.GetString(key, s),
-            int i => Store.GetInt(key, i),
-            bool b => Store.GetBoolean(key, b),
-            long l => Store.GetLong(key, l),
-            float f => Store.GetFloat(key, f),
-            double d => Java.Lang.Double.LongBitsToDouble(Store.GetLong(key, Java.Lang.Double.DoubleToLongBits(d))),
-            DateTime t => ReadDateTime(key, t),
-            _ => throw new NotSupportedException($"Preferences cannot hold a {typeof(T)}.")
-        };
+        // By the declared type, not the default's: a null default ("string?") has no runtime type to switch on.
+        object? value;
+        if (typeof(T) == typeof(string))
+            value = Store.GetString(key, defaultValue as string);
+        else if (typeof(T) == typeof(int))
+            value = Store.GetInt(key, (int)(object)defaultValue!);
+        else if (typeof(T) == typeof(bool))
+            value = Store.GetBoolean(key, (bool)(object)defaultValue!);
+        else if (typeof(T) == typeof(long))
+            value = Store.GetLong(key, (long)(object)defaultValue!);
+        else if (typeof(T) == typeof(float))
+            value = Store.GetFloat(key, (float)(object)defaultValue!);
+        else if (typeof(T) == typeof(double))
+            value = Java.Lang.Double.LongBitsToDouble(Store.GetLong(key, Java.Lang.Double.DoubleToLongBits((double)(object)defaultValue!)));
+        else if (typeof(T) == typeof(DateTime))
+            value = ReadDateTime(key, (DateTime)(object)defaultValue!);
+        else
+            throw new NotSupportedException($"Preferences cannot hold a {typeof(T)}.");
+
         return (T)value!;
     }
 
