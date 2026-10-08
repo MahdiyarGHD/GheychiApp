@@ -11,7 +11,7 @@
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
-    <Style Selector="TextBox.plain:pointerover /template/ Border#PART_BorderElement, TextBox.plain:focus /template/ Border#PART_BorderElement, TextBox.plain:disabled /template/ Border#PART_BorderElement">
+    <Style Selector="TextBox.plain:pointerover /template/ Border#border, TextBox.plain:focus /template/ Border#border, TextBox.plain:disabled /template/ Border#border">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
     </Style>

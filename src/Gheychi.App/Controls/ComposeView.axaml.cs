@@ -35,7 +35,6 @@ public partial class ComposeView : UserControl
     private long _lastChosenTick;
     private Task? _contactsTask;
     private ScrollViewer? _scroller;
-    private IActivatableLifetime? _lifetime;
 
     public event EventHandler? BackRequested;
     public event EventHandler<ComposeRecipient>? RecipientChosen;
@@ -155,15 +154,18 @@ public partial class ComposeView : UserControl
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        if (_lifetime is null && Application.Current?.TryGetFeature(typeof(IActivatableLifetime)) is IActivatableLifetime lifetime)
-        {
-            _lifetime = lifetime;
-            lifetime.Activated += OnAppActivated;
-        }
+        MainActivity.Resumed -= OnAppResumed;
+        MainActivity.Resumed += OnAppResumed;
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        MainActivity.Resumed -= OnAppResumed;
     }
 
     // Back from the system settings after allowing contacts access.
-    private void OnAppActivated(object? sender, ActivatedEventArgs e)
+    private void OnAppResumed()
     {
         if (!_hasContactsPermission)
             _ = EnsureContactsAsync(force: true);

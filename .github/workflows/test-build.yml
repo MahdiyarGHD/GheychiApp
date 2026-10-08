@@ -1,0 +1,68 @@
+name: Test build
+
+# An installable arm64 APK from any branch, to try a change on a phone without cutting a release.
+# Signed with the debug key, so it cannot update a release build: uninstall that one first.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'feat/migrate-to-avalonia'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-build-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  AVALONIA_TELEMETRY_OPTOUT: 1
+  APP_PROJECT: src/Gheychi.App/Gheychi.App.csproj
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      # The spam model is not in git: the build fetches the latest released one (build/SpamModel.targets).
+      - name: Publish arm64 APK
+        run: >
+          dotnet publish "$APP_PROJECT" -c Release -f net10.0-android -r android-arm64
+          -p:AndroidPackageFormat=apk
+          -p:ApplicationVersion=${{ github.run_number }}
+          -p:InstallAndroidDependencies=true
+          -p:AcceptAndroidSDKLicenses=True
+          -p:AndroidSdkDirectory="${ANDROID_HOME}"
+
+      # After the publish: the infrastructure tests read the spam model it fetched.
+      - name: Unit tests
+        run: |
+          dotnet test tests/Gheychi.Core.Tests -c Release
+          dotnet test tests/Gheychi.Infrastructure.Tests -c Release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gheychi-test-arm64
+          path: src/Gheychi.App/bin/Release/net10.0-android/android-arm64/publish/*-Signed.apk
+          if-no-files-found: error

@@ -38,7 +38,6 @@ public partial class SettingsPage : UserControl
     private bool _simsShown;
     private int _summaryVersion;
     private int _zIndex;
-    private IActivatableLifetime? _lifetime;
 
     public SettingsPage()
     {
@@ -90,21 +89,14 @@ public partial class SettingsPage : UserControl
             _ = ShowSimsAsync();
 
         // Back from the default-app prompt or the system settings, what is allowed may have changed.
-        if (_lifetime is null && Application.Current?.TryGetFeature<IActivatableLifetime>() is { } lifetime)
-        {
-            _lifetime = lifetime;
-            lifetime.Activated += OnAppActivated;
-        }
+        MainActivity.Resumed -= OnAppResumed;
+        MainActivity.Resumed += OnAppResumed;
     }
 
     /// <summary>The tab left the screen (legacy OnDisappearing).</summary>
     public void OnHidden()
     {
-        if (_lifetime is not null)
-        {
-            _lifetime.Activated -= OnAppActivated;
-            _lifetime = null;
-        }
+        MainActivity.Resumed -= OnAppResumed;
     }
 
     /// <summary>True when it closed an open screen.</summary>
@@ -117,7 +109,7 @@ public partial class SettingsPage : UserControl
         return true;
     }
 
-    private void OnAppActivated(object? sender, ActivatedEventArgs e) => MainThread.BeginInvokeOnMainThread(UpdateStatus);
+    private void OnAppResumed() => MainThread.BeginInvokeOnMainThread(UpdateStatus);
 
     // ---- Screens -------------------------------------------------------------------------------
 

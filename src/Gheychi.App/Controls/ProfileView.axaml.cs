@@ -40,7 +40,6 @@ public partial class ProfileView : UserControl
     private int _bindVersion;
     private IReadOnlyList<SimCardInfo> _sims = [];
     private IReadOnlyDictionary<int, int> _slotBySubId = new Dictionary<int, int>();
-    private IActivatableLifetime? _lifetime;
 
     public ProfileView()
     {
@@ -104,11 +103,8 @@ public partial class ProfileView : UserControl
         _ = LoadSimsAsync(version);
 
         // Back from the system's notification settings the "Custom" tag may have changed.
-        if (_lifetime is null && Application.Current?.TryGetFeature(typeof(IActivatableLifetime)) is IActivatableLifetime lifetime)
-        {
-            _lifetime = lifetime;
-            lifetime.Activated += OnAppActivated;
-        }
+        MainActivity.Resumed -= OnAppResumed;
+        MainActivity.Resumed += OnAppResumed;
     }
 
     /// <summary>Called once the page has slid in.</summary>
@@ -122,11 +118,7 @@ public partial class ProfileView : UserControl
         LinksList.ItemsSource = null;
         _spamItems = [];
         SpamList.ItemsSource = null;
-        if (_lifetime is not null)
-        {
-            _lifetime.Activated -= OnAppActivated;
-            _lifetime = null;
-        }
+        MainActivity.Resumed -= OnAppResumed;
     }
 
     // Returns true when it consumed the back press.
@@ -145,7 +137,7 @@ public partial class ProfileView : UserControl
         return true;
     }
 
-    private void OnAppActivated(object? sender, ActivatedEventArgs e) => UpdateNotificationState();
+    private void OnAppResumed() => MainThread.BeginInvokeOnMainThread(UpdateNotificationState);
 
     private static void SetSwitch(Border track, Border thumb, bool on, bool enabled = true)
     {
