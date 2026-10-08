@@ -1,0 +1,32 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.LicensesScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Licenses}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <Border Classes="card" Margin="16,4,16,24">
+                <ItemsControl x:Name="LicenseList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LicenseRow">
+                            <Border Classes="row" Tapped="OnLicenseTapped">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                    <StackPanel Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" Classes="rowTitle" />
+                                        <TextBlock Text="{Binding License}" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="1" Data="{StaticResource Icon.Link}" Width="16" Height="16"
+                                             VerticalAlignment="Center" Foreground="#8A8F98" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

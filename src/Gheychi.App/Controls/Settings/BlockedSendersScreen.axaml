@@ -1,0 +1,48 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.BlockedSendersScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Blocked}" />
+
+        <TextBlock Grid.Row="1" Text="{loc:Translate Settings_BlockedNote}" Classes="note" Margin="26,0,26,12" />
+
+        <ScrollViewer Grid.Row="2" Margin="8,0" VerticalScrollBarVisibility="Hidden">
+            <ItemsControl x:Name="BlockedList">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BlockedSenderRow">
+                        <Grid Margin="10,8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Classes="badge" Background="{theme:ThemeBrush Light=#F7E3E1, Dark=#3A2224}">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Block}"
+                                         Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}" Classes="rowTitle" />
+                                <TextBlock Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <Border Grid.Column="2" Width="36" Height="36" CornerRadius="18" Background="Transparent"
+                                    VerticalAlignment="Center" Tapped="OnUnblockTapped"
+                                    AutomationProperties.Name="{loc:Translate Settings_BlockedUnblock}">
+                                <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                                         Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock x:Name="EmptyNote" Grid.Row="2" Text="{loc:Translate Settings_BlockedEmpty}" Margin="24,48,24,0"
+                   Classes="note" TextAlignment="Center" VerticalAlignment="Top" IsVisible="False" />
+    </Grid>
+</settings:SettingsScreen>

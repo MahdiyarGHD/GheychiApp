@@ -1,0 +1,44 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.AppearanceSettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Appearance}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionTheme}" Classes="sectionTitle" Margin="26,4,16,8" />
+                <Border Classes="card" Padding="10">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Border x:Name="ThemeSystem" Grid.Column="0" Classes="segment" Tapped="OnThemeTapped">
+                            <TextBlock Text="{loc:Translate Settings_System}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="ThemeLight" Grid.Column="1" Classes="segment" Tapped="OnThemeTapped">
+                            <TextBlock Text="{loc:Translate Settings_ThemeLight}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="ThemeDark" Grid.Column="2" Classes="segment" Tapped="OnThemeTapped">
+                            <TextBlock Text="{loc:Translate Settings_ThemeDark}" Classes="segmentTitle" />
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionLanguage}" Classes="sectionTitle" />
+                <Border Classes="card" Padding="10">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Border x:Name="LanguageSystem" Grid.Column="0" Classes="segment" Tapped="OnLanguageTapped">
+                            <TextBlock Text="{loc:Translate Settings_System}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="LanguageEnglish" Grid.Column="1" Classes="segment" Tapped="OnLanguageTapped">
+                            <TextBlock Text="English" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="LanguagePersian" Grid.Column="2" Classes="segment" Tapped="OnLanguageTapped">
+                            <TextBlock Text="فارسی" Classes="segmentTitle" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <TextBlock Text="{loc:Translate Settings_RestartHint}" Classes="note" Margin="26,8,26,0" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

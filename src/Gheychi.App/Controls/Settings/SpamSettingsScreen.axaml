@@ -1,0 +1,198 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:local="clr-namespace:Gheychi.App"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.SpamSettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Spam}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,4,0,24">
+                <Border Classes="card">
+                    <Border Classes="row">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Classes="badge" Background="{theme:ThemeBrush Light=#F5E4DA, Dark=#3A2A22}">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.TabSpam}"
+                                         Foreground="{theme:ThemeBrush Light=#9A4A2A, Dark=#F0B79A}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{loc:Translate Settings_SpamFilter}" Classes="rowTitle" />
+                                <TextBlock x:Name="FilterHint" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <ToggleButton x:Name="FilterSwitch" Grid.Column="2" Classes="setting" IsCheckedChanged="OnFilterToggled" />
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <StackPanel x:Name="FilterOptions">
+                    <TextBlock Text="{settings:UpperTranslate Settings_SectionSensitivity}" Classes="sectionTitle" />
+                    <Border Classes="card" Padding="14">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                <Border x:Name="PresetRelaxed" Grid.Column="0" Classes="segment" Tapped="OnPresetTapped">
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{loc:Translate Settings_Relaxed}" Classes="segmentTitle" />
+                                        <TextBlock x:Name="PresetRelaxedHint" Classes="segmentHint" />
+                                    </StackPanel>
+                                </Border>
+                                <Border x:Name="PresetBalanced" Grid.Column="1" Classes="segment" Tapped="OnPresetTapped">
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{loc:Translate Settings_Balanced}" Classes="segmentTitle" />
+                                        <TextBlock x:Name="PresetBalancedHint" Classes="segmentHint" />
+                                    </StackPanel>
+                                </Border>
+                                <Border x:Name="PresetStrict" Grid.Column="2" Classes="segment" Tapped="OnPresetTapped">
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{loc:Translate Settings_Strict}" Classes="segmentTitle" />
+                                        <TextBlock x:Name="PresetStrictHint" Classes="segmentHint" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto" Margin="2,0">
+                                <TextBlock Text="{loc:Translate Settings_Threshold}"
+                                           FontSize="14"
+                                           FontFamily="{x:Static local:AppFonts.Bold}"
+                                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock x:Name="SensitivityValue"
+                                           Grid.Column="1"
+                                           FontSize="14"
+                                           FontFamily="{x:Static local:AppFonts.Bold}"
+                                           Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                            <Slider x:Name="SensitivitySlider" Classes="setting" Minimum="50" Maximum="99" ValueChanged="OnSensitivityChanged" />
+                            <TextBlock x:Name="SensitivityExplain" Classes="note" Margin="2,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="{settings:UpperTranslate Settings_SectionDigest}" Classes="sectionTitle" />
+                    <Border Classes="card">
+                        <StackPanel>
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Classes="badge">
+                                        <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{loc:Translate Settings_Digest}" Classes="rowTitle" />
+                                        <TextBlock Text="{loc:Translate Settings_DigestHint}" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ToggleButton x:Name="DigestSwitch" Grid.Column="2" Classes="setting" IsCheckedChanged="OnDigestToggled" />
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" />
+                            <Border x:Name="DigestTimeRow" Classes="row" Tapped="OnDigestTimeTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Classes="badge">
+                                        <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.History}"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{loc:Translate Settings_DigestTime}" Classes="rowTitle" />
+                                        <TextBlock Text="{loc:Translate Settings_DigestTimeHint}" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" Classes="valueChip">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock x:Name="DigestTimeValue" Classes="valueChipLabel" />
+                                            <ui:Icon Classes="unfold" Data="{StaticResource Icon.Unfold}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionSpamList}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row" Tapped="OnAutoClearTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.History}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_AutoClear}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_AutoClearHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <Border Grid.Column="2" Classes="valueChip">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock x:Name="AutoClearValue" Classes="valueChipLabel" />
+                                        <ui:Icon Classes="unfold" Data="{StaticResource Icon.Unfold}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnTrustedTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Person}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Trusted}" Classes="rowTitle" />
+                                    <TextBlock x:Name="TrustedHint" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnAnalyticsTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Chart}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Analytics}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_AnalyticsHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionModel}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
+                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock x:Name="ModelVersion" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_ModelHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnModelUpdateTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Download}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock x:Name="ModelUpdateTitle" Classes="rowTitle" />
+                                    <TextBlock x:Name="ModelUpdateHint" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

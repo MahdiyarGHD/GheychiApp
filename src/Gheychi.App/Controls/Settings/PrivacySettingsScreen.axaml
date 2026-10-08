@@ -1,0 +1,59 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.PrivacySettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Privacy}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,4,0,24">
+                <Border Classes="card" Padding="16" Background="{theme:ThemeBrush Light=#DDF0E4, Dark=#173527}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Border Classes="badge" Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#14251B}">
+                            <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
+                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Text="{loc:Translate Settings_PrivacyCardTitle}" Classes="rowTitle" />
+                            <TextBlock Text="{loc:Translate Settings_PrivacyCardText}" Classes="note" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionData}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row" Tapped="OnClearSearchesTapped">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Search}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_ClearSearches}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_ClearSearchesHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnClearSpamTapped">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <Border Classes="badge" Background="{theme:ThemeBrush Light=#FBEAEA, Dark=#3A2323}">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Trash}" Foreground="#D64545" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_ClearSpam}" Classes="rowTitle" Foreground="#D64545" />
+                                    <TextBlock x:Name="ClearSpamHint" Classes="rowSubtitle" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="{loc:Translate Settings_ClearSpamNote}" Classes="note" Margin="26,8,26,0" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

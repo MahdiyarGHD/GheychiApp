@@ -12,6 +12,9 @@ namespace Gheychi.App.Ui;
 /// </summary>
 public static class OverlayAnimator
 {
+    /// <summary>Distance that keeps a parked overlay far outside the screen on any device.</summary>
+    public const double ParkedDistance = 3000;
+
     public static readonly TimeSpan OpenDuration = TimeSpan.FromMilliseconds(200);
     public static readonly TimeSpan CloseDuration = TimeSpan.FromMilliseconds(160);
 

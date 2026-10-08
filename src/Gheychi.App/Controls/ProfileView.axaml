@@ -1,0 +1,518 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             x:Class="Gheychi.App.Controls.ProfileView"
+             Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+
+    <UserControl.Resources>
+        <ControlTemplate x:Key="ScrollList" TargetType="ItemsControl">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                <ItemsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" />
+            </ScrollViewer>
+        </ControlTemplate>
+        <ItemsPanelTemplate x:Key="VirtualPanel">
+            <VirtualizingStackPanel />
+        </ItemsPanelTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LetterSpacing" Value="0.6" />
+            <Setter Property="Margin" Value="26,22,16,8" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+            <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
+        </Style>
+
+        <Style Selector="Border.card">
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="CornerRadius" Value="24" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E2320}" />
+        </Style>
+
+        <Style Selector="Border.row">
+            <Setter Property="Padding" Value="20,14" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style Selector="TextBlock.rowTitle">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style Selector="TextBlock.rowSubtitle">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MaxLines" Value="2" />
+        </Style>
+
+        <Style Selector="Border.rowBadge">
+            <Setter Property="Width" Value="42" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="CornerRadius" Value="21" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E7EEE6, Dark=#2A332D}" />
+        </Style>
+
+        <Style Selector="Border.quick">
+            <Setter Property="Padding" Value="4,14" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#EEF1EA, Dark=#1E2320}" />
+        </Style>
+
+        <Style Selector="Border.quickBadge">
+            <Setter Property="Width" Value="52" />
+            <Setter Property="Height" Value="52" />
+            <Setter Property="CornerRadius" Value="26" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E4EBE3, Dark=#2A332D}" />
+        </Style>
+
+        <Style Selector="TextBlock.quickLabel">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style Selector="Border.divider">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="18,0" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E8EDE6, Dark=#2A302C}" />
+        </Style>
+
+        <Style Selector="Border.backButton">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBlock.pageTitle">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- ===================== Profile ===================== -->
+        <Grid x:Name="ProfilePage" RowDefinitions="Auto,*">
+            <Grid Grid.Row="0" Margin="12,0,16,0" Height="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Border Classes="backButton"
+                        Tapped="OnBackTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Back}">
+                    <ui:Icon Data="{StaticResource Icon.Back}" Width="22" Height="22"
+                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                </Border>
+                <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_Title}" />
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,0,0,32">
+
+                    <!-- Identity -->
+                    <Border Width="116" Height="116"
+                            Margin="0,6,0,8"
+                            CornerRadius="58"
+                            HorizontalAlignment="Center"
+                            Background="{theme:ThemeBrush Light=#DCE7DE, Dark=#35423C}">
+                        <Panel>
+                            <ui:Icon x:Name="AvatarIcon" Width="52" Height="52"
+                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                            <TextBlock x:Name="AvatarInitials"
+                                       FontSize="40"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Panel>
+                    </Border>
+
+                    <TextBlock x:Name="NameLabel"
+                               Margin="24,12,24,0"
+                               FontSize="24"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="2" />
+                    <TextBlock x:Name="PhoneLabel"
+                               Margin="24,2,24,0"
+                               FontSize="14"
+                               Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                               HorizontalAlignment="Center" />
+                    <Border x:Name="SimPill"
+                            IsVisible="False"
+                            Margin="0,12,0,0"
+                            Padding="14,6"
+                            CornerRadius="16"
+                            Background="{theme:ThemeBrush Light=#E9EDE6, Dark=#232A25}"
+                            HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="7" Height="7" CornerRadius="4" Background="{StaticResource PrimaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="SimPillLabel"
+                                       FontSize="12.5"
+                                       Foreground="{theme:ThemeBrush Light=#3A453D, Dark=#C9D2CB}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Quick actions: a button only exists when the conversation can do it; the rest share the width -->
+                    <Grid x:Name="ActionsGrid" Margin="16,24,16,0" ColumnSpacing="10">
+                        <Border x:Name="CallButton" Classes="quick" Tapped="OnCallTapped">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <Border Classes="quickBadge" Background="{theme:ThemeBrush Light=#B9EBCB, Dark=#1F5A3F}">
+                                    <ui:Icon Data="{StaticResource Icon.Phone}" Width="22" Height="22"
+                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                </Border>
+                                <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Call}" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="TextButton" Classes="quick" Tapped="OnTextTapped">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <Border Classes="quickBadge">
+                                    <ui:Icon Data="{StaticResource Icon.Chat}" Width="22" Height="22"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Text}" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="DetailsButton" Classes="quick" Tapped="OnDetailsTapped">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <Border Classes="quickBadge">
+                                    <ui:Icon Data="{StaticResource Icon.Person}" Width="22" Height="22"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Details}" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="SearchButton" Classes="quick" Tapped="OnSearchTapped">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <Border Classes="quickBadge">
+                                    <ui:Icon Data="{StaticResource Icon.Search}" Width="22" Height="22"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Search}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Phone & routing -->
+                    <TextBlock Classes="sectionTitle" Text="{loc:Translate Profile_SectionPhone}" />
+                    <Border Classes="card">
+                        <StackPanel>
+                            <Border Classes="row" Padding="20,16">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock x:Name="NumberLabel" Classes="rowTitle" />
+                                        <TextBlock x:Name="NumberKindLabel" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <Border x:Name="NumberCallButton"
+                                            Grid.Column="1"
+                                            Classes="rowBadge"
+                                            Tapped="OnCallTapped"
+                                            AutomationProperties.Name="{loc:Translate Profile_Call}">
+                                        <ui:Icon Data="{StaticResource Icon.Phone}" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel x:Name="SimRow" IsVisible="False">
+                                <Border Classes="divider" />
+                                <Border Classes="row" Padding="20,16" Tapped="OnPreferredSimTapped">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_PreferredSim}" />
+                                            <TextBlock x:Name="PreferredSimHint" Classes="rowSubtitle" />
+                                        </StackPanel>
+                                        <Border Grid.Column="1"
+                                                Padding="14,8"
+                                                CornerRadius="18"
+                                                Background="{theme:ThemeBrush Light=#E9EDE6, Dark=#2A332D}"
+                                                VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock x:Name="PreferredSimValue"
+                                                           FontSize="13"
+                                                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                                           VerticalAlignment="Center" />
+                                                <ui:Icon Data="{StaticResource Icon.Unfold}" Width="16" Height="16"
+                                                         Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                                                         VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Preferences -->
+                    <TextBlock Classes="sectionTitle" Text="{loc:Translate Profile_SectionPreferences}" />
+                    <Border Classes="card">
+                        <StackPanel>
+                            <Border Classes="row" Tapped="OnLinksTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" Classes="rowBadge">
+                                        <ui:Icon Data="{StaticResource Icon.Link}" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_Links}" />
+                                        <TextBlock x:Name="LinksHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="2" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
+                                             Foreground="#8A8F98" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" />
+
+                            <Border Classes="row" Tapped="OnNotificationsTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" Classes="rowBadge">
+                                        <ui:Icon Data="{StaticResource Icon.Notifications}" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_Notifications}" />
+                                        <TextBlock Classes="rowSubtitle" Text="{loc:Translate Profile_NotificationsHint}" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="NotificationsCustom"
+                                               Grid.Column="2"
+                                               IsVisible="False"
+                                               Text="{loc:Translate Profile_NotificationsCustom}"
+                                               FontSize="13"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}"
+                                               VerticalAlignment="Center" />
+                                    <ui:Icon Grid.Column="3" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
+                                             Foreground="#8A8F98" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" />
+
+                            <Border Classes="row" Tapped="OnSnoozeTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" Classes="rowBadge">
+                                        <ui:Icon Data="{StaticResource Icon.Snooze}" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_Snooze}" />
+                                        <TextBlock x:Name="SnoozeHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <!-- Display only: the row is the control, so turning it on can ask for how long first -->
+                                    <Border x:Name="SnoozeSwitch" Grid.Column="2" Width="46" Height="26" CornerRadius="13" Padding="3"
+                                            VerticalAlignment="Center">
+                                        <Border x:Name="SnoozeThumb" Width="20" Height="20" CornerRadius="10" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" />
+
+                            <Border Classes="row" Tapped="OnSpamImmuneTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" Classes="rowBadge">
+                                        <ui:Icon Data="{StaticResource Icon.Shield}" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_SpamImmune}" />
+                                        <TextBlock x:Name="SpamImmuneHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <!-- Display only, like the snooze switch: the row is the control -->
+                                    <Border x:Name="SpamImmuneSwitch" Grid.Column="2" Width="46" Height="26" CornerRadius="13" Padding="3"
+                                            VerticalAlignment="Center">
+                                        <Border x:Name="SpamImmuneThumb" Width="20" Height="20" CornerRadius="10" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel x:Name="SpamMessagesRow" IsVisible="False">
+                                <Border Classes="divider" />
+                                <Border Classes="row" Tapped="OnSpamMessagesTapped">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                        <Border Grid.Column="0" Classes="rowBadge">
+                                            <ui:Icon Data="{StaticResource Icon.SpamRow}" Width="20" Height="20"
+                                                     Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_SpamMessages}" />
+                                            <TextBlock x:Name="SpamMessagesHint" Classes="rowSubtitle" />
+                                        </StackPanel>
+                                        <ui:Icon Grid.Column="2" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
+                                                 Foreground="#8A8F98" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Conversation actions -->
+                    <TextBlock Classes="sectionTitle" Text="{loc:Translate Profile_SectionActions}" />
+                    <Border Classes="card">
+                        <StackPanel>
+                            <Border Classes="row" Tapped="OnArchiveTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" Classes="rowBadge">
+                                        <ui:Icon x:Name="ArchiveIcon" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock x:Name="ArchiveTitle" Classes="rowTitle" />
+                                        <TextBlock x:Name="ArchiveHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="2" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
+                                             Foreground="#8A8F98" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+
+                            <StackPanel x:Name="BlockRow" IsVisible="False">
+                                <Border Classes="divider" />
+                                <Border Classes="row" Tapped="OnBlockTapped">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                        <Border Grid.Column="0" Classes="rowBadge" Background="{theme:ThemeBrush Light=#F7E3E1, Dark=#3A2224}">
+                                            <ui:Icon Data="{StaticResource Icon.Block}" Width="20" Height="20"
+                                                     Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock x:Name="BlockTitle" Classes="rowTitle" />
+                                            <TextBlock x:Name="BlockHint" Classes="rowSubtitle" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ===================== Links ===================== -->
+        <Grid x:Name="LinksPage"
+              IsVisible="False"
+              RowDefinitions="Auto,*"
+              Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+            <Grid Grid.Row="0" Margin="12,0,16,0" Height="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Border Classes="backButton"
+                        Tapped="OnLinksBackTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Back}">
+                    <ui:Icon Data="{StaticResource Icon.Back}" Width="22" Height="22"
+                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                </Border>
+                <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_Links}" />
+            </Grid>
+
+            <Panel Grid.Row="1">
+                <ItemsControl x:Name="LinksList"
+                              Margin="8,0"
+                              Template="{StaticResource ScrollList}"
+                              ItemsPanel="{StaticResource VirtualPanel}"
+                              Tapped="OnLinkTapped">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LinkResultItem">
+                            <Grid Height="62" ColumnDefinitions="Auto,*" Background="Transparent">
+                                <Border Width="42" Height="42"
+                                        Margin="10,0,14,0"
+                                        CornerRadius="21"
+                                        Background="{Binding IconBgColor, Mode=OneTime}">
+                                    <ui:Icon Data="{StaticResource Icon.Link}" Width="20" Height="20"
+                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="0,0,10,0" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title, Mode=OneTime}"
+                                               FontSize="14"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               Foreground="{Binding TitleColor, Mode=OneTime}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding ChatLine, Mode=OneTime}"
+                                               FontSize="12"
+                                               Foreground="{Binding MutedColor, Mode=OneTime}"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock x:Name="LinksEmpty"
+                           IsVisible="False"
+                           FontSize="15"
+                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Panel>
+        </Grid>
+
+        <!-- ===================== Spam messages ===================== -->
+        <Grid x:Name="SpamListPage"
+              IsVisible="False"
+              RowDefinitions="Auto,*"
+              Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+            <Grid Grid.Row="0" Margin="12,0,16,0" Height="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Border Classes="backButton"
+                        Tapped="OnSpamListBackTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Back}">
+                    <ui:Icon Data="{StaticResource Icon.Back}" Width="22" Height="22"
+                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                </Border>
+                <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_SpamMessages}" />
+            </Grid>
+
+            <ItemsControl x:Name="SpamList"
+                          Grid.Row="1"
+                          Margin="16,0,6,0"
+                          Template="{StaticResource ScrollList}"
+                          ItemsPanel="{StaticResource VirtualPanel}"
+                          Tapped="OnSpamListTapped">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SpamItem">
+                        <Grid RowDefinitions="Auto,1">
+                            <Grid Margin="0,10" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="2">
+                                <TextBlock Grid.Row="0" Grid.Column="0" TextTrimming="CharacterEllipsis">
+                                    <Run Text="{Binding Confidence, Mode=OneTime}"
+                                         FontSize="11"
+                                         FontFamily="{x:Static app:AppFonts.Bold}"
+                                         Foreground="{Binding ConfidenceColor, Mode=OneTime}" />
+                                    <Run Text="  ·  " FontSize="11" Foreground="#8A8F98" />
+                                    <Run Text="{Binding Time, Mode=OneTime}" FontSize="11" Foreground="#8A8F98" />
+                                </TextBlock>
+                                <TextBlock Grid.Row="1" Grid.Column="0"
+                                           Text="{Binding Preview, Mode=OneTime}"
+                                           FontSize="13"
+                                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                           TextWrapping="Wrap"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="2" />
+                                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                        Classes="more"
+                                        Width="34" Height="34"
+                                        CornerRadius="17"
+                                        Background="Transparent"
+                                        VerticalAlignment="Center">
+                                    <ui:Icon Data="{StaticResource Icon.More}" Width="18" Height="18"
+                                             Foreground="{theme:ThemeBrush Light=#8A8F98, Dark=#9AA0AB}" />
+                                </Border>
+                            </Grid>
+                            <Border Grid.Row="1" Margin="0,0,8,0"
+                                    Background="{theme:ThemeBrush Light=#EEF1EC, Dark=#24292A}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Panel>
+</UserControl>

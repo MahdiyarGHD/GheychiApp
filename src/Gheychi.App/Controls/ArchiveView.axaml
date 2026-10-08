@@ -1,0 +1,226 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             xmlns:ti="using:Avalonia.Input.TextInput"
+             x:Class="Gheychi.App.Controls.ArchiveView"
+             Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+
+    <Grid x:Name="Root" RowDefinitions="Auto,Auto,*" Focusable="True">
+
+        <!-- Header: normal bar or selection bar -->
+        <Panel Grid.Row="0" Height="60">
+            <Grid x:Name="NormalHeader"
+                  Margin="12,0,16,0"
+                  ColumnDefinitions="Auto,*"
+                  ColumnSpacing="8"
+                  VerticalAlignment="Center">
+                <Border Grid.Column="0"
+                        Width="40" Height="40"
+                        CornerRadius="20"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnBackTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Back}">
+                    <ui:Icon Data="{StaticResource Icon.Back}"
+                             Width="22" Height="22"
+                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                </Border>
+                <TextBlock Grid.Column="1"
+                           Text="{loc:Translate Archive_Title}"
+                           FontSize="20"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                           VerticalAlignment="Center" />
+            </Grid>
+
+            <Grid x:Name="SelectionHeader"
+                  IsVisible="False"
+                  Margin="12,0,16,0"
+                  ColumnDefinitions="Auto,*,Auto"
+                  ColumnSpacing="8"
+                  VerticalAlignment="Center">
+                <Border Grid.Column="0"
+                        Width="40" Height="40"
+                        CornerRadius="20"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnCancelSelectionTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Cancel}">
+                    <ui:Icon Data="{StaticResource Icon.Close}"
+                             Width="20" Height="20"
+                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                </Border>
+                <TextBlock x:Name="SelectedCountLabel"
+                           Grid.Column="1"
+                           FontSize="18"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                           VerticalAlignment="Center" />
+                <Border Grid.Column="2"
+                        Width="40" Height="40"
+                        CornerRadius="20"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnUnarchiveTapped"
+                        AutomationProperties.Name="{loc:Translate Messages_Unarchive}">
+                    <ui:Icon Data="{StaticResource Icon.Unarchive}"
+                             Width="21" Height="21"
+                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                </Border>
+            </Grid>
+        </Panel>
+
+        <!-- Filter box -->
+        <Border Grid.Row="1"
+                Margin="16,2,16,8"
+                Padding="14,0"
+                Height="44"
+                CornerRadius="22"
+                Background="{theme:ThemeBrush Light=#EEF1EA, Dark=#1E2320}">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                <ui:Icon Grid.Column="0"
+                         Data="{StaticResource Icon.Search}"
+                         Width="18" Height="18"
+                         Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                <TextBox x:Name="FilterEntry"
+                         Grid.Column="1"
+                         Classes="plain"
+                         PlaceholderText="{loc:Translate Archive_SearchHint}"
+                         PlaceholderForeground="#8A8F98"
+                         Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                         FontSize="14"
+                         ti:TextInputOptions.ReturnKeyType="Search"
+                         VerticalAlignment="Center"
+                         TextChanged="OnFilterTextChanged"
+                         KeyDown="OnFilterKeyDown" />
+                <Border x:Name="ClearFilterButton"
+                        Grid.Column="2"
+                        IsVisible="False"
+                        Width="28" Height="28"
+                        Margin="-6,0"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnClearFilterTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Cancel}">
+                    <ui:Icon Data="{StaticResource Icon.Close}"
+                             Width="16" Height="16"
+                             Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <Panel Grid.Row="2">
+            <ItemsControl x:Name="ArchiveList"
+                          Margin="8,0,8,0"
+                          Tapped="OnListTapped"
+                          Holding="OnListHolding">
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <ItemsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ThreadItem">
+                        <Grid Height="68"
+                              ColumnDefinitions="Auto,*,Auto"
+                              Background="{Binding RowBackgroundColor}">
+                            <!-- Avatar: the disc, then whichever of icon / initials / check applies, as siblings to keep the row flat -->
+                            <Border Width="46" Height="46"
+                                    Margin="8,0,14,0"
+                                    CornerRadius="23"
+                                    Background="{Binding AvatarBgColor}" />
+                            <ui:Icon Margin="8,0,14,0"
+                                     Width="24" Height="24"
+                                     IsVisible="{Binding ShowIcon}"
+                                     Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
+                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                            <TextBlock Margin="8,0,14,0"
+                                       Text="{Binding Initials, Mode=OneTime}"
+                                       IsVisible="{Binding ShowInitials}"
+                                       Foreground="{Binding AvatarTextColor, Mode=OneTime}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                            <ui:Icon Margin="8,0,14,0"
+                                     Width="22" Height="22"
+                                     IsVisible="{Binding IsSelected}"
+                                     Data="{StaticResource Icon.Check}"
+                                     Foreground="White" />
+
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                           Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
+                                           FontSize="14"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Preview, Mode=OneTime}"
+                                           FontSize="12"
+                                           Foreground="{Binding PreviewColor, Mode=OneTime}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Margin="14,0,8,0" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding Time, Mode=OneTime}"
+                                           FontSize="11"
+                                           Foreground="{Binding TimeColor, Mode=OneTime}"
+                                           HorizontalAlignment="Right" />
+                                <Border IsVisible="{Binding IsUnread}"
+                                        Padding="7,1"
+                                        CornerRadius="9"
+                                        Background="{StaticResource PrimaryBrush}"
+                                        HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding CountText}"
+                                               FontSize="11"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel x:Name="EmptyState"
+                        IsVisible="False"
+                        Spacing="6"
+                        Margin="32,0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                <Border Width="64" Height="64"
+                        CornerRadius="32"
+                        Background="{theme:ThemeBrush Light=#E9F0E8, Dark=#1E2320}"
+                        HorizontalAlignment="Center">
+                    <ui:Icon Data="{StaticResource Icon.Archive}"
+                             Width="26" Height="26"
+                             Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                </Border>
+                <TextBlock x:Name="EmptyTitleLabel"
+                           FontSize="16"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                <TextBlock x:Name="EmptyMessageLabel"
+                           FontSize="13"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+            </StackPanel>
+        </Panel>
+    </Grid>
+</UserControl>

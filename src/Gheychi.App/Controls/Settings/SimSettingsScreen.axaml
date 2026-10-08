@@ -1,0 +1,56 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.SimSettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Sims}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionSims}" Classes="sectionTitle" Margin="26,4,16,8" />
+                <Border Classes="card">
+                    <ItemsControl x:Name="SimList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SimSettingsRow">
+                                <Border Classes="row">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                        <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
+                                            <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SimCard}"
+                                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" Classes="rowTitle" />
+                                            <TextBlock Text="{Binding Subtitle}" Classes="rowSubtitle" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionSending}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <Border Classes="row" Tapped="OnDefaultSimTapped">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                            <StackPanel Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{loc:Translate Settings_DefaultSim}" Classes="rowTitle" />
+                                <TextBlock Text="{loc:Translate Settings_DefaultSimHint}" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <Border Grid.Column="1" Classes="valueChip">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock x:Name="DefaultSimValue" Classes="valueChipLabel" />
+                                    <ui:Icon Classes="unfold" Data="{StaticResource Icon.Unfold}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

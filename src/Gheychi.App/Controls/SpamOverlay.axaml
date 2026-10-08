@@ -1,0 +1,266 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             x:Class="Gheychi.App.Controls.SpamOverlay"
+             IsVisible="False">
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="BoxShadow" Value="0 8 24 0 #40000000" />
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <Style Selector="Grid.menuRow">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style Selector="Grid.menuRow > ui|Icon">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Margin" Value="18,11,14,11" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+        </Style>
+
+        <Style Selector="Grid.menuRow > TextBlock">
+            <Setter Property="Margin" Value="0,0,18,0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBlock.detailKey">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#8A8F98" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="TextBlock.detailValue">
+            <Setter Property="Margin" Value="12,0,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="MaxLines" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="Border.divider">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#F1F4F0, Dark=#2A2E35}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <Border x:Name="Backdrop" Background="{theme:ThemeBrush Light=#66000000, Dark=#99000000}" Opacity="0" Tapped="OnBackdropTapped" />
+
+        <!-- ===================== Menu ===================== -->
+        <Border x:Name="MenuSheet"
+                Classes="card"
+                Margin="10,0,10,10"
+                Padding="0,4"
+                VerticalAlignment="Bottom">
+            <StackPanel>
+                <StackPanel Margin="18,12,18,10" Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock x:Name="MenuSender"
+                                   FontSize="14"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1"
+                                   VerticalAlignment="Center" />
+                        <TextBlock x:Name="MenuConfidence"
+                                   Grid.Column="1"
+                                   Margin="8,0,0,0"
+                                   FontSize="11"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Padding="12,10"
+                            CornerRadius="14"
+                            Background="{theme:ThemeBrush Light=#F3F5F1, Dark=#24292A}">
+                        <TextBlock x:Name="MenuPreview"
+                                   FontSize="13"
+                                   Foreground="{theme:ThemeBrush Light=#3E4840, Dark=#C9CDD3}"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="Wrap"
+                                   MaxLines="8" />
+                    </Border>
+                </StackPanel>
+
+                <Border Classes="divider" />
+
+                <Grid Classes="menuRow" ColumnDefinitions="Auto,*" Tapped="OnRestoreTapped">
+                    <ui:Icon Data="{StaticResource Icon.Unarchive}" />
+                    <TextBlock Grid.Column="1" Text="{loc:Translate Spam_ActionRestore}" />
+                </Grid>
+
+                <Grid Classes="menuRow" ColumnDefinitions="Auto,*" Tapped="OnRestoreTrustTapped">
+                    <ui:Icon Data="{StaticResource Icon.Shield}" />
+                    <TextBlock Grid.Column="1" Text="{loc:Translate Spam_ActionRestoreTrust}" />
+                </Grid>
+
+                <Grid Classes="menuRow" ColumnDefinitions="Auto,*" Tapped="OnReportTapped">
+                    <ui:Icon Data="{StaticResource Icon.Report}" />
+                    <TextBlock Grid.Column="1" Text="{loc:Translate Spam_ActionReportNotSpam}" />
+                </Grid>
+
+                <Grid Classes="menuRow" ColumnDefinitions="Auto,*" Tapped="OnInfoTapped">
+                    <ui:Icon Data="{StaticResource Icon.Info}" />
+                    <TextBlock Grid.Column="1" Text="{loc:Translate Spam_ActionInfo}" />
+                </Grid>
+
+                <Border Classes="divider" Margin="0,4" />
+
+                <Grid Classes="menuRow" ColumnDefinitions="Auto,*" Tapped="OnDeleteTapped">
+                    <ui:Icon Data="{StaticResource Icon.Trash}" Foreground="#D64545" />
+                    <TextBlock Grid.Column="1" Text="{loc:Translate Spam_ActionDelete}" Foreground="#D64545" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ===================== Info ===================== -->
+        <Border x:Name="InfoCard"
+                Classes="card"
+                Margin="24,0"
+                Padding="18,16"
+                VerticalAlignment="Center">
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{loc:Translate Spam_InfoTitle}"
+                               FontSize="15"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                               VerticalAlignment="Center" />
+                    <Border Grid.Column="1"
+                            Width="28"
+                            Height="28"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            Tapped="OnBackdropTapped">
+                        <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16" Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                    </Border>
+                </Grid>
+
+                <Border x:Name="ScorePanel"
+                        Padding="14,12"
+                        CornerRadius="16">
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock x:Name="InfoPercent"
+                                       FontSize="26"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock x:Name="InfoConfidence"
+                                       Grid.Column="1"
+                                       Margin="10,0,0,0"
+                                       FontSize="13"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                        <ProgressBar x:Name="InfoBar"
+                                     Minimum="0"
+                                     Maximum="1"
+                                     Height="6"
+                                     MinHeight="6"
+                                     CornerRadius="3"
+                                     Background="{theme:ThemeBrush Light=#1F000000, Dark=#26FFFFFF}" />
+                        <TextBlock x:Name="InfoExplain"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{theme:ThemeBrush Light=#4A534C, Dark=#B5BAC2}" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Spacing="9">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Text="{loc:Translate Spam_InfoFrom}" Classes="detailKey" />
+                        <TextBlock x:Name="InfoFrom" Grid.Column="1" Classes="detailValue" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Text="{loc:Translate Spam_InfoReceived}" Classes="detailKey" />
+                        <TextBlock x:Name="InfoReceived" Grid.Column="1" Classes="detailValue" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Text="{loc:Translate Spam_InfoThreshold}" Classes="detailKey" />
+                        <TextBlock x:Name="InfoThreshold" Grid.Column="1" Classes="detailValue" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Text="{loc:Translate Spam_InfoModel}" Classes="detailKey" />
+                        <TextBlock x:Name="InfoModel" Grid.Column="1" Classes="detailValue" />
+                    </Grid>
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+                    <Border Grid.Column="0"
+                            Margin="0,0,5,0"
+                            Padding="0,10"
+                            CornerRadius="14"
+                            Background="#2E6B4C"
+                            Tapped="OnRestoreTapped">
+                        <TextBlock Text="{loc:Translate Spam_ActionRestoreShort}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Column="1"
+                            Margin="5,0,0,0"
+                            Padding="0,10"
+                            CornerRadius="14"
+                            Background="{theme:ThemeBrush Light=#FBEAEA, Dark=#3A2323}"
+                            Tapped="OnDeleteTapped">
+                        <TextBlock Text="{loc:Translate Spam_ActionDelete}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="#D64545"
+                                   HorizontalAlignment="Center" />
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ===================== Confirm ===================== -->
+        <Border x:Name="ConfirmCard"
+                Classes="card"
+                Margin="32,0"
+                Padding="20,18,20,14"
+                VerticalAlignment="Center">
+            <StackPanel Spacing="8">
+                <TextBlock x:Name="ConfirmTitle"
+                           FontSize="15"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                           TextWrapping="Wrap" />
+                <TextBlock x:Name="ConfirmMessage"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           Foreground="{theme:ThemeBrush Light=#4A534C, Dark=#B5BAC2}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" Margin="0,8,0,0">
+                    <TextBlock Text="{loc:Translate Chat_Cancel}"
+                               Padding="12,8"
+                               FontSize="13"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                               Background="Transparent"
+                               Tapped="OnConfirmCancelTapped" />
+                    <TextBlock x:Name="ConfirmAccept"
+                               Padding="12,8"
+                               FontSize="13"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="#D64545"
+                               Background="Transparent"
+                               Tapped="OnConfirmAcceptTapped" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

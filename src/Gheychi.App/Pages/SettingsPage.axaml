@@ -1,0 +1,266 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             xmlns:local="clr-namespace:Gheychi.App"
+             xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+             x:Class="Gheychi.App.Pages.SettingsPage">
+    <UserControl.Styles>
+        <StyleInclude Source="avares://Gheychi.App/Controls/Settings/SettingsStyles.axaml" />
+    </UserControl.Styles>
+
+    <!-- The screen behind each row is built when first opened and added over the overview -->
+    <Grid x:Name="Root">
+        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,16,0,24">
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="14">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <Border Width="56" Height="56" CornerRadius="18" Background="#16382A" VerticalAlignment="Top">
+                                <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="28" Height="28" Foreground="#8FE0BE"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="Gheychi"
+                                               FontSize="20"
+                                               FontFamily="{x:Static local:AppFonts.Bold}"
+                                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                               VerticalAlignment="Center" />
+                                    <Border Padding="7,2" CornerRadius="8" VerticalAlignment="Center"
+                                            Background="{theme:ThemeBrush Light=#E0E8DF, Dark=#203328}">
+                                        <TextBlock x:Name="HeroVersion"
+                                                   FontSize="11"
+                                                   FontFamily="{x:Static local:AppFonts.Bold}"
+                                                   Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="{loc:Translate Settings_Tagline}" Classes="note" FontSize="13" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Border x:Name="DefaultChip" Grid.Column="0" Classes="chip" Tapped="OnDefaultChipTapped">
+                                <StackPanel Spacing="2">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Border Classes="chipDot" />
+                                        <TextBlock Text="{loc:Translate Settings_ChipSms}" Classes="chipTitle" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="DefaultLabel" Classes="chipLabel" />
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="NotificationsChip" Grid.Column="1" Classes="chip" Tapped="OnNotificationsChipTapped">
+                                <StackPanel Spacing="2">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Border Classes="chipDot" />
+                                        <TextBlock Text="{loc:Translate Settings_ChipNotifications}" Classes="chipTitle" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="NotificationsLabel" Classes="chipLabel" />
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="ContactsChip" Grid.Column="2" Classes="chip" Tapped="OnContactsChipTapped">
+                                <StackPanel Spacing="2">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Border Classes="chipDot" />
+                                        <TextBlock Text="{loc:Translate Settings_ChipContacts}" Classes="chipTitle" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="ContactsLabel" Classes="chipLabel" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Grid.Column="0" Classes="tile" Tapped="OnModelTileTapped">
+                                <StackPanel Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
+                                                Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#14251B}">
+                                            <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
+                                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <Border x:Name="ModelUpdateDot" Grid.Column="1" Width="9" Height="9" CornerRadius="5"
+                                                Background="#2E9B63" VerticalAlignment="Top" IsVisible="False" />
+                                    </Grid>
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{loc:Translate Settings_TileModel}" Classes="tileCaption" />
+                                        <TextBlock x:Name="TileModelValue" Classes="tileValue" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Classes="tile" Tapped="OnCaughtTapped">
+                                <StackPanel Spacing="8">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
+                                                Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#14251B}">
+                                            <ui:Icon Data="{StaticResource Icon.Chart}" Width="16" Height="16"
+                                                     Foreground="{theme:ThemeBrush Light=#9A4A2A, Dark=#F0B79A}"
+                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <ui:Icon Grid.Column="1" Classes="chevron" Width="16" Height="16"
+                                                 Data="{StaticResource Icon.ChevronRight}" />
+                                    </Grid>
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{loc:Translate Settings_TileCaught}" Classes="tileCaption" />
+                                        <TextBlock x:Name="TileCaughtValue" Classes="tileValue" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionProtection}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row" Tapped="OnSpamTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge" Background="{theme:ThemeBrush Light=#F5E4DA, Dark=#3A2A22}">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.TabSpam}"
+                                             Foreground="{theme:ThemeBrush Light=#9A4A2A, Dark=#F0B79A}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Spam}" Classes="rowTitle" />
+                                    <TextBlock x:Name="SpamHint" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnBlockedTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge" Background="{theme:ThemeBrush Light=#F7E3E1, Dark=#3A2224}">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Block}"
+                                             Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Blocked}" Classes="rowTitle" />
+                                    <TextBlock x:Name="BlockedHint" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <StackPanel x:Name="SimsRow" IsVisible="False">
+                            <Border Classes="divider" />
+                            <Border Classes="row" Tapped="OnSimsTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
+                                        <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SimCard}"
+                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{loc:Translate Settings_Sims}" Classes="rowTitle" />
+                                        <TextBlock x:Name="SimsHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnNotificationsTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Notifications}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_NotificationsHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionPersonal}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <Border Classes="row" Tapped="OnAppearanceTapped">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Classes="badge">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Palette}"
+                                         Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{loc:Translate Settings_Appearance}" Classes="rowTitle" />
+                                <TextBlock Text="{loc:Translate Settings_AppearanceHint}" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionPrivacy}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row" Tapped="OnPrivacyTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge" Background="{theme:ThemeBrush Light=#F4ECD4, Dark=#332D1C}">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Lock}"
+                                             Foreground="{theme:ThemeBrush Light=#8A6A12, Dark=#E5C66B}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Privacy}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_PrivacyHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnAboutTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Info}"
+                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_About}" Classes="rowTitle" />
+                                    <TextBlock x:Name="AboutHint" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Margin="24,28,24,0" Spacing="4" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                        <ui:Icon Data="{StaticResource Icon.Shield}" Width="15" Height="15" VerticalAlignment="Center"
+                                 Foreground="{theme:ThemeBrush Light=#3A453D, Dark=#C9D2CB}" />
+                        <TextBlock Text="{loc:Translate Settings_FooterTitle}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static local:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#3A453D, Dark=#C9D2CB}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{loc:Translate Settings_FooterText}"
+                               FontSize="12"
+                               Foreground="#8A8F98"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+                </StackPanel>
+
+                <Border Margin="0,22,0,0"
+                        Padding="14,7"
+                        HorizontalAlignment="Center"
+                        BorderThickness="1"
+                        BorderBrush="{theme:ThemeBrush Light=#DCE5DB, Dark=#22392C}"
+                        CornerRadius="16"
+                        Background="{theme:ThemeBrush Light=#EEF2EC, Dark=#14251B}"
+                        Tapped="OnCreditTapped">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Text="{loc:Translate Settings_CreditMadeWith}" FontSize="12" Foreground="#8A8F98" VerticalAlignment="Center" />
+                        <TextBlock x:Name="CreditHeart" Text="&#x1F49A;" FontSize="13" VerticalAlignment="Center" />
+                        <TextBlock Text="{loc:Translate Settings_CreditBy}" FontSize="12" Foreground="#8A8F98" VerticalAlignment="Center" />
+                        <TextBlock Text="MahdiyarGHD"
+                                   FontSize="12"
+                                   FontFamily="{x:Static local:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,727 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:ctrl="clr-namespace:Gheychi.App.Controls"
+             x:Class="Gheychi.App.Controls.SearchView"
+             x:DataType="vm:SearchViewModel">
+
+    <UserControl.Styles>
+        <!-- The result lists scroll through a virtualising panel; the deep-search button is their last row. -->
+        <Style Selector="ItemsControl.results">
+            <Setter Property="Template">
+                <ControlTemplate TargetType="ItemsControl">
+                    <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter>
+            <Setter Property="ItemsPanel">
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <!-- The root is focusable so that taking the focus away from the search box (dismissing the keyboard) has a target. -->
+    <Grid x:Name="Root"
+          RowDefinitions="Auto,*"
+          Focusable="True"
+          Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+
+        <!-- Top header bar; the bottom border is the divider -->
+        <Border Grid.Row="0"
+                Padding="12,10,16,9"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{theme:ThemeBrush Light=#EAEFE8, Dark=#1E2220}">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+
+                <!-- Back button -->
+                <Border Grid.Column="0"
+                        Width="40"
+                        Height="40"
+                        CornerRadius="20"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.Name="{loc:Translate Chat_Back}"
+                        Tapped="OnBackTapped">
+                    <ui:Icon Data="{StaticResource Icon.Back}"
+                             Width="22"
+                             Height="22"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                </Border>
+
+                <!-- Search pill -->
+                <Border Grid.Column="1"
+                        Height="44"
+                        CornerRadius="22"
+                        Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                        Padding="10,0,8,0"
+                        VerticalAlignment="Center">
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6" VerticalAlignment="Center">
+
+                        <!-- Search icon (visible when no active filter chip) -->
+                        <ui:Icon Grid.Column="0"
+                                 Data="{StaticResource Icon.Search}"
+                                 Width="18"
+                                 Height="18"
+                                 VerticalAlignment="Center"
+                                 IsVisible="{Binding HasNoActiveFilter}"
+                                 Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+
+                        <!-- Active filter chip inside the pill -->
+                        <Border Grid.Column="1"
+                                CornerRadius="13"
+                                Background="{theme:ThemeBrush Light=#1F386948, Dark=#2634D399}"
+                                Padding="8,4,4,4"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding HasActiveFilter}">
+                            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                <ui:Icon Width="14"
+                                         Height="14"
+                                         VerticalAlignment="Center"
+                                         Data="{Binding ActiveFilter.IconSource, Converter={x:Static ui:IconFileConverter.Instance}}"
+                                         Foreground="{Binding ActiveFilter.IconTint}" />
+                                <TextBlock Text="{Binding ActiveFilter.Title}"
+                                           FontSize="11"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{Binding ActiveFilter.IconTint}"
+                                           VerticalAlignment="Center" />
+                                <Border Width="18"
+                                        Height="18"
+                                        CornerRadius="9"
+                                        Background="Transparent"
+                                        VerticalAlignment="Center"
+                                        Tapped="OnClearActiveFilterTapped">
+                                    <ui:Icon Data="{StaticResource Icon.Close}"
+                                             Width="11"
+                                             Height="11"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Search entry -->
+                        <TextBox Grid.Column="2"
+                                 x:Name="SearchEntry"
+                                 Classes="plain"
+                                 Text="{Binding SearchText, Mode=TwoWay}"
+                                 PlaceholderText="{loc:Translate Search_MessagesNumbers}"
+                                 PlaceholderForeground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                                 Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                                 FontSize="14"
+                                 VerticalAlignment="Center" />
+
+                        <!-- Voice search (mic): visible only while the search text is empty -->
+                        <Border Grid.Column="3"
+                                Width="32"
+                                Height="32"
+                                CornerRadius="16"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                IsVisible="{Binding IsSearchTextEmpty}"
+                                AutomationProperties.Name="{loc:Translate Search_VoiceSearch}"
+                                Tapped="OnVoiceSearchTapped">
+                            <ui:Icon Data="{StaticResource Icon.Mic}"
+                                     Width="20"
+                                     Height="20"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                        </Border>
+
+                        <!-- Clear ('X'): visible only while the search text has content -->
+                        <Border Grid.Column="3"
+                                Width="32"
+                                Height="32"
+                                CornerRadius="16"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                IsVisible="{Binding HasSearchText}"
+                                AutomationProperties.Name="{loc:Translate Search_Clear}"
+                                Tapped="OnClearSearchTapped">
+                            <ui:Icon Data="{StaticResource Icon.Close}"
+                                     Width="18"
+                                     Height="18"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 1. Initial state: quick filters and recent searches -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Hidden"
+                      HorizontalScrollBarVisibility="Disabled"
+                      IsVisible="{Binding IsInitialSearchMode}">
+            <StackPanel Spacing="28" Margin="20,18,20,32">
+
+                <!-- Quick filters -->
+                <StackPanel Spacing="12">
+                    <TextBlock x:Name="FiltersHeader"
+                               FontSize="12"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                               LetterSpacing="1.2" />
+
+                    <ItemsControl ItemsSource="{Binding FilterPills}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FilterPillItem">
+                                <Border Margin="0,0,8,8"
+                                        Padding="14,9"
+                                        CornerRadius="18"
+                                        Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                                        IsVisible="{Binding IsVisible}"
+                                        Tapped="OnFilterPillTapped">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <ui:Icon Width="17"
+                                                 Height="17"
+                                                 VerticalAlignment="Center"
+                                                 Data="{Binding IconSource, Converter={x:Static ui:IconFileConverter.Instance}}"
+                                                 Foreground="{Binding IconTint}" />
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="12"
+                                                   Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Recent searches -->
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0"
+                                   x:Name="RecentHeader"
+                                   FontSize="12"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                                   LetterSpacing="1.2"
+                                   VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Search_ClearAll}"
+                                   FontSize="12"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#2E6B4C}"
+                                   Background="Transparent"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding HasRecentSearches}"
+                                   Tapped="OnClearAllRecentTapped" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding RecentSearches}"
+                                  IsVisible="{Binding HasRecentSearches}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RecentSearchItem">
+                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                      ColumnSpacing="12"
+                                      Background="Transparent"
+                                      Tapped="OnRecentItemTapped">
+                                    <ui:Icon Grid.Column="0"
+                                             Data="{StaticResource Icon.History}"
+                                             Width="18"
+                                             Height="18"
+                                             Margin="4,0,0,0"
+                                             VerticalAlignment="Center"
+                                             Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Query}"
+                                               FontSize="13"
+                                               Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" />
+
+                                    <Border Grid.Column="2"
+                                            Width="32"
+                                            Height="32"
+                                            Margin="0,8,4,8"
+                                            CornerRadius="16"
+                                            Background="Transparent"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            AutomationProperties.Name="{loc:Translate Chat_Delete}"
+                                            Tapped="OnRemoveRecentItemTapped">
+                                        <ui:Icon Data="{StaticResource Icon.Close}"
+                                                 Width="16"
+                                                 Height="16"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="{theme:ThemeBrush Light=#ABB4AC, Dark=#6E766F}" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="{loc:Translate Search_NoRecent}"
+                               FontStyle="Italic"
+                               FontSize="12"
+                               Foreground="#8A8F98"
+                               Margin="4,8"
+                               IsVisible="{Binding HasNoRecentSearches}" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 2. Chat results: category tabs, found count, one row per chat, deep search -->
+        <Grid Grid.Row="1"
+              RowDefinitions="Auto,*"
+              IsVisible="{Binding IsChatResultsMode}">
+
+            <Border Grid.Row="0"
+                    Padding="16,8,16,9"
+                    BorderThickness="0,0,0,1"
+                    BorderBrush="{theme:ThemeBrush Light=#EAEFE8, Dark=#1E2220}"
+                    Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+
+                    <ScrollViewer Grid.Column="0"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  VerticalAlignment="Center">
+                        <ItemsControl ItemsSource="{Binding CategoryTabs}" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CategoryTabItem">
+                                    <Border Padding="12,6"
+                                            CornerRadius="16"
+                                            Background="{Binding BackgroundColor}"
+                                            VerticalAlignment="Center"
+                                            Tapped="OnCategoryTabTapped">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="12"
+                                                       FontFamily="{Binding FontFamily}"
+                                                       Foreground="{Binding TextColor}"
+                                                       VerticalAlignment="Center" />
+                                            <Border IsVisible="{Binding ShowBadge}"
+                                                    MinWidth="22"
+                                                    Height="20"
+                                                    Padding="6,0"
+                                                    CornerRadius="10"
+                                                    Background="{Binding BadgeBgColor}"
+                                                    VerticalAlignment="Center"
+                                                    HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding CountText}"
+                                                           FontSize="10"
+                                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                                           Foreground="{Binding BadgeTextColor}"
+                                                           TextAlignment="Center"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding FoundCountText}"
+                               FontSize="11"
+                               Foreground="{theme:ThemeBrush Light=#747D75, Dark=#8A8F98}"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0" />
+                </Grid>
+            </Border>
+
+            <!-- Rows are picked by item type: SearchResultItem, or the deep-search footer the list ends with. -->
+            <ItemsControl x:Name="ChatResultsList"
+                          Grid.Row="1"
+                          Classes="results"
+                          IsVisible="{Binding HasResults}">
+                <ItemsControl.DataTemplates>
+                    <DataTemplate DataType="vm:SearchResultItem">
+                        <Grid Height="78"
+                              ColumnDefinitions="Auto,*"
+                              ColumnSpacing="14"
+                              Background="Transparent"
+                              Tapped="OnSearchResultRowTapped">
+
+                            <!-- Avatar; the SIM chip sits inside the holder bounds so it is never clipped -->
+                            <Panel Grid.Column="0"
+                                   Width="56"
+                                   Height="54"
+                                   Margin="16,0,0,0"
+                                   VerticalAlignment="Center">
+                                <Border Width="48"
+                                        Height="48"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        CornerRadius="24"
+                                        Background="{Binding AvatarBgColor}">
+                                    <TextBlock Text="{Binding Initials}"
+                                               FontSize="16"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               Foreground="{Binding AvatarTextColor}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+
+                                <Border IsVisible="{Binding ShowSimBadge}"
+                                        MinWidth="24"
+                                        Height="24"
+                                        Padding="7,0"
+                                        CornerRadius="12"
+                                        BorderThickness="2.5"
+                                        BorderBrush="{Binding SimBadgeRingColor}"
+                                        Background="{Binding SimBadgeBgColor}"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Bottom">
+                                    <TextBlock Text="{Binding SimSlotText}"
+                                               FontSize="11"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               Foreground="{Binding SimBadgeTextColor}"
+                                               TextAlignment="Center"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                            </Panel>
+
+                            <!-- Info column. The name takes the leftover width and truncates, so it can never run into the time. -->
+                            <Grid Grid.Column="1"
+                                  RowDefinitions="Auto,Auto"
+                                  RowSpacing="4"
+                                  Margin="0,0,16,0"
+                                  VerticalAlignment="Center">
+
+                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding DisplayName}"
+                                               FontSize="15"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               Foreground="{Binding NameColor}"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1"
+                                               VerticalAlignment="Center" />
+
+                                    <Border Grid.Column="1"
+                                            IsVisible="{Binding IsArchivedOrSpam}"
+                                            Padding="7,2"
+                                            CornerRadius="6"
+                                            Background="{Binding MatchBgColor}"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DeepSearchTag}"
+                                                   FontSize="10"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   Foreground="{Binding MatchTextColor}" />
+                                    </Border>
+
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Time}"
+                                               FontSize="12"
+                                               Foreground="{Binding TimeColor}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="*,Auto,Auto"
+                                      ColumnSpacing="8"
+                                      VerticalAlignment="Center">
+                                    <TextBlock Grid.Column="0"
+                                               ctrl:SnippetText.Runs="{Binding SnippetRuns}"
+                                               FontSize="13"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1"
+                                               VerticalAlignment="Center" />
+
+                                    <!-- Match count: compact pill with just the number; the full text is the accessibility description -->
+                                    <Border Grid.Column="1"
+                                            IsVisible="{Binding HasMultipleMatches}"
+                                            MinWidth="24"
+                                            Height="20"
+                                            Padding="7,0"
+                                            CornerRadius="10"
+                                            Background="{Binding MatchBgColor}"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.Name="{Binding MatchCountDescription}">
+                                        <TextBlock Text="{Binding MatchCountText}"
+                                                   FontSize="11"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   Foreground="{Binding MatchTextColor}"
+                                                   TextAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <Border Grid.Column="2"
+                                            Width="8"
+                                            Height="8"
+                                            CornerRadius="4"
+                                            Background="{theme:ThemeBrush Light=#2E6B4C, Dark=#2E6B4C}"
+                                            VerticalAlignment="Center"
+                                            IsVisible="{Binding IsUnread}" />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="ctrl:DeepSearchFooter">
+                        <Border Margin="0,16,0,32"
+                                HorizontalAlignment="Center"
+                                CornerRadius="20"
+                                Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                                Padding="16,8"
+                                Tapped="OnDeepSearchTapped">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <ui:Icon Data="{StaticResource Icon.ManageSearch}"
+                                         Width="18"
+                                         Height="18"
+                                         VerticalAlignment="Center"
+                                         Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}" />
+                                <TextBlock Text="{loc:Translate Search_DeepSearch}"
+                                           FontSize="12"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
+
+            <!-- Empty state -->
+            <StackPanel Grid.Row="1"
+                        Spacing="14"
+                        Margin="32,48,32,32"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        IsVisible="{Binding HasNoResults}">
+                <ui:Icon Data="{StaticResource Icon.Search}"
+                         Width="48"
+                         Height="48"
+                         HorizontalAlignment="Center"
+                         Foreground="{theme:ThemeBrush Light=#ABB4AC, Dark=#6E766F}" />
+                <TextBlock Text="{Binding NoResultsText}"
+                           FontSize="15"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 3. Links / Places results: one row per link (or place) found in a message -->
+        <Grid Grid.Row="1"
+              RowDefinitions="Auto,*"
+              IsVisible="{Binding IsLinkResultsMode}">
+
+            <Border Grid.Row="0"
+                    Padding="16,10,16,9"
+                    BorderThickness="0,0,0,1"
+                    BorderBrush="{theme:ThemeBrush Light=#EAEFE8, Dark=#1E2220}"
+                    Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+                <TextBlock Text="{Binding FoundCountText}"
+                           FontSize="12"
+                           Foreground="{theme:ThemeBrush Light=#747D75, Dark=#8A8F98}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center" />
+            </Border>
+
+            <ItemsControl x:Name="LinkResultsList"
+                          Grid.Row="1"
+                          Classes="results"
+                          IsVisible="{Binding HasLinkResults}">
+                <ItemsControl.DataTemplates>
+                    <DataTemplate DataType="vm:LinkResultItem">
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="12"
+                              Background="Transparent"
+                              Tapped="OnLinkRowTapped">
+
+                            <StackPanel Grid.Column="0"
+                                        Spacing="2"
+                                        Margin="16,12,0,12"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}"
+                                           FontSize="15"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{Binding TitleColor}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" />
+                                <TextBlock Text="{Binding HostText}"
+                                           FontSize="12"
+                                           Foreground="{Binding MutedColor}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" />
+                                <TextBlock Text="{Binding ChatLine}"
+                                           Margin="0,4,0,0"
+                                           FontSize="12"
+                                           Foreground="{Binding MutedColor}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" />
+                            </StackPanel>
+
+                            <!-- Tapping the icon opens the link; tapping the row opens the chat -->
+                            <Border Grid.Column="1"
+                                    Width="40"
+                                    Height="40"
+                                    Margin="0,12,16,12"
+                                    CornerRadius="20"
+                                    Background="{Binding IconBgColor}"
+                                    VerticalAlignment="Center"
+                                    Tapped="OnLinkIconTapped">
+                                <ui:Icon Width="18"
+                                         Height="18"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"
+                                         Data="{Binding IconSource, Converter={x:Static ui:IconFileConverter.Instance}}"
+                                         Foreground="{Binding TitleColor}" />
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate DataType="ctrl:DeepSearchFooter">
+                        <Border Margin="0,16,0,32"
+                                HorizontalAlignment="Center"
+                                CornerRadius="20"
+                                Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                                Padding="16,8"
+                                Tapped="OnDeepSearchTapped">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <ui:Icon Data="{StaticResource Icon.ManageSearch}"
+                                         Width="18"
+                                         Height="18"
+                                         VerticalAlignment="Center"
+                                         Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}" />
+                                <TextBlock Text="{loc:Translate Search_DeepSearch}"
+                                           FontSize="12"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
+
+            <StackPanel Grid.Row="1"
+                        Spacing="14"
+                        Margin="32,48,32,32"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        IsVisible="{Binding HasNoLinkResults}">
+                <ui:Icon Width="48"
+                         Height="48"
+                         HorizontalAlignment="Center"
+                         Data="{Binding ActiveFilter.IconSource, Converter={x:Static ui:IconFileConverter.Instance}}"
+                         Foreground="{theme:ThemeBrush Light=#ABB4AC, Dark=#6E766F}" />
+                <TextBlock Text="{Binding NoLinksText}"
+                           FontSize="15"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 4. Loading skeleton: shown while a search is running and there is nothing to show yet.
+             The rows are created the first time they are needed (SearchView.EnsureSkeletonRows). -->
+        <Grid x:Name="SkeletonOverlay"
+              Grid.Row="1"
+              IsVisible="{Binding ShowSkeleton}"
+              Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+            <Panel x:Name="SkeletonRowsHost" VerticalAlignment="Top">
+
+                <!-- Chat results: avatar + two lines -->
+                <ItemsControl x:Name="ChatSkeletonRows" IsVisible="{Binding IsChatResultsMode}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:Int32">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                <Border Width="48"
+                                        Height="48"
+                                        Margin="16,14,0,14"
+                                        CornerRadius="24"
+                                        Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                                <StackPanel Grid.Column="1"
+                                            Spacing="10"
+                                            Margin="0,0,16,0"
+                                            VerticalAlignment="Center">
+                                    <Border Height="14"
+                                            Width="150"
+                                            HorizontalAlignment="Left"
+                                            CornerRadius="7"
+                                            Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                                    <Border Height="12"
+                                            HorizontalAlignment="Stretch"
+                                            CornerRadius="6"
+                                            Background="{theme:ThemeBrush Light=#ECF0EC, Dark=#1D221E}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Links / Places results: three lines + round icon on the right -->
+                <ItemsControl x:Name="LinkSkeletonRows" IsVisible="{Binding IsLinkResultsMode}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:Int32">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <StackPanel Spacing="8"
+                                            Margin="16,12,0,12"
+                                            VerticalAlignment="Center">
+                                    <Border Height="14"
+                                            HorizontalAlignment="Stretch"
+                                            CornerRadius="7"
+                                            Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                                    <Border Height="11"
+                                            Width="110"
+                                            HorizontalAlignment="Left"
+                                            CornerRadius="5"
+                                            Background="{theme:ThemeBrush Light=#ECF0EC, Dark=#1D221E}" />
+                                    <Border Height="11"
+                                            Width="170"
+                                            HorizontalAlignment="Left"
+                                            CornerRadius="5"
+                                            Background="{theme:ThemeBrush Light=#ECF0EC, Dark=#1D221E}" />
+                                </StackPanel>
+                                <Border Grid.Column="1"
+                                        Width="40"
+                                        Height="40"
+                                        Margin="0,12,16,12"
+                                        VerticalAlignment="Center"
+                                        CornerRadius="20"
+                                        Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Panel>
+        </Grid>
+    </Grid>
+
+</UserControl>

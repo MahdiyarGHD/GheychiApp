@@ -1,0 +1,293 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Gheychi.App"
+        xmlns:theme="clr-namespace:Gheychi.App.Theming"
+        xmlns:ui="clr-namespace:Gheychi.App.Ui">
+
+    <!-- Included once, by the Settings tab: the screens are built inside it and inherit these. -->
+
+    <Style Selector="Grid.screen">
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}" />
+    </Style>
+
+    <Style Selector="TextBlock.screenTitle">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="1" />
+    </Style>
+
+    <Style Selector="Border.backButton">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.sectionTitle">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="LetterSpacing" Value="0.6" />
+        <Setter Property="Margin" Value="26,20,16,8" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
+    </Style>
+
+    <Style Selector="Border.card">
+        <Setter Property="Margin" Value="16,0" />
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#EEF2EC, Dark=#14251B}" />
+    </Style>
+
+    <Style Selector="Border.tile">
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E3EAE2, Dark=#1D3026}" />
+    </Style>
+
+    <Style Selector="TextBlock.tileCaption">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="2" />
+    </Style>
+
+    <Style Selector="TextBlock.tileValue">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="2" />
+    </Style>
+
+    <Style Selector="TextBlock.bigNumber">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+    </Style>
+
+    <!-- A tappable row: the border carries the padding and the hit area, the grid inside the columns. -->
+    <Style Selector="Border.row">
+        <Setter Property="Padding" Value="16,11" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.badge">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E0E8DF, Dark=#203328}" />
+    </Style>
+
+    <Style Selector="ui|Icon.badgeIcon">
+        <Setter Property="Width" Value="19" />
+        <Setter Property="Height" Value="19" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.rowTitle">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="2" />
+    </Style>
+
+    <Style Selector="TextBlock.rowSubtitle">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="3" />
+    </Style>
+
+    <Style Selector="ui|Icon.chevron">
+        <Setter Property="Width" Value="18" />
+        <Setter Property="Height" Value="18" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="#8A8F98" />
+    </Style>
+
+    <Style Selector="ui|Icon.unfold">
+        <Setter Property="Width" Value="15" />
+        <Setter Property="Height" Value="15" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+    </Style>
+
+    <Style Selector="Border.divider">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="70,0,16,0" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E1E7DF, Dark=#203328}" />
+    </Style>
+
+    <Style Selector="Border.valueChip">
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E0E8DF, Dark=#203328}" />
+    </Style>
+
+    <Style Selector="TextBlock.valueChipLabel">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.note">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Compact switch, accent colour on: a 46x28 track and a 20 knob that slides 18. A ToggleButton with its own
+         template: ToggleSwitch demands the parts of its drag-the-knob template. -->
+    <Style Selector="ToggleButton.setting">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel Width="46" Height="28" Background="Transparent">
+                    <Border Name="Track" CornerRadius="14" Background="{theme:ThemeBrush Light=#C5CEC4, Dark=#3A4A40}" />
+                    <Border Name="Knob" Width="20" Height="20" CornerRadius="10" Background="#FFFFFF"
+                            HorizontalAlignment="Left" Margin="4,0,0,0">
+                        <Border.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+                            </Transitions>
+                        </Border.Transitions>
+                    </Border>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ToggleButton.setting:checked /template/ Border#Track">
+        <Setter Property="Background" Value="#2E6B4C" />
+    </Style>
+    <Style Selector="ToggleButton.setting:checked /template/ Border#Knob">
+        <Setter Property="RenderTransform" Value="translateX(18px)" />
+    </Style>
+
+    <!-- Slider: 4 dip track in the accent colour up to a 22 dip thumb. -->
+    <Style Selector="Slider.setting">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid Background="Transparent">
+                    <Track Name="PART_Track"
+                           Minimum="{TemplateBinding Minimum}"
+                           Maximum="{TemplateBinding Maximum}"
+                           Value="{TemplateBinding Value, Mode=TwoWay}"
+                           IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+                           Orientation="Horizontal">
+                        <Track.DecreaseButton>
+                            <RepeatButton Name="PART_DecreaseButton" Focusable="False">
+                                <RepeatButton.Template>
+                                    <ControlTemplate>
+                                        <Border Height="4" CornerRadius="2" Background="#2E6B4C" VerticalAlignment="Center" />
+                                    </ControlTemplate>
+                                </RepeatButton.Template>
+                            </RepeatButton>
+                        </Track.DecreaseButton>
+                        <Track.IncreaseButton>
+                            <RepeatButton Name="PART_IncreaseButton" Focusable="False">
+                                <RepeatButton.Template>
+                                    <ControlTemplate>
+                                        <Border Height="4" CornerRadius="2" Background="{theme:ThemeBrush Light=#C5CEC4, Dark=#3A4A40}" VerticalAlignment="Center" />
+                                    </ControlTemplate>
+                                </RepeatButton.Template>
+                            </RepeatButton>
+                        </Track.IncreaseButton>
+                        <Thumb Name="thumb" Width="22" Height="22">
+                            <Thumb.Template>
+                                <ControlTemplate>
+                                    <Border CornerRadius="11" Background="#2E6B4C" />
+                                </ControlTemplate>
+                            </Thumb.Template>
+                        </Thumb>
+                    </Track>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Segmented choices: code toggles the "on" class on the segment; its labels follow. -->
+    <Style Selector="Border.segment">
+        <Setter Property="Padding" Value="6,10" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E3EAE2, Dark=#1D3026}" />
+    </Style>
+    <Style Selector="Border.segment.on">
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}" />
+    </Style>
+
+    <Style Selector="Border.segment TextBlock.segmentTitle">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+    </Style>
+    <Style Selector="Border.segment.on TextBlock.segmentTitle">
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#0A1A11}" />
+    </Style>
+
+    <Style Selector="Border.segment TextBlock.segmentHint">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+    </Style>
+    <Style Selector="Border.segment.on TextBlock.segmentHint">
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#DDF3E8, Dark=#173527}" />
+    </Style>
+
+    <!-- Status chips on the overview: OK, or with the "warn" class when something needs attention. -->
+    <Style Selector="TextBlock.chipTitle">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="1" />
+    </Style>
+
+    <Style Selector="Border.chip">
+        <Setter Property="Padding" Value="10,8" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#DDF0E4, Dark=#1B3A2B}" />
+    </Style>
+    <Style Selector="Border.chip.warn">
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#FCF2E1, Dark=#3A3020}" />
+    </Style>
+
+    <Style Selector="Border.chip TextBlock.chipLabel">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+    </Style>
+    <Style Selector="Border.chip.warn TextBlock.chipLabel">
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#8A5A0E, Dark=#E8C27A}" />
+    </Style>
+
+    <Style Selector="Border.chipDot">
+        <Setter Property="Width" Value="7" />
+        <Setter Property="Height" Value="7" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="#2E9B63" />
+    </Style>
+    <Style Selector="Border.chip.warn Border.chipDot">
+        <Setter Property="Background" Value="#D08A16" />
+    </Style>
+</Styles>

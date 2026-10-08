@@ -41,15 +41,6 @@
         <Using Remove="Android.Views" />
     </ItemGroup>
 
-    <!-- The MAUI sources still waiting to be ported. -->
-    <ItemGroup>
-        <Compile Remove="_legacy\**" />
-        <EmbeddedResource Remove="_legacy\**" />
-        <AvaloniaXaml Remove="_legacy\**" />
-        <AndroidResource Remove="_legacy\**" />
-        <None Remove="_legacy\**" />
-    </ItemGroup>
-
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.1.3" />
         <PackageReference Include="Avalonia.Android" Version="12.1.3" />
