@@ -70,7 +70,8 @@ public sealed class GitHubAppReleaseSource : IAppReleaseSource
     }
 
     /// <summary>
-    /// The APK the release workflow attaches: "Gheychi-{version}.apk", the version being the tag without a leading "v".
+    /// The universal APK the release workflow attaches, which installs on every ABI: "Gheychi-{version}.apk", the
+    /// version being the tag without a leading "v".
     /// A direct link, so the browser downloads it instead of showing the release page.
     /// </summary>
     public static string ApkUrl(string tag)
