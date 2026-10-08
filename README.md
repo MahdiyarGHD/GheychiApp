@@ -21,6 +21,7 @@
   <img src="design/badges/android.svg" alt="Android 7.0+">
   <img src="design/badges/maui.svg" alt=".NET MAUI 10">
   <img src="design/badges/mlnet.svg" alt="ML.NET on-device">
+  <a href="LICENSE"><img src="design/badges/license.svg" alt="License: GPL-3.0"></a>
 </p>
 
 ---
@@ -121,6 +122,10 @@ dotnet test tests/Gheychi.Core.Tests
 | `src/Gheychi.Core`           | منطق اصلی و مستقل از پلتفرم؛ تشخیص هرزنامه، جستجو، تاریخ، اعلان‌ها و به‌روزرسانی |
 | `src/Gheychi.Infrastructure` | مدل ML.NET، دیتابیس SQLite، دریافت به‌روزرسانی‌ها و ارسال گزارش‌ها               |
 | `tests/`                     | تست‌های واحد                                                                     |
+
+## 📄 مجوز
+
+حق نشر © ۲۰۲۶ MahdiyarGHD. قیچی نرم‌افزار آزاده و با مجوز [GNU GPL نسخه‌ی ۳](LICENSE) منتشر شده: می‌تونید ازش استفاده کنید، کدش رو بخونید، تغییرش بدید و پخشش کنید؛ ولی هر نسخه یا تغییری که منتشر می‌کنید هم باید متن‌باز و همراه با کد منبع، با همین مجوز باشه.
 
 ---
 
