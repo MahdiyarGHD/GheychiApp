@@ -40,6 +40,18 @@ public sealed class AppUpdatesTests
     }
 
     [Fact]
+    public async Task Check_OffersTheApkTheSourceFound()
+    {
+        _source.Releases = [Release("1.3.0")];
+        _source.ApkUrls = new Dictionary<string, string> { ["1.3.0"] = "https://example.test/Gheychi-1.3.0-arm64-v8a.apk" };
+        var updates = Create("1.2.0");
+
+        await updates.CheckAsync(force: false);
+
+        Assert.Equal("https://example.test/Gheychi-1.3.0-arm64-v8a.apk", updates.GetAvailable()?.DownloadUrl);
+    }
+
+    [Fact]
     public async Task Check_OnlyNewerHasNoApkYet_IsNotAvailable()
     {
         _source.Releases = [Release("1.2.0"), Release("1.3.0")];
@@ -140,8 +152,12 @@ public sealed class AppUpdatesTests
             return Fail ? throw new HttpRequestException("offline") : Task.FromResult(Releases);
         }
 
-        public Task<bool> HasApkAsync(AppRelease release, CancellationToken cancellationToken = default) =>
-            Task.FromResult(!WithoutApk.Contains(release.Tag));
+        public IReadOnlyDictionary<string, string> ApkUrls { get; set; } = new Dictionary<string, string>();
+
+        public Task<AppRelease?> FindApkAsync(AppRelease release, CancellationToken cancellationToken = default) =>
+            Task.FromResult(WithoutApk.Contains(release.Tag)
+                ? null
+                : ApkUrls.TryGetValue(release.Tag, out var url) ? release with { DownloadUrl = url } : release);
     }
 
     private sealed class FakeState : IAppUpdateState

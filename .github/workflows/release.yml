@@ -20,7 +20,8 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   APP_PROJECT: src/Gheychi.App/Gheychi.App.csproj
-  # rid:abi of each single-ABI APK released next to the universal one; the RuntimeIdentifiers of the app project.
+  # rid:abi of each single-ABI APK released next to the universal one; the RuntimeIdentifiers of the app project
+  # and GitHubAppReleaseSource.Abis.
   ANDROID_ABIS: android-arm:armeabi-v7a android-arm64:arm64-v8a android-x86:x86 android-x64:x86_64
 
 jobs:
@@ -141,8 +142,8 @@ jobs:
             )
           fi
 
-          # The universal APK first, then one per ABI. All share the version code, so the in-app update to the next
-          # universal APK installs over any of them.
+          # The universal APK first, then one per ABI. All share the version code, so an update installs over any of
+          # them, whichever ABI it is built for.
           dotnet publish "$APP_PROJECT" "${args[@]}"
           for pair in $ANDROID_ABIS; do
             dotnet publish "$APP_PROJECT" "${args[@]}" -r "${pair%%:*}"
@@ -177,7 +178,8 @@ jobs:
             (cd "$out" && sha256sum "$2" > "$2.sha256")
           }
 
-          # The in-app updater downloads the universal APK by this name (GitHubAppReleaseSource.ApkUrl).
+          # The in-app updater downloads these by name (GitHubAppReleaseSource.ApkUrl): the APK for the phone's ABI,
+          # else the universal one.
           collect "$bin/publish" "Gheychi-$version.apk" "$(for pair in $ANDROID_ABIS; do echo "${pair#*:}"; done | sort | xargs)"
           for pair in $ANDROID_ABIS; do
             collect "$bin/${pair%%:*}/publish" "Gheychi-$version-${pair#*:}.apk" "${pair#*:}"

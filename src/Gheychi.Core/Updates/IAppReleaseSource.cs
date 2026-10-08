@@ -8,9 +8,10 @@ public interface IAppReleaseSource
     Task<IReadOnlyList<AppRelease>> GetReleasesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Whether the release's APK can be downloaded yet. A release is listed as soon as its tag is pushed, while the
-    /// release workflow is still building the APK it attaches.
+    /// The release with <see cref="AppRelease.DownloadUrl"/> set to the APK this device should download, or null
+    /// while it has none yet. A release is listed as soon as its tag is pushed, while the release workflow is still
+    /// building the APKs it attaches.
     /// </summary>
     /// <exception cref="Exception">The source could not be reached.</exception>
-    Task<bool> HasApkAsync(AppRelease release, CancellationToken cancellationToken = default);
+    Task<AppRelease?> FindApkAsync(AppRelease release, CancellationToken cancellationToken = default);
 }

@@ -50,7 +50,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISpamModelSource>(_ => new GitHubSpamModelSource(
             new HttpClient { Timeout = TimeSpan.FromMinutes(2) },
             FileSystem.CacheDirectory));
-        builder.Services.AddSingleton<IAppReleaseSource>(_ => new GitHubAppReleaseSource(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+        builder.Services.AddSingleton<IAppReleaseSource>(_ => new GitHubAppReleaseSource(
+            new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
+            GitHubAppReleaseSource.ChooseAbi(global::Android.OS.Build.SupportedAbis ?? [])));
         builder.Services.AddSingleton<IAppUpdateState, Services.PreferencesAppUpdateState>();
         builder.Services.AddSingleton(sp => new AppUpdates(
             sp.GetRequiredService<IAppReleaseSource>(),
