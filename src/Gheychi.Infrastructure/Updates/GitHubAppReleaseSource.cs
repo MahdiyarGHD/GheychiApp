@@ -12,14 +12,23 @@ public sealed class GitHubAppReleaseSource : IAppReleaseSource
     // It lists candidates as well; which is which is read from the tag.
     public const string FeedUrl = $"https://github.com/{Repository}/releases.atom";
 
+    /// <summary>The ABIs the release workflow attaches a single-ABI APK for (ANDROID_ABIS in release.yml).</summary>
+    public static readonly IReadOnlyList<string> Abis = ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"];
+
     private static readonly XNamespace Atom = "http://www.w3.org/2005/Atom";
 
     private readonly HttpClient _http;
+    private readonly string? _abi;
 
-    public GitHubAppReleaseSource(HttpClient http)
+    /// <param name="abi">The device's ABI, to download the APK built for it alone; null for the universal one.</param>
+    public GitHubAppReleaseSource(HttpClient http, string? abi = null)
     {
         _http = http;
+        _abi = abi;
     }
+
+    /// <summary>The first of the device's ABIs, most preferred first, that a single-ABI APK is released for.</summary>
+    public static string? ChooseAbi(IEnumerable<string> supportedAbis) => supportedAbis.FirstOrDefault(Abis.Contains);
 
     public async Task<IReadOnlyList<AppRelease>> GetReleasesAsync(CancellationToken cancellationToken = default)
     {
@@ -29,18 +38,29 @@ public sealed class GitHubAppReleaseSource : IAppReleaseSource
         return Parse(await XDocument.LoadAsync(feed, LoadOptions.None, cancellationToken));
     }
 
-    public async Task<bool> HasApkAsync(AppRelease release, CancellationToken cancellationToken = default)
+    public async Task<AppRelease?> FindApkAsync(AppRelease release, CancellationToken cancellationToken = default)
     {
-        if (release.DownloadUrl is null)
-            return false;
+        // The single-ABI APK is about a third of the universal one. Releases from before single-ABI APKs have only
+        // the universal one.
+        string?[] candidates = _abi is null ? [release.DownloadUrl] : [ApkUrl(release.Tag, _abi), release.DownloadUrl];
+        foreach (var url in candidates.Distinct())
+        {
+            if (url is not null && await ExistsAsync(url, cancellationToken))
+                return release with { DownloadUrl = url };
+        }
 
+        return null;
+    }
+
+    private async Task<bool> ExistsAsync(string url, CancellationToken cancellationToken)
+    {
         // Only the headers: GitHub answers a missing asset with 404 and a published one with a redirect to the file.
-        using var request = new HttpRequestMessage(HttpMethod.Head, release.DownloadUrl);
+        using var request = new HttpRequestMessage(HttpMethod.Head, url);
         using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             return false;
         if ((int)response.StatusCode >= 400)
-            throw new HttpRequestException($"Checking {release.DownloadUrl} returned {(int)response.StatusCode}.");
+            throw new HttpRequestException($"Checking {url} returned {(int)response.StatusCode}.");
 
         return true;
     }
@@ -70,13 +90,14 @@ public sealed class GitHubAppReleaseSource : IAppReleaseSource
     }
 
     /// <summary>
-    /// The universal APK the release workflow attaches, which installs on every ABI: "Gheychi-{version}.apk", the
-    /// version being the tag without a leading "v".
+    /// An APK the release workflow attaches: "Gheychi-{version}.apk", the universal one that installs on every ABI,
+    /// or "Gheychi-{version}-{abi}.apk", the version being the tag without a leading "v".
     /// A direct link, so the browser downloads it instead of showing the release page.
     /// </summary>
-    public static string ApkUrl(string tag)
+    public static string ApkUrl(string tag, string? abi = null)
     {
         var version = tag.StartsWith('v') ? tag[1..] : tag;
-        return $"https://github.com/{Repository}/releases/download/{Uri.EscapeDataString(tag)}/Gheychi-{Uri.EscapeDataString(version)}.apk";
+        var name = abi is null ? $"Gheychi-{version}.apk" : $"Gheychi-{version}-{abi}.apk";
+        return $"https://github.com/{Repository}/releases/download/{Uri.EscapeDataString(tag)}/{Uri.EscapeDataString(name)}";
     }
 }

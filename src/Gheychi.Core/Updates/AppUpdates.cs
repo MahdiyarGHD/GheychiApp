@@ -57,11 +57,9 @@ public sealed class AppUpdates
             AppRelease? found = null;
             foreach (var release in releases.Where(IsNewer).OrderByDescending(r => r.Version))
             {
-                if (await _source.HasApkAsync(release, cancellationToken))
-                {
-                    found = release;
+                found = await _source.FindApkAsync(release, cancellationToken);
+                if (found is not null)
                     break;
-                }
             }
 
             _state.LastCheckedUtc = now;

@@ -19,6 +19,7 @@
   <img src="design/badges/android.svg" alt="Android 7.0+">
   <img src="design/badges/maui.svg" alt=".NET MAUI 10">
   <img src="design/badges/mlnet.svg" alt="ML.NET on-device">
+  <a href="LICENSE"><img src="design/badges/license.svg" alt="License: GPL-3.0"></a>
 </p>
 
 ---
@@ -100,6 +101,10 @@ dotnet test tests/Gheychi.Core.Tests
 | `src/Gheychi.Core` | Platform-independent logic: spam decisions, search, dates, notifications and updates |
 | `src/Gheychi.Infrastructure` | The ML.NET model, SQLite storage, update sources and reports |
 | `tests/` | Unit tests for Core and Infrastructure |
+
+## 📄 License
+
+Copyright © 2026 MahdiyarGHD. Gheychi is free software under the [GNU General Public License v3.0](LICENSE): you can use, study, change and share it, but any copy or modified version you distribute must stay open source, with its source code, under the same license.
 
 ---
 
