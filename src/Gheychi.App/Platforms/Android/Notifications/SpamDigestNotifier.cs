@@ -1,7 +1,6 @@
 using Android.App;
 using Android.Content;
 using AndroidX.Core.App;
-using Gheychi.App.Controls.Settings;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Services;
@@ -78,7 +77,7 @@ internal static class SpamDigestNotifier
     {
         NotificationChannels.EnsureSpamDigest(context);
         var loc = LocalizationManager.Instance;
-        var count = SettingsUi.Number(digest.Count);
+        var count = LocalizedNumbers.Number(digest.Count);
         var title = (digest.AllToday, digest.Count == 1) switch
         {
             (true, true) => loc["Spam_DigestTitleTodayOne"],
@@ -91,7 +90,7 @@ internal static class SpamDigestNotifier
         {
             (1, _) => string.Format(loc["Spam_DigestFromOne"], senders[0]),
             (_, 0) => string.Format(loc["Spam_DigestFromTwo"], senders[0], senders[1]),
-            _ => string.Format(loc["Spam_DigestFromMany"], senders[0], senders[1], SettingsUi.Number(digest.OtherSenders))
+            _ => string.Format(loc["Spam_DigestFromMany"], senders[0], senders[1], LocalizedNumbers.Number(digest.OtherSenders))
         };
 
         var builder = new NotificationCompat.Builder(context, NotificationIds.ChannelSpamDigest);

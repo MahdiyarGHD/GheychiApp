@@ -1,4 +1,5 @@
 using System.Globalization;
+using Avalonia.Media;
 using Gheychi.App.Localization;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
@@ -7,8 +8,8 @@ namespace Gheychi.App.ViewModels;
 
 public sealed class SpamItem
 {
-    public static readonly Color VeryLikelyColor = Color.FromArgb("#D64545");
-    public static readonly Color LikelyColor = Color.FromArgb("#C7841A");
+    public static readonly IBrush VeryLikelyColor = Palette.Brush("#D64545");
+    public static readonly IBrush LikelyColor = Palette.Brush("#C7841A");
 
     public required SpamMessage Message { get; init; }
     public long Id => Message.Id;
@@ -20,7 +21,7 @@ public sealed class SpamItem
     public string Preview => Message.Body;
 
     public bool IsVeryLikely => SpamConfidence.Level(Message.Score) == SpamConfidenceLevel.VeryLikely;
-    public Color ConfidenceColor => IsVeryLikely ? VeryLikelyColor : LikelyColor;
+    public IBrush ConfidenceColor => IsVeryLikely ? VeryLikelyColor : LikelyColor;
     public string ScoreText => FormatPercent(SpamConfidence.Percent(Message.Score));
 
     /// <summary>"85%" or, in Persian, "۸۵٪".</summary>

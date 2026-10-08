@@ -76,8 +76,8 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install MAUI Android workload
-        run: dotnet workload install maui-android
+      - name: Install Android workload
+        run: dotnet workload install android
 
       - name: Core tests
         run: dotnet test tests/Gheychi.Core.Tests -c Release
@@ -89,7 +89,7 @@ jobs:
         env:
           MODEL_REPO: MahdiyarGHD/sms-spam-dataset
         run: |
-          dir=src/Gheychi.App/Resources/Raw/SpamModel
+          dir=src/Gheychi.App/Assets/SpamModel
           rm -rf "$dir" && mkdir -p "$dir"
           curl -fsSL --retry 3 -o "$dir/manifest.json" "https://github.com/$MODEL_REPO/releases/latest/download/manifest.json"
           version=$(jq -er .version "$dir/manifest.json")

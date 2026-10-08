@@ -8,4 +8,4 @@ riderModule.iml
 .DS_Store
 
 # Trained and released by the sms-spam-dataset repository; the build fetches it.
-src/Gheychi.App/Resources/Raw/SpamModel/
+src/Gheychi.App/Assets/SpamModel/

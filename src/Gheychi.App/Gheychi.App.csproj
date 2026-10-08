@@ -5,47 +5,52 @@
 
         <OutputType>Exe</OutputType>
         <RootNamespace>Gheychi.App</RootNamespace>
-        <UseMaui>true</UseMaui>
-        <SingleProject>true</SingleProject>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-
-        <MauiXamlInflator>SourceGen</MauiXamlInflator>
+        <LangVersion>latest</LangVersion>
 
         <ApplicationTitle>Gheychi</ApplicationTitle>
-
         <ApplicationId>com.evergreen.gheychiapp</ApplicationId>
-
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>
 
         <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <AvaloniaNameGeneratorBehavior>InitializeComponent</AvaloniaNameGeneratorBehavior>
     </PropertyGroup>
 
-    <!-- Profiled AOT only precompiles the MAUI startup path; the rest of the app (opening a chat, the
+    <!-- Full AOT: with profiled AOT only the startup path is precompiled and everything else (opening a chat, the
          profile, search) was JIT-compiled the first time it ran, which showed as a pause. Larger APK. -->
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <RunAOTCompilation>true</RunAOTCompilation>
         <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
         <!-- Since .NET 9 only the 64-bit ABIs are built by default; older and low-end phones are 32-bit ARM.
              Not with -r: the SDK packages every ABI in RuntimeIdentifiers whenever it is set, ignoring the -r one. -->
         <RuntimeIdentifiers Condition="'$(RuntimeIdentifier)' == ''">android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#05190F"/>
+        <Using Include="Gheychi.App" />
+    </ItemGroup>
 
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#05190F" BaseSize="128,128"/>
-
-        <MauiImage Include="Resources\Images\*"/>
-        <MauiFont Include="Resources\Fonts\*"/>
-        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)"/>
+    <!-- The MAUI sources still waiting to be ported. -->
+    <ItemGroup>
+        <Compile Remove="_legacy\**" />
+        <EmbeddedResource Remove="_legacy\**" />
+        <AvaloniaXaml Remove="_legacy\**" />
+        <AndroidResource Remove="_legacy\**" />
+        <None Remove="_legacy\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0"/>
+        <PackageReference Include="Avalonia" Version="12.1.3" />
+        <PackageReference Include="Avalonia.Android" Version="12.1.3" />
+        <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.3" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
         <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
         <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
         <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.android" Version="2.1.11" />
@@ -56,13 +61,16 @@
         <ProjectReference Include="..\Gheychi.Infrastructure\Gheychi.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <AvaloniaResource Include="UiAssets\**" />
+    </ItemGroup>
+
     <Import Project="..\..\build\SpamModel.targets" />
 
-    <!-- A model fetched during this build missed the Resources\Raw glob, which was evaluated before it existed. -->
+    <!-- A model fetched during this build missed the Assets glob, which was evaluated before it existed. -->
     <Target Name="IncludeFetchedSpamModel" AfterTargets="FetchSpamModel" Condition="'$(SpamModelFetched)' == 'true'">
         <ItemGroup>
-            <_FetchedSpamModel Include="Resources\Raw\**" Exclude="@(MauiAsset)" />
-            <MauiAsset Include="@(_FetchedSpamModel)" LogicalName="%(_FetchedSpamModel.RecursiveDir)%(_FetchedSpamModel.Filename)%(_FetchedSpamModel.Extension)" />
+            <AndroidAsset Include="Assets\SpamModel\**" Exclude="@(AndroidAsset)" />
         </ItemGroup>
     </Target>
 

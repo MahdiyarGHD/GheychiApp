@@ -10,7 +10,6 @@ using Android.Telephony;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Gheychi.App.Platforms.Android.Notifications;
-using Gheychi.App.Platforms.Android.Permissions;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 using SmsMessage = Gheychi.Core.Models.SmsMessage;
@@ -42,7 +41,7 @@ public sealed class AndroidSmsService : ISmsService
 
     public bool IsDefaultSmsApp()
     {
-        var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+        var context = Platform.AppContext;
 
         // From Android 10 the SMS role is what the user grants, and what EnsureDefaultSmsAppAsync asks for. Telephony's
         // answer did not always follow it: the app held the role but still showed "not your SMS app", and the button
@@ -59,7 +58,7 @@ public sealed class AndroidSmsService : ISmsService
     {
         if (OperatingSystem.IsAndroidVersionAtLeast(29))
         {
-            var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
+            var activity = Platform.CurrentActivity;
             var roleManager = activity?.GetSystemService(Context.RoleService) as RoleManager;
             if (activity != null && roleManager != null && !roleManager.IsRoleHeld(RoleManager.RoleSms))
             {
@@ -72,12 +71,12 @@ public sealed class AndroidSmsService : ISmsService
             return Task.FromResult(true);
         }
 
-        var defaultSms = Telephony.Sms.GetDefaultSmsPackage(Microsoft.Maui.ApplicationModel.Platform.AppContext);
-        if (defaultSms != Microsoft.Maui.ApplicationModel.Platform.AppContext.PackageName)
+        var defaultSms = Telephony.Sms.GetDefaultSmsPackage(Platform.AppContext);
+        if (defaultSms != Platform.AppContext.PackageName)
         {
             var intent = new Intent(Telephony.Sms.Intents.ActionChangeDefault);
-            intent.PutExtra(Telephony.Sms.Intents.ExtraPackageName, Microsoft.Maui.ApplicationModel.Platform.AppContext.PackageName);
-            Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.StartActivity(intent);
+            intent.PutExtra(Telephony.Sms.Intents.ExtraPackageName, Platform.AppContext.PackageName);
+            Platform.CurrentActivity?.StartActivity(intent);
             return Task.FromResult(false);
         }
 
@@ -86,13 +85,13 @@ public sealed class AndroidSmsService : ISmsService
 
     public async Task<bool> EnsurePermissionsAsync()
     {
-        var smsStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<SmsPermission>();
+        var smsStatus = await Permissions.CheckStatusAsync<SmsPermission>();
         if (smsStatus != PermissionStatus.Granted)
-            smsStatus = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<SmsPermission>();
+            smsStatus = await Permissions.RequestAsync<SmsPermission>();
 
-        var contactStatus = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<ContactsPermission>();
+        var contactStatus = await Permissions.CheckStatusAsync<ContactsPermission>();
         if (contactStatus != PermissionStatus.Granted)
-            await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<ContactsPermission>();
+            await Permissions.RequestAsync<ContactsPermission>();
 
         // Not awaited: the inbox must not wait for a notification prompt the user may take a while to answer.
         if (OperatingSystem.IsAndroidVersionAtLeast(33))
@@ -106,11 +105,11 @@ public sealed class AndroidSmsService : ISmsService
         try
         {
             // The channel has to exist before Android 13 shows its notification prompt.
-            await Task.Run(() => NotificationChannels.Ensure(Microsoft.Maui.ApplicationModel.Platform.AppContext));
+            await Task.Run(() => NotificationChannels.Ensure(Platform.AppContext));
 
-            var status = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<NotificationsPermission>();
+            var status = await Permissions.CheckStatusAsync<NotificationsPermission>();
             if (status != PermissionStatus.Granted)
-                await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<NotificationsPermission>();
+                await Permissions.RequestAsync<NotificationsPermission>();
         }
         catch (Exception ex)
         {
@@ -121,7 +120,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<IReadOnlyList<SmsThread>> GetThreadsAsync(CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<SmsThread>>(() =>
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var contactsTask = Task.Run(() => LoadContacts(context), cancellationToken);
             var canonicalAddresses = LoadCanonicalAddresses(context);
             var contactMap = contactsTask.GetAwaiter().GetResult();
@@ -332,7 +331,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<IReadOnlyList<SearchResultChat>> SearchChatsAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<SearchResultChat>>(async () =>
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var archivedIds = GetArchivedThreadIds();
             var variants = SearchTextHelper.BuildVariants(query.Text);
             var hasText = variants.Count > 0;
@@ -483,7 +482,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<IReadOnlyList<SearchResultLink>> SearchLinksAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<SearchResultLink>>(async () =>
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var archivedIds = GetArchivedThreadIds();
             var variants = SearchTextHelper.BuildVariants(query.Text);
             var places = query.FilterKind == SearchFilterKind.Places;
@@ -544,7 +543,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<IReadOnlyList<ThreadTextRow>> GetThreadTextRowsAsync(long threadId, CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<ThreadTextRow>>(() =>
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var rows = new List<ThreadTextRow>();
             ForEachMessage(
                 context,
@@ -948,7 +947,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<IReadOnlyList<SmsMessage>> GetMessagesAsync(long threadId, int? limit = null, int offset = 0, CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<SmsMessage>>(() =>
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var smsUri = Telephony.Sms.ContentUri;
             if (smsUri == null)
                 return Array.Empty<SmsMessage>();
@@ -1099,7 +1098,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<long> QueueOutgoingAsync(string address, string text, int subId, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
         {
-            var id = InsertOutgoing(Microsoft.Maui.ApplicationModel.Platform.AppContext, address, text, subId, finalOk: null);
+            var id = InsertOutgoing(Platform.AppContext, address, text, subId, finalOk: null);
             if (id > 0)
                 InvalidateSearchCaches();
             return id;
@@ -1168,7 +1167,7 @@ public sealed class AndroidSmsService : ISmsService
 
     public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId)
     {
-        var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+        var context = Platform.AppContext;
         var millis = new DateTimeOffset(timestamp).ToUnixTimeMilliseconds();
         var threadId = await Task.Run(() => IncomingSmsHandler.Store(context, address, body, millis, subId, read: true));
         if (threadId > 0)
@@ -1236,7 +1235,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default) =>
         Task.Run(async () =>
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             SmsManager? smsManager = null;
 
 #pragma warning disable CA1422
@@ -1309,7 +1308,7 @@ public sealed class AndroidSmsService : ISmsService
         }, cancellationToken);
 
     public Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default) =>
-        Task.Run(() => MarkThreadRead(Microsoft.Maui.ApplicationModel.Platform.AppContext, threadId), cancellationToken);
+        Task.Run(() => MarkThreadRead(Platform.AppContext, threadId), cancellationToken);
 
     /// <summary>Marks the thread read and dismisses its notification. Also used by the notification's own "Mark as read".</summary>
     internal static bool MarkThreadRead(Context context, long threadId)
@@ -1343,7 +1342,7 @@ public sealed class AndroidSmsService : ISmsService
     public Task<bool> MarkThreadAsUnreadAsync(long threadId, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var smsUri = Telephony.Sms.ContentUri;
             if (smsUri == null)
                 return false;
@@ -1392,7 +1391,7 @@ public sealed class AndroidSmsService : ISmsService
             if (threadIds == null || threadIds.Count == 0)
                 return false;
 
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var smsUri = Telephony.Sms.ContentUri;
             if (smsUri == null)
                 return false;
@@ -1429,7 +1428,7 @@ public sealed class AndroidSmsService : ISmsService
             if (messageIds == null || messageIds.Count == 0)
                 return false;
 
-            var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+            var context = Platform.AppContext;
             var smsUri = Telephony.Sms.ContentUri;
             if (smsUri == null)
                 return false;
@@ -1490,7 +1489,7 @@ public sealed class AndroidSmsService : ISmsService
                 return;
         }
 
-        var context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
+        var context = Platform.AppContext;
         var simList = new List<SimCardInfo>();
         var slotMap = new Dictionary<int, int>();
         var carrierMap = new Dictionary<int, string>();
@@ -1655,7 +1654,7 @@ public sealed class AndroidSmsService : ISmsService
     }
 
     public Task<IReadOnlyList<ContactEntry>> GetContactsAsync(CancellationToken cancellationToken = default) =>
-        Task.Run<IReadOnlyList<ContactEntry>>(() => LoadContactEntries(Microsoft.Maui.ApplicationModel.Platform.AppContext, cancellationToken), cancellationToken);
+        Task.Run<IReadOnlyList<ContactEntry>>(() => LoadContactEntries(Platform.AppContext, cancellationToken), cancellationToken);
 
     private static List<ContactEntry> LoadContactEntries(Context context, CancellationToken cancellationToken)
     {
@@ -1738,7 +1737,7 @@ public sealed class AndroidSmsService : ISmsService
 
             try
             {
-                return Telephony.Threads.GetOrCreateThreadId(Microsoft.Maui.ApplicationModel.Platform.AppContext, address);
+                return Telephony.Threads.GetOrCreateThreadId(Platform.AppContext, address);
             }
             catch (Exception)
             {
@@ -1907,7 +1906,7 @@ public sealed class AndroidSmsService : ISmsService
     {
         try
         {
-            var raw = Microsoft.Maui.Storage.Preferences.Default.Get<string>("archived_threads_v1", string.Empty);
+            var raw = Preferences.Default.Get<string>("archived_threads_v1", string.Empty);
             if (string.IsNullOrWhiteSpace(raw))
                 return [];
 

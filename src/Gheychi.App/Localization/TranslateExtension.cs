@@ -1,10 +1,15 @@
 namespace Gheychi.App.Localization;
 
-[ContentProperty(nameof(Key))]
-public sealed class TranslateExtension : IMarkupExtension
+/// <summary><c>{loc:Translate Key}</c>: the text in the language in use. The language only changes with a restart.</summary>
+public sealed class TranslateExtension
 {
+    public TranslateExtension()
+    {
+    }
+
+    public TranslateExtension(string key) => Key = key;
+
     public string Key { get; set; } = string.Empty;
 
-    public object ProvideValue(IServiceProvider serviceProvider) =>
-        LocalizationManager.Instance[Key];
+    public string ProvideValue(IServiceProvider? serviceProvider = null) => LocalizationManager.Instance[Key];
 }

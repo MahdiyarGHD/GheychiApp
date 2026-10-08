@@ -1,9 +1,9 @@
 using Android;
-using Microsoft.Maui.ApplicationModel;
 
-namespace Gheychi.App.Platforms.Android.Permissions;
+// Not in a namespace called Permissions: inside Gheychi.App.Platforms.Android that would hide the Permissions class.
+namespace Gheychi.App.Platforms.Android;
 
-public sealed class SmsPermission : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
+public sealed class SmsPermission : BasePlatformPermission
 {
     public override (string androidPermission, bool isRuntime)[] RequiredPermissions =>
     [
@@ -14,7 +14,7 @@ public sealed class SmsPermission : Microsoft.Maui.ApplicationModel.Permissions.
 }
 
 /// <summary>Runtime permission from Android 13; only ask for it there.</summary>
-public sealed class NotificationsPermission : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
+public sealed class NotificationsPermission : BasePlatformPermission
 {
     public override (string androidPermission, bool isRuntime)[] RequiredPermissions =>
     [
@@ -22,7 +22,7 @@ public sealed class NotificationsPermission : Microsoft.Maui.ApplicationModel.Pe
     ];
 }
 
-public sealed class ContactsPermission : Microsoft.Maui.ApplicationModel.Permissions.BasePlatformPermission
+public sealed class ContactsPermission : BasePlatformPermission
 {
     public override (string androidPermission, bool isRuntime)[] RequiredPermissions =>
     [

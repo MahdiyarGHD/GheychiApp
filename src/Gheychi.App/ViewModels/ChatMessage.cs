@@ -1,68 +1,47 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using Microsoft.Maui.Controls;
+using Avalonia;
+using Avalonia.Media;
 
 namespace Gheychi.App.ViewModels;
 
 public sealed class ChatMessage : INotifyPropertyChanged
 {
-    private static readonly CornerRadius OutgoingCornersLtr = new(18, 18, 4, 18);
-    private static readonly CornerRadius IncomingCornersLtr = new(18, 18, 18, 4);
-    private static readonly CornerRadius OutgoingCornersRtl = new(18, 18, 18, 4);
-    private static readonly CornerRadius IncomingCornersRtl = new(18, 18, 4, 18);
+    // Avalonia orders corners top-left, top-right, bottom-right, bottom-left (MAUI: ..., bottom-left, bottom-right).
+    private static readonly CornerRadius OutgoingCornersLtr = new(18, 18, 18, 4);
+    private static readonly CornerRadius IncomingCornersLtr = new(18, 18, 4, 18);
+    private static readonly CornerRadius OutgoingCornersRtl = new(18, 18, 4, 18);
+    private static readonly CornerRadius IncomingCornersRtl = new(18, 18, 18, 4);
 
-    private static readonly Color IncomingBgDark = Color.FromArgb("#1C1F24");
-    private static readonly Color IncomingBgLight = Color.FromArgb("#EDF1EB");
-    private static readonly Color TextDark = Color.FromArgb("#E8EAED");
-    private static readonly Color TextLight = Color.FromArgb("#1B1E24");
-    private static readonly Color TimeColorNormal = Color.FromArgb("#8A8F98");
-    private static readonly Color PrimaryColor = Color.FromArgb("#2E6B4C");
-    private static readonly Color DangerColor = Color.FromArgb("#D64545");
-    private static readonly Brush UncheckedStrokeLight = new SolidColorBrush(Color.FromArgb("#9AA0AB"));
-    private static readonly Brush UncheckedStrokeDark = new SolidColorBrush(Color.FromArgb("#5C6370"));
-
-    private static bool IsDarkTheme => Application.Current?.RequestedTheme == AppTheme.Dark;
-
-    private static readonly Color[] LightBgColors =
-    [
-        Color.FromArgb("#E6F4F1"), // Teal
-        Color.FromArgb("#FEF3C7"), // Amber
-        Color.FromArgb("#EEF2FF"), // Indigo
-        Color.FromArgb("#F5F3FF"), // Purple
-    ];
-
-    private static readonly Color[] DarkBgColors =
-    [
-        Color.FromArgb("#142B28"),
-        Color.FromArgb("#2E2010"),
-        Color.FromArgb("#1E1B4B"),
-        Color.FromArgb("#2E1065"),
-    ];
-
-    private static readonly Color[] LightTextColors =
-    [
-        Color.FromArgb("#0F766E"),
-        Color.FromArgb("#B45309"),
-        Color.FromArgb("#4338CA"),
-        Color.FromArgb("#7C3AED"),
-    ];
-
-    private static readonly Color[] DarkTextColors =
-    [
-        Color.FromArgb("#5EEAD4"),
-        Color.FromArgb("#FCD34D"),
-        Color.FromArgb("#A5B4FC"),
-        Color.FromArgb("#C4B5FD"),
-    ];
+    private static readonly IBrush IncomingBg = Palette.Pick("#EDF1EB", "#1C1F24");
+    private static readonly IBrush TextBrush = Palette.Pick("#1B1E24", "#E8EAED");
+    private static readonly IBrush TimeBrush = Palette.Brush("#8A8F98");
+    private static readonly IBrush PrimaryBrush = Palette.Brush("#2E6B4C");
+    private static readonly IBrush DangerBrush = Palette.Brush("#D64545");
+    private static readonly IBrush UncheckedStroke = Palette.Pick("#9AA0AB", "#5C6370");
 
     // Soft tint + dark text per SIM slot (light theme) or deep tint + light text (dark theme):
     // always readable, unlike white text on a pastel fill.
-    public static Color SimTintBackground(int slot) =>
-        (IsDarkTheme ? DarkBgColors : LightBgColors)[Math.Max(0, (slot - 1) % LightBgColors.Length)];
+    private static readonly IBrush[] SimBackgrounds =
+    [
+        Palette.Pick("#E6F4F1", "#142B28"), // Teal
+        Palette.Pick("#FEF3C7", "#2E2010"), // Amber
+        Palette.Pick("#EEF2FF", "#1E1B4B"), // Indigo
+        Palette.Pick("#F5F3FF", "#2E1065"), // Purple
+    ];
 
-    public static Color SimTintText(int slot) =>
-        (IsDarkTheme ? DarkTextColors : LightTextColors)[Math.Max(0, (slot - 1) % LightTextColors.Length)];
+    private static readonly IBrush[] SimTexts =
+    [
+        Palette.Pick("#0F766E", "#5EEAD4"),
+        Palette.Pick("#B45309", "#FCD34D"),
+        Palette.Pick("#4338CA", "#A5B4FC"),
+        Palette.Pick("#7C3AED", "#C4B5FD"),
+    ];
+
+    public static IBrush SimTintBackground(int slot) => SimBackgrounds[Math.Max(0, (slot - 1) % SimBackgrounds.Length)];
+
+    public static IBrush SimTintText(int slot) => SimTexts[Math.Max(0, (slot - 1) % SimTexts.Length)];
 
     public static CornerRadius IncomingCorners =>
         CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? IncomingCornersRtl : IncomingCornersLtr;
@@ -70,9 +49,9 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public static CornerRadius OutgoingCorners =>
         CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? OutgoingCornersRtl : OutgoingCornersLtr;
 
-    public static Color IncomingBubbleBg => IsDarkTheme ? IncomingBgDark : IncomingBgLight;
-    public static Color MessageTextColor => IsDarkTheme ? TextDark : TextLight;
-    public static Color MessageTimeColor => TimeColorNormal;
+    public static IBrush IncomingBubbleBg => IncomingBg;
+    public static IBrush MessageTextColor => TextBrush;
+    public static IBrush MessageTimeColor => TimeBrush;
 
     public long Id { get; set; }
     public DateTime Timestamp { get; init; }
@@ -122,7 +101,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
         ? $"{_reactionEmoji} …"
         : _hasReactionFailed ? $"{_reactionEmoji} !" : _reactionEmoji ?? string.Empty;
 
-    public Color ReactionTextColor => _hasReactionFailed ? DangerColor : (IsDarkTheme ? TextDark : TextLight);
+    public IBrush ReactionTextColor => _hasReactionFailed ? DangerBrush : TextBrush;
 
     private bool _isReactionSending;
     public bool IsReactionSending
@@ -164,8 +143,8 @@ public sealed class ChatMessage : INotifyPropertyChanged
         }
     }
 
-    public Color SelectionFill => _isSelected ? PrimaryColor : Colors.Transparent;
-    public Brush SelectionStroke => _isSelected ? Brush.Transparent : (IsDarkTheme ? UncheckedStrokeDark : UncheckedStrokeLight);
+    public IBrush SelectionFill => _isSelected ? PrimaryBrush : Palette.Transparent;
+    public IBrush SelectionStroke => _isSelected ? Palette.Transparent : UncheckedStroke;
     public double SelectionStrokeThickness => _isSelected ? 0 : 1.5;
 
     private bool _isSelectionMode;
@@ -175,7 +154,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
         set => SetField(ref _isSelectionMode, value);
     }
 
-    private static readonly Brush MatchStroke = new SolidColorBrush(Color.FromArgb("#F2B84B"));
+    private static readonly IBrush MatchStroke = Palette.Brush("#F2B84B");
     private const double MatchStrokeThickness = 1.5;
     private const double CurrentStrokeThickness = 3;
 
@@ -196,7 +175,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
         }
     }
 
-    public Brush SearchStroke => _searchMark == SearchMark.None ? Brush.Transparent : MatchStroke;
+    public IBrush SearchStroke => _searchMark == SearchMark.None ? Palette.Transparent : MatchStroke;
     public double SearchStrokeThickness => _searchMark switch
     {
         SearchMark.Current => CurrentStrokeThickness,
@@ -272,9 +251,9 @@ public sealed class ChatMessage : INotifyPropertyChanged
 
     public string SimTagText => !string.IsNullOrWhiteSpace(CarrierName) ? CarrierName : $"SIM {SimSlot}";
 
-    public Color SimTagBgColor => (IsDarkTheme ? DarkBgColors : LightBgColors)[Math.Max(0, (SimSlot - 1) % LightBgColors.Length)];
+    public IBrush SimTagBgColor => SimTintBackground(SimSlot);
 
-    public Color SimTagTextColor => (IsDarkTheme ? DarkTextColors : LightTextColors)[Math.Max(0, (SimSlot - 1) % LightTextColors.Length)];
+    public IBrush SimTagTextColor => SimTintText(SimSlot);
 
     public void ToggleRevealed()
     {

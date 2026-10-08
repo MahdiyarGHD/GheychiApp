@@ -3,7 +3,6 @@ using Android.Content.PM;
 using Android.Provider;
 using AndroidX.Core.Content;
 using Gheychi.App.Platforms.Android.Notifications;
-using Microsoft.Maui.ApplicationModel;
 using AndroidUri = global::Android.Net.Uri;
 
 namespace Gheychi.App.Platforms.Android;

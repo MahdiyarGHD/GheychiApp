@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\src\Gheychi.App\Resources\Raw\SpamModel\**" LinkBase="SpamModel" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="..\..\src\Gheychi.App\Assets\SpamModel\**" LinkBase="SpamModel" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
