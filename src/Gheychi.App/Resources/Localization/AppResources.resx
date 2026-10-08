@@ -1041,8 +1041,11 @@
   <data name="Profile_Unblocked" xml:space="preserve">
     <value>Unblocked</value>
   </data>
-  <data name="Chat_Blocked" xml:space="preserve">
-    <value>Blocked</value>
+  <data name="Chat_Unblock" xml:space="preserve">
+    <value>Unblock sender</value>
+  </data>
+  <data name="Chat_BlockedHint" xml:space="preserve">
+    <value>You blocked this sender, so their messages are dropped</value>
   </data>
   <data name="Settings_Blocked" xml:space="preserve">
     <value>Blocked senders</value>

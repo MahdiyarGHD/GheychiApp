@@ -499,8 +499,22 @@ public partial class ChatView : ContentView
         RefreshBlocked();
     }
 
-    private void RefreshBlocked() =>
-        HeaderBlocked.IsVisible = _blocked is not null && Vm?.Thread.Phone is { Length: > 0 } phone && _blocked.IsBlocked(phone);
+    private void RefreshBlocked()
+    {
+        var blocked = _blocked is not null && Vm?.Thread.Phone is { Length: > 0 } phone && _blocked.IsBlocked(phone);
+        BlockedBar.IsVisible = blocked;
+        Composer.IsVisible = !blocked;
+    }
+
+    private void OnUnblockTapped(object? sender, TappedEventArgs e)
+    {
+        if (_blocked is null || Vm?.Thread.Phone is not { Length: > 0 } phone)
+            return;
+
+        _blocked.SetBlocked(phone, false);
+        Toast.Show(LocalizationManager.Instance["Profile_Unblocked"]);
+        RefreshBlocked();
+    }
 
     public void ScrollToBottom()
     {
