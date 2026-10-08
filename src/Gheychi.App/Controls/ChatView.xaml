@@ -548,28 +548,13 @@
                                LineBreakMode="TailTruncation"
                                MaxLines="1"
                                HorizontalOptions="Fill" />
-                        <Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="6">
-                            <Label Text="{Binding Thread.Phone}"
-                                   FontSize="12"
-                                   TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
-                                   LineBreakMode="TailTruncation"
-                                   MaxLines="1"
-                                   VerticalOptions="Center" />
-                            <Border x:Name="HeaderBlocked"
-                                    Grid.Column="1"
-                                    IsVisible="False"
-                                    Padding="6,1"
-                                    StrokeThickness="0"
-                                    StrokeShape="RoundRectangle 6"
-                                    BackgroundColor="{AppThemeBinding Light=#F7E3E1, Dark=#3A2224}"
-                                    HorizontalOptions="Start"
-                                    VerticalOptions="Center">
-                                <Label Text="{loc:Translate Chat_Blocked}"
-                                       FontSize="10"
-                                       FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                                       TextColor="{AppThemeBinding Light=#B3261E, Dark=#F2B8B5}" />
-                            </Border>
-                        </Grid>
+                        <Label Grid.Row="1"
+                               Text="{Binding Thread.Phone}"
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#8A8F98, Dark=#8A8F98}"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="1"
+                               HorizontalOptions="Fill" />
                     </Grid>
                     <Grid Grid.Column="3" WidthRequest="40" HeightRequest="40" VerticalOptions="Center"
                               IsVisible="{Binding Thread.CanCall}"
@@ -887,101 +872,122 @@
                 </Border>
             </Grid>
 
-            <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode) -->
+            <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode); for a blocked sender, the way to unblock -->
             <Grid Grid.Row="2"
                   IsVisible="{Binding IsInputBarVisible}"
-                  Padding="10,6,10,8"
-                  ColumnDefinitions="Auto,*,Auto,Auto"
-                  ColumnSpacing="6">
-                <Border Grid.Column="0"
-                        WidthRequest="34"
-                        HeightRequest="34"
-                        StrokeThickness="0"
-                        StrokeShape="RoundRectangle 17"
-                        BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
-                        VerticalOptions="Center"
-                        SemanticProperties.Description="{loc:Translate Chat_Attach}">
-                    <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
-                        <Image Source="plus.png"
-                               WidthRequest="16"
-                               HeightRequest="16"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center">
-                            <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
-                            </Image.Behaviors>
-                        </Image>
-                    </Grid>
-                </Border>
-                <Border Grid.Column="1"
-                        Padding="12,0"
-                        MinimumHeightRequest="36"
+                  Padding="10,6,10,8">
+                <Border x:Name="BlockedBar"
+                        IsVisible="False"
+                        Padding="16,9"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 18"
-                        BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
-                        VerticalOptions="Center">
-                    <Grid VerticalOptions="Center">
-                        <Editor Grid.Column="0"
-                                x:Name="MessageEntry"
-                                VerticalOptions="Center"
-                                VerticalTextAlignment="Center"
-                                Text="{Binding Draft}"
-                                Placeholder="{loc:Translate Chat_MessageHint}"
-                                FontSize="13"
-                                AutoSize="TextChanges"
-                                MinimumHeightRequest="0"
-                                MaximumHeightRequest="100"
-                                BackgroundColor="Transparent"
-                                TextChanged="OnMessageEntryTextChanged" />
-                    </Grid>
-                </Border>
-                <Border Grid.Column="2"
-                        WidthRequest="34"
-                        HeightRequest="34"
-                        StrokeThickness="0"
-                        StrokeShape="RoundRectangle 17"
-                        BackgroundColor="{Binding SimBadgeColor}"
-                        VerticalOptions="Center"
-                        SemanticProperties.Description="{loc:Translate Chat_Sim}">
-                    <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
-                        <Label Text="{Binding SimText}"
-                               TranslationY="{DynamicResource BadgeDigitOffsetY}"
-                               FontSize="13"
+                        BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnUnblockTapped" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="1" HorizontalOptions="Center">
+                        <Label Text="{loc:Translate Chat_Unblock}"
+                               FontSize="14"
                                FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
-                               TextColor="White"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center"
-                               HorizontalTextAlignment="Center"
-                               VerticalTextAlignment="Center" />
-                    </Grid>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSimTap" />
-                    </Border.GestureRecognizers>
+                               TextColor="{AppThemeBinding Light=#1B5E43, Dark=#8FE0BE}"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="{loc:Translate Chat_BlockedHint}"
+                               FontSize="11"
+                               TextColor="#8A8F98"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="3"
-                        WidthRequest="36"
-                        HeightRequest="36"
-                        StrokeThickness="0"
-                        StrokeShape="RoundRectangle 18"
-                        BackgroundColor="{StaticResource Primary}"
-                        VerticalOptions="Center"
-                        SemanticProperties.Description="{loc:Translate Chat_Send}">
-                    <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
-                        <Image Source="send.png"
-                               Margin="0,3,0,0"
-                               WidthRequest="18"
-                               HeightRequest="18"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center">
-                            <Image.Behaviors>
-                                <behaviors:IconTintBehavior TintColor="White" />
-                            </Image.Behaviors>
-                        </Image>
-                    </Grid>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSend" />
-                    </Border.GestureRecognizers>
-                </Border>
+                <Grid x:Name="Composer" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+                    <Border Grid.Column="0"
+                            WidthRequest="34"
+                            HeightRequest="34"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 17"
+                            BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
+                            VerticalOptions="Center"
+                            SemanticProperties.Description="{loc:Translate Chat_Attach}">
+                        <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+                            <Image Source="plus.png"
+                                   WidthRequest="16"
+                                   HeightRequest="16"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="{AppThemeBinding Light=#5E665F, Dark=#9AA0AB}" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Grid>
+                    </Border>
+                    <Border Grid.Column="1"
+                            Padding="12,0"
+                            MinimumHeightRequest="36"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 18"
+                            BackgroundColor="{AppThemeBinding Light=#E8EDE6, Dark=#1C1F24}"
+                            VerticalOptions="Center">
+                        <Grid VerticalOptions="Center">
+                            <Editor Grid.Column="0"
+                                    x:Name="MessageEntry"
+                                    VerticalOptions="Center"
+                                    VerticalTextAlignment="Center"
+                                    Text="{Binding Draft}"
+                                    Placeholder="{loc:Translate Chat_MessageHint}"
+                                    FontSize="13"
+                                    AutoSize="TextChanges"
+                                    MinimumHeightRequest="0"
+                                    MaximumHeightRequest="100"
+                                    BackgroundColor="Transparent"
+                                    TextChanged="OnMessageEntryTextChanged" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Column="2"
+                            WidthRequest="34"
+                            HeightRequest="34"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 17"
+                            BackgroundColor="{Binding SimBadgeColor}"
+                            VerticalOptions="Center"
+                            SemanticProperties.Description="{loc:Translate Chat_Sim}">
+                        <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+                            <Label Text="{Binding SimText}"
+                                   TranslationY="{DynamicResource BadgeDigitOffsetY}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static vm:ThreadItem.FontFamilyBold}"
+                                   TextColor="White"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalTextAlignment="Center" />
+                        </Grid>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSimTap" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                    <Border Grid.Column="3"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 18"
+                            BackgroundColor="{StaticResource Primary}"
+                            VerticalOptions="Center"
+                            SemanticProperties.Description="{loc:Translate Chat_Send}">
+                        <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+                            <Image Source="send.png"
+                                   Margin="0,3,0,0"
+                                   WidthRequest="18"
+                                   HeightRequest="18"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center">
+                                <Image.Behaviors>
+                                    <behaviors:IconTintBehavior TintColor="White" />
+                                </Image.Behaviors>
+                            </Image>
+                        </Grid>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSend" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </Grid>
             </Grid>
         </Grid>
 

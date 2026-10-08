@@ -1041,8 +1041,11 @@
   <data name="Profile_Unblocked" xml:space="preserve">
     <value>مسدودی برداشته شد</value>
   </data>
-  <data name="Chat_Blocked" xml:space="preserve">
-    <value>مسدود</value>
+  <data name="Chat_Unblock" xml:space="preserve">
+    <value>رفع مسدودی فرستنده</value>
+  </data>
+  <data name="Chat_BlockedHint" xml:space="preserve">
+    <value>این فرستنده را مسدود کرده‌اید و پیام‌هایش دور ریخته می‌شوند</value>
   </data>
   <data name="Settings_Blocked" xml:space="preserve">
     <value>فرستنده‌های مسدود</value>
