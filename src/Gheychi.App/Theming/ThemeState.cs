@@ -71,9 +71,10 @@ public static class AppFonts
     private static readonly bool Persian =
         CultureInfo.CurrentUICulture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase);
 
-    public static FontFamily Regular { get; } = new(Folder + (Persian ? "Vazirmatn" : "Plus Jakarta Sans"));
+    // Latin has no Persian letters: in the English UI they come from Vazirmatn, not the phone's fallback font.
+    public static FontFamily Regular { get; } = Persian ? new(Folder + "Vazirmatn") : new(Folder + "Plus Jakarta Sans, " + Folder + "Vazirmatn");
 
-    public static FontFamily Bold { get; } = new(Folder + (Persian ? "Vazirmatn SemiBold" : "Plus Jakarta Sans SemiBold"));
+    public static FontFamily Bold { get; } = Persian ? new(Folder + "Vazirmatn SemiBold") : new(Folder + "Plus Jakarta Sans SemiBold, " + Folder + "Vazirmatn SemiBold");
 
     /// <summary>
     /// A 13sp digit centred by its line box is not centred by its ink: from the fonts' metrics, Plus Jakarta Sans
