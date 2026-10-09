@@ -87,6 +87,7 @@ public partial class MainView : UserControl
 
             // Below Android 15 the bars have a colour of their own, which would show against the other theme.
             insets.SystemBarColor = Color.Parse(ThemeState.IsDark ? "#121212" : "#F1F3F4");
+            ColorSystemBars();
             insets.SafeAreaChanged += OnInsetsChanged;
         }
         if (_topLevel.InputPane is { } pane)
@@ -111,6 +112,17 @@ public partial class MainView : UserControl
             if (_selected >= 0 && _pages[_selected] is { } shown)
                 NotifyShown(shown);
         }
+    }
+
+    // The splash theme paints the bars dark green; the navigation bar sits under the tab bar, so it takes the tab bar's
+    // colour (MainView.axaml) and the status bar the page's.
+    private static void ColorSystemBars()
+    {
+        if (Platform.CurrentActivity?.Window is not { } window)
+            return;
+
+        window.SetStatusBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#121212" : "#F1F3F4"));
+        window.SetNavigationBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#1A1B1E" : "#EFF0F1"));
     }
 
     private static void OnAppResumed() => _ = Services.UpdateAutoCheck.RunAsync();
