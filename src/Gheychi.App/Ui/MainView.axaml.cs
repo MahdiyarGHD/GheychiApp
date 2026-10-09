@@ -79,6 +79,11 @@ public partial class MainView : UserControl
         _topLevel.BackRequested += OnBackRequested;
         if (_topLevel.InsetsManager is { } insets)
         {
+            // Edge to edge from Android 11: the window is then never resized for the keyboard, which redrew the whole
+            // surface (a white flash) each time it opened. The keyboard's room is made by ApplyInsets instead.
+            if (OperatingSystem.IsAndroidVersionAtLeast(30))
+                insets.DisplayEdgeToEdgePreference = true;
+
             // Below Android 15 the bars have a colour of their own, which would show against the other theme.
             insets.SystemBarColor = Color.Parse(ThemeState.IsDark ? "#0A1A11" : "#F6F8F4");
             insets.SafeAreaChanged += OnInsetsChanged;
@@ -293,8 +298,7 @@ public partial class MainView : UserControl
 
         var safe = _topLevel.InsetsManager?.SafeAreaPadding ?? default;
         var keyboard = 0.0;
-        // Before Android 15 the system shrinks the window for the keyboard itself (AdjustResize); only an edge-to-edge
-        // window has to make room for it.
+        // Where the window is not edge to edge (before Android 11) the system shrinks it for the keyboard itself.
         if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true && _topLevel.InputPane is { State: InputPaneState.Open } pane)
             keyboard = Math.Max(0, _topLevel.Bounds.Height - pane.OccludedRect.Top);
 
