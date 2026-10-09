@@ -839,14 +839,19 @@
                             VerticalAlignment="Center"
                             AutomationProperties.Name="{loc:Translate Chat_Sim}"
                             Tapped="OnSimTap">
-                        <TextBlock x:Name="SimDigit"
-                                   Text="{Binding SimText}"
-                                   FontSize="13"
-                                   FontFamily="{x:Static app:AppFonts.Bold}"
-                                   Foreground="White"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   TextAlignment="Center" />
+                        <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <ui:Icon Data="{StaticResource Icon.SimOutline}"
+                                     Width="28" Height="28"
+                                     Foreground="White" />
+                            <TextBlock x:Name="SimDigit"
+                                       Text="{Binding SimText}"
+                                       FontSize="11"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       TextAlignment="Center" />
+                        </Panel>
                     </Border>
                     <Border Grid.Column="3"
                             Width="42" Height="42"

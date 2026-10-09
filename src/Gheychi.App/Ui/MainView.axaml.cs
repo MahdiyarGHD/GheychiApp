@@ -90,6 +90,8 @@ public partial class MainView : UserControl
         }
         if (_topLevel.InputPane is { } pane)
             pane.StateChanged += OnInsetsChanged;
+        if (ContentView is { } content)
+            content.LayoutChange += OnContentLayoutChanged;
         ApplyInsets();
 
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
@@ -123,6 +125,8 @@ public partial class MainView : UserControl
                 NotifyHidden(page);
         }
 
+        if (ContentView is { } content)
+            content.LayoutChange -= OnContentLayoutChanged;
         if (_topLevel is not null)
         {
             _topLevel.BackRequested -= OnBackRequested;
@@ -291,12 +295,44 @@ public partial class MainView : UserControl
 
     private void OnInsetsChanged(object? sender, EventArgs e) => ApplyInsets();
 
+    private global::Android.Views.View? ContentView =>
+        Platform.CurrentActivity?.FindViewById(global::Android.Resource.Id.Content);
+
+    private Thickness ViewOffset()
+    {
+        if (_topLevel is null || ContentView is not { } content || content.RootView is not { } window)
+            return default;
+
+        var at = new int[2];
+        content.GetLocationInWindow(at);
+        var scale = _topLevel.RenderScaling;
+        return new Thickness(
+            at[0] / scale,
+            at[1] / scale,
+            (window.Width - at[0] - content.Width) / scale,
+            (window.Height - at[1] - content.Height) / scale);
+    }
+
+    private void OnContentLayoutChanged(object? sender, global::Android.Views.View.LayoutChangeEventArgs e) => ApplyInsets();
+
     private void ApplyInsets()
     {
         if (_topLevel is null)
             return;
 
         var safe = _topLevel.InsetsManager?.SafeAreaPadding ?? default;
+        // Right after the app restarts itself the system can still be fitting the window around the bars while the
+        // insets are reported as well; what the view is already inset by is not applied a second time.
+        if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true)
+        {
+            var offset = ViewOffset();
+            safe = new Thickness(
+                Math.Max(0, safe.Left - offset.Left),
+                Math.Max(0, safe.Top - offset.Top),
+                Math.Max(0, safe.Right - offset.Right),
+                Math.Max(0, safe.Bottom - offset.Bottom));
+        }
+
         var keyboard = 0.0;
         // Where the window is not edge to edge (before Android 11) the system shrinks it for the keyboard itself.
         if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true && _topLevel.InputPane is { State: InputPaneState.Open } pane)
