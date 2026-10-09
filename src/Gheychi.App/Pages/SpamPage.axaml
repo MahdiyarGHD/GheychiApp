@@ -12,10 +12,10 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*">
 
         <!-- App header -->
-        <Grid x:Name="AppHeader" Grid.Row="0" Margin="18,8,6,8" ColumnDefinitions="*,Auto,Auto">
+        <Grid x:Name="AppHeader" Grid.Row="0" Margin="22,10,10,12" ColumnDefinitions="*,Auto,Auto">
             <TextBlock Grid.Column="0"
                        Text="Gheychi"
-                       FontSize="19"
+                       FontSize="22"
                        FontFamily="{x:Static app:AppFonts.Bold}"
                        Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                        VerticalAlignment="Center" />
@@ -74,10 +74,8 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Height="1" Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#2A302C}" />
-
         <!-- Title -->
-        <Grid Grid.Row="2" Margin="18,16,10,8" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+        <Grid Grid.Row="2" Margin="22,2,10,14" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
             <TextBlock Grid.Row="0"
                        Grid.Column="0"
                        Text="{loc:Translate Spam_PageTitle}"
@@ -107,9 +105,13 @@
                        Foreground="#8A8F98" />
         </Grid>
 
+        <Border Grid.Row="3"
+                CornerRadius="28,28,0,0"
+                ClipToBounds="True"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#14251B}">
+        <Panel>
         <ItemsControl x:Name="SpamList"
-                      Grid.Row="3"
-                      Margin="12,0,4,0"
+                      Margin="0,8,0,0"
                       ItemsSource="{Binding Items}">
             <ItemsControl.Template>
                 <ControlTemplate TargetType="ItemsControl">
@@ -128,7 +130,7 @@
                     <vm:SpamTemplateSelector.DateSeparatorTemplate>
                         <DataTemplate x:DataType="vm:DateSeparatorItem">
                             <TextBlock Text="{Binding Text}"
-                                       Padding="6,14,0,4"
+                                       Padding="22,14,0,4"
                                        FontSize="12"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
                                        Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
@@ -136,27 +138,27 @@
                     </vm:SpamTemplateSelector.DateSeparatorTemplate>
                     <vm:SpamTemplateSelector.SpamTemplate>
                         <DataTemplate x:DataType="vm:SpamItem">
-                            <!-- One flat grid per row: the day's rows are 10 dip apart above and below, the divider is the third row. -->
-                            <Grid RowDefinitions="Auto,Auto,1" ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                            <!-- One flat grid per row: the avatar spans both lines, the more button sits at the end. -->
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                                 <Border Grid.Row="0"
                                         Grid.RowSpan="2"
                                         Grid.Column="0"
-                                        Width="38"
-                                        Height="38"
-                                        Margin="6,12,12,0"
-                                        CornerRadius="19"
-                                        Background="{theme:ThemeBrush Light=#E7EEE6, Dark=#2A332D}"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="16,14,14,0"
+                                        CornerRadius="22"
+                                        Background="{theme:ThemeBrush Light=#FCF0DC, Dark=#3A3020}"
                                         VerticalAlignment="Top">
-                                    <ui:Icon Data="{StaticResource Icon.SpamRow}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                    <ui:Icon Data="{StaticResource Icon.SpamAlert}" Width="23" Height="23" Foreground="{theme:ThemeBrush Light=#A8660A, Dark=#E8C27A}" />
                                 </Border>
 
                                 <!-- The sender gives way first; the confidence and time are always shown whole -->
                                 <TextBlock Grid.Row="0"
                                            Grid.Column="1"
-                                           Margin="0,10,8,0"
+                                           Margin="0,12,8,0"
                                            Text="{Binding Sender}"
                                            ui:TextDirection.KeepSide="True"
-                                           FontSize="14"
+                                           FontSize="15"
                                            FontFamily="{x:Static app:AppFonts.Bold}"
                                            Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                                            TextTrimming="CharacterEllipsis"
@@ -164,26 +166,26 @@
                                            VerticalAlignment="Center" />
                                 <TextBlock Grid.Row="0"
                                            Grid.Column="2"
-                                           Margin="0,10,8,0"
+                                           Margin="0,12,8,0"
                                            Text="{Binding Confidence}"
-                                           FontSize="11"
+                                           FontSize="11.5"
                                            FontFamily="{x:Static app:AppFonts.Bold}"
                                            Foreground="{Binding ConfidenceColor}"
                                            VerticalAlignment="Center" />
                                 <TextBlock Grid.Row="0"
                                            Grid.Column="3"
-                                           Margin="0,10,12,0"
+                                           Margin="0,12,12,0"
                                            Text="{Binding Clock}"
-                                           FontSize="11"
+                                           FontSize="11.5"
                                            Foreground="#8A8F98"
                                            VerticalAlignment="Center" />
                                 <TextBlock Grid.Row="1"
                                            Grid.Column="1"
                                            Grid.ColumnSpan="3"
-                                           Margin="0,2,12,10"
+                                           Margin="0,3,12,14"
                                            Text="{Binding Preview}"
                                            ui:TextDirection.KeepSide="True"
-                                           FontSize="13"
+                                           FontSize="13.5"
                                            Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}"
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="Wrap"
@@ -200,12 +202,6 @@
                                         Tapped="OnMoreTapped">
                                     <ui:Icon Data="{StaticResource Icon.More}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#8A8F98, Dark=#9AA0AB}" />
                                 </Border>
-
-                                <Border Grid.Row="2"
-                                        Grid.Column="0"
-                                        Grid.ColumnSpan="5"
-                                        Margin="56,0,8,0"
-                                        Background="{theme:ThemeBrush Light=#EEF1EC, Dark=#24292A}" />
                             </Grid>
                         </DataTemplate>
                     </vm:SpamTemplateSelector.SpamTemplate>
@@ -214,7 +210,6 @@
         </ItemsControl>
 
         <StackPanel x:Name="EmptyState"
-                    Grid.Row="3"
                     Margin="12,64,4,0"
                     Spacing="10"
                     HorizontalAlignment="Center"
@@ -233,6 +228,8 @@
                        TextAlignment="Center"
                        TextWrapping="Wrap" />
         </StackPanel>
+        </Panel>
+        </Border>
 
         <controls:SpamOverlay x:Name="Overlay" Grid.RowSpan="4" />
     </Grid>

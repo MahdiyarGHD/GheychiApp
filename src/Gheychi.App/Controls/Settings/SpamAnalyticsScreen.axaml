@@ -117,7 +117,7 @@
                                         <Border Classes="row">
                                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                                 <Border Classes="badge">
-                                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SpamRow}"
+                                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SpamAlert}"
                                                              Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
                                                 </Border>
                                                 <TextBlock Grid.Column="1" Text="{Binding Display}" Classes="rowTitle" VerticalAlignment="Center" />

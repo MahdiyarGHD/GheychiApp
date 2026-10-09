@@ -346,7 +346,7 @@
                                 <Border Classes="row" Tapped="OnSpamMessagesTapped">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                         <Border Grid.Column="0" Classes="rowBadge">
-                                            <ui:Icon Data="{StaticResource Icon.SpamRow}" Width="20" Height="20"
+                                            <ui:Icon Data="{StaticResource Icon.SpamAlert}" Width="20" Height="20"
                                                      Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
                                         </Border>
                                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">

@@ -8,6 +8,8 @@ public sealed record TrustedSenderRow(string Key, string Display);
 public sealed record BlockedSenderRow(string Key, string Title, string Subtitle)
 {
     public bool HasSubtitle => Subtitle.Length > 0;
+    public string Initials => ThreadItem.GenerateInitials(Title);
+    public bool HasNoInitials => Initials.Length == 0;
 }
 
 public sealed record LicenseRow(string Name, string License, string Url);
