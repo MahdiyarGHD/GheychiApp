@@ -237,7 +237,7 @@
                                     <TextBlock Text="{Binding StatusGlyph}"
                                                FontSize="11"
                                                LetterSpacing="-4.5"
-                                               Margin="2,0,0,0"
+                                               Margin="2,0,6,0"
                                                Foreground="{StaticResource MintBrush}"
                                                VerticalAlignment="Bottom" />
                                 </StackPanel>
@@ -337,7 +337,7 @@
                                     <TextBlock Text="{Binding StatusGlyph}"
                                                FontSize="11"
                                                LetterSpacing="-4.5"
-                                               Margin="2,0,0,0"
+                                               Margin="2,0,6,0"
                                                Foreground="{StaticResource MintBrush}"
                                                VerticalAlignment="Bottom" />
                                 </StackPanel>

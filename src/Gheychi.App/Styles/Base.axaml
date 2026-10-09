@@ -1,5 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:theme="clr-namespace:Gheychi.App.Theming"
+        xmlns:ui="clr-namespace:Gheychi.App.Ui">
 
     <!-- A text box with no chrome, for inputs that sit inside a rounded bar of their own. -->
     <Style Selector="TextBox.plain">
@@ -14,5 +16,33 @@
     <Style Selector="TextBox.plain:pointerover /template/ Border#border, TextBox.plain:focus /template/ Border#border, TextBox.plain:disabled /template/ Border#border">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="TextBox">
+        <Setter Property="ui:TextMenu.Enabled" Value="True" />
+    </Style>
+    <Style Selector="FlyoutPresenter.textmenu">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Button.textmenu">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="14,9" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.textmenu:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.textmenu:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E8EDE6, Dark=#32363E}" />
     </Style>
 </Styles>
