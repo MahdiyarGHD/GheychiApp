@@ -15,6 +15,7 @@
         <Grid x:Name="AppHeader" Grid.Row="0" Margin="22,10,10,12" ColumnDefinitions="*,Auto,Auto">
             <TextBlock Grid.Column="0"
                        Text="Gheychi"
+                       ui:TextDirection.KeepSide="True"
                        FontSize="22"
                        FontFamily="{x:Static app:AppFonts.Bold}"
                        Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
