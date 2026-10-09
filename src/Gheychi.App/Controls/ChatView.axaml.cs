@@ -218,6 +218,9 @@ public partial class ChatView : UserControl
         Composer.IsVisible = !blocked;
     }
 
+    // The whole pill is the input, not only the line of text in it.
+    private void OnInputBarTapped(object? sender, TappedEventArgs e) => MessageEntry.Focus();
+
     private void OnUnblockTapped(object? sender, TappedEventArgs e)
     {
         if (_blocked is null || Vm?.Thread.Phone is not { Length: > 0 } phone)
