@@ -181,6 +181,7 @@
                                            Grid.ColumnSpan="3"
                                            Margin="0,2,12,10"
                                            Text="{Binding Preview}"
+                                           ui:TextDirection.KeepSide="True"
                                            FontSize="13"
                                            Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}"
                                            TextTrimming="CharacterEllipsis"

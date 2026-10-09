@@ -492,6 +492,7 @@
                                 </TextBlock>
                                 <TextBlock Grid.Row="1" Grid.Column="0"
                                            Text="{Binding Preview, Mode=OneTime}"
+                                           ui:TextDirection.KeepSide="True"
                                            FontSize="13"
                                            Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
                                            TextWrapping="Wrap"

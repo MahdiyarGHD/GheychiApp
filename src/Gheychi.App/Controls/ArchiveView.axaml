@@ -167,6 +167,7 @@
                                            FontFamily="{x:Static app:AppFonts.Bold}"
                                            TextTrimming="CharacterEllipsis" />
                                 <TextBlock Text="{Binding Preview, Mode=OneTime}"
+                                           ui:TextDirection.KeepSide="True"
                                            FontSize="12"
                                            Foreground="{Binding PreviewColor, Mode=OneTime}"
                                            TextTrimming="CharacterEllipsis" />
