@@ -366,9 +366,20 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         if (Vm is not { } vm || vm.Threads.Count == 0 || _threadsScroll is not { Viewport.Height: > 0 } scroll)
             return null;
 
-        var start = Math.Max(0, (int)(scroll.Offset.Y / RowHeight) - PreloadBuffer);
-        var end = Math.Min(vm.Threads.Count - 1, (int)((scroll.Offset.Y + scroll.Viewport.Height) / RowHeight) + PreloadBuffer);
-        return end < start ? null : vm.Threads.Skip(start).Take(end - start + 1).ToList();
+        var first = (int)(scroll.Offset.Y / RowHeight);
+        var last = (int)((scroll.Offset.Y + scroll.Viewport.Height) / RowHeight);
+        var start = Math.Max(0, first - PreloadBuffer);
+        var end = Math.Min(vm.Threads.Count - 1, last + PreloadBuffer);
+        if (end < start)
+            return null;
+
+        // The rows in view come first, then the ones beside them, nearest first.
+        var middle = (first + last) / 2.0;
+        return Enumerable.Range(start, end - start + 1)
+            .OrderBy(index => index >= first && index <= last ? 0 : 1)
+            .ThenBy(index => Math.Abs(index - middle))
+            .Select(index => vm.Threads[index])
+            .ToList();
     }
 
     private static ThreadItem? ThreadFrom(RoutedEventArgs e) =>
