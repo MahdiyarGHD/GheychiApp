@@ -172,49 +172,41 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         var ct = _preloadCts.Token;
         _ = Task.Run(async () =>
         {
-            var count = 0;
-            foreach (var thread in threads)
+            List<ThreadItem> pending;
+            lock (CacheLock)
+                pending = threads.Where(thread => !RecentCache.ContainsKey(thread.ThreadId)).Take(maxThreads).ToList();
+
+            try
             {
-                if (ct.IsCancellationRequested || count++ >= maxThreads)
-                    break;
-
-                lock (CacheLock)
+                // A few at a time, in the order given (the ones in view first). The open chat's own query has priority
+                // (opening cancels this), so the warm-up only stays out of the way of the finger.
+                await Parallel.ForEachAsync(pending, new ParallelOptions { MaxDegreeOfParallelism = 3, CancellationToken = ct }, async (thread, token) =>
                 {
-                    if (RecentCache.ContainsKey(thread.ThreadId))
-                        continue;
-                }
+                    await UserActivity.WaitForIdleAsync(150, token);
 
-                // The open chat's own query always has SQLite priority (opening cancels this), so the warm-up
-                // only needs to stay out of the way of the finger.
-                try
-                {
-                    await Task.Delay(40, ct);
-
-                    // Reading a chat is real work (provider, SQLite, allocations): not while the user is touching the screen.
-                    await UserActivity.WaitForIdleAsync(300, ct);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-
-                try
-                {
-                    var generation = CurrentCacheGeneration();
-                    var loader = new ChatViewModel(null, smsService, dateFormatter);
-                    var data = await loader.FetchMessagesAsync(thread, RecentPageSize, cancellationToken: ct);
-
-                    // Empty means the provider failed (a thread always has messages); caching it
-                    // would open that chat blank. A bumped generation means a message arrived
-                    // while this was being read, so the page is already stale.
-                    if (!ct.IsCancellationRequested && data.RawCount > 0 && generation == CurrentCacheGeneration())
+                    try
                     {
-                        AddToCache(thread.ThreadId, data);
+                        var generation = CurrentCacheGeneration();
+                        var loader = new ChatViewModel(null, smsService, dateFormatter);
+                        var data = await loader.FetchMessagesAsync(thread, RecentPageSize, cancellationToken: token);
+
+                        // Empty means the provider failed (a thread always has messages); caching it
+                        // would open that chat blank. A bumped generation means a message arrived
+                        // while this was being read, so the page is already stale.
+                        if (!token.IsCancellationRequested && data.RawCount > 0 && generation == CurrentCacheGeneration())
+                            AddToCache(thread.ThreadId, data);
                     }
-                }
-                catch
-                {
-                }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch
+                    {
+                    }
+                });
+            }
+            catch (OperationCanceledException)
+            {
             }
         }, ct);
     }
