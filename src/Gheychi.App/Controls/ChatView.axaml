@@ -490,6 +490,7 @@
                                 Background="Transparent"
                                 Tapped="OnHeaderTapped">
                         <TextBlock Text="{Binding Thread.Name}"
+                                   ui:TextDirection.KeepSide="True"
                                    Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                                    FontSize="15"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
