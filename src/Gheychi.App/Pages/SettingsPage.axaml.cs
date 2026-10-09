@@ -213,6 +213,8 @@ public partial class SettingsPage : UserControl
 
     private void OnPrivacyTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Privacy);
 
+    private void OnHelpTapped(object? sender, TappedEventArgs e) => _ = HelpLink.OpenAsync();
+
     private void OnAboutTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.About);
 
     private void OnCaughtTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Analytics);

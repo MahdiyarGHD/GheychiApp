@@ -432,6 +432,27 @@
   <data name="Profile_LinksReading" xml:space="preserve">
     <value>در حال جستجوی پیوندها…</value>
   </data>
+  <data name="Profile_Starred" xml:space="preserve">
+    <value>پیام‌های ستاره‌دار</value>
+  </data>
+  <data name="Profile_StarredReading" xml:space="preserve">
+    <value>در حال جستجوی پیام‌های ستاره‌دار…</value>
+  </data>
+  <data name="Profile_StarredNone" xml:space="preserve">
+    <value>پیام ستاره‌داری وجود ندارد</value>
+  </data>
+  <data name="Profile_StarredCount" xml:space="preserve">
+    <value>{0} پیام ستاره‌دار</value>
+  </data>
+  <data name="Profile_SpamMessagesNone" xml:space="preserve">
+    <value>هرزنامه‌ای از این فرستنده نیست</value>
+  </data>
+  <data name="Help_Feedback" xml:space="preserve">
+    <value>راهنما و بازخورد</value>
+  </data>
+  <data name="Help_FeedbackHint" xml:space="preserve">
+    <value>گزارش مشکل یا ارسال پیشنهاد در گیت‌هاب</value>
+  </data>
   <data name="Profile_Notifications" xml:space="preserve">
     <value>اعلان‌ها</value>
   </data>

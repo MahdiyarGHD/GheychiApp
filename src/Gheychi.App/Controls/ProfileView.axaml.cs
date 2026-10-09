@@ -17,6 +17,13 @@ using Gheychi.App.Theming;
 
 namespace Gheychi.App.Controls;
 
+/// <summary>A list of the profile page that the chat menu opens directly.</summary>
+public enum ProfileSection
+{
+    Starred,
+    Spam
+}
+
 /// <summary>The conversation's profile page: who it is with, what can be done with them, and per-conversation settings.</summary>
 public partial class ProfileView : UserControl
 {
@@ -32,7 +39,13 @@ public partial class ProfileView : UserControl
     private readonly IDateFormattingService _dates;
     private readonly SpamViewModel? _spam;
     private readonly IBlockedSenders? _blocked;
+    private readonly IMessageMetadataRepository? _metadata;
     private IReadOnlyList<SpamItem> _spamItems = [];
+    private IReadOnlyList<StarredMessageItem> _starred = [];
+    private bool _starredLoaded;
+
+    // Opened straight on a list by the chat menu: leaving the list leaves the profile, back to the chat.
+    private bool _direct;
 
     private ThreadItem _thread = ThreadItem.Empty;
     private ThreadProfileActions _actions = ThreadProfileActions.For(null);
@@ -54,6 +67,7 @@ public partial class ProfileView : UserControl
         if (_spam is not null)
             _spam.Changed += UpdateSpam;
         _blocked = services?.GetService<IBlockedSenders>();
+        _metadata = services?.GetService<IMessageMetadataRepository>();
 
         SetSwitch(SnoozeSwitch, SnoozeThumb, on: false);
         SetSwitch(SpamImmuneSwitch, SpamImmuneThumb, on: false);
@@ -73,6 +87,9 @@ public partial class ProfileView : UserControl
     /// <summary>The ••• of a spam message in the list was tapped; the host shows the spam menu for it.</summary>
     public event EventHandler<SpamItem>? SpamMenuRequested;
 
+    /// <summary>A starred message was tapped; the host goes back to the chat and scrolls to it.</summary>
+    public event EventHandler<StarredMessageItem>? MessageRequested;
+
     /// <summary>Shows <paramref name="thread"/>; call before the page slides in.</summary>
     public void Bind(ThreadItem thread, bool isArchived)
     {
@@ -85,6 +102,8 @@ public partial class ProfileView : UserControl
         ProfilePage.IsVisible = true;
         LinksPage.IsVisible = false;
         SpamListPage.IsVisible = false;
+        StarredPage.IsVisible = false;
+        _direct = false;
 
         BindIdentity();
         ApplyActions();
@@ -99,7 +118,10 @@ public partial class ProfileView : UserControl
 
         SimPill.IsVisible = SimRow.IsVisible = false;
         LinksHint.Text = LocalizationManager.Instance["Profile_LinksReading"];
+        StarredHint.Text = LocalizationManager.Instance["Profile_StarredReading"];
         _links = [];
+        _starred = [];
+        _starredLoaded = false;
 
         _ = LoadSimsAsync(version);
 
@@ -108,8 +130,18 @@ public partial class ProfileView : UserControl
         MainActivity.Resumed += OnAppResumed;
     }
 
+    /// <summary>Opens a list of the page at once, as if its row had been tapped; the back arrow then leaves the profile.</summary>
+    public void ShowSection(ProfileSection section)
+    {
+        _direct = true;
+        if (section == ProfileSection.Starred)
+            OnStarredTapped(null, null!);
+        else
+            OnSpamMessagesTapped(null, null!);
+    }
+
     /// <summary>Called once the page has slid in.</summary>
-    public void OnOpened() => _ = LoadLinksAsync(_bindVersion);
+    public void OnOpened() => _ = LoadThreadDataAsync(_bindVersion);
 
     /// <summary>Called once the page is out of sight.</summary>
     public void Reset()
@@ -117,6 +149,8 @@ public partial class ProfileView : UserControl
         _bindVersion++;
         _links = [];
         LinksList.ItemsSource = null;
+        _starred = [];
+        StarredList.ItemsSource = null;
         _spamItems = [];
         SpamList.ItemsSource = null;
         MainActivity.Resumed -= OnAppResumed;
@@ -127,7 +161,13 @@ public partial class ProfileView : UserControl
     {
         if (SpamListPage.IsVisible)
         {
-            SpamListPage.IsVisible = false;
+            CloseSection(SpamListPage);
+            return true;
+        }
+
+        if (StarredPage.IsVisible)
+        {
+            CloseSection(StarredPage);
             return true;
         }
 
@@ -136,6 +176,13 @@ public partial class ProfileView : UserControl
 
         LinksPage.IsVisible = false;
         return true;
+    }
+
+    private void CloseSection(Control page)
+    {
+        page.IsVisible = false;
+        if (_direct)
+            BackRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnAppResumed() => MainThread.BeginInvokeOnMainThread(UpdateNotificationState);
@@ -288,8 +335,8 @@ public partial class ProfileView : UserControl
     private IReadOnlyList<LinkResultItem> _links = [];
 
     // Reads every message of the conversation, so it waits for the slide: the allocations it makes
-    // would otherwise pause the slide for garbage collections.
-    private async Task LoadLinksAsync(int version)
+    // would otherwise pause the slide for garbage collections. The links and the starred messages come from one read.
+    private async Task LoadThreadDataAsync(int version)
     {
         if (_sms is not { } sms)
             return;
@@ -297,25 +344,35 @@ public partial class ProfileView : UserControl
         try
         {
             var threadId = _thread.ThreadId;
-            var items = await Task.Run(async () =>
+            var (links, starred) = await Task.Run(async () =>
             {
                 var rows = await sms.GetThreadTextRowsAsync(threadId);
-                return BuildLinkItems(ThreadLinks.Find(rows), threadId);
+                var starredIds = _metadata is null
+                    ? new HashSet<long>()
+                    : (await _metadata.GetStarredForThreadAsync(threadId)).Select(m => m.MessageId).ToHashSet();
+                return (BuildLinkItems(ThreadLinks.Find(rows), threadId), BuildStarredItems(rows, starredIds));
             });
             if (version != _bindVersion)
                 return;
 
-            _links = items;
+            _links = links;
+            _starred = starred;
+            _starredLoaded = true;
             var loc = LocalizationManager.Instance;
-            LinksHint.Text = items.Count == 0
+            LinksHint.Text = links.Count == 0
                 ? loc["Profile_LinksNone"]
-                : string.Format(loc["Profile_LinksCount"], items.Count);
+                : string.Format(loc["Profile_LinksCount"], links.Count);
+            UpdateStarred();
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Reading links for the profile failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Reading links and starred messages for the profile failed: {ex}");
             if (version == _bindVersion)
+            {
                 LinksHint.Text = LocalizationManager.Instance["Profile_LinksNone"];
+                _starredLoaded = true;
+                UpdateStarred();
+            }
         }
     }
 
@@ -369,6 +426,64 @@ public partial class ProfileView : UserControl
         }
     }
 
+    // ---- Starred -------------------------------------------------------------------------------
+
+    private List<StarredMessageItem> BuildStarredItems(IReadOnlyList<ThreadTextRow> rows, HashSet<long> starredIds)
+    {
+        var items = new List<StarredMessageItem>(starredIds.Count);
+        if (starredIds.Count == 0)
+            return items;
+
+        var now = DateTime.Now;
+        var culture = CultureInfo.CurrentUICulture;
+        for (var row = 0; row < rows.Count && items.Count < starredIds.Count; row++)
+        {
+            if (!starredIds.Contains(rows[row].Id))
+                continue;
+
+            var time = DateTimeOffset.FromUnixTimeMilliseconds(rows[row].DateMs).LocalDateTime;
+            items.Add(new StarredMessageItem
+            {
+                MessageId = rows[row].Id,
+                Row = row,
+                Preview = rows[row].Body,
+                Time = _dates.FormatThreadTime(time, now, culture)
+            });
+        }
+
+        return items;
+    }
+
+    private void UpdateStarred()
+    {
+        var loc = LocalizationManager.Instance;
+        StarredHint.Text = _starred.Count == 0
+            ? loc["Profile_StarredNone"]
+            : string.Format(loc["Profile_StarredCount"], _starred.Count);
+
+        if (!StarredPage.IsVisible)
+            return;
+
+        StarredList.ItemsSource = _starred;
+        StarredEmpty.Text = _starredLoaded ? loc["Profile_StarredNone"] : loc["Profile_StarredReading"];
+        StarredEmpty.IsVisible = _starred.Count == 0;
+        StarredList.IsVisible = _starred.Count > 0;
+    }
+
+    private void OnStarredTapped(object? sender, TappedEventArgs e)
+    {
+        StarredPage.IsVisible = true;
+        UpdateStarred();
+    }
+
+    private void OnStarredBackTapped(object? sender, TappedEventArgs e) => CloseSection(StarredPage);
+
+    private void OnStarredItemTapped(object? sender, TappedEventArgs e)
+    {
+        if ((e.Source as StyledElement)?.DataContext is StarredMessageItem item)
+            MessageRequested?.Invoke(this, item);
+    }
+
     // ---- Spam ----------------------------------------------------------------------------------
 
     // The profile shows a contact by name; a number or sender id is shown as itself.
@@ -386,14 +501,20 @@ public partial class ProfileView : UserControl
         SpamImmuneHint.Text = isContact ? loc["Profile_SpamImmuneContact"] : loc["Profile_SpamImmuneHint"];
 
         _spamItems = _spam.ForSender(_sendAddress);
-        SpamMessagesRow.IsVisible = _spamItems.Count > 0;
-        SpamMessagesHint.Text = string.Format(loc["Profile_SpamMessagesHint"], _spamItems.Count);
+        SpamMessagesHint.Text = _spamItems.Count == 0
+            ? loc["Profile_SpamMessagesNone"]
+            : string.Format(loc["Profile_SpamMessagesHint"], _spamItems.Count);
 
         if (SpamListPage.IsVisible)
-        {
-            SpamList.ItemsSource = _spamItems;
-            SpamListPage.IsVisible = _spamItems.Count > 0;
-        }
+            ShowSpamList();
+    }
+
+    private void ShowSpamList()
+    {
+        SpamList.ItemsSource = _spamItems;
+        SpamEmpty.Text = LocalizationManager.Instance["Profile_SpamMessagesNone"];
+        SpamEmpty.IsVisible = _spamItems.Count == 0;
+        SpamList.IsVisible = _spamItems.Count > 0;
     }
 
     private void OnSpamImmuneTapped(object? sender, TappedEventArgs e)
@@ -407,11 +528,11 @@ public partial class ProfileView : UserControl
 
     private void OnSpamMessagesTapped(object? sender, TappedEventArgs e)
     {
-        SpamList.ItemsSource = _spamItems;
         SpamListPage.IsVisible = true;
+        ShowSpamList();
     }
 
-    private void OnSpamListBackTapped(object? sender, TappedEventArgs e) => SpamListPage.IsVisible = false;
+    private void OnSpamListBackTapped(object? sender, TappedEventArgs e) => CloseSection(SpamListPage);
 
     private void OnSpamListTapped(object? sender, TappedEventArgs e)
     {
@@ -547,24 +668,8 @@ public partial class ProfileView : UserControl
             if (_blocked is null || string.IsNullOrWhiteSpace(_sendAddress))
                 return;
 
-            var loc = LocalizationManager.Instance;
             var address = _sendAddress;
-            if (_blocked.IsBlocked(address))
-            {
-                _blocked.SetBlocked(address, false);
-                Toast.Show(loc["Profile_Unblocked"]);
-            }
-            else
-            {
-                var title = string.Format(loc["Profile_BlockConfirmTitle"], _thread.Name);
-                if (!await Dialogs.AlertAsync(title, loc["Profile_BlockConfirmMessage"], loc["Profile_BlockConfirm"], loc["Chat_Cancel"]))
-                    return;
-
-                _blocked.SetBlocked(address, true);
-                Toast.Show(loc["Profile_Blocked"]);
-            }
-
-            if (address == _sendAddress)
+            if (await BlockActions.ToggleAsync(_blocked, address, _thread.Name) && address == _sendAddress)
                 BindBlocked();
         }
         catch (Exception ex)

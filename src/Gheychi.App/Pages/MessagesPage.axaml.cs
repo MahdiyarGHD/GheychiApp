@@ -109,6 +109,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         var chat = new ChatView { IsVisible = false, ZIndex = OverlayZIndex };
         chat.BackRequested += CloseChatAsync;
         chat.ProfileRequested += OnChatProfileRequested;
+        chat.SectionRequested += OnChatSectionRequested;
+        chat.ArchiveRequested += archive => OnProfileArchiveRequested(chat, archive);
+        chat.IsArchivedLookup = IsArchived;
         Overlays.Children.Add(chat);
         return chat;
     }
@@ -159,6 +162,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         profile.TextRequested += OnProfileTextRequested;
         profile.SearchRequested += OnProfileSearchRequested;
         profile.ArchiveRequested += OnProfileArchiveRequested;
+        profile.MessageRequested += OnProfileMessageRequested;
         profile.SpamMenuRequested += (_, item) => SpamPopup.ShowMenu(item);
         Overlays.Children.Add(profile);
         return profile;
@@ -942,7 +946,36 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         }
     }
 
-    private async Task OpenProfileAsync(ThreadItem thread)
+    // The chat menu lists the starred or spam messages of the chat: the profile page holds those lists.
+    private async void OnChatSectionRequested(ProfileSection section)
+    {
+        try
+        {
+            if (_animating || IsChatClosed || !IsProfileClosed || ChatOverlay.Vm is null)
+                return;
+
+            await OpenProfileAsync(ChatOverlay.Vm.Thread, section);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open chat section failed: {ex}");
+        }
+    }
+
+    private async void OnProfileMessageRequested(object? sender, StarredMessageItem item)
+    {
+        try
+        {
+            await CloseProfileAsync();
+            await ChatOverlay.JumpToMessageAsync(item.Row, item.MessageId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Jump to starred message failed: {ex}");
+        }
+    }
+
+    private async Task OpenProfileAsync(ThreadItem thread, ProfileSection? section = null)
     {
         if (_animating)
             return;
@@ -953,6 +986,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             var profile = ProfileOverlay;
             ChatOverlay.ReleaseInputFocus();
             profile.Bind(thread, IsArchived(thread.ThreadId));
+            if (section is { } direct)
+                profile.ShowSection(direct);
 
             var distance = OverlayDistance;
             OverlayAnimator.SetTranslation(profile, 0, distance);
