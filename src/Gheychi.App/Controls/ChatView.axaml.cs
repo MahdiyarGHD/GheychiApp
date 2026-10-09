@@ -41,6 +41,8 @@ public partial class ChatView : UserControl
     private bool _stickyPending;
     private bool _holdFired;
     private bool _stoppedFling;
+    private bool _initialPending;
+    private int? _initialUnread;
     private long _lastOffsetChangeTick;
     private int _lastFirstVisibleIndex = -1;
     private long _lastDateUpdateTime;
@@ -136,6 +138,7 @@ public partial class ChatView : UserControl
     {
         _followTail = true;
         _initialLayoutSettled = false;
+        _initialPending = false;
         _lastFirstVisibleIndex = -1;
         _loadingOlder = false;
         HideScrollToBottomButton();
@@ -243,6 +246,7 @@ public partial class ChatView : UserControl
     public Task Close()
     {
         HeaderMenuOverlay.IsVisible = false;
+        LinkPopup.Hide();
         CloseSearch();
         DetachLiveUpdates();
         HideSkeleton();
@@ -283,6 +287,7 @@ public partial class ChatView : UserControl
         SelectionOverlay.IsVisible = false;
         MessageInfoModal.IsVisible = false;
         HeaderMenuOverlay.IsVisible = false;
+        LinkPopup.Hide();
     }
 
     // ---- Scrolling ----------------------------------------------------------------------------
@@ -311,6 +316,11 @@ public partial class ChatView : UserControl
 
         if (!isUnread || firstUnreadIndex!.Value >= count - 2)
             HideScrollToBottomButton();
+
+        // A chat shown the moment its messages arrive (a tapped notification opens it without a slide) has had no layout
+        // yet, and a row cannot be scrolled to before it exists: the position is taken again when the first layout is done.
+        _initialPending = !MessagesList.IsLaidOut;
+        _initialUnread = firstUnreadIndex;
 
         // Anchoring at the target has to be done before history pagination is allowed: it moves the first row.
         Dispatcher.UIThread.Post(() =>
@@ -396,6 +406,14 @@ public partial class ChatView : UserControl
 
         if (Vm is not { } vm || vm.Items.Count == 0)
             return;
+
+        if (_initialPending && MessagesList.IsLaidOut)
+        {
+            _initialPending = false;
+            var unread = _initialUnread;
+            Dispatcher.UIThread.Post(() => ScrollToInitialPosition(unread));
+            return;
+        }
 
         // The page got shorter or taller (the keyboard): stay on the newest message.
         if (e.ViewportDelta.Y != 0 && _followTail)
@@ -568,7 +586,7 @@ public partial class ChatView : UserControl
                 if (vm.IsSelectionMode)
                     vm.ToggleMessageSelection(message);
                 else if (message.HasLink && LinkAt(e, message) is { } link)
-                    OpenLink(message, link);
+                    ShowLinkMenu(message, link.Span, link.Anchor);
                 else if (!message.IsOutgoing)
                     vm.ToggleSimTag(message);
                 break;
@@ -616,43 +634,36 @@ public partial class ChatView : UserControl
         return null;
     }
 
-    // The link under the finger, if any: the text of the bubble is one block, so its layout says which character was hit.
-    private LinkSpan? LinkAt(TappedEventArgs e, ChatMessage message)
+    // The link under the finger, if any, and where its text is on the page. The tap may have landed beside the text
+    // (on the padding of the bubble), so the text block is looked up from the bubble, not from the tapped element.
+    private (LinkSpan Span, Rect Anchor)? LinkAt(TappedEventArgs e, ChatMessage message)
     {
-        for (var visual = e.Source as Visual; visual is not null && !ReferenceEquals(visual, MessagesList); visual = visual.GetVisualParent())
+        var bubble = e.Source as Visual;
+        while (bubble is not null && !ReferenceEquals(bubble, MessagesList) && bubble is not Control { Tag: "bubble" })
+            bubble = bubble.GetVisualParent();
+
+        if (bubble is not Control root || ReferenceEquals(root, MessagesList))
+            return null;
+
+        foreach (var visual in root.GetVisualDescendants())
         {
-            if (visual is TextBlock block && block.DataContext == message)
-                return RichText.LinkAt(block, e.GetPosition(block), message);
+            if (visual is not TextBlock block || !ReferenceEquals(RichText.GetMessage(block), message))
+                continue;
+
+            if (RichText.LinkAt(block, e.GetPosition(block), message) is not { } hit)
+                return null;
+
+            var origin = block.TranslatePoint(hit.Bounds.TopLeft, this) ?? default;
+            return (hit.Span, new Rect(origin, hit.Bounds.Size));
         }
 
         return null;
     }
 
-    private async void OpenLink(ChatMessage message, LinkSpan span)
+    private void ShowLinkMenu(ChatMessage message, LinkSpan span, Rect anchor)
     {
-        try
-        {
-            var target = TextLinker.Target(message.Body, span);
-            if (span.Kind == LinkKind.Url)
-            {
-                TriggerHaptic();
-                if (!await Launcher.Default.OpenAsync(target))
-                    await Dialogs.AlertAsync(string.Empty, LocalizationManager.Instance["Chat_LinkOpenFailed"], "OK");
-                return;
-            }
-
-            var loc = LocalizationManager.Instance;
-            var shown = message.Body.Substring(span.Start, span.Length);
-            var choice = await Dialogs.ActionSheetAsync(shown, loc["Chat_Cancel"], null, loc["Chat_Call"], loc["Chat_CopyNumber"]);
-            if (choice == loc["Chat_Call"])
-                Platforms.Android.ProfileLauncher.Dial(target);
-            else if (choice == loc["Chat_CopyNumber"])
-                await Clipboard.Default.SetTextAsync(target);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Opening a link failed: {ex}");
-        }
+        TriggerHaptic();
+        LinkPopup.Show(anchor, span.Kind, message.Body.Substring(span.Start, span.Length), TextLinker.Target(message.Body, span));
     }
 
     private async void RetryReaction(ChatViewModel vm, ChatMessage message)
@@ -1013,6 +1024,12 @@ public partial class ChatView : UserControl
 
     public bool HandleBack()
     {
+        if (LinkPopup.IsOpen)
+        {
+            LinkPopup.Hide();
+            return true;
+        }
+
         if (HeaderMenuOverlay.IsVisible)
         {
             HeaderMenuOverlay.IsVisible = false;
@@ -1046,7 +1063,7 @@ public partial class ChatView : UserControl
         return false;
     }
 
-    private static void TriggerHaptic(global::Android.Views.FeedbackConstants feedback = global::Android.Views.FeedbackConstants.ContextClick)
+    internal static void TriggerHaptic(global::Android.Views.FeedbackConstants feedback = global::Android.Views.FeedbackConstants.ContextClick)
     {
         try
         {

@@ -33,23 +33,41 @@ public static class RichText
 
     public static void SetLinkBrush(TextBlock block, IBrush? value) => block.SetValue(LinkBrushProperty, value);
 
-    /// <summary>The link at a point of the block, or null when the point is on plain text.</summary>
-    public static LinkSpan? LinkAt(TextBlock block, Point point, ChatMessage message)
+    // A fingertip is far wider than a line of text: a tap this close to a link still means the link.
+    private const double TouchSlop = 14;
+
+    /// <summary>A link of a message and the line of text it was found on, in the coordinates of the block.</summary>
+    public readonly record struct LinkHit(LinkSpan Span, Rect Bounds);
+
+    /// <summary>
+    /// The link nearest to a point of the block, if one is within reach of a finger. Tested against the rectangles the
+    /// links are drawn in, not against the character under the point: that one is only right for a pointer, and a
+    /// finger lands beside or between the lines.
+    /// </summary>
+    public static LinkHit? LinkAt(TextBlock block, Point point, ChatMessage message)
     {
         if (message.Links is not { } links)
             return null;
 
-        var hit = block.TextLayout.HitTestPoint(point);
-        if (!hit.IsInside)
-            return null;
-
+        var layout = block.TextLayout;
+        LinkHit? best = null;
+        var bestDistance = TouchSlop * TouchSlop;
         foreach (var span in links)
         {
-            if (hit.TextPosition >= span.Start && hit.TextPosition < span.End)
-                return span;
+            foreach (var rect in layout.HitTestTextRange(span.Start, span.Length))
+            {
+                var dx = Math.Max(Math.Max(rect.Left - point.X, point.X - rect.Right), 0);
+                var dy = Math.Max(Math.Max(rect.Top - point.Y, point.Y - rect.Bottom), 0);
+                var distance = dx * dx + dy * dy;
+                if (distance > bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                best = new LinkHit(span, rect);
+            }
         }
 
-        return null;
+        return best;
     }
 
     private static void Apply(TextBlock block, ChatMessage? message)

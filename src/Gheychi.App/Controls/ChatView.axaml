@@ -1156,5 +1156,8 @@
                 </StackPanel>
             </Border>
         </Grid>
+
+        <!-- Open / call / copy for a tapped link or phone number -->
+        <c:LinkMenu x:Name="LinkPopup" />
     </Grid>
 </UserControl>
