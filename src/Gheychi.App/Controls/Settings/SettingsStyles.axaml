@@ -45,7 +45,7 @@
     <Style Selector="Border.tile">
         <Setter Property="Padding" Value="12,10" />
         <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E5E6E7, Dark=#252628}" />
+        <Setter Property="Background" Value="{theme:AccentBrush Role=Wash, Dark=#252628}" />
     </Style>
 
     <Style Selector="TextBlock.tileCaption">

@@ -79,7 +79,7 @@
                         <!-- Active filter chip inside the pill -->
                         <Border Grid.Column="1"
                                 CornerRadius="13"
-                                Background="{theme:ThemeBrush Light=#1F386948, Dark=#2634D399}"
+                                Background="{theme:AccentBrush Role=Text, Alpha=32}"
                                 Padding="8,4,4,4"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding HasActiveFilter}">

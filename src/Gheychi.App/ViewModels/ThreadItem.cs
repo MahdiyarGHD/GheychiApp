@@ -20,7 +20,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
     private static readonly IBrush AvatarBgSelectedBrush = Palette.Accent(AccentRole.Solid);
     private static readonly IBrush AvatarTextBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush IconTintBrush = Palette.Pick("#393B3E", "#DDDEDF");
-    private static readonly IBrush SelectedRowBrush = Palette.Pick("#142E6B4C", "#262E6B4C");
+    private static readonly IBrush SelectedRowBrush = Palette.Accent(AccentRole.Solid, ThemeState.IsDark ? (byte)0x26 : (byte)0x14);
 
     private static readonly Thickness FailedPreviewMargin = new(20, 0, 0, 0);
 
