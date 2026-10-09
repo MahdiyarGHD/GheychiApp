@@ -16,6 +16,7 @@ namespace Gheychi.App.Pages;
 public partial class MessagesPage : UserControl, IPageSwipeClient
 {
     private const double RowHeight = 68;
+    private const int PreloadBuffer = 3;
     private const int RecentSuggestionCount = 5;
 
     private const int ArchiveZIndex = 1;
@@ -30,8 +31,6 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private bool _animating;
     private long _lastScrollTime;
-    private int _lastFirstVisible = -1;
-    private int _lastLastVisible = -1;
     private bool _timerRunning;
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
@@ -79,6 +78,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         var viewModel = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
         InitializeComponent();
         DataContext = viewModel;
+        viewModel.PreloadTargets = VisibleThreads;
 
         ThreadsList.TemplateApplied += (_, e) =>
         {
@@ -332,11 +332,6 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsScrolled(object? sender, ScrollChangedEventArgs e)
     {
-        if (_threadsScroll is not { } scroll)
-            return;
-
-        _lastFirstVisible = Math.Max(0, (int)(scroll.Offset.Y / RowHeight));
-        _lastLastVisible = (int)((scroll.Offset.Y + scroll.Viewport.Height) / RowHeight);
         _lastScrollTime = Environment.TickCount64;
 
         if (!_timerRunning)
@@ -362,22 +357,18 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         }
     }
 
-    private void OnScrollSettled()
+    private void OnScrollSettled() => Vm?.StartChatPreload();
+
+    // What is on screen plus a few rows each side, which the list has built or is about to build. Read from the scroll
+    // viewer, not from the last scroll event: the list can be showing rows it was never scrolled to.
+    private List<ThreadItem>? VisibleThreads()
     {
-        if (Vm is not { ChatPreloadEnabled: true } vm || vm.Threads.Count == 0 || _lastFirstVisible < 0)
-            return;
+        if (Vm is not { } vm || vm.Threads.Count == 0 || _threadsScroll is not { Viewport.Height: > 0 } scroll)
+            return null;
 
-        var start = Math.Max(0, _lastFirstVisible - 2);
-        var end = Math.Min(vm.Threads.Count - 1, _lastLastVisible + 2);
-        var count = end - start + 1;
-        if (count <= 0)
-            return;
-
-        var visible = vm.Threads.Skip(start).Take(count).ToList();
-        var smsService = IPlatformApplication.Current?.Services.GetService<ISmsService>();
-        var dateFormatter = IPlatformApplication.Current?.Services.GetService<IDateFormattingService>();
-        if (smsService != null && dateFormatter != null)
-            ChatViewModel.PreloadVisibleThreads(visible, smsService, dateFormatter);
+        var start = Math.Max(0, (int)(scroll.Offset.Y / RowHeight) - PreloadBuffer);
+        var end = Math.Min(vm.Threads.Count - 1, (int)((scroll.Offset.Y + scroll.Viewport.Height) / RowHeight) + PreloadBuffer);
+        return end < start ? null : vm.Threads.Skip(start).Take(end - start + 1).ToList();
     }
 
     private static ThreadItem? ThreadFrom(RoutedEventArgs e) =>
