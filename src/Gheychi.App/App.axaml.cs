@@ -24,6 +24,9 @@ public partial class App : Avalonia.Application
         Resources["PrimaryBrush"] = Palette.Accent(AccentRole.Solid);
         Resources["AccentTextBrush"] = Palette.Accent(AccentRole.Text);
         Resources["MintBrush"] = Palette.Accent(AccentRole.Glow);
+        Resources["ChatBodySize"] = TextScale.Body;
+        Resources["ChatMetaSize"] = TextScale.Meta;
+        Resources["ChatReactionSize"] = TextScale.Reaction;
     }
 
     public override void OnFrameworkInitializationCompleted()

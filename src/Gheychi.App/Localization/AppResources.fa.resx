@@ -57,9 +57,6 @@
   <data name="Chat_Back" xml:space="preserve">
     <value>بازگشت</value>
   </data>
-  <data name="Chat_Attach" xml:space="preserve">
-    <value>پیوست</value>
-  </data>
   <data name="Chat_Sim" xml:space="preserve">
     <value>شیار سیم‌کارت</value>
   </data>
@@ -643,7 +640,7 @@
     <value>ظاهر</value>
   </data>
   <data name="Settings_AppearanceHint" xml:space="preserve">
-    <value>پوسته، رنگ تأکید و زبان</value>
+    <value>پوسته، رنگ تأکید، اندازه نوشته و زبان</value>
   </data>
   <data name="Settings_Privacy" xml:space="preserve">
     <value>حریم خصوصی و ذخیره‌سازی</value>
@@ -943,7 +940,7 @@
     <value>پوسته جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>برای اعمال پوسته، رنگ تأکید یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
+    <value>برای اعمال پوسته، رنگ تأکید، اندازه نوشته یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>به‌روزرسانی موجود است</value>
@@ -1112,5 +1109,23 @@
   </data>
   <data name="Accent_Graphite" xml:space="preserve">
     <value>گرافیتی</value>
+  </data>
+  <data name="Settings_SectionTextSize" xml:space="preserve">
+    <value>اندازه نوشته</value>
+  </data>
+  <data name="Settings_TextSizeSmall" xml:space="preserve">
+    <value>کوچک</value>
+  </data>
+  <data name="Settings_TextSizeDefault" xml:space="preserve">
+    <value>پیش‌فرض</value>
+  </data>
+  <data name="Settings_TextSizeLarge" xml:space="preserve">
+    <value>بزرگ</value>
+  </data>
+  <data name="Settings_TextSizeLargest" xml:space="preserve">
+    <value>بزرگ‌تر</value>
+  </data>
+  <data name="Settings_RestartTextSizeMessage" xml:space="preserve">
+    <value>اندازه نوشته جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
 </root>

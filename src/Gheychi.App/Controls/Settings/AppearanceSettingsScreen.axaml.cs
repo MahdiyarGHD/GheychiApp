@@ -16,6 +16,7 @@ public partial class AppearanceSettingsScreen : SettingsScreen
 {
     private readonly (Border Segment, AppTheme Theme)[] _themes;
     private readonly (Border Segment, string Language)[] _languages;
+    private readonly Border[] _textSizes;
     private readonly List<(AccentScheme Scheme, Border Ring, Icon Check)> _accents = [];
 
     public AppearanceSettingsScreen()
@@ -23,6 +24,7 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         InitializeComponent();
         _themes = [(ThemeSystem, AppTheme.Unspecified), (ThemeLight, AppTheme.Light), (ThemeDark, AppTheme.Dark)];
         _languages = [(LanguageSystem, string.Empty), (LanguageEnglish, AppPreferences.LanguageEnglish), (LanguagePersian, AppPreferences.LanguagePersian)];
+        _textSizes = [TextSizeSmall, TextSizeDefault, TextSizeLarge, TextSizeLargest];
         BuildAccentPicker();
     }
 
@@ -31,6 +33,7 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         var theme = AppPreferences.Theme;
         SettingsUi.Select(_themes.Select(t => t.Segment), _themes.FirstOrDefault(t => t.Theme == theme).Segment);
         ShowAccent(AccentScheme.Find(AppPreferences.Accent));
+        SettingsUi.Select(_textSizes, _textSizes[Math.Clamp(AppPreferences.TextSize, 0, _textSizes.Length - 1)]);
         var language = AppPreferences.Language;
         SettingsUi.Select(_languages.Select(l => l.Segment), _languages.FirstOrDefault(l => l.Language == language).Segment);
     }
@@ -146,6 +149,27 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Changing the theme failed: {ex}");
+        }
+    }
+
+    private async void OnTextSizeTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            var step = Array.IndexOf(_textSizes, sender);
+            if (step < 0 || step == AppPreferences.TextSize)
+                return;
+
+            var loc = LocalizationManager.Instance;
+            if (!await Confirm(loc["Settings_RestartTitle"], loc["Settings_RestartTextSizeMessage"], loc["Settings_Restart"]))
+                return;
+
+            AppPreferences.TextSize = step;
+            AppStatus.Restart();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Changing the text size failed: {ex}");
         }
     }
 

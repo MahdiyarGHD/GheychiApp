@@ -32,6 +32,7 @@ public static class ThemeState
             _ => SystemIsDark()
         };
         Accent = AccentScheme.Find(Services.AppPreferences.Accent);
+        TextScale.Resolve();
     }
 
     public static bool SystemIsDark() =>

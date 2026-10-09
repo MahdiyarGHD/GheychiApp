@@ -28,6 +28,24 @@
                     <UniformGrid x:Name="AccentGrid" Columns="5" />
                 </Border>
 
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionTextSize}" Classes="sectionTitle" />
+                <Border Classes="card" Padding="10">
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                        <Border x:Name="TextSizeSmall" Grid.Column="0" Classes="segment" Tapped="OnTextSizeTapped">
+                            <TextBlock Text="{loc:Translate Settings_TextSizeSmall}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="TextSizeDefault" Grid.Column="1" Classes="segment" Tapped="OnTextSizeTapped">
+                            <TextBlock Text="{loc:Translate Settings_TextSizeDefault}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="TextSizeLarge" Grid.Column="2" Classes="segment" Tapped="OnTextSizeTapped">
+                            <TextBlock Text="{loc:Translate Settings_TextSizeLarge}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="TextSizeLargest" Grid.Column="3" Classes="segment" Tapped="OnTextSizeTapped">
+                            <TextBlock Text="{loc:Translate Settings_TextSizeLargest}" Classes="segmentTitle" />
+                        </Border>
+                    </Grid>
+                </Border>
+
                 <TextBlock Text="{settings:UpperTranslate Settings_SectionLanguage}" Classes="sectionTitle" />
                 <Border Classes="card" Padding="10">
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">

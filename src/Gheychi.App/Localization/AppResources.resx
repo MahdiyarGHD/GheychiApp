@@ -57,9 +57,6 @@
   <data name="Chat_Back" xml:space="preserve">
     <value>Back</value>
   </data>
-  <data name="Chat_Attach" xml:space="preserve">
-    <value>Attach</value>
-  </data>
   <data name="Chat_Sim" xml:space="preserve">
     <value>SIM slot</value>
   </data>
@@ -643,7 +640,7 @@
     <value>Appearance</value>
   </data>
   <data name="Settings_AppearanceHint" xml:space="preserve">
-    <value>Theme, accent colour and language</value>
+    <value>Theme, accent colour, text size and language</value>
   </data>
   <data name="Settings_Privacy" xml:space="preserve">
     <value>Privacy &amp; storage</value>
@@ -943,7 +940,7 @@
     <value>The new theme is applied after the app restarts.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>The app restarts to apply a new theme, accent colour or language.</value>
+    <value>The app restarts to apply a new theme, accent colour, text size or language.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>Update available</value>
@@ -1112,5 +1109,23 @@
   </data>
   <data name="Accent_Graphite" xml:space="preserve">
     <value>Graphite</value>
+  </data>
+  <data name="Settings_SectionTextSize" xml:space="preserve">
+    <value>Text size</value>
+  </data>
+  <data name="Settings_TextSizeSmall" xml:space="preserve">
+    <value>Small</value>
+  </data>
+  <data name="Settings_TextSizeDefault" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Settings_TextSizeLarge" xml:space="preserve">
+    <value>Large</value>
+  </data>
+  <data name="Settings_TextSizeLargest" xml:space="preserve">
+    <value>Largest</value>
+  </data>
+  <data name="Settings_RestartTextSizeMessage" xml:space="preserve">
+    <value>The new text size is applied after the app restarts.</value>
   </data>
 </root>
