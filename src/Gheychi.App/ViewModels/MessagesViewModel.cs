@@ -286,8 +286,20 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     public void EnableChatPreload()
     {
         _chatPreloadEnabled = true;
-        if (Threads.Count > 0)
-            ChatViewModel.PreloadVisibleThreads(Threads.Take(PreloadCount).ToList(), _smsService, _dateFormatter, PreloadCount);
+        StartChatPreload();
+    }
+
+    /// <summary>The threads the list is showing, or about to show; the page sets it. Without it the newest ones are read.</summary>
+    public Func<List<ThreadItem>?>? PreloadTargets { get; set; }
+
+    /// <summary>Reads the first page of the threads on screen ahead; call on the UI thread.</summary>
+    public void StartChatPreload()
+    {
+        if (!_chatPreloadEnabled || Threads.Count == 0)
+            return;
+
+        var targets = PreloadTargets?.Invoke() ?? Threads.Take(PreloadCount).ToList();
+        ChatViewModel.PreloadVisibleThreads(targets, _smsService, _dateFormatter, Math.Max(PreloadCount, targets.Count));
     }
 
     public bool HasPermission
@@ -368,11 +380,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             // Before the screens are warmed up the CPU belongs to them; EnableChatPreload starts this later.
             if (_chatPreloadEnabled)
             {
-                var newest = items.Inbox.Take(PreloadCount).ToList();
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(800);
-                    ChatViewModel.PreloadVisibleThreads(newest, _smsService, _dateFormatter, PreloadCount);
+                    MainThread.BeginInvokeOnMainThread(StartChatPreload);
                 });
             }
         }

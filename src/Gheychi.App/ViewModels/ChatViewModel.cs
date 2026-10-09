@@ -184,14 +184,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                         continue;
                 }
 
-                // Lightly throttled background warm-up: the open chat's own query
-                // always has SQLite priority, so list warm-up never blocks it.
+                // The open chat's own query always has SQLite priority (opening cancels this), so the warm-up
+                // only needs to stay out of the way of the finger.
                 try
                 {
-                    await Task.Delay(250, ct);
+                    await Task.Delay(40, ct);
 
                     // Reading a chat is real work (provider, SQLite, allocations): not while the user is touching the screen.
-                    await UserActivity.WaitForIdleAsync(500, ct);
+                    await UserActivity.WaitForIdleAsync(300, ct);
                 }
                 catch (OperationCanceledException)
                 {
