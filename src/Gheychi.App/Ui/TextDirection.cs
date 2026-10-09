@@ -47,6 +47,13 @@ public static class TextDirection
                 Apply(block, e.NewValue.GetValueOrDefault());
         }));
 
+        // A text set in XAML before the attribute that asks to keep the side is laid out again once it is known.
+        KeepSideProperty.Changed.Subscribe(new AnonymousObserver<AvaloniaPropertyChangedEventArgs<bool>>(e =>
+        {
+            if (e.Sender is TextBlock block)
+                Apply(block, block.Text);
+        }));
+
         TextBox.TextProperty.Changed.Subscribe(new AnonymousObserver<AvaloniaPropertyChangedEventArgs<string?>>(e =>
         {
             if (e.Sender is TextBox box)
