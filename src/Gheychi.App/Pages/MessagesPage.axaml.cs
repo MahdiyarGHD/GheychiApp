@@ -23,6 +23,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private const int ComposeZIndex = 2;
     // Under the chat, so a result opens its chat straight over the results (search and compose are never open together).
     private const int SearchZIndex = 2;
+    private const int ShareZIndex = 2;
     private const int OverlayZIndex = 3;
     private const int ProfileZIndex = 4;
     private const double InboxParallax = 0.25;
@@ -46,6 +47,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private SearchView? _searchOverlay;
     private ComposeView? _composeOverlay;
     private ArchiveView? _archiveOverlay;
+    private ShareView? _shareOverlay;
+    private string? _sharedText;
     private ProfileView? _profileOverlay;
     private SpamOverlay? _spamPopup;
     private Control? _warming;
@@ -58,10 +61,12 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private SearchView SearchOverlay => _searchOverlay ??= CreateSearchOverlay();
     private ComposeView ComposeOverlay => _composeOverlay ??= CreateComposeOverlay();
     private ArchiveView ArchiveOverlay => _archiveOverlay ??= CreateArchiveOverlay();
+    private ShareView ShareOverlay => _shareOverlay ??= CreateShareOverlay();
     private ProfileView ProfileOverlay => _profileOverlay ??= CreateProfileOverlay();
     private bool IsChatClosed => _chatOverlay is null || !_chatOverlay.IsVisible || ReferenceEquals(_chatOverlay, _warming);
     private bool IsSearchClosed => _searchOverlay is null || !_searchOverlay.IsVisible || ReferenceEquals(_searchOverlay, _warming);
     private bool IsComposeClosed => _composeOverlay is null || !_composeOverlay.IsVisible || ReferenceEquals(_composeOverlay, _warming);
+    private bool IsShareClosed => _shareOverlay is null || !_shareOverlay.IsVisible;
     private bool IsProfileClosed => _profileOverlay is null || !_profileOverlay.IsVisible || ReferenceEquals(_profileOverlay, _warming);
 
     private static Panel Overlays => MainView.Current!.Overlays;
@@ -90,7 +95,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         };
 
         // Opened from a notification on a cold start: show the chat, not an inbox that is about to be covered.
-        if (ChatLaunchRequests.HasPending)
+        if (ChatLaunchRequests.HasPending || ExternalSendRequests.HasPendingAddress)
         {
             InboxLayer.IsVisible = false;
             _ = ChatOverlay;
@@ -135,6 +140,16 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             archive.Initialize(Vm);
         Overlays.Children.Add(archive);
         return archive;
+    }
+
+    private ShareView CreateShareOverlay()
+    {
+        var share = new ShareView { IsVisible = false, ZIndex = ShareZIndex };
+        share.BackRequested += (_, _) => _ = CloseShareAsync();
+        share.ThreadChosen += OnShareThreadChosen;
+        share.NumberChosen += OnShareNumberChosen;
+        Overlays.Children.Add(share);
+        return share;
     }
 
     private ProfileView CreateProfileOverlay()
@@ -187,12 +202,17 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         PageSwipe.Client = this;
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
+        ExternalSendRequests.Requested -= OnExternalSendRequested;
+        ExternalSendRequests.Requested += OnExternalSendRequested;
 
         // A tapped notification gets its chat before the inbox starts loading: the chat view is the slow part to
         // build, and the inbox behind it only has to be ready by the time the chat is closed. While the activity is
         // still resuming this is left to OnChatLaunchRequested.
         if (ChatPresence.IsAppVisible)
+        {
             await OpenRequestedChatAsync();
+            await OpenExternalAsync();
+        }
 
         try
         {
@@ -233,6 +253,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _inboxShown = false;
         MainActivity.Resumed -= OnAppResumed;
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
+        ExternalSendRequests.Requested -= OnExternalSendRequested;
         if (ReferenceEquals(PageSwipe.Client, this))
             PageSwipe.Client = null;
     }
@@ -325,7 +346,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     // the inbox list behind it.
     private void CoverInbox()
     {
-        if (!IsChatClosed || !IsSearchClosed || !IsComposeClosed)
+        if (!IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed)
             InboxLayer.IsVisible = false;
     }
 
@@ -518,13 +539,199 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     /// <summary>Ends the cold-start hold (see the constructor); harmless when nothing was held.</summary>
     private void RevealInbox()
     {
-        if (IsChatClosed)
+        if (IsChatClosed && IsShareClosed)
             UncoverInbox();
     }
 
     private ThreadItem? FindThread(long threadId) =>
         Vm?.Threads.FirstOrDefault(t => t.ThreadId == threadId)
         ?? Vm?.ArchivedThreads.FirstOrDefault(t => t.ThreadId == threadId);
+
+    // ---- Other apps -----------------------------------------------------------------------------
+
+    private void OnExternalSendRequested() =>
+        MainThread.BeginInvokeOnMainThread(() => _ = OpenExternalAsync());
+
+    /// <summary>Does what another app asked for: a conversation with a number, or a place to send a shared text.</summary>
+    private async Task OpenExternalAsync()
+    {
+        var request = ExternalSendRequests.Take();
+        if (request is null)
+            return;
+
+        try
+        {
+            await DismissForExternalAsync();
+
+            if (request.HasAddress)
+                await OpenConversationAsync(request.Address!, request.Text);
+            else if (!string.IsNullOrEmpty(request.Text))
+                await OpenShareAsync(request.Text);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open external request failed: {ex}");
+        }
+        finally
+        {
+            RevealInbox();
+        }
+    }
+
+    // Whatever is open gives way, so the request is not answered underneath it.
+    private async Task DismissForExternalAsync()
+    {
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm?.IsSelectionMode == true)
+            Vm.ExitSelectionMode();
+
+        if (!IsProfileClosed)
+            ParkProfileOverlay();
+        if (!IsChatClosed)
+            await CloseChatAsync();
+        if (!IsSearchClosed)
+            ParkSearchOverlay();
+        if (!IsComposeClosed)
+            ComposeOverlay.Park();
+        if (!IsShareClosed)
+            ParkShareOverlay();
+        if (_archiveOpen)
+            await CloseArchiveAsync();
+
+        UncoverInbox();
+    }
+
+    /// <summary>Opens the conversation with a number, with the text, if there is one, ready to send.</summary>
+    private async Task OpenConversationAsync(string number, string? text)
+    {
+        // The names of the conversations come from the inbox; on a cold start it is not read yet.
+        if (Vm is { } vm)
+            await vm.EnsureCachedInboxAsync();
+
+        var address = PhoneNumberNormalizer.ToSendAddress(number);
+        var threadId = SmsService is null ? 0 : await SmsService.GetOrCreateThreadIdAsync(address);
+        if (threadId <= 0)
+        {
+            await Dialogs.AlertAsync(string.Empty, Localization.LocalizationManager.Instance["Compose_OpenFailed"], "OK");
+            return;
+        }
+
+        var thread = FindThread(threadId) ?? CreateNewThreadItem(threadId, new ComposeRecipient(address, null, null));
+        await OpenThreadWithTextAsync(thread, text);
+    }
+
+    private async Task OpenThreadWithTextAsync(ThreadItem thread, string? text)
+    {
+        var wasUnread = thread.IsUnread;
+        var unreadCount = thread.Count;
+        if (wasUnread)
+            thread.MarkAsRead();
+
+        // Over the inbox that is still hidden behind a cold start, there is nothing to slide over.
+        await OpenChatAsync(thread, wasUnread, unreadCount, animate: InboxLayer.IsVisible);
+
+        if (!string.IsNullOrEmpty(text) && _chatOverlay?.Vm is { } chat && chat.Thread.ThreadId == thread.ThreadId)
+            chat.Draft = string.IsNullOrEmpty(chat.Draft) ? text : chat.Draft + "\n" + text;
+    }
+
+    private async Task OpenShareAsync(string text)
+    {
+        if (_animating)
+            return;
+        _animating = true;
+        try
+        {
+            _sharedText = text;
+            var share = ShareOverlay;
+            if (Vm != null)
+                share.Initialize(Vm);
+            share.Open(text);
+
+            var distance = OverlayDistance;
+            OverlayAnimator.SetTranslation(share, 0, distance);
+            share.IsVisible = true;
+
+            await OverlayAnimator.SettleAsync();
+            await OverlayAnimator.SlideYAsync(share, distance, 0, OverlayAnimator.OpenDuration, decelerate: true);
+            CoverInbox();
+        }
+        catch (InvalidOperationException)
+        {
+            OverlayAnimator.SetTranslation(ShareOverlay, 0, 0);
+            ShareOverlay.IsVisible = true;
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private async Task CloseShareAsync()
+    {
+        if (_animating || IsShareClosed)
+            return;
+        _animating = true;
+        try
+        {
+            ShareOverlay.Unfocus();
+            UncoverInbox();
+            await OverlayAnimator.SlideYAsync(ShareOverlay, 0, OverlayDistance, OverlayAnimator.CloseDuration, decelerate: false);
+            ParkShareOverlay();
+        }
+        catch (InvalidOperationException)
+        {
+            ParkShareOverlay();
+        }
+        finally
+        {
+            _animating = false;
+        }
+    }
+
+    private void ParkShareOverlay()
+    {
+        Park(ShareOverlay);
+        ShareOverlay.ResetState();
+    }
+
+    private async void OnShareThreadChosen(object? sender, ThreadItem thread)
+    {
+        if (_animating || !IsChatClosed)
+            return;
+
+        try
+        {
+            ShareOverlay.Unfocus();
+            await OpenThreadWithTextAsync(thread, _sharedText);
+
+            // The chat is over the list; closing it returns to the inbox.
+            if (!IsShareClosed && !IsChatClosed)
+                ParkShareOverlay();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open shared chat failed: {ex}");
+        }
+    }
+
+    private async void OnShareNumberChosen(object? sender, string number)
+    {
+        if (_animating || !IsChatClosed)
+            return;
+
+        try
+        {
+            ShareOverlay.Unfocus();
+            await OpenConversationAsync(number, _sharedText);
+
+            if (!IsShareClosed && !IsChatClosed)
+                ParkShareOverlay();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Open shared conversation failed: {ex}");
+        }
+    }
 
     // ---- Selection mode -------------------------------------------------------------------------
 
@@ -1147,7 +1354,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         get
         {
-            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true
+            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true
                 || IsDefaultAppGateShown)
                 return 0;
 
@@ -1321,6 +1528,13 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         if (SelectBoxOverlay.IsVisible)
         {
             SelectBoxOverlay.IsVisible = false;
+            return true;
+        }
+
+        if (!IsShareClosed && IsChatClosed)
+        {
+            if (_shareOverlay?.HandleBack() != true)
+                MainThread.BeginInvokeOnMainThread(async () => await CloseShareAsync());
             return true;
         }
 

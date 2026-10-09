@@ -1,0 +1,214 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             xmlns:ti="using:Avalonia.Input.TextInput"
+             x:Class="Gheychi.App.Controls.ShareView"
+             Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+
+    <Grid x:Name="Root" RowDefinitions="Auto,Auto,*" Focusable="True">
+
+        <!-- Header: back, the title, and the text that is being shared -->
+        <Grid Grid.Row="0"
+              MinHeight="64"
+              Margin="12,0,16,0"
+              ColumnDefinitions="Auto,*"
+              ColumnSpacing="8">
+            <Border Grid.Column="0"
+                    Width="40" Height="40"
+                    CornerRadius="20"
+                    Background="Transparent"
+                    VerticalAlignment="Center"
+                    Tapped="OnBackTapped"
+                    AutomationProperties.Name="{loc:Translate Chat_Back}">
+                <ui:Icon Data="{StaticResource Icon.Back}"
+                         Width="22" Height="22"
+                         Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+            </Border>
+            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center" Margin="0,8">
+                <TextBlock Text="{loc:Translate Share_Title}"
+                           ui:TextDirection.KeepSide="True"
+                           FontSize="22"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}" />
+                <TextBlock x:Name="SharedTextLabel"
+                           ui:TextDirection.KeepSide="True"
+                           FontSize="12.5"
+                           MaxLines="2"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="Wrap"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- The filter and the list sit on the same rounded surface as the inbox -->
+        <Border Grid.Row="1"
+                Grid.RowSpan="2"
+                CornerRadius="28,28,0,0"
+                ClipToBounds="True"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <Border Grid.Row="0"
+                        Margin="16,16,16,8"
+                        Padding="14,0"
+                        Height="44"
+                        CornerRadius="22"
+                        Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#28292B}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                        <ui:Icon Grid.Column="0"
+                                 Data="{StaticResource Icon.Search}"
+                                 Width="18" Height="18"
+                                 Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
+                        <TextBox x:Name="FilterEntry"
+                                 Grid.Column="1"
+                                 Classes="plain"
+                                 PlaceholderText="{loc:Translate Share_SearchHint}"
+                                 PlaceholderForeground="#8A8F98"
+                                 Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
+                                 FontSize="14"
+                                 ti:TextInputOptions.ReturnKeyType="Search"
+                                 VerticalAlignment="Center"
+                                 TextChanged="OnFilterTextChanged"
+                                 KeyDown="OnFilterKeyDown" />
+                        <Border x:Name="ClearFilterButton"
+                                Grid.Column="2"
+                                IsVisible="False"
+                                Width="28" Height="28"
+                                Margin="-6,0"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                Tapped="OnClearFilterTapped"
+                                AutomationProperties.Name="{loc:Translate Chat_Cancel}">
+                            <ui:Icon Data="{StaticResource Icon.Close}"
+                                     Width="16" Height="16"
+                                     Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- A typed number is a place to send to as well -->
+                <Grid x:Name="NumberRow"
+                      Grid.Row="1"
+                      IsVisible="False"
+                      Height="76"
+                      ColumnDefinitions="Auto,*"
+                      ColumnSpacing="15"
+                      Background="Transparent"
+                      Tapped="OnNumberTapped">
+                    <Border Grid.Column="0"
+                            Width="50" Height="50"
+                            Margin="15,0,0,0"
+                            CornerRadius="25"
+                            VerticalAlignment="Center"
+                            Background="{theme:AccentBrush Role=Soft}">
+                        <ui:Icon Data="{StaticResource Icon.Person}"
+                                 Width="27" Height="27"
+                                 Foreground="{theme:AccentBrush Role=Text}" />
+                    </Border>
+                    <TextBlock x:Name="NumberLabel"
+                               Grid.Column="1"
+                               Margin="0,0,17,0"
+                               VerticalAlignment="Center"
+                               ui:TextDirection.KeepSide="True"
+                               FontSize="15"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="1"
+                               Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}" />
+                </Grid>
+
+                <Panel x:Name="ShareHost" Grid.Row="2">
+                    <ItemsControl x:Name="ShareList" Tapped="OnListTapped">
+                        <ItemsControl.Template>
+                            <ControlTemplate TargetType="ItemsControl">
+                                <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                                              HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" />
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ThreadItem">
+                                <Grid Height="76"
+                                      ColumnDefinitions="Auto,*,Auto"
+                                      ColumnSpacing="15"
+                                      Background="Transparent">
+                                    <Border Grid.Column="0"
+                                            Width="50"
+                                            Height="50"
+                                            Margin="15,0,0,0"
+                                            CornerRadius="25"
+                                            VerticalAlignment="Center"
+                                            IsHitTestVisible="False"
+                                            Background="{Binding AvatarBgColor}">
+                                        <Panel>
+                                            <ui:Icon IsVisible="{Binding ShowIcon}"
+                                                     Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
+                                                     Width="27"
+                                                     Height="27"
+                                                     Foreground="{theme:AccentBrush Role=Text}"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Initials, Mode=OneTime}"
+                                                       IsVisible="{Binding ShowInitials}"
+                                                       Foreground="{Binding AvatarTextColor, Mode=OneTime}"
+                                                       FontSize="21"
+                                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       TextAlignment="Center" />
+                                        </Panel>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" IsHitTestVisible="False">
+                                        <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                                   ui:TextDirection.KeepSide="True"
+                                                   Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
+                                                   FontSize="15"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxLines="1" />
+                                        <TextBlock Text="{Binding Preview, Mode=OneTime}"
+                                                   ui:TextDirection.KeepSide="True"
+                                                   Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                                                   FontFamily="{x:Static app:AppFonts.Regular}"
+                                                   FontSize="13.5"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxLines="1" />
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="2"
+                                               Margin="0,0,17,0"
+                                               Text="{Binding Time, Mode=OneTime}"
+                                               FontSize="11.5"
+                                               FontFamily="{x:Static app:AppFonts.Regular}"
+                                               Foreground="#8A8F98"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock x:Name="EmptyLabel"
+                               IsVisible="False"
+                               Margin="32,48,32,0"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Center"
+                               FontSize="14"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
+                </Panel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

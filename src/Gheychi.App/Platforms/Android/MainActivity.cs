@@ -20,9 +20,14 @@ namespace Gheychi.App;
     WindowSoftInputMode = SoftInput.AdjustResize,
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden | ConfigChanges.LayoutDirection)]
 [IntentFilter(
-    [Intent.ActionSend, Intent.ActionSendto],
+    [Intent.ActionSendto, Intent.ActionView],
     Categories = [Intent.CategoryDefault, Intent.CategoryBrowsable],
     DataSchemes = ["sms", "smsto", "mms", "mmsto"])]
+// The share sheet: a text sent to a conversation.
+[IntentFilter(
+    [Intent.ActionSend],
+    Categories = [Intent.CategoryDefault],
+    DataMimeType = "text/plain")]
 public class MainActivity : AvaloniaMainActivity
 {
     public const int VoiceSearchRequestCode = 7301;
@@ -39,6 +44,7 @@ public class MainActivity : AvaloniaMainActivity
         // The first view is built during base.OnCreate, and has to know a notified chat is coming.
         ChatLaunchRequests.FromIntent(Intent);
         SpamTabRequests.FromIntent(Intent);
+        ExternalSendRequests.FromIntent(Intent);
 
         Platform.CurrentActivity = this;
         base.OnCreate(savedInstanceState);
@@ -69,6 +75,7 @@ public class MainActivity : AvaloniaMainActivity
         base.OnNewIntent(intent);
         ChatLaunchRequests.FromIntent(intent);
         SpamTabRequests.FromIntent(intent);
+        ExternalSendRequests.FromIntent(intent);
     }
 
     protected override void OnResume()
@@ -78,6 +85,7 @@ public class MainActivity : AvaloniaMainActivity
         ChatPresence.AppVisibilityChanged(true);
         ChatLaunchRequests.RaiseIfPending();
         SpamTabRequests.RaiseIfPending();
+        ExternalSendRequests.RaiseIfPending();
         Resumed?.Invoke();
     }
 
