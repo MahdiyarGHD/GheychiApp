@@ -65,6 +65,18 @@ public sealed class SpamDetectorTests
         Assert.Equal(0, classifier.Calls);
     }
 
+    [Theory]
+    [InlineData("Liked “win a prize”")]
+    [InlineData("Laughed at “click http://x.example now”")]
+    public async Task Reaction_IsNeverClassified(string body)
+    {
+        var classifier = new FakeClassifier(new SpamScore(1f, 1));
+        var detector = Detector(classifier, 0.5f);
+
+        Assert.Null(await detector.DetectAsync("+989121234567", body, fromContact: false));
+        Assert.Equal(0, classifier.Calls);
+    }
+
     [Fact]
     public async Task TrustedSender_IsNeverClassified()
     {

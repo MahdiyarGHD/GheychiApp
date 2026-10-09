@@ -1,3 +1,5 @@
+using Gheychi.Core.Services;
+
 namespace Gheychi.Core.Spam;
 
 /// <summary>A message judged spam: its score and the threshold in force when it was judged.</summary>
@@ -12,6 +14,11 @@ public sealed class SpamDetector(ISpamClassifier classifier, ISpamSettings setti
     public async Task<SpamVerdict?> DetectAsync(string address, string body, bool fromContact, CancellationToken cancellationToken = default)
     {
         if (!settings.Enabled || fromContact || string.IsNullOrWhiteSpace(body) || trustedSenders.IsTrusted(address))
+            return null;
+
+        // A reaction (Liked "...") quotes a message of the conversation; it is never spam, and quarantining it
+        // made the reaction vanish for the person who sent it.
+        if (ReactionHelper.TryParseReaction(body).IsReaction)
             return null;
 
         var threshold = settings.Threshold;
