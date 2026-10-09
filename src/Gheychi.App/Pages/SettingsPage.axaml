@@ -40,10 +40,10 @@
                             </StackPanel>
                         </Grid>
 
-                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Grid ColumnDefinitions="*,1.25*,*" ColumnSpacing="6">
                             <Border x:Name="DefaultChip" Grid.Column="0" Classes="chip" Tapped="OnDefaultChipTapped">
                                 <StackPanel Spacing="2">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
                                         <Border Classes="chipDot" />
                                         <TextBlock Text="{loc:Translate Settings_ChipSms}" Classes="chipTitle" />
                                     </StackPanel>
@@ -52,7 +52,7 @@
                             </Border>
                             <Border x:Name="NotificationsChip" Grid.Column="1" Classes="chip" Tapped="OnNotificationsChipTapped">
                                 <StackPanel Spacing="2">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
                                         <Border Classes="chipDot" />
                                         <TextBlock Text="{loc:Translate Settings_ChipNotifications}" Classes="chipTitle" />
                                     </StackPanel>
@@ -61,7 +61,7 @@
                             </Border>
                             <Border x:Name="ContactsChip" Grid.Column="2" Classes="chip" Tapped="OnContactsChipTapped">
                                 <StackPanel Spacing="2">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
                                         <Border Classes="chipDot" />
                                         <TextBlock Text="{loc:Translate Settings_ChipContacts}" Classes="chipTitle" />
                                     </StackPanel>

@@ -252,7 +252,7 @@
 
     <!-- Status chips on the overview: OK, or with the "warn" class when something needs attention. -->
     <Style Selector="TextBlock.chipTitle">
-        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontSize" Value="11" />
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -260,7 +260,7 @@
     </Style>
 
     <Style Selector="Border.chip">
-        <Setter Property="Padding" Value="10,8" />
+        <Setter Property="Padding" Value="8,8" />
         <Setter Property="CornerRadius" Value="14" />
         <Setter Property="Background" Value="{theme:ThemeBrush Light=#DDF0E4, Dark=#1B3A2B}" />
     </Style>
