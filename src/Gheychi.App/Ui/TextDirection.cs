@@ -12,7 +12,8 @@ namespace Gheychi.App.Ui;
 /// Gives each text the direction of its own first letter instead of the app's. The whole app follows the chosen
 /// language, but a Persian message in an English app (or the other way round) has to read and align from its own side:
 /// otherwise an emoji or a number at its start jumps to the wrong end and the punctuation is placed backwards.
-/// A text with no letter (a time, a count, only emoji) keeps the app's direction.
+/// A text with no letter keeps the app's direction, except a number (a phone number, a code such as "*123#") shown
+/// by a label in a right-to-left app: that one is ordered left to right, or its groups and its signs come out backwards.
 /// </summary>
 public static class TextDirection
 {
@@ -24,6 +25,9 @@ public static class TextDirection
     /// </summary>
     public static readonly AttachedProperty<bool> KeepSideProperty =
         AvaloniaProperty.RegisterAttached<TextBlock, TextBlock, bool>("KeepSide");
+
+    private static readonly AttachedProperty<bool> NumberAlignedProperty =
+        AvaloniaProperty.RegisterAttached<TextBlock, TextBlock, bool>("NumberAligned");
 
     public static bool GetKeepSide(TextBlock control) => control.GetValue(KeepSideProperty);
 
@@ -60,21 +64,35 @@ public static class TextDirection
             return;
         }
 
-        foreach (var inline in inlines)
-        {
-            if (inline is Run { Text: { Length: > 0 } text } && Detect(text) is { } direction)
-            {
-                Set(block, direction);
-                return;
-            }
-        }
-
-        Set(block, null);
+        var (direction, number) = DetectForLabel(string.Concat(inlines.OfType<Run>().Select(run => run.Text)));
+        Set(block, direction, number);
     }
 
-    public static void Apply(Control control, string? text) => Set(control, Detect(text));
+    public static void Apply(Control control, string? text)
+    {
+        if (control is TextBlock)
+        {
+            var (direction, number) = DetectForLabel(text);
+            Set(control, direction, number);
+        }
+        else
+        {
+            Set(control, Detect(text));
+        }
+    }
 
-    private static void Set(Control control, FlowDirection? direction)
+    // A box someone types into keeps its direction while the first characters are digits.
+    private static (FlowDirection? Direction, bool Number) DetectForLabel(string? text)
+    {
+        if (Detect(text) is { } direction)
+            return (direction, false);
+
+        return AppDirection == FlowDirection.RightToLeft && text is not null && text.Any(char.IsDigit)
+            ? (FlowDirection.LeftToRight, true)
+            : (null, false);
+    }
+
+    private static void Set(Control control, FlowDirection? direction, bool number = false)
     {
         var differs = direction is { } wanted && wanted != AppDirection;
         if (differs)
@@ -82,12 +100,29 @@ public static class TextDirection
         else if (control.IsSet(Visual.FlowDirectionProperty))
             control.ClearValue(Visual.FlowDirectionProperty);
 
-        if (control is TextBlock block && GetKeepSide(block))
+        if (control is not TextBlock block)
+            return;
+
+        if (GetKeepSide(block))
         {
             if (differs)
                 block.TextAlignment = AppDirection == FlowDirection.LeftToRight ? TextAlignment.Left : TextAlignment.Right;
             else if (block.IsSet(TextBlock.TextAlignmentProperty))
                 block.ClearValue(TextBlock.TextAlignmentProperty);
+        }
+        else if (differs && number)
+        {
+            // Left to right would also move a line that starts at the edge to the other one.
+            if (!block.GetValue(NumberAlignedProperty) && block.TextAlignment == TextAlignment.Start)
+            {
+                block.TextAlignment = TextAlignment.Right;
+                block.SetValue(NumberAlignedProperty, true);
+            }
+        }
+        else if (block.GetValue(NumberAlignedProperty))
+        {
+            block.ClearValue(TextBlock.TextAlignmentProperty);
+            block.SetValue(NumberAlignedProperty, false);
         }
     }
 
