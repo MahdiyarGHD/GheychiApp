@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android;
+using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
 
@@ -14,6 +16,15 @@ public partial class ChatView
 
     /// <summary>The user tapped the avatar or name in the header.</summary>
     public event Action? ProfileRequested;
+
+    /// <summary>The menu asked for a list that lives on the profile page: the starred or the spam messages of the chat.</summary>
+    public event Action<ProfileSection>? SectionRequested;
+
+    /// <summary>The menu asked to archive the chat (true) or bring it back to the inbox (false).</summary>
+    public event Action<bool>? ArchiveRequested;
+
+    /// <summary>Tells whether a conversation is in the archive; set by the page that hosts the chat.</summary>
+    public Func<long, bool>? IsArchivedLookup { get; set; }
 
     public bool IsSearching => Vm?.Search.IsActive == true;
 
@@ -69,7 +80,81 @@ public partial class ChatView
             ProfileLauncher.Dial(PhoneNumberNormalizer.ToSendAddress(vm.Thread.Phone));
     }
 
-    private void OnHeaderMenuTapped(object? sender, TappedEventArgs e) => HeaderMenuOverlay.IsVisible = true;
+    private void OnHeaderMenuTapped(object? sender, TappedEventArgs e)
+    {
+        PrepareHeaderMenu();
+        HeaderMenuOverlay.IsVisible = true;
+    }
+
+    // What the menu offers depends on the conversation: archive or bring back, block or unblock.
+    private void PrepareHeaderMenu()
+    {
+        if (Vm is not { } vm)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        var archived = IsArchivedLookup?.Invoke(vm.Thread.ThreadId) == true;
+        MenuArchiveIcon.Data = IconCatalog.Find(archived ? "unarchive.png" : "archive.png");
+        MenuArchiveLabel.Text = loc[archived ? "Profile_Unarchive" : "Profile_Archive"];
+
+        var address = PhoneNumberNormalizer.ToSendAddress(vm.Thread.Phone);
+        MenuBlockRow.IsVisible = _blocked is not null && !string.IsNullOrWhiteSpace(address);
+        MenuBlockLabel.Text = loc[_blocked?.IsBlocked(address) == true ? "Profile_Unblock" : "Profile_Block"];
+    }
+
+    private void OnMenuDetailsTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        if (Vm is { } vm)
+            ProfileLauncher.ShowContact(PhoneNumberNormalizer.ToSendAddress(vm.Thread.Phone));
+    }
+
+    private void OnMenuArchiveTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        if (Vm is { } vm)
+            ArchiveRequested?.Invoke(IsArchivedLookup?.Invoke(vm.Thread.ThreadId) != true);
+    }
+
+    private async void OnMenuBlockTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        try
+        {
+            if (_blocked is null || Vm is not { } vm)
+                return;
+
+            var address = PhoneNumberNormalizer.ToSendAddress(vm.Thread.Phone);
+            if (string.IsNullOrWhiteSpace(address))
+                return;
+
+            if (await BlockActions.ToggleAsync(_blocked, address, vm.Thread.Name))
+                RefreshBlocked();
+        }
+        catch (Exception ex)
+        {
+            // async void: a failed block must not terminate the app.
+            System.Diagnostics.Debug.WriteLine($"Blocking the sender failed: {ex}");
+        }
+    }
+
+    private void OnMenuStarredTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        SectionRequested?.Invoke(ProfileSection.Starred);
+    }
+
+    private void OnMenuSpamTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        SectionRequested?.Invoke(ProfileSection.Spam);
+    }
+
+    private void OnMenuHelpTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        _ = HelpLink.OpenAsync();
+    }
 
     private void OnCloseHeaderMenuTapped(object? sender, TappedEventArgs e) => HeaderMenuOverlay.IsVisible = false;
 
@@ -133,6 +218,23 @@ public partial class ChatView
             // async void: a failed jump must not terminate the app.
             System.Diagnostics.Debug.WriteLine($"Jump to search match failed: {ex}");
         }
+    }
+
+    /// <summary>Scrolls to a message that may be far back in the history; <paramref name="row"/> is its offset from the newest.</summary>
+    public async Task JumpToMessageAsync(int row, long messageId)
+    {
+        if (Vm is not { } vm)
+            return;
+
+        for (var wait = 0; !_initialLayoutSettled && wait < 20; wait++)
+            await Task.Delay(30);
+
+        if (!await vm.EnsureLoadedThroughAsync(row) || !ReferenceEquals(vm, Vm))
+            return;
+
+        var message = vm.Messages.FirstOrDefault(m => m.Id == messageId);
+        if (message is not null)
+            ScrollToMessage(vm.Items.IndexOf(message));
     }
 
     // Puts the message in the middle of the page so its neighbours are visible.

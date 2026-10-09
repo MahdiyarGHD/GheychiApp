@@ -432,6 +432,27 @@
   <data name="Profile_LinksReading" xml:space="preserve">
     <value>Looking for links…</value>
   </data>
+  <data name="Profile_Starred" xml:space="preserve">
+    <value>Starred messages</value>
+  </data>
+  <data name="Profile_StarredReading" xml:space="preserve">
+    <value>Looking for starred messages…</value>
+  </data>
+  <data name="Profile_StarredNone" xml:space="preserve">
+    <value>No starred messages</value>
+  </data>
+  <data name="Profile_StarredCount" xml:space="preserve">
+    <value>{0} starred</value>
+  </data>
+  <data name="Profile_SpamMessagesNone" xml:space="preserve">
+    <value>No spam from this sender</value>
+  </data>
+  <data name="Help_Feedback" xml:space="preserve">
+    <value>Help &amp; feedback</value>
+  </data>
+  <data name="Help_FeedbackHint" xml:space="preserve">
+    <value>Report a problem or share an idea on GitHub</value>
+  </data>
   <data name="Profile_Notifications" xml:space="preserve">
     <value>Notifications</value>
   </data>

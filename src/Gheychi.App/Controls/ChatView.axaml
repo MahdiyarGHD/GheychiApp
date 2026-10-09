@@ -866,7 +866,7 @@
               Tapped="OnCloseHeaderMenuTapped">
             <Border Margin="0,54,12,0"
                     Padding="4"
-                    Width="200"
+                    MinWidth="220"
                     BorderThickness="1"
                     BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                     CornerRadius="12"
@@ -875,23 +875,65 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Tapped="OnMenuTapEater">
-                <Border Padding="12,11"
-                        Background="Transparent"
-                        Tapped="OnMenuSearchTapped">
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                        <ui:Icon Grid.Column="0"
-                                 Data="{StaticResource Icon.Search}"
-                                 Width="18" Height="18"
-                                 VerticalAlignment="Center"
-                                 Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
-                        <TextBlock Grid.Column="1"
-                                   Text="{loc:Translate Chat_Search}"
-                                   FontSize="13"
-                                   FontFamily="{x:Static app:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
-                                   VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
+                <StackPanel>
+                    <Border Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuSearchTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Search}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            <TextBlock Grid.Column="1" Text="{loc:Translate Chat_Search}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border x:Name="MenuDetailsRow" Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuDetailsTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Person}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            <TextBlock Grid.Column="1" Text="{loc:Translate Profile_Details}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border x:Name="MenuArchiveRow" Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuArchiveTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon x:Name="MenuArchiveIcon" Grid.Column="0" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            <TextBlock x:Name="MenuArchiveLabel" Grid.Column="1" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border x:Name="MenuBlockRow" Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuBlockTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Block}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                            <TextBlock x:Name="MenuBlockLabel" Grid.Column="1" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuStarredTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Star}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            <TextBlock Grid.Column="1" Text="{loc:Translate Profile_Starred}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuSpamTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon Grid.Column="0" Data="{StaticResource Icon.SpamAlert}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            <TextBlock Grid.Column="1" Text="{loc:Translate Profile_SpamMessages}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Height="1" Margin="8,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
+                    <Border Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuHelpTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Help}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            <TextBlock Grid.Column="1" Text="{loc:Translate Help_Feedback}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
             </Border>
         </Grid>
 

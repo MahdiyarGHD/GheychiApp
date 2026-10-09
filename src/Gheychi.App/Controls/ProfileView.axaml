@@ -280,6 +280,22 @@
                             </Border>
                             <Border Classes="divider" />
 
+                            <Border Classes="row" Tapped="OnStarredTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" Classes="rowBadge">
+                                        <ui:Icon Data="{StaticResource Icon.Star}" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_Starred}" />
+                                        <TextBlock x:Name="StarredHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="2" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
+                                             Foreground="#8A8F98" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" />
+
                             <Border Classes="row" Tapped="OnNotificationsTapped">
                                 <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
                                     <Border Grid.Column="0" Classes="rowBadge">
@@ -341,7 +357,7 @@
                                 </Grid>
                             </Border>
 
-                            <StackPanel x:Name="SpamMessagesRow" IsVisible="False">
+                            <StackPanel x:Name="SpamMessagesRow">
                                 <Border Classes="divider" />
                                 <Border Classes="row" Tapped="OnSpamMessagesTapped">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
@@ -457,6 +473,56 @@
             </Panel>
         </Grid>
 
+        <!-- ===================== Starred messages ===================== -->
+        <Grid x:Name="StarredPage"
+              IsVisible="False"
+              RowDefinitions="Auto,*"
+              Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+            <Grid Grid.Row="0" Margin="12,0,16,0" Height="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Border Classes="backButton"
+                        Tapped="OnStarredBackTapped"
+                        AutomationProperties.Name="{loc:Translate Chat_Back}">
+                    <ui:Icon Data="{StaticResource Icon.Back}" Width="22" Height="22"
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                </Border>
+                <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_Starred}" />
+            </Grid>
+
+            <Panel Grid.Row="1">
+                <ItemsControl x:Name="StarredList"
+                              Margin="16,0,16,0"
+                              Template="{StaticResource ScrollList}"
+                              ItemsPanel="{StaticResource VirtualPanel}"
+                              Tapped="OnStarredItemTapped">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StarredMessageItem">
+                            <Grid RowDefinitions="Auto,1" Background="Transparent">
+                                <StackPanel Margin="0,10" Spacing="2">
+                                    <TextBlock Text="{Binding Time, Mode=OneTime}" FontSize="11" Foreground="#8A8F98" />
+                                    <TextBlock Text="{Binding Preview, Mode=OneTime}"
+                                               ui:TextDirection.KeepSide="True"
+                                               FontSize="14"
+                                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="3" />
+                                </StackPanel>
+                                <Border Grid.Row="1"
+                                        Background="{theme:ThemeBrush Light=#EEEEEF, Dark=#262728}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock x:Name="StarredEmpty"
+                           IsVisible="False"
+                           FontSize="15"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Panel>
+        </Grid>
+
         <!-- ===================== Spam messages ===================== -->
         <Grid x:Name="SpamListPage"
               IsVisible="False"
@@ -471,6 +537,14 @@
                 </Border>
                 <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_SpamMessages}" />
             </Grid>
+
+            <TextBlock x:Name="SpamEmpty"
+                       Grid.Row="1"
+                       IsVisible="False"
+                       FontSize="15"
+                       Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
 
             <ItemsControl x:Name="SpamList"
                           Grid.Row="1"
