@@ -19,8 +19,8 @@ namespace Gheychi.App.Controls;
 /// <summary>The conversation's profile page: who it is with, what can be done with them, and per-conversation settings.</summary>
 public partial class ProfileView : UserControl
 {
-    private static readonly IBrush SwitchOnTrack = Palette.Brush("#2E6B4C");
-    private static readonly IBrush SwitchOffTrack = Palette.Pick("#C5CCC6", "#444C47");
+    private static readonly IBrush SwitchOnTrack = Palette.Brush("#2E7D5B");
+    private static readonly IBrush SwitchOffTrack = Palette.Pick("#C6C8CB", "#46484A");
     private static readonly IBrush SwitchOnThumb = Palette.Brush("#FFFFFF");
     private static readonly IBrush SwitchOffThumb = Palette.Pick("#FFFFFF", "#9AA0AB");
     private static readonly IBrush RowTitleBrush = Palette.Pick("#1B1E24", "#E8EAED");

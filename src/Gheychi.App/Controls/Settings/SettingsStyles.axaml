@@ -7,13 +7,13 @@
     <!-- Included once, by the Settings tab: the screens are built inside it and inherit these. -->
 
     <Style Selector="Grid.screen">
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}" />
     </Style>
 
     <Style Selector="TextBlock.screenTitle">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="MaxLines" Value="1" />
@@ -31,7 +31,7 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="LetterSpacing" Value="0.6" />
         <Setter Property="Margin" Value="26,20,16,8" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
         <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
     </Style>
 
@@ -39,18 +39,18 @@
         <Setter Property="Margin" Value="16,0" />
         <Setter Property="Padding" Value="0,4" />
         <Setter Property="CornerRadius" Value="22" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#EEF2EC, Dark=#14251B}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}" />
     </Style>
 
     <Style Selector="Border.tile">
         <Setter Property="Padding" Value="12,10" />
         <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E3EAE2, Dark=#1D3026}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E5E6E7, Dark=#252628}" />
     </Style>
 
     <Style Selector="TextBlock.tileCaption">
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="MaxLines" Value="2" />
@@ -82,7 +82,7 @@
         <Setter Property="Height" Value="40" />
         <Setter Property="CornerRadius" Value="20" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E0E8DF, Dark=#203328}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E2E3E5, Dark=#28292B}" />
     </Style>
 
     <Style Selector="ui|Icon.badgeIcon">
@@ -103,7 +103,7 @@
 
     <Style Selector="TextBlock.rowSubtitle">
         <Setter Property="FontSize" Value="12.5" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="MaxLines" Value="5" />
@@ -120,20 +120,20 @@
         <Setter Property="Width" Value="15" />
         <Setter Property="Height" Value="15" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
     </Style>
 
     <Style Selector="Border.divider">
         <Setter Property="Height" Value="1" />
         <Setter Property="Margin" Value="70,0,16,0" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E1E7DF, Dark=#203328}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E2E3E4, Dark=#28292B}" />
     </Style>
 
     <Style Selector="Border.valueChip">
         <Setter Property="Padding" Value="12,6" />
         <Setter Property="CornerRadius" Value="16" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E0E8DF, Dark=#203328}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E2E3E5, Dark=#28292B}" />
     </Style>
 
     <Style Selector="TextBlock.valueChipLabel">
@@ -144,7 +144,7 @@
 
     <Style Selector="TextBlock.note">
         <Setter Property="FontSize" Value="12.5" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
@@ -156,7 +156,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel Width="46" Height="28" Background="Transparent">
-                    <Border Name="Track" CornerRadius="14" Background="{theme:ThemeBrush Light=#C5CEC4, Dark=#3A4A40}" />
+                    <Border Name="Track" CornerRadius="14" Background="{theme:ThemeBrush Light=#C7C9CB, Dark=#404244}" />
                     <Border Name="Knob" Width="20" Height="20" CornerRadius="10" Background="#FFFFFF"
                             HorizontalAlignment="Left" Margin="4,0,0,0">
                         <Border.Transitions>
@@ -170,7 +170,7 @@
         </Setter>
     </Style>
     <Style Selector="ToggleButton.setting:checked /template/ Border#Track">
-        <Setter Property="Background" Value="#2E6B4C" />
+        <Setter Property="Background" Value="#2E7D5B" />
     </Style>
     <Style Selector="ToggleButton.setting:checked /template/ Border#Knob">
         <Setter Property="RenderTransform" Value="translateX(18px)" />
@@ -192,7 +192,7 @@
                             <RepeatButton Name="PART_DecreaseButton" Focusable="False">
                                 <RepeatButton.Template>
                                     <ControlTemplate>
-                                        <Border Height="4" CornerRadius="2" Background="#2E6B4C" VerticalAlignment="Center" />
+                                        <Border Height="4" CornerRadius="2" Background="#2E7D5B" VerticalAlignment="Center" />
                                     </ControlTemplate>
                                 </RepeatButton.Template>
                             </RepeatButton>
@@ -201,7 +201,7 @@
                             <RepeatButton Name="PART_IncreaseButton" Focusable="False">
                                 <RepeatButton.Template>
                                     <ControlTemplate>
-                                        <Border Height="4" CornerRadius="2" Background="{theme:ThemeBrush Light=#C5CEC4, Dark=#3A4A40}" VerticalAlignment="Center" />
+                                        <Border Height="4" CornerRadius="2" Background="{theme:ThemeBrush Light=#C7C9CB, Dark=#404244}" VerticalAlignment="Center" />
                                     </ControlTemplate>
                                 </RepeatButton.Template>
                             </RepeatButton>
@@ -209,7 +209,7 @@
                         <Thumb Name="thumb" Width="22" Height="22">
                             <Thumb.Template>
                                 <ControlTemplate>
-                                    <Border CornerRadius="11" Background="#2E6B4C" />
+                                    <Border CornerRadius="11" Background="#2E7D5B" />
                                 </ControlTemplate>
                             </Thumb.Template>
                         </Thumb>
@@ -223,10 +223,10 @@
     <Style Selector="Border.segment">
         <Setter Property="Padding" Value="6,10" />
         <Setter Property="CornerRadius" Value="14" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E3EAE2, Dark=#1D3026}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E5E6E7, Dark=#252628}" />
     </Style>
     <Style Selector="Border.segment.on">
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}" />
     </Style>
 
     <Style Selector="Border.segment TextBlock.segmentTitle">
@@ -238,13 +238,13 @@
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
     </Style>
     <Style Selector="Border.segment.on TextBlock.segmentTitle">
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#0A1A11}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#121212}" />
     </Style>
 
     <Style Selector="Border.segment TextBlock.segmentHint">
         <Setter Property="FontSize" Value="11" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
     </Style>
     <Style Selector="Border.segment.on TextBlock.segmentHint">
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#DDF3E8, Dark=#173527}" />
@@ -253,7 +253,7 @@
     <!-- Status chips on the overview: OK, or with the "warn" class when something needs attention. -->
     <Style Selector="TextBlock.chipTitle">
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="MaxLines" Value="1" />
@@ -274,7 +274,7 @@
         <Setter Property="MaxLines" Value="1" />
         <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
     </Style>
     <Style Selector="Border.chip.warn TextBlock.chipLabel">
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#8A5A0E, Dark=#E8C27A}" />

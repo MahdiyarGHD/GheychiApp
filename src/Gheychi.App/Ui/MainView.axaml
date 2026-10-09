@@ -5,7 +5,7 @@
              xmlns:ui="clr-namespace:Gheychi.App.Ui"
              x:Class="Gheychi.App.Ui.MainView">
 
-    <Border x:Name="Root" Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}">
+    <Border x:Name="Root" Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
     <Panel>
 
         <Grid RowDefinitions="*,Auto">
@@ -14,8 +14,8 @@
             <Border x:Name="TabBar"
                     Grid.Row="1"
                     BorderThickness="0,1,0,0"
-                    BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#1C2B22}"
-                    Background="{theme:ThemeBrush Light=#F0F4EC, Dark=#0F2218}">
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#222325}"
+                    Background="{theme:ThemeBrush Light=#EFF0F1, Dark=#0F2218}">
                 <Grid ColumnDefinitions="*,*,*" Height="64">
 
                     <Panel x:Name="MessagesTab" Grid.Column="0" Background="Transparent" Tapped="OnTabTapped">

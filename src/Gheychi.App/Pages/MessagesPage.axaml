@@ -29,7 +29,7 @@
                                 Background="Transparent"
                                 VerticalAlignment="Center"
                                 Tapped="OnSearchBarTapped">
-                            <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </Grid>
                 </StackPanel>
@@ -70,7 +70,7 @@
             <Panel Grid.Row="1">
                 <Border CornerRadius="28,28,0,0"
                         ClipToBounds="True"
-                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#14251B}">
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
                 <ItemsControl x:Name="ThreadsList"
                               Margin="0,10,0,0"
                               ItemsSource="{Binding Threads}"
@@ -107,7 +107,7 @@
                                                  Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}}"
                                                  Width="27"
                                                  Height="27"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding Initials}"
@@ -185,7 +185,7 @@
                 <!-- Not the default SMS app: Android keeps the inbox from working properly, so it is not shown -->
                 <Panel x:Name="NotDefaultScreen"
                        IsVisible="False"
-                       Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}"
+                       Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}"
                        Tapped="OnNotDefaultTapEater">
                     <StackPanel Margin="32,0" Spacing="10" VerticalAlignment="Center">
                         <Border Width="64"
@@ -204,13 +204,13 @@
                                    TextWrapping="Wrap" />
                         <TextBlock Text="{loc:Translate Messages_NotDefaultText}"
                                    FontSize="14"
-                                   Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                                   Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
                                    TextAlignment="Center"
                                    TextWrapping="Wrap" />
                         <Border Margin="0,12,0,0"
                                 Padding="22,12"
                                 CornerRadius="22"
-                                Background="#2E6B4C"
+                                Background="#2E7D5B"
                                 HorizontalAlignment="Center"
                                 Tapped="OnSetDefaultTapped">
                             <TextBlock Text="{loc:Translate Messages_NotDefaultAction}"
@@ -229,7 +229,7 @@
                     Padding="4"
                     Width="200"
                     BorderThickness="1"
-                    BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                     CornerRadius="12"
                     Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                     BoxShadow="0 6 16 0 #40000000"

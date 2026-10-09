@@ -138,7 +138,7 @@ public static class TextMenu
             _card = new Border
             {
                 Background = Palette.Pick("#FFFFFF", "#272B33"),
-                BorderBrush = Palette.Pick("#E2E8DF", "#363B44"),
+                BorderBrush = Palette.Pick("#E3E5E8", "#363B44"),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(14),
                 Padding = new Thickness(3),

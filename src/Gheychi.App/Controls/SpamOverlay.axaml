@@ -10,7 +10,7 @@
     <UserControl.Styles>
         <Style Selector="Border.card">
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}" />
+            <Setter Property="BorderBrush" Value="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}" />
             <Setter Property="Background" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}" />
             <Setter Property="CornerRadius" Value="22" />
             <Setter Property="BoxShadow" Value="0 8 24 0 #40000000" />
@@ -25,7 +25,7 @@
             <Setter Property="Width" Value="20" />
             <Setter Property="Height" Value="20" />
             <Setter Property="Margin" Value="18,11,14,11" />
-            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
         </Style>
 
         <Style Selector="Grid.menuRow > TextBlock">
@@ -54,7 +54,7 @@
 
         <Style Selector="Border.divider">
             <Setter Property="Height" Value="1" />
-            <Setter Property="Background" Value="{theme:ThemeBrush Light=#F1F4F0, Dark=#2A2E35}" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#F1F2F3, Dark=#2A2E35}" />
         </Style>
     </UserControl.Styles>
 
@@ -86,10 +86,10 @@
                     </Grid>
                     <Border Padding="12,10"
                             CornerRadius="14"
-                            Background="{theme:ThemeBrush Light=#F3F5F1, Dark=#24292A}">
+                            Background="{theme:ThemeBrush Light=#F3F3F3, Dark=#262728}">
                         <TextBlock x:Name="MenuPreview"
                                    FontSize="13"
-                                   Foreground="{theme:ThemeBrush Light=#3E4840, Dark=#C9CDD3}"
+                                   Foreground="{theme:ThemeBrush Light=#404346, Dark=#C9CDD3}"
                                    TextTrimming="CharacterEllipsis"
                                    TextWrapping="Wrap"
                                    MaxLines="8" />
@@ -146,7 +146,7 @@
                             Background="Transparent"
                             VerticalAlignment="Center"
                             Tapped="OnBackdropTapped">
-                        <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16" Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                        <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                     </Border>
                 </Grid>
 
@@ -176,7 +176,7 @@
                         <TextBlock x:Name="InfoExplain"
                                    FontSize="12"
                                    TextWrapping="Wrap"
-                                   Foreground="{theme:ThemeBrush Light=#4A534C, Dark=#B5BAC2}" />
+                                   Foreground="{theme:ThemeBrush Light=#4B4E52, Dark=#B5BAC2}" />
                     </StackPanel>
                 </Border>
 
@@ -204,7 +204,7 @@
                             Margin="0,0,5,0"
                             Padding="0,10"
                             CornerRadius="14"
-                            Background="#2E6B4C"
+                            Background="#2E7D5B"
                             Tapped="OnRestoreTapped">
                         <TextBlock Text="{loc:Translate Spam_ActionRestoreShort}"
                                    FontSize="13"
@@ -243,13 +243,13 @@
                 <TextBlock x:Name="ConfirmMessage"
                            FontSize="13"
                            TextWrapping="Wrap"
-                           Foreground="{theme:ThemeBrush Light=#4A534C, Dark=#B5BAC2}" />
+                           Foreground="{theme:ThemeBrush Light=#4B4E52, Dark=#B5BAC2}" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" Margin="0,8,0,0">
                     <TextBlock Text="{loc:Translate Chat_Cancel}"
                                Padding="12,8"
                                FontSize="13"
                                FontFamily="{x:Static app:AppFonts.Bold}"
-                               Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                               Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
                                Background="Transparent"
                                Tapped="OnConfirmCancelTapped" />
                     <TextBlock x:Name="ConfirmAccept"

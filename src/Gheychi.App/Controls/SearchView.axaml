@@ -31,13 +31,13 @@
     <Grid x:Name="Root"
           RowDefinitions="Auto,*"
           Focusable="True"
-          Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+          Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
 
         <!-- Top header bar; the bottom border is the divider -->
         <Border Grid.Row="0"
                 Padding="12,10,16,9"
                 BorderThickness="0,0,0,1"
-                BorderBrush="{theme:ThemeBrush Light=#EAEFE8, Dark=#1E2220}">
+                BorderBrush="{theme:ThemeBrush Light=#EBEBEC, Dark=#1F2021}">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
 
                 <!-- Back button -->
@@ -55,14 +55,14 @@
                              Height="22"
                              HorizontalAlignment="Center"
                              VerticalAlignment="Center"
-                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 </Border>
 
                 <!-- Search pill -->
                 <Border Grid.Column="1"
                         Height="44"
                         CornerRadius="22"
-                        Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                        Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
                         Padding="10,0,8,0"
                         VerticalAlignment="Center">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6" VerticalAlignment="Center">
@@ -74,7 +74,7 @@
                                  Height="18"
                                  VerticalAlignment="Center"
                                  IsVisible="{Binding HasNoActiveFilter}"
-                                 Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                                 Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
 
                         <!-- Active filter chip inside the pill -->
                         <Border Grid.Column="1"
@@ -116,8 +116,8 @@
                                  Classes="plain"
                                  Text="{Binding SearchText, Mode=TwoWay}"
                                  PlaceholderText="{loc:Translate Search_MessagesNumbers}"
-                                 PlaceholderForeground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
-                                 Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                                 PlaceholderForeground="{theme:ThemeBrush Light=#595C61, Dark=#8A8F98}"
+                                 Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
                                  FontSize="14"
                                  VerticalAlignment="Center" />
 
@@ -137,7 +137,7 @@
                                      Height="20"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                                     Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                         </Border>
 
                         <!-- Clear ('X'): visible only while the search text has content -->
@@ -156,7 +156,7 @@
                                      Height="18"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                                     Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                         </Border>
                     </Grid>
                 </Border>
@@ -175,7 +175,7 @@
                     <TextBlock x:Name="FiltersHeader"
                                FontSize="12"
                                FontFamily="{x:Static app:AppFonts.Bold}"
-                               Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                               Foreground="{theme:ThemeBrush Light=#595C61, Dark=#8A8F98}"
                                LetterSpacing="1.2" />
 
                     <ItemsControl ItemsSource="{Binding FilterPills}">
@@ -189,7 +189,7 @@
                                 <Border Margin="0,0,8,8"
                                         Padding="14,9"
                                         CornerRadius="18"
-                                        Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                                        Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
                                         IsVisible="{Binding IsVisible}"
                                         Tapped="OnFilterPillTapped">
                                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -200,7 +200,7 @@
                                                  Foreground="{Binding IconTint}" />
                                         <TextBlock Text="{Binding Title}"
                                                    FontSize="12"
-                                                   Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                                                   Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Border>
@@ -217,7 +217,7 @@
                                    x:Name="RecentHeader"
                                    FontSize="12"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                                   Foreground="{theme:ThemeBrush Light=#595C61, Dark=#8A8F98}"
                                    LetterSpacing="1.2"
                                    VerticalAlignment="Center" />
 
@@ -225,7 +225,7 @@
                                    Text="{loc:Translate Search_ClearAll}"
                                    FontSize="12"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#2E6B4C}"
+                                   Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#2E7D5B}"
                                    Background="Transparent"
                                    VerticalAlignment="Center"
                                    IsVisible="{Binding HasRecentSearches}"
@@ -251,12 +251,12 @@
                                              Height="18"
                                              Margin="4,0,0,0"
                                              VerticalAlignment="Center"
-                                             Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                                             Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
 
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Query}"
                                                FontSize="13"
-                                               Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                                               Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
                                                TextTrimming="CharacterEllipsis"
                                                VerticalAlignment="Center" />
 
@@ -275,7 +275,7 @@
                                                  Height="16"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center"
-                                                 Foreground="{theme:ThemeBrush Light=#ABB4AC, Dark=#6E766F}" />
+                                                 Foreground="{theme:ThemeBrush Light=#ACAFB3, Dark=#6F7175}" />
                                     </Border>
                                 </Grid>
                             </DataTemplate>
@@ -300,8 +300,8 @@
             <Border Grid.Row="0"
                     Padding="16,8,16,9"
                     BorderThickness="0,0,0,1"
-                    BorderBrush="{theme:ThemeBrush Light=#EAEFE8, Dark=#1E2220}"
-                    Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+                    BorderBrush="{theme:ThemeBrush Light=#EBEBEC, Dark=#1F2021}"
+                    Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
                 <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
 
                     <ScrollViewer Grid.Column="0"
@@ -353,7 +353,7 @@
                     <TextBlock Grid.Column="1"
                                Text="{Binding FoundCountText}"
                                FontSize="11"
-                               Foreground="{theme:ThemeBrush Light=#747D75, Dark=#8A8F98}"
+                               Foreground="{theme:ThemeBrush Light=#74787D, Dark=#8A8F98}"
                                VerticalAlignment="Center"
                                Margin="8,0,0,0" />
                 </Grid>
@@ -493,7 +493,7 @@
                                             Width="8"
                                             Height="8"
                                             CornerRadius="4"
-                                            Background="{theme:ThemeBrush Light=#2E6B4C, Dark=#2E6B4C}"
+                                            Background="{theme:ThemeBrush Light=#2E7D5B, Dark=#2E7D5B}"
                                             VerticalAlignment="Center"
                                             IsVisible="{Binding IsUnread}" />
                                 </Grid>
@@ -505,7 +505,7 @@
                         <Border Margin="0,16,0,32"
                                 HorizontalAlignment="Center"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                                Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
                                 Padding="16,8"
                                 Tapped="OnDeepSearchTapped">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -536,11 +536,11 @@
                          Width="48"
                          Height="48"
                          HorizontalAlignment="Center"
-                         Foreground="{theme:ThemeBrush Light=#ABB4AC, Dark=#6E766F}" />
+                         Foreground="{theme:ThemeBrush Light=#ACAFB3, Dark=#6F7175}" />
                 <TextBlock Text="{Binding NoResultsText}"
                            FontSize="15"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#8A8F98}"
                            TextWrapping="Wrap"
                            TextAlignment="Center" />
             </StackPanel>
@@ -554,11 +554,11 @@
             <Border Grid.Row="0"
                     Padding="16,10,16,9"
                     BorderThickness="0,0,0,1"
-                    BorderBrush="{theme:ThemeBrush Light=#EAEFE8, Dark=#1E2220}"
-                    Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+                    BorderBrush="{theme:ThemeBrush Light=#EBEBEC, Dark=#1F2021}"
+                    Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
                 <TextBlock Text="{Binding FoundCountText}"
                            FontSize="12"
-                           Foreground="{theme:ThemeBrush Light=#747D75, Dark=#8A8F98}"
+                           Foreground="{theme:ThemeBrush Light=#74787D, Dark=#8A8F98}"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center" />
             </Border>
@@ -620,7 +620,7 @@
                         <Border Margin="0,16,0,32"
                                 HorizontalAlignment="Center"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#F0F5EE, Dark=#1E2320}"
+                                Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
                                 Padding="16,8"
                                 Tapped="OnDeepSearchTapped">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -650,11 +650,11 @@
                          Height="48"
                          HorizontalAlignment="Center"
                          Data="{Binding ActiveFilter.IconSource, Converter={x:Static ui:IconFileConverter.Instance}}"
-                         Foreground="{theme:ThemeBrush Light=#ABB4AC, Dark=#6E766F}" />
+                         Foreground="{theme:ThemeBrush Light=#ACAFB3, Dark=#6F7175}" />
                 <TextBlock Text="{Binding NoLinksText}"
                            FontSize="15"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#8A8F98}"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#8A8F98}"
                            TextWrapping="Wrap"
                            TextAlignment="Center" />
             </StackPanel>
@@ -665,7 +665,7 @@
         <Grid x:Name="SkeletonOverlay"
               Grid.Row="1"
               IsVisible="{Binding ShowSkeleton}"
-              Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+              Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
             <Panel x:Name="SkeletonRowsHost" VerticalAlignment="Top">
 
                 <!-- Chat results: avatar + two lines -->
@@ -677,7 +677,7 @@
                                         Height="48"
                                         Margin="16,14,0,14"
                                         CornerRadius="24"
-                                        Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                                        Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
                                 <StackPanel Grid.Column="1"
                                             Spacing="10"
                                             Margin="0,0,16,0"
@@ -686,11 +686,11 @@
                                             Width="150"
                                             HorizontalAlignment="Left"
                                             CornerRadius="7"
-                                            Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                                            Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
                                     <Border Height="12"
                                             HorizontalAlignment="Stretch"
                                             CornerRadius="6"
-                                            Background="{theme:ThemeBrush Light=#ECF0EC, Dark=#1D221E}" />
+                                            Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1F1F20}" />
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
@@ -708,17 +708,17 @@
                                     <Border Height="14"
                                             HorizontalAlignment="Stretch"
                                             CornerRadius="7"
-                                            Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                                            Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
                                     <Border Height="11"
                                             Width="110"
                                             HorizontalAlignment="Left"
                                             CornerRadius="5"
-                                            Background="{theme:ThemeBrush Light=#ECF0EC, Dark=#1D221E}" />
+                                            Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1F1F20}" />
                                     <Border Height="11"
                                             Width="170"
                                             HorizontalAlignment="Left"
                                             CornerRadius="5"
-                                            Background="{theme:ThemeBrush Light=#ECF0EC, Dark=#1D221E}" />
+                                            Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1F1F20}" />
                                 </StackPanel>
                                 <Border Grid.Column="1"
                                         Width="40"
@@ -726,7 +726,7 @@
                                         Margin="0,12,16,12"
                                         VerticalAlignment="Center"
                                         CornerRadius="20"
-                                        Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#252A26}" />
+                                        Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

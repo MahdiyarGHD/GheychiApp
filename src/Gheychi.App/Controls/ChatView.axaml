@@ -47,7 +47,7 @@
                                         BorderBrush="{Binding SearchStroke}"
                                         StrokeThickness="{Binding SearchStrokeThickness}"
                                         CornerRadius="16"
-                                        Background="{theme:ThemeBrush Light=#EDF1EB, Dark=#1C1F24}"
+                                        Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock Text="{Binding BodyBeforeLink}"
                                        FontSize="13"
@@ -58,9 +58,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDF1EB, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalAlignment="Bottom"
@@ -129,7 +129,7 @@
                                         BorderBrush="{Binding SearchStroke}"
                                         StrokeThickness="{Binding SearchStrokeThickness}"
                                         CornerRadius="16"
-                                        Background="{theme:ThemeBrush Light=#EDF1EB, Dark=#1C1F24}"
+                                        Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock FontSize="13" TextWrapping="Wrap">
                                 <Run Text="{Binding BodyBeforeLink}"
@@ -143,9 +143,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDF1EB, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalAlignment="Bottom"
@@ -255,9 +255,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDF1EB, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalAlignment="Bottom"
@@ -363,9 +363,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDF1EB, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalAlignment="Bottom"
@@ -400,7 +400,7 @@
             <Border Margin="0,8,0,4"
                     Padding="12,4"
                     CornerRadius="11"
-                    Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#1C1F24}"
+                    Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
                     HorizontalAlignment="Center">
                 <TextBlock Text="{Binding Text}"
                            FontSize="11"
@@ -417,7 +417,7 @@
                         BorderThickness="1"
                         BorderBrush="{StaticResource PrimaryBrush}"
                         CornerRadius="11"
-                        Background="{theme:ThemeBrush Light=#EBF3EE, Dark=#142B1F}">
+                        Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#142B1F}">
                     <TextBlock Text="{Binding Text}"
                                FontSize="11"
                                FontFamily="{x:Static app:AppFonts.Bold}"
@@ -441,7 +441,7 @@
         <Grid x:Name="PageContent"
               Focusable="True"
               RowDefinitions="Auto,*,Auto"
-              Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}">
+              Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
 
             <!-- Row 0: Dual Header (Normal vs Selection Contextual Header) -->
             <Grid Grid.Row="0">
@@ -465,7 +465,7 @@
                     <Border Grid.Column="1"
                             Width="40" Height="40"
                             CornerRadius="20"
-                            Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#35423C}"
+                            Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#1F4A35}"
                             Tapped="OnHeaderTapped">
                         <Panel>
                             <ui:Icon IsVisible="{Binding Thread.HasIcon}"
@@ -473,10 +473,10 @@
                                      Width="22" Height="22"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                     Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                             <TextBlock IsVisible="{Binding Thread.HasNoIcon}"
                                        Text="{Binding Thread.Initials}"
-                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
                                        FontSize="14"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
                                        HorizontalAlignment="Center"
@@ -513,7 +513,7 @@
                                  Width="22" Height="22"
                                  HorizontalAlignment="Center"
                                  VerticalAlignment="Center"
-                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                     </Panel>
                     <Panel Grid.Column="4"
                            Width="40" Height="40"
@@ -525,14 +525,14 @@
                                  Width="22" Height="22"
                                  HorizontalAlignment="Center"
                                  VerticalAlignment="Center"
-                                 Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                 Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                     </Panel>
                 </Grid>
 
                 <!-- Selection Contextual Header -->
                 <Border IsVisible="{Binding IsSelectionMode}"
                         Padding="12,10"
-                        Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}">
+                        Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
                     <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto"
                           ColumnSpacing="14">
                         <Panel Grid.Column="0"
@@ -562,7 +562,7 @@
                                      Width="20" Height="20"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                     Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                         </Panel>
                         <Panel Grid.Column="3"
                                Width="24" Height="24"
@@ -574,7 +574,7 @@
                                      Width="19" Height="19"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                     Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                         </Panel>
                         <Panel Grid.Column="4"
                                Width="24" Height="24"
@@ -586,7 +586,7 @@
                                      Width="20" Height="20"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                     Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                         </Panel>
                         <Panel Grid.Column="5"
                                Width="24" Height="24"
@@ -607,7 +607,7 @@
                 <Border x:Name="SearchHeader"
                         IsVisible="False"
                         Padding="8,8,10,8"
-                        Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}">
+                        Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
                     <Grid ColumnDefinitions="Auto,*,Auto,Auto"
                           ColumnSpacing="4">
                         <Panel Grid.Column="0"
@@ -626,7 +626,7 @@
                                 Padding="14,0,12,0"
                                 Height="40"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
                                 VerticalAlignment="Center">
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
                                 <TextBox x:Name="SearchEntry"
@@ -650,12 +650,12 @@
                                              Width="16" Height="16"
                                              HorizontalAlignment="Center"
                                              VerticalAlignment="Center"
-                                             Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                             Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 </Panel>
                                 <TextBlock Grid.Column="2"
                                            Text="{Binding Search.CounterText}"
                                            FontSize="12"
-                                           Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}"
+                                           Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}"
                                            VerticalAlignment="Center" />
                             </Grid>
                         </Border>
@@ -719,7 +719,7 @@
                 <Border Margin="0,8,0,0"
                         Padding="12,4"
                         CornerRadius="11"
-                        Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Top"
                         IsVisible="{Binding HasStickyDate}"
@@ -737,7 +737,7 @@
                             VerticalAlignment="Bottom">
                     <Border Width="210" Height="42"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#E2E8DF, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#E3E5E8, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="180" Height="52"
                             CornerRadius="16"
@@ -745,7 +745,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="260" Height="46"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#E2E8DF, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#E3E5E8, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="230" Height="42"
                             CornerRadius="16"
@@ -753,7 +753,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="160" Height="38"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#E2E8DF, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#E3E5E8, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                 </StackPanel>
 
@@ -785,13 +785,13 @@
                         IsVisible="False"
                         Padding="16,9"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
                         Tapped="OnUnblockTapped">
                     <StackPanel Spacing="1" HorizontalAlignment="Center">
                         <TextBlock Text="{loc:Translate Chat_Unblock}"
                                    FontSize="14"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                   Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
                                    TextAlignment="Center" />
                         <TextBlock Text="{loc:Translate Chat_BlockedHint}"
                                    FontSize="11"
@@ -803,20 +803,20 @@
                     <Border Grid.Column="0"
                             Width="40" Height="40"
                             CornerRadius="20"
-                            Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
                             VerticalAlignment="Center"
                             AutomationProperties.Name="{loc:Translate Chat_Attach}">
                         <ui:Icon Data="{StaticResource Icon.Plus}"
                                  Width="16" Height="16"
                                  HorizontalAlignment="Center"
                                  VerticalAlignment="Center"
-                                 Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                 Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                     </Border>
                     <Border Grid.Column="1"
                             Padding="12,0"
                             MinHeight="44"
                             CornerRadius="22"
-                            Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
                             VerticalAlignment="Center"
                             Tapped="OnInputBarTapped">
                         <TextBox x:Name="MessageEntry"
@@ -881,7 +881,7 @@
                     Padding="4"
                     Width="200"
                     BorderThickness="1"
-                    BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                     CornerRadius="12"
                     Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                     BoxShadow="0 6 16 0 #40000000"
@@ -927,7 +927,7 @@
                     <!-- 1. Floating Quick Reactions Dock -->
                     <Border x:Name="ReactionDock"
                             BorderThickness="1"
-                            BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                            BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                             CornerRadius="24"
                             Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                             Padding="10,6"
@@ -994,7 +994,7 @@
                             Margin="4,14,4,0"
                             Width="260"
                             BorderThickness="1"
-                            BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                            BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                             CornerRadius="18"
                             Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                             BoxShadow="0 10 24 0 #4D000000"
@@ -1017,7 +1017,7 @@
                                 <Border Grid.Row="1" Grid.Column="5"
                                         Padding="5,1"
                                         CornerRadius="6"
-                                        Background="{theme:ThemeBrush Light=#EBF3EE, Dark=#142B1F}"
+                                        Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#142B1F}"
                                         VerticalAlignment="Center">
                                     <TextBlock Text="{loc:Translate Chat_LinkBadge}"
                                                FontSize="9.5"
@@ -1032,7 +1032,7 @@
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
                                   Tapped="OnCopyTextTapped">
-                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Copy}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Copy}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock Grid.Row="1" Grid.Column="3"
                                            Text="{loc:Translate Chat_CopyText}"
                                            FontSize="13"
@@ -1045,7 +1045,7 @@
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
                                   Tapped="OnMenuStarTapped">
-                                <ui:Icon x:Name="MenuStarIcon" Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Star}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                <ui:Icon x:Name="MenuStarIcon" Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Star}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock x:Name="MenuStarLabel"
                                            Grid.Row="1" Grid.Column="3"
                                            Text="{loc:Translate Chat_Star}"
@@ -1054,14 +1054,14 @@
                                            VerticalAlignment="Center" />
                             </Grid>
 
-                            <Border Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEF2EC, Dark=#2A2E35}" />
+                            <Border Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
 
                             <!-- Select More -->
                             <Grid ColumnDefinitions="10,Auto,10,*,10"
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
                                   Tapped="OnMenuSelectMoreTapped">
-                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Checklist}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Checklist}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock Grid.Row="1" Grid.Column="3"
                                            Text="{loc:Translate Chat_SelectMore}"
                                            FontSize="13"
@@ -1074,7 +1074,7 @@
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
                                   Tapped="OnMenuInfoTapped">
-                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Info}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Info}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock Grid.Row="1" Grid.Column="3"
                                            Text="{loc:Translate Chat_Info}"
                                            FontSize="13"
@@ -1088,7 +1088,7 @@
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
                                   Tapped="OnMenuReportTapped">
-                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Report}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Report}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock Grid.Row="1" Grid.Column="3"
                                            Text="{loc:Translate Chat_ReportSpam}"
                                            FontSize="13"
@@ -1096,7 +1096,7 @@
                                            VerticalAlignment="Center" />
                             </Grid>
 
-                            <Border Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEF2EC, Dark=#2A2E35}" />
+                            <Border Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
 
                             <!-- Delete -->
                             <Grid ColumnDefinitions="10,Auto,10,*,10"
@@ -1125,7 +1125,7 @@
                     Tapped="OnCloseInfoModalTapped" />
             <Border Margin="24,0"
                     BorderThickness="1"
-                    BorderBrush="{theme:ThemeBrush Light=#E2E8DF, Dark=#2A2E35}"
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                     CornerRadius="24"
                     Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                     VerticalAlignment="Center"
@@ -1148,11 +1148,11 @@
                                      Width="18" Height="18"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}" />
+                                     Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                         </Panel>
                     </Grid>
 
-                    <Border Height="1" Background="{theme:ThemeBrush Light=#EEF2EC, Dark=#2A2E35}" />
+                    <Border Height="1" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
 
                     <StackPanel Spacing="10">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">

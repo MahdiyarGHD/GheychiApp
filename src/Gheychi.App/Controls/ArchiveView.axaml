@@ -7,7 +7,7 @@
              xmlns:ui="clr-namespace:Gheychi.App.Ui"
              xmlns:ti="using:Avalonia.Input.TextInput"
              x:Class="Gheychi.App.Controls.ArchiveView"
-             Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+             Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
 
     <Grid x:Name="Root" RowDefinitions="Auto,Auto,*" Focusable="True">
 
@@ -27,13 +27,13 @@
                         AutomationProperties.Name="{loc:Translate Chat_Back}">
                     <ui:Icon Data="{StaticResource Icon.Back}"
                              Width="22" Height="22"
-                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 </Border>
                 <TextBlock Grid.Column="1"
                            Text="{loc:Translate Archive_Title}"
                            FontSize="20"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                           Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
                            VerticalAlignment="Center" />
             </Grid>
 
@@ -52,13 +52,13 @@
                         AutomationProperties.Name="{loc:Translate Chat_Cancel}">
                     <ui:Icon Data="{StaticResource Icon.Close}"
                              Width="20" Height="20"
-                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 </Border>
                 <TextBlock x:Name="SelectedCountLabel"
                            Grid.Column="1"
                            FontSize="18"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                           Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
                            VerticalAlignment="Center" />
                 <Border Grid.Column="2"
                         Width="40" Height="40"
@@ -69,7 +69,7 @@
                         AutomationProperties.Name="{loc:Translate Messages_Unarchive}">
                     <ui:Icon Data="{StaticResource Icon.Unarchive}"
                              Width="21" Height="21"
-                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 </Border>
             </Grid>
         </Panel>
@@ -80,18 +80,18 @@
                 Padding="14,0"
                 Height="44"
                 CornerRadius="22"
-                Background="{theme:ThemeBrush Light=#EEF1EA, Dark=#1E2320}">
+                Background="{theme:ThemeBrush Light=#EDEDEE, Dark=#202021}">
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
                 <ui:Icon Grid.Column="0"
                          Data="{StaticResource Icon.Search}"
                          Width="18" Height="18"
-                         Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                         Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
                 <TextBox x:Name="FilterEntry"
                          Grid.Column="1"
                          Classes="plain"
                          PlaceholderText="{loc:Translate Archive_SearchHint}"
                          PlaceholderForeground="#8A8F98"
-                         Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}"
+                         Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
                          FontSize="14"
                          ti:TextInputOptions.ReturnKeyType="Search"
                          VerticalAlignment="Center"
@@ -108,7 +108,7 @@
                         AutomationProperties.Name="{loc:Translate Chat_Cancel}">
                     <ui:Icon Data="{StaticResource Icon.Close}"
                              Width="16" Height="16"
-                             Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                             Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
                 </Border>
             </Grid>
         </Border>
@@ -145,7 +145,7 @@
                                      Width="24" Height="24"
                                      IsVisible="{Binding ShowIcon}"
                                      Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
-                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                             <TextBlock Margin="8,0,14,0"
                                        Text="{Binding Initials, Mode=OneTime}"
                                        IsVisible="{Binding ShowInitials}"
@@ -204,23 +204,23 @@
                         HorizontalAlignment="Center">
                 <Border Width="64" Height="64"
                         CornerRadius="32"
-                        Background="{theme:ThemeBrush Light=#E9F0E8, Dark=#1E2320}"
+                        Background="{theme:ThemeBrush Light=#EBECED, Dark=#202021}"
                         HorizontalAlignment="Center">
                     <ui:Icon Data="{StaticResource Icon.Archive}"
                              Width="26" Height="26"
-                             Foreground="{theme:ThemeBrush Light=#747D75, Dark=#9AA0AB}" />
+                             Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
                 </Border>
                 <TextBlock x:Name="EmptyTitleLabel"
                            FontSize="16"
                            FontFamily="{x:Static app:AppFonts.Bold}"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                           Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 <TextBlock x:Name="EmptyMessageLabel"
                            FontSize="13"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
             </StackPanel>
         </Panel>
     </Grid>

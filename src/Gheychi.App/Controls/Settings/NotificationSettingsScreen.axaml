@@ -16,7 +16,7 @@
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                 <Border Classes="badge">
                                     <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Lock}"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                     <TextBlock Text="{loc:Translate Settings_LockScreen}" Classes="rowTitle" />
@@ -31,7 +31,7 @@
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                 <Border Classes="badge">
                                     <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                     <TextBlock Text="{loc:Translate Settings_SystemNotifications}" Classes="rowTitle" />

@@ -20,7 +20,7 @@ internal static class MessageNotifier
 
     private const int MinConversationsForSummary = 2;
 
-    internal static readonly int AccentColor = global::Android.Graphics.Color.ParseColor("#2E6B4C").ToArgb();
+    internal static readonly int AccentColor = global::Android.Graphics.Color.ParseColor("#2E7D5B").ToArgb();
     private static int _smallIcon;
 
     /// <summary>A new message arrived: alert, unless <paramref name="silent"/>.</summary>
