@@ -14,10 +14,10 @@
             <!-- Header: the normal one (as the Spam tab's) or the one shown while threads are selected -->
             <Panel Grid.Row="0">
                 <StackPanel IsVisible="{Binding IsNotSelectionMode}">
-                    <Grid Margin="18,8,6,8" ColumnDefinitions="*,Auto">
+                    <Grid Margin="22,10,10,12" ColumnDefinitions="*,Auto">
                         <TextBlock Grid.Column="0"
                                    Text="Gheychi"
-                                   FontSize="19"
+                                   FontSize="22"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
                                    Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                                    VerticalAlignment="Center" />
@@ -32,7 +32,6 @@
                             <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </Grid>
-                    <Border Height="1" Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#2A302C}" />
                 </StackPanel>
 
                 <Grid IsVisible="{Binding IsSelectionMode}"
@@ -69,8 +68,11 @@
             </Panel>
 
             <Panel Grid.Row="1">
+                <Border CornerRadius="28,28,0,0"
+                        ClipToBounds="True"
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#14251B}">
                 <ItemsControl x:Name="ThreadsList"
-                              Margin="8,4,8,0"
+                              Margin="0,10,0,0"
                               ItemsSource="{Binding Threads}"
                               Tapped="OnThreadsTapped"
                               Holding="OnThreadsHolding">
@@ -88,72 +90,72 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:ThreadItem">
-                            <Grid Height="68"
+                            <Grid Height="80"
                                   ColumnDefinitions="Auto,*,Auto"
-                                  ColumnSpacing="14"
+                                  ColumnSpacing="16"
                                   Background="{Binding RowBackgroundColor}">
                                 <Border Grid.Column="0"
-                                        Width="46"
-                                        Height="46"
-                                        Margin="8,0,0,0"
-                                        CornerRadius="23"
+                                        Width="52"
+                                        Height="52"
+                                        Margin="16,0,0,0"
+                                        CornerRadius="26"
                                         VerticalAlignment="Center"
                                         IsHitTestVisible="False"
                                         Background="{Binding AvatarBgColor}">
                                     <Panel>
                                         <ui:Icon IsVisible="{Binding ShowIcon}"
                                                  Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}}"
-                                                 Width="24"
-                                                 Height="24"
+                                                 Width="28"
+                                                 Height="28"
                                                  Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding Initials}"
                                                    IsVisible="{Binding ShowInitials}"
                                                    Foreground="{Binding AvatarTextColor}"
-                                                   FontSize="14"
+                                                   FontSize="22"
                                                    FontFamily="{x:Static app:AppFonts.Bold}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    TextAlignment="Center" />
                                         <ui:Icon IsVisible="{Binding IsSelected}"
                                                  Data="{StaticResource Icon.Check}"
-                                                 Width="22"
-                                                 Height="22"
+                                                 Width="26"
+                                                 Height="26"
                                                  Foreground="White"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
                                     </Panel>
                                 </Border>
 
-                                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <TextBlock Text="{Binding Name}"
                                                ui:TextDirection.KeepSide="True"
                                                Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
-                                               FontSize="14"
+                                               FontSize="16"
                                                FontFamily="{x:Static app:AppFonts.Bold}"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
                                     <TextBlock Text="{Binding Preview}"
                                                ui:TextDirection.KeepSide="True"
                                                Foreground="{Binding PreviewColor}"
-                                               FontSize="12"
+                                               FontSize="14"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="2" Spacing="6" Margin="0,0,8,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsHitTestVisible="False">
+                                <StackPanel Grid.Column="2" Spacing="6" Margin="0,0,18,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsHitTestVisible="False">
                                     <TextBlock Text="{Binding Time}"
-                                               FontSize="11"
+                                               FontSize="12"
                                                Foreground="{Binding TimeColor}"
                                                HorizontalAlignment="Right" />
                                     <Border IsVisible="{Binding IsUnread}"
-                                            Padding="7,1"
-                                            CornerRadius="9"
+                                            Padding="8,2"
+                                            CornerRadius="11"
                                             Background="{StaticResource PrimaryBrush}"
                                             HorizontalAlignment="Right">
                                         <TextBlock Text="{Binding CountText}"
-                                                   FontSize="11"
+                                                   FontSize="12"
                                                    FontFamily="{x:Static app:AppFonts.Bold}"
                                                    Foreground="White"
                                                    HorizontalAlignment="Center"
@@ -164,6 +166,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                </Border>
 
                 <Border Margin="0,0,24,24"
                         Width="58"

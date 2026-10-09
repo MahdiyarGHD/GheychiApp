@@ -384,12 +384,21 @@
                                         VerticalAlignment="Top"
                                         CornerRadius="24"
                                         Background="{Binding AvatarBgColor}">
-                                    <TextBlock Text="{Binding Initials}"
-                                               FontSize="16"
-                                               FontFamily="{x:Static app:AppFonts.Bold}"
-                                               Foreground="{Binding AvatarTextColor}"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" />
+                                    <Panel>
+                                        <ui:Icon IsVisible="{Binding HasNoInitials}"
+                                                 Data="{StaticResource Icon.Person}"
+                                                 Width="24"
+                                                 Height="24"
+                                                 Foreground="{Binding AvatarTextColor}"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Initials}"
+                                                   FontSize="18"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   Foreground="{Binding AvatarTextColor}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Panel>
                                 </Border>
 
                                 <Border IsVisible="{Binding ShowSimBadge}"

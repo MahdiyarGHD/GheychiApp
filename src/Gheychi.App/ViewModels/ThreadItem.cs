@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Media;
@@ -151,18 +152,31 @@ public sealed class ThreadItem : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(name))
             return "?";
 
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length >= 2)
+        if (IsNumber(name))
+            return string.Empty;
+
+        var trimmed = name.TrimStart();
+        foreach (var c in trimmed)
         {
-            var first = char.ToUpperInvariant(parts[0][0]);
-            var second = char.ToUpperInvariant(parts[1][0]);
-            return $"{first}{second}";
+            if (char.IsLetterOrDigit(c))
+                return char.ToUpperInvariant(c).ToString();
         }
 
-        if (name.Length <= 2)
-            return name.ToUpperInvariant();
+        return StringInfo.GetNextTextElement(trimmed);
+    }
 
-        return char.ToUpperInvariant(name[0]).ToString();
+    /// <summary>A name with no letter in it, only digits and the signs of a number or a code (+98 912 000 0003, *123#).</summary>
+    public static bool IsNumber(string name)
+    {
+        var hasDigit = false;
+        foreach (var c in name)
+        {
+            if (char.IsLetter(c))
+                return false;
+            hasDigit |= char.IsDigit(c);
+        }
+
+        return hasDigit || name.TrimStart() is ['+' or '*' or '#', ..];
     }
 
     public static string? DetectIcon(string name, string address)
@@ -184,7 +198,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
             combined.Contains("صرافی"))
             return "bitcoin.png";
 
-        return null;
+        return IsNumber(name) ? "person.png" : null;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
