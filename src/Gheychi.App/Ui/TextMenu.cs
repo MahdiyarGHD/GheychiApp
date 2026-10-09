@@ -2,6 +2,9 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Layout;
@@ -53,6 +56,8 @@ public static class TextMenu
         private Border _card = null!;
         private Popup _popup = null!;
         private Button _cut = null!, _copy = null!, _paste = null!, _all = null!;
+        private bool _reopen;
+        private int _settleVersion;
 
         public Bar(TextBox box)
         {
@@ -65,12 +70,50 @@ public static class TextMenu
                 e.Handled = true;
                 Show();
             };
-            box.LostFocus += (_, _) => Hide();
+            box.LostFocus += (_, _) =>
+            {
+                _reopen = false;
+                Hide();
+            };
+
+            // Holding on a word selects it, and the box only asks for a menu when the hold lands on a selection that
+            // already exists; a fresh one gets the menu here.
+            box.AddHandler(InputElement.HoldingEvent, (_, e) =>
+            {
+                if (e.HoldingState == HoldingState.Started && e.PointerType == PointerType.Touch)
+                    Dispatcher.UIThread.Post(() => { if (HasSelection) Show(); }, DispatcherPriority.Background);
+            }, RoutingStrategies.Bubble, handledEventsToo: true);
+
             box.PropertyChanged += (_, e) =>
             {
-                if (e.Property == TextBox.SelectionStartProperty || e.Property == TextBox.SelectionEndProperty || e.Property == TextBox.TextProperty)
+                if (e.Property == TextBox.TextProperty)
+                {
+                    _reopen = false;
                     Hide();
+                }
+                else if (e.Property == TextBox.SelectionStartProperty || e.Property == TextBox.SelectionEndProperty)
+                {
+                    // Dragging a handle: the menu goes while it moves and comes back once the selection has settled.
+                    _reopen |= IsOpen;
+                    Hide();
+                    if (_reopen)
+                        ShowWhenSettled();
+                }
             };
+        }
+
+        private bool HasSelection => _box.SelectionStart != _box.SelectionEnd;
+
+        private async void ShowWhenSettled()
+        {
+            var version = ++_settleVersion;
+            await Task.Delay(350);
+            if (version != _settleVersion)
+                return;
+
+            _reopen = false;
+            if (_box.IsFocused && HasSelection)
+                Show();
         }
 
         public bool IsOpen => _popup is { IsOpen: true };
@@ -83,7 +126,11 @@ public static class TextMenu
             _cut = Item(loc["TextMenu_Cut"], () => box.Cut());
             _copy = Item(loc["TextMenu_Copy"], () => { box.Copy(); box.ClearSelection(); });
             _paste = Item(loc["TextMenu_Paste"], () => box.Paste());
-            _all = Item(loc["TextMenu_SelectAll"], () => box.SelectAll());
+            _all = Item(loc["TextMenu_SelectAll"], () =>
+            {
+                _reopen = true;
+                box.SelectAll();
+            });
 
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
             row.Children.AddRange([_cut, _copy, _paste, _all]);
@@ -136,9 +183,9 @@ public static class TextMenu
                 return;
 
             _popup.PlacementRect = AnchorRect();
-            _card.Opacity = 0;
             if (!_popup.IsOpen)
             {
+                _card.Opacity = 0;
                 ((ISetLogicalParent)_popup).SetParent(_box);
                 _popup.IsOpen = true;
             }

@@ -35,10 +35,11 @@
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
         <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="Padding" Value="14,8" />
-        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="MinHeight" Value="46" />
         <Setter Property="MinWidth" Value="0" />
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="CornerRadius" Value="13" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
     <Style Selector="Button.textmenu:pointerover /template/ ContentPresenter#PART_ContentPresenter">
