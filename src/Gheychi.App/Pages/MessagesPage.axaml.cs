@@ -15,7 +15,7 @@ namespace Gheychi.App.Pages;
 
 public partial class MessagesPage : UserControl, IPageSwipeClient
 {
-    private const double RowHeight = 68;
+    private const double RowHeight = 80;
     private const int PreloadBuffer = 3;
     private const int RecentSuggestionCount = 5;
 
@@ -35,6 +35,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
     private bool _overlaysWarmedUp;
+    private bool _earlyPreloadStarted;
     private bool _inboxShown;
     private bool _composeBusy;
     private bool _archiveOpen;
@@ -203,11 +204,26 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             System.Diagnostics.Debug.WriteLine($"Inbox initialize failed: {ex}");
         }
 
+        if (!_earlyPreloadStarted)
+        {
+            _earlyPreloadStarted = true;
+            _ = PreloadWhenQuietAsync();
+        }
+
         if (!_overlaysWarmedUp)
         {
             _overlaysWarmedUp = true;
             _ = WarmUpOverlaysAsync();
         }
+    }
+
+    // The chats in view are read as soon as the inbox has settled, not after every screen below has been built (that
+    // took ten seconds or more): the reading is on worker threads and waits for the finger by itself.
+    private async Task PreloadWhenQuietAsync()
+    {
+        await Task.Delay(600);
+        await WaitForQuietAsync();
+        Vm?.EnableChatPreload();
     }
 
     /// <summary>Another tab came to the front.</summary>
@@ -253,7 +269,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             // Reading chats ahead is background work that would compete with the screens above.
             await Task.Delay(1500);
             await WaitForQuietAsync();
-            Vm?.EnableChatPreload();
+            if (Vm is { ChatPreloadEnabled: false })
+                Vm.EnableChatPreload();
 
             await Task.Delay(1500);
             await WaitForQuietAsync();
@@ -675,8 +692,12 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             ParkChatOverlay();
 
             // Replies sent, messages read or deleted inside the chat are not in the list yet.
+            // Opening the chat stopped the reading ahead of the others.
             if (Vm != null)
+            {
                 _ = Vm.LoadThreadsAsync();
+                Vm.StartChatPreload();
+            }
         }
         catch (InvalidOperationException)
         {

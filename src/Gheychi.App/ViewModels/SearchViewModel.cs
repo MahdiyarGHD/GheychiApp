@@ -164,6 +164,7 @@ public sealed class SearchResultItem
     public string Address { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public string Initials { get; init; } = string.Empty;
+    public bool HasNoInitials => Initials.Length == 0;
     public int SubId { get; init; }
     public int SimSlot { get; init; } = 1;
     public string SimSlotText => SimSlot.ToString();
