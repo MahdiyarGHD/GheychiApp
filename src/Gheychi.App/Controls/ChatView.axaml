@@ -47,7 +47,7 @@
                                         BorderBrush="{Binding SearchStroke}"
                                         StrokeThickness="{Binding SearchStrokeThickness}"
                                         CornerRadius="16"
-                                        Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
+                                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock Text="{Binding BodyBeforeLink}"
                                        FontSize="13"
@@ -58,9 +58,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalAlignment="Bottom"
@@ -129,7 +129,7 @@
                                         BorderBrush="{Binding SearchStroke}"
                                         StrokeThickness="{Binding SearchStrokeThickness}"
                                         CornerRadius="16"
-                                        Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
+                                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock FontSize="13" TextWrapping="Wrap">
                                 <Run Text="{Binding BodyBeforeLink}"
@@ -143,9 +143,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalAlignment="Bottom"
@@ -255,9 +255,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalAlignment="Bottom"
@@ -363,9 +363,9 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#EDEEEF, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalAlignment="Bottom"
@@ -400,7 +400,7 @@
             <Border Margin="0,8,0,4"
                     Padding="12,4"
                     CornerRadius="11"
-                    Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
+                    Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                     HorizontalAlignment="Center">
                 <TextBlock Text="{Binding Text}"
                            FontSize="11"
@@ -410,7 +410,7 @@
 
         <DataTemplate x:Key="UnreadSeparatorTemplate" x:DataType="vm:UnreadSeparatorItem">
             <Grid Margin="16,8" ColumnDefinitions="*,Auto,*" VerticalAlignment="Center">
-                <Border Grid.Column="0" Height="1" Background="#802E6B4C" VerticalAlignment="Center" />
+                <Border Grid.Column="0" Height="1" Background="{theme:AccentBrush Role=Solid, Alpha=128}" VerticalAlignment="Center" />
                 <Border Grid.Column="1"
                         Margin="8,0"
                         Padding="12,4"
@@ -424,7 +424,7 @@
                                Foreground="{StaticResource PrimaryBrush}"
                                HorizontalAlignment="Center" />
                 </Border>
-                <Border Grid.Column="2" Height="1" Background="#802E6B4C" VerticalAlignment="Center" />
+                <Border Grid.Column="2" Height="1" Background="{theme:AccentBrush Role=Solid, Alpha=128}" VerticalAlignment="Center" />
             </Grid>
         </DataTemplate>
 
@@ -626,7 +626,7 @@
                                 Padding="14,0,12,0"
                                 Height="40"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                 VerticalAlignment="Center">
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
                                 <TextBox x:Name="SearchEntry"
@@ -719,7 +719,7 @@
                 <Border Margin="0,8,0,0"
                         Padding="12,4"
                         CornerRadius="11"
-                        Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Top"
                         IsVisible="{Binding HasStickyDate}"
@@ -737,7 +737,7 @@
                             VerticalAlignment="Bottom">
                     <Border Width="210" Height="42"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#E3E5E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="180" Height="52"
                             CornerRadius="16"
@@ -745,7 +745,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="260" Height="46"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#E3E5E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="230" Height="42"
                             CornerRadius="16"
@@ -753,7 +753,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="160" Height="38"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#E3E5E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                 </StackPanel>
 
@@ -785,7 +785,7 @@
                         IsVisible="False"
                         Padding="16,9"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                         Tapped="OnUnblockTapped">
                     <StackPanel Spacing="1" HorizontalAlignment="Center">
                         <TextBlock Text="{loc:Translate Chat_Unblock}"
@@ -803,7 +803,7 @@
                     <Border Grid.Column="0"
                             Width="40" Height="40"
                             CornerRadius="20"
-                            Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                             VerticalAlignment="Center"
                             AutomationProperties.Name="{loc:Translate Chat_Attach}">
                         <ui:Icon Data="{StaticResource Icon.Plus}"
@@ -816,7 +816,7 @@
                             Padding="12,0"
                             MinHeight="44"
                             CornerRadius="22"
-                            Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                             VerticalAlignment="Center"
                             Tapped="OnInputBarTapped">
                         <TextBox x:Name="MessageEntry"

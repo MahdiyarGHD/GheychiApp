@@ -15,7 +15,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
     private static readonly CornerRadius OutgoingCornersRtl = new(18, 18, 4, 18);
     private static readonly CornerRadius IncomingCornersRtl = new(18, 18, 18, 4);
 
-    private static readonly IBrush IncomingBg = Palette.Pick("#FFFFFF", "#1E1F22");
+    private static readonly IBrush IncomingBg = Palette.Pick("#DFE3E8", "#1C1F24");
     private static readonly IBrush TextBrush = Palette.Pick("#1B1E24", "#E8EAED");
     private static readonly IBrush TimeBrush = Palette.Brush("#8A8F98");
     private static readonly IBrush PrimaryBrush = Palette.Accent(AccentRole.Solid);

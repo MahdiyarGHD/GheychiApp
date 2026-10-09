@@ -75,7 +75,7 @@
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
-                                                Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
+                                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
                                             <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
                                                      Foreground="{theme:AccentBrush Role=Text}"
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -93,9 +93,9 @@
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
-                                                Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
+                                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
                                             <ui:Icon Data="{StaticResource Icon.Chart}" Width="16" Height="16"
-                                                     Foreground="{theme:ThemeBrush Light=#9A4A2A, Dark=#F0B79A}"
+                                                     Foreground="{theme:AccentBrush Role=Text}"
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <ui:Icon Grid.Column="1" Classes="chevron" Width="16" Height="16"

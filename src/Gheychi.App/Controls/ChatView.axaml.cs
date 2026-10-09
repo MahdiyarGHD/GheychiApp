@@ -712,7 +712,7 @@ public partial class ChatView : UserControl
         }
         else
         {
-            ElevatedBubbleBorder.Background = isDark ? Palette.Brush("#1C1F24") : Brushes.White;
+            ElevatedBubbleBorder.Background = ChatMessage.IncomingBubbleBg;
             ElevatedBubbleBody.Foreground = isDark ? Palette.Brush("#E8EAED") : Palette.Brush("#1B1E24");
         }
 

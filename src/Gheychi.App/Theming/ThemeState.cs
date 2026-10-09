@@ -57,6 +57,9 @@ public static class Palette
 
     public static IImmutableBrush Accent(AccentRole role) => Brush(ThemeState.Accent.Hex(role, ThemeState.IsDark));
 
+    public static IImmutableBrush Accent(AccentRole role, byte alpha) =>
+        Brush("#" + alpha.ToString("X2") + ThemeState.Accent.Hex(role, ThemeState.IsDark)[1..]);
+
     public static IImmutableBrush Transparent { get; } = new ImmutableSolidColorBrush(Colors.Transparent);
 }
 

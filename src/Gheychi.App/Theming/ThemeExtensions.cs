@@ -37,8 +37,12 @@ public sealed class AccentBrushExtension
 
     public string? Dark { get; set; }
 
+    /// <summary>0-255; the accent's opacity, for hairlines and highlights.</summary>
+    public byte Alpha { get; set; } = 255;
+
     public IBrush ProvideValue(IServiceProvider? serviceProvider = null) =>
-        (ThemeState.IsDark ? Dark : Light) is { } neutral ? Palette.Brush(neutral) : Palette.Accent(Role);
+        (ThemeState.IsDark ? Dark : Light) is { } neutral ? Palette.Brush(neutral)
+        : Alpha == 255 ? Palette.Accent(Role) : Palette.Accent(Role, Alpha);
 }
 
 /// <summary>Same as <see cref="ThemeBrushExtension"/> for properties that take a <see cref="Color"/>.</summary>
