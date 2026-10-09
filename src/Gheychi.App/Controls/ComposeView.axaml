@@ -7,7 +7,7 @@
              xmlns:ui="clr-namespace:Gheychi.App.Ui"
              xmlns:ti="using:Avalonia.Input.TextInput"
              x:Class="Gheychi.App.Controls.ComposeView"
-             Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+             Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#0A1A11}">
 
     <UserControl.Resources>
         <vm:ComposeRowTemplateSelector x:Key="RowSelector">
@@ -15,7 +15,7 @@
             <vm:ComposeRowTemplateSelector.Header>
                 <DataTemplate x:DataType="vm:ComposeRow">
                     <TextBlock Text="{Binding Letter, Mode=OneTime}"
-                               Margin="20,10,16,2"
+                               Margin="22,14,16,4"
                                FontSize="11"
                                LetterSpacing="0.8"
                                FontFamily="{x:Static app:AppFonts.Bold}"
@@ -26,25 +26,25 @@
             <!-- A person: avatar with initials, name, "Mobile · number" -->
             <vm:ComposeRowTemplateSelector.Contact>
                 <DataTemplate x:DataType="vm:ComposeRow">
-                    <Grid Height="50" ColumnDefinitions="Auto,*" Background="Transparent">
-                        <Border Width="40" Height="40" Margin="16,0,12,0" CornerRadius="20"
+                    <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
+                        <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
                                 Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#35423C}">
                             <TextBlock Text="{Binding Initials, Mode=OneTime}"
-                                       FontSize="13"
+                                       FontSize="19"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
                                        Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="0,0,16,0" Spacing="1" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
-                                       FontSize="14"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       FontSize="15"
+                                       FontFamily="{x:Static app:AppFonts.Regular}"
                                        TextTrimming="CharacterEllipsis"
-                                       Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}" />
+                                       Foreground="{theme:ThemeBrush Light=#3A413C, Dark=#C9CED4}" />
                             <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
                                        IsVisible="{Binding HasSubtitle, Mode=OneTime}"
-                                       FontSize="12"
+                                       FontSize="13"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{theme:ThemeBrush Light=#646C65, Dark=#9AA0AB}" />
                         </StackPanel>
@@ -55,22 +55,22 @@
             <!-- A person without letters in the name: a person icon instead of initials -->
             <vm:ComposeRowTemplateSelector.ContactIcon>
                 <DataTemplate x:DataType="vm:ComposeRow">
-                    <Grid Height="50" ColumnDefinitions="Auto,*" Background="Transparent">
-                        <Border Width="40" Height="40" Margin="16,0,12,0" CornerRadius="20"
+                    <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
+                        <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
                                 Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#35423C}">
                             <ui:Icon Data="{StaticResource Icon.Person}"
-                                     Width="18" Height="18"
+                                     Width="23" Height="23"
                                      Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="0,0,16,0" Spacing="1" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
-                                       FontSize="14"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       FontSize="15"
+                                       FontFamily="{x:Static app:AppFonts.Regular}"
                                        TextTrimming="CharacterEllipsis"
-                                       Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}" />
+                                       Foreground="{theme:ThemeBrush Light=#3A413C, Dark=#C9CED4}" />
                             <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
                                        IsVisible="{Binding HasSubtitle, Mode=OneTime}"
-                                       FontSize="12"
+                                       FontSize="13"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{theme:ThemeBrush Light=#646C65, Dark=#9AA0AB}" />
                         </StackPanel>
@@ -81,21 +81,21 @@
             <!-- "Send to 0903…": the number typed in the To field -->
             <vm:ComposeRowTemplateSelector.Typed>
                 <DataTemplate x:DataType="vm:ComposeRow">
-                    <Grid Height="50" ColumnDefinitions="Auto,*" Background="Transparent">
-                        <Border Width="40" Height="40" Margin="16,0,12,0" CornerRadius="20"
+                    <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
+                        <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
                                 Background="{StaticResource PrimaryBrush}">
                             <ui:Icon Data="{StaticResource Icon.Send}"
-                                     Width="18" Height="18"
+                                     Width="21" Height="21"
                                      Foreground="White" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="0,0,16,0" Spacing="1" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
-                                       FontSize="14"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       FontSize="15"
+                                       FontFamily="{x:Static app:AppFonts.Regular}"
                                        TextTrimming="CharacterEllipsis"
-                                       Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}" />
+                                       Foreground="{theme:ThemeBrush Light=#3A413C, Dark=#C9CED4}" />
                             <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
-                                       FontSize="12"
+                                       FontSize="13"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}" />
                         </StackPanel>
@@ -114,7 +114,7 @@
     <Grid x:Name="Root" RowDefinitions="Auto,Auto,*" Focusable="True">
 
         <!-- Header -->
-        <Grid Grid.Row="0" Height="48" ColumnDefinitions="Auto,*" ColumnSpacing="4">
+        <Grid Grid.Row="0" Height="56" ColumnDefinitions="Auto,*" ColumnSpacing="4">
             <Border x:Name="BackButton"
                     Width="40" Height="40"
                     Margin="8,0,0,0"
@@ -130,7 +130,7 @@
             <TextBlock Grid.Column="1"
                        Margin="0,0,12,0"
                        Text="{loc:Translate Compose_Title}"
-                       FontSize="18"
+                       FontSize="22"
                        FontFamily="{x:Static app:AppFonts.Bold}"
                        Foreground="{theme:ThemeBrush Light=#1A1C19, Dark=#E8EAED}"
                        VerticalAlignment="Center" />
@@ -139,13 +139,13 @@
         <!-- Recipient field -->
         <Border x:Name="RecipientCard"
                 Grid.Row="1"
-                Margin="12,0,12,6"
-                Padding="14,0,6,0"
-                Height="42"
+                Margin="14,0,14,14"
+                Padding="16,0,6,0"
+                Height="46"
                 BorderThickness="1.5"
                 BorderBrush="Transparent"
-                CornerRadius="21"
-                Background="{theme:ThemeBrush Light=#EAF0E8, Dark=#1E2320}">
+                CornerRadius="23"
+                Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#14251B}">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
                 <TextBlock Grid.Column="0"
                            Text="{loc:Translate Compose_To}"
@@ -205,8 +205,13 @@
         </Border>
 
         <!-- Suggestions and contacts -->
-        <Panel Grid.Row="2">
+        <Border Grid.Row="2"
+                CornerRadius="28,28,0,0"
+                ClipToBounds="True"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#14251B}">
+        <Panel>
             <ItemsControl x:Name="ContactList"
+                          Margin="0,8,0,0"
                           ItemTemplate="{StaticResource RowSelector}"
                           Tapped="OnRowTapped">
                 <ItemsControl.Template>
@@ -241,7 +246,7 @@
                         HorizontalAlignment="Center">
                 <Border Width="64" Height="64"
                         CornerRadius="32"
-                        Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#1E2320}"
+                        Background="{theme:ThemeBrush Light=#E3E9E4, Dark=#203328}"
                         HorizontalAlignment="Center">
                     <ui:Icon Data="{StaticResource Icon.Person}"
                              Width="26" Height="26"
@@ -273,5 +278,6 @@
                 </Border>
             </StackPanel>
         </Panel>
+        </Border>
     </Grid>
 </UserControl>
