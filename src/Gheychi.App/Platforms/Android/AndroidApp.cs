@@ -1,8 +1,11 @@
 using Android.App;
 using Android.Runtime;
 using AndroidX.AppCompat.App;
+using Avalonia;
 using Avalonia.Android;
+using Avalonia.Media;
 using Gheychi.App.Localization;
+using Gheychi.App.Platforms.Android;
 using Gheychi.App.Platforms.Android.Notifications;
 
 namespace Gheychi.App;
@@ -13,6 +16,14 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
     protected AndroidApp(IntPtr javaReference, JniHandleOwnership transfer)
         : base(javaReference, transfer)
     {
+    }
+
+    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    {
+        builder = base.CustomizeAppBuilder(builder);
+        if (SystemEmoji.Fallbacks is { } fallbacks)
+            builder = builder.With(new FontManagerOptions { FontFallbacks = fallbacks }).AfterSetup(_ => Task.Run(SystemEmoji.Register));
+        return builder;
     }
 
     // The services are built here and not when the first screen is: a text that arrives while the app is closed
