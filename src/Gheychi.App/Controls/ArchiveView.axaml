@@ -12,7 +12,7 @@
     <Grid x:Name="Root" RowDefinitions="Auto,Auto,*" Focusable="True">
 
         <!-- Header: normal bar or selection bar -->
-        <Panel Grid.Row="0" Height="60">
+        <Panel Grid.Row="0" Height="64">
             <Grid x:Name="NormalHeader"
                   Margin="12,0,16,0"
                   ColumnDefinitions="Auto,*"
@@ -31,9 +31,9 @@
                 </Border>
                 <TextBlock Grid.Column="1"
                            Text="{loc:Translate Archive_Title}"
-                           FontSize="20"
+                           FontSize="22"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
+                           Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                            VerticalAlignment="Center" />
             </Grid>
 
@@ -74,48 +74,52 @@
             </Grid>
         </Panel>
 
-        <!-- Filter box -->
+        <!-- The filter and the list sit on the same rounded surface as the inbox -->
         <Border Grid.Row="1"
-                Margin="16,2,16,8"
-                Padding="14,0"
-                Height="44"
-                CornerRadius="22"
-                Background="{theme:ThemeBrush Light=#EDEDEE, Dark=#202021}">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
-                <ui:Icon Grid.Column="0"
-                         Data="{StaticResource Icon.Search}"
-                         Width="18" Height="18"
-                         Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
-                <TextBox x:Name="FilterEntry"
-                         Grid.Column="1"
-                         Classes="plain"
-                         PlaceholderText="{loc:Translate Archive_SearchHint}"
-                         PlaceholderForeground="#8A8F98"
-                         Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
-                         FontSize="14"
-                         ti:TextInputOptions.ReturnKeyType="Search"
-                         VerticalAlignment="Center"
-                         TextChanged="OnFilterTextChanged"
-                         KeyDown="OnFilterKeyDown" />
-                <Border x:Name="ClearFilterButton"
-                        Grid.Column="2"
-                        IsVisible="False"
-                        Width="28" Height="28"
-                        Margin="-6,0"
-                        Background="Transparent"
-                        VerticalAlignment="Center"
-                        Tapped="OnClearFilterTapped"
-                        AutomationProperties.Name="{loc:Translate Chat_Cancel}">
-                    <ui:Icon Data="{StaticResource Icon.Close}"
-                             Width="16" Height="16"
+                Grid.RowSpan="2"
+                CornerRadius="28,28,0,0"
+                ClipToBounds="True"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+        <Grid RowDefinitions="Auto,*">
+            <Border Margin="16,16,16,8"
+                    Padding="14,0"
+                    Height="44"
+                    CornerRadius="22"
+                    Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#28292B}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                    <ui:Icon Grid.Column="0"
+                             Data="{StaticResource Icon.Search}"
+                             Width="18" Height="18"
                              Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
-                </Border>
-            </Grid>
-        </Border>
+                    <TextBox x:Name="FilterEntry"
+                             Grid.Column="1"
+                             Classes="plain"
+                             PlaceholderText="{loc:Translate Archive_SearchHint}"
+                             PlaceholderForeground="#8A8F98"
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}"
+                             FontSize="14"
+                             ti:TextInputOptions.ReturnKeyType="Search"
+                             VerticalAlignment="Center"
+                             TextChanged="OnFilterTextChanged"
+                             KeyDown="OnFilterKeyDown" />
+                    <Border x:Name="ClearFilterButton"
+                            Grid.Column="2"
+                            IsVisible="False"
+                            Width="28" Height="28"
+                            Margin="-6,0"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            Tapped="OnClearFilterTapped"
+                            AutomationProperties.Name="{loc:Translate Chat_Cancel}">
+                        <ui:Icon Data="{StaticResource Icon.Close}"
+                                 Width="16" Height="16"
+                                 Foreground="{theme:ThemeBrush Light=#74787D, Dark=#9AA0AB}" />
+                    </Border>
+                </Grid>
+            </Border>
 
-        <Panel Grid.Row="2">
+        <Panel Grid.Row="1">
             <ItemsControl x:Name="ArchiveList"
-                          Margin="8,0,8,0"
                           Tapped="OnListTapped"
                           Holding="OnListHolding">
                 <ItemsControl.Template>
@@ -133,58 +137,74 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:ThreadItem">
-                        <Grid Height="68"
+                        <Grid Height="76"
                               ColumnDefinitions="Auto,*,Auto"
+                              ColumnSpacing="15"
                               Background="{Binding RowBackgroundColor}">
-                            <!-- Avatar: the disc, then whichever of icon / initials / check applies, as siblings to keep the row flat -->
-                            <Border Width="46" Height="46"
-                                    Margin="8,0,14,0"
-                                    CornerRadius="23"
-                                    Background="{Binding AvatarBgColor}" />
-                            <ui:Icon Margin="8,0,14,0"
-                                     Width="24" Height="24"
-                                     IsVisible="{Binding ShowIcon}"
-                                     Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
-                                     Foreground="{theme:AccentBrush Role=Text}" />
-                            <TextBlock Margin="8,0,14,0"
-                                       Text="{Binding Initials, Mode=OneTime}"
-                                       IsVisible="{Binding ShowInitials}"
-                                       Foreground="{Binding AvatarTextColor, Mode=OneTime}"
-                                       FontSize="14"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                            <ui:Icon Margin="8,0,14,0"
-                                     Width="22" Height="22"
-                                     IsVisible="{Binding IsSelected}"
-                                     Data="{StaticResource Icon.Check}"
-                                     Foreground="White" />
+                            <Border Grid.Column="0"
+                                    Width="50"
+                                    Height="50"
+                                    Margin="15,0,0,0"
+                                    CornerRadius="25"
+                                    VerticalAlignment="Center"
+                                    IsHitTestVisible="False"
+                                    Background="{Binding AvatarBgColor}">
+                                <Panel>
+                                    <ui:Icon IsVisible="{Binding ShowIcon}"
+                                             Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
+                                             Width="27"
+                                             Height="27"
+                                             Foreground="{theme:AccentBrush Role=Text}"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Initials, Mode=OneTime}"
+                                               IsVisible="{Binding ShowInitials}"
+                                               Foreground="{Binding AvatarTextColor, Mode=OneTime}"
+                                               FontSize="21"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center" />
+                                    <ui:Icon IsVisible="{Binding IsSelected}"
+                                             Data="{StaticResource Icon.Check}"
+                                             Width="25"
+                                             Height="25"
+                                             Foreground="White"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center" />
+                                </Panel>
+                            </Border>
 
-                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" IsHitTestVisible="False">
                                 <TextBlock Text="{Binding Name, Mode=OneTime}"
-                                           Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
-                                           FontSize="14"
-                                           FontFamily="{x:Static app:AppFonts.Bold}"
-                                           TextTrimming="CharacterEllipsis" />
+                                           ui:TextDirection.KeepSide="True"
+                                           Foreground="{Binding NameColor}"
+                                           FontSize="15"
+                                           FontFamily="{Binding NameFont}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" />
                                 <TextBlock Text="{Binding Preview, Mode=OneTime}"
                                            ui:TextDirection.KeepSide="True"
-                                           FontSize="12"
-                                           Foreground="{Binding PreviewColor, Mode=OneTime}"
-                                           TextTrimming="CharacterEllipsis" />
+                                           Foreground="{Binding PreviewColor}"
+                                           FontFamily="{Binding PreviewFont}"
+                                           FontSize="13.5"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" />
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2" Margin="14,0,8,0" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <StackPanel Grid.Column="2" Spacing="6" Margin="0,0,17,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsHitTestVisible="False">
                                 <TextBlock Text="{Binding Time, Mode=OneTime}"
-                                           FontSize="11"
-                                           Foreground="{Binding TimeColor, Mode=OneTime}"
+                                           FontSize="11.5"
+                                           FontFamily="{Binding PreviewFont}"
+                                           Foreground="{Binding TimeColor}"
                                            HorizontalAlignment="Right" />
                                 <Border IsVisible="{Binding IsUnread}"
-                                        Padding="7,1"
-                                        CornerRadius="9"
+                                        Padding="8,2"
+                                        CornerRadius="11"
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                                     <TextBlock Text="{Binding CountText}"
-                                               FontSize="11"
+                                               FontSize="11.5"
                                                FontFamily="{x:Static app:AppFonts.Bold}"
                                                Foreground="White"
                                                HorizontalAlignment="Center"
@@ -204,7 +224,7 @@
                         HorizontalAlignment="Center">
                 <Border Width="64" Height="64"
                         CornerRadius="32"
-                        Background="{theme:ThemeBrush Light=#EBECED, Dark=#202021}"
+                        Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#28292B}"
                         HorizontalAlignment="Center">
                     <ui:Icon Data="{StaticResource Icon.Archive}"
                              Width="26" Height="26"
@@ -223,5 +243,7 @@
                            Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
             </StackPanel>
         </Panel>
+        </Grid>
+        </Border>
     </Grid>
 </UserControl>
