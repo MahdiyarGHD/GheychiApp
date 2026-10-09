@@ -106,7 +106,7 @@
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-        <Setter Property="MaxLines" Value="3" />
+        <Setter Property="MaxLines" Value="5" />
     </Style>
 
     <Style Selector="ui|Icon.chevron">
