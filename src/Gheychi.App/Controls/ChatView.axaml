@@ -780,7 +780,7 @@
             <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode); for a blocked sender, the way to unblock -->
             <Grid Grid.Row="2"
                   IsVisible="{Binding IsInputBarVisible}"
-                  Margin="10,6,10,8">
+                  Margin="10,12,10,8">
                 <Border x:Name="BlockedBar"
                         IsVisible="False"
                         Padding="16,9"

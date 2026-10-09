@@ -15,7 +15,7 @@ namespace Gheychi.App.Pages;
 
 public partial class MessagesPage : UserControl, IPageSwipeClient
 {
-    private const double RowHeight = 80;
+    private const double RowHeight = 76;
     private const int PreloadBuffer = 3;
     private const int RecentSuggestionCount = 5;
 
