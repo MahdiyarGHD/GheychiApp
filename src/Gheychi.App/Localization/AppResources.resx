@@ -1065,4 +1065,16 @@
   <data name="Settings_BlockedUnblock" xml:space="preserve">
     <value>Unblock</value>
   </data>
+  <data name="TextMenu_Cut" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="TextMenu_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="TextMenu_Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="TextMenu_SelectAll" xml:space="preserve">
+    <value>Select all</value>
+  </data>
 </root>

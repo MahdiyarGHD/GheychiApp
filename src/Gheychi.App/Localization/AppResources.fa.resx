@@ -1065,4 +1065,16 @@
   <data name="Settings_BlockedUnblock" xml:space="preserve">
     <value>رفع مسدودی</value>
   </data>
+  <data name="TextMenu_Cut" xml:space="preserve">
+    <value>برش</value>
+  </data>
+  <data name="TextMenu_Copy" xml:space="preserve">
+    <value>کپی</value>
+  </data>
+  <data name="TextMenu_Paste" xml:space="preserve">
+    <value>چسباندن</value>
+  </data>
+  <data name="TextMenu_SelectAll" xml:space="preserve">
+    <value>انتخاب همه</value>
+  </data>
 </root>

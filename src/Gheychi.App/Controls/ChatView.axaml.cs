@@ -23,7 +23,7 @@ public sealed record MessageBounds(double Y, double Height, double Width = 0);
 
 public partial class ChatView : UserControl
 {
-    private const int OlderTriggerAhead = 12;
+    private const int OlderTriggerAhead = 40;
 
     private static readonly TimeSpan ButtonFade = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan OverlayOpen = TimeSpan.FromMilliseconds(180);
@@ -43,8 +43,6 @@ public partial class ChatView : UserControl
     private long _lastOffsetChangeTick;
     private int _lastFirstVisibleIndex = -1;
     private long _lastDateUpdateTime;
-    private long _lastOlderLoadTime;
-    private int _olderTriggerIndex = OlderTriggerAhead;
     private double _targetAnchorX;
     private Geometry? _starIcon;
     private Geometry? _starFillIcon;
@@ -135,7 +133,6 @@ public partial class ChatView : UserControl
         _followTail = true;
         _initialLayoutSettled = false;
         _lastFirstVisibleIndex = -1;
-        _olderTriggerIndex = OlderTriggerAhead;
         _loadingOlder = false;
         HideScrollToBottomButton();
 
@@ -242,8 +239,25 @@ public partial class ChatView : UserControl
         CloseSearch();
         DetachLiveUpdates();
         HideSkeleton();
+        DropSelection(MessageEntry);
+        DropSelection(SearchEntry);
         ReleaseInputFocus();
         return Task.CompletedTask;
+    }
+
+    // The selection handles live in a layer above the page and are only removed when the box loses focus with its
+    // menu closed; a box that lost focus while its menu was open would leave them on screen after the chat is gone.
+    private void DropSelection(TextBox box)
+    {
+        var menuOpen = box.ContextFlyout?.IsOpen == true;
+        box.ContextFlyout?.Hide();
+        if (!menuOpen && box.SelectionStart == box.SelectionEnd)
+            return;
+
+        box.ClearSelection();
+        if (!box.IsFocused)
+            box.Focus();
+        PageContent.Focus();
     }
 
     /// <summary>Puts the cursor in the message box (and brings up the keyboard).</summary>
@@ -417,22 +431,9 @@ public partial class ChatView : UserControl
             }, TimeSpan.FromMilliseconds(180));
         }
 
-        // Only trigger loading older history if:
-        // 1. Initial layout and scroll have fully settled (NEVER on chat open!)
-        // 2. User is actively moving UP toward older messages (oldFirst >= 0 and current < oldFirst)
-        // 3. User is within trigger threshold (<= OlderTriggerAhead)
-        // 4. Not currently loading, has more messages, and throttled by at least 350ms
-        if (_initialLayoutSettled &&
-            oldFirst >= 0 &&
-            first < oldFirst &&
-            first <= _olderTriggerIndex &&
-            vm.HasMore &&
-            !_loadingOlder &&
-            now - _lastOlderLoadTime >= 350)
-        {
-            _lastOlderLoadTime = now;
+        // Never on open: the first layout moves the first row. Only while the reader moves up toward older rows.
+        if (_initialLayoutSettled && oldFirst >= 0 && first < oldFirst && first <= OlderTriggerAhead && vm.HasMore)
             TriggerLoadOlder();
-        }
     }
 
     private void UpdateStickyDate()
@@ -470,9 +471,10 @@ public partial class ChatView : UserControl
         // Posted, never started from the scroll event: the load may complete at once and change the list mid-layout.
         MainThread.BeginInvokeOnMainThread(async () =>
         {
+            var loaded = false;
             try
             {
-                await vm.LoadOlderAsync();
+                loaded = await vm.LoadOlderAsync();
             }
             catch (Exception ex)
             {
@@ -482,6 +484,10 @@ public partial class ChatView : UserControl
             {
                 _loadingOlder = false;
             }
+
+            // A fling that outran the page ended at the top, where no scroll event follows to ask for the next one.
+            if (loaded && _initialLayoutSettled && vm.HasMore && ReferenceEquals(vm, Vm) && MessagesList.FirstVisibleIndex is >= 0 and <= OlderTriggerAhead)
+                TriggerLoadOlder();
         });
     }
 
