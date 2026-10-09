@@ -18,6 +18,17 @@ public static class TextDirection
 {
     private static readonly FlowDirection AppDirection = CultureService.GetFlowDirection();
 
+    /// <summary>
+    /// For the previews in lists: the text is ordered by its own direction, but the line still starts on the side the
+    /// app does, so a Persian preview sits where the English ones do.
+    /// </summary>
+    public static readonly AttachedProperty<bool> KeepSideProperty =
+        AvaloniaProperty.RegisterAttached<TextBlock, TextBlock, bool>("KeepSide");
+
+    public static bool GetKeepSide(TextBlock control) => control.GetValue(KeepSideProperty);
+
+    public static void SetKeepSide(TextBlock control, bool value) => control.SetValue(KeepSideProperty, value);
+
     /// <summary>Hooks every text block, run and text box; call once before the first one is created.</summary>
     public static void Register()
     {
@@ -65,10 +76,19 @@ public static class TextDirection
 
     private static void Set(Control control, FlowDirection? direction)
     {
-        if (direction is { } wanted && wanted != AppDirection)
-            control.FlowDirection = wanted;
+        var differs = direction is { } wanted && wanted != AppDirection;
+        if (differs)
+            control.FlowDirection = direction!.Value;
         else if (control.IsSet(Visual.FlowDirectionProperty))
             control.ClearValue(Visual.FlowDirectionProperty);
+
+        if (control is TextBlock block && GetKeepSide(block))
+        {
+            if (differs)
+                block.TextAlignment = AppDirection == FlowDirection.LeftToRight ? TextAlignment.Left : TextAlignment.Right;
+            else if (block.IsSet(TextBlock.TextAlignmentProperty))
+                block.ClearValue(TextBlock.TextAlignmentProperty);
+        }
     }
 
     /// <summary>The direction of the first strong letter, or null when there is none.</summary>

@@ -134,6 +134,7 @@
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
                                     <TextBlock Text="{Binding Preview}"
+                                               ui:TextDirection.KeepSide="True"
                                                Foreground="{Binding PreviewColor}"
                                                FontSize="12"
                                                TextTrimming="CharacterEllipsis"

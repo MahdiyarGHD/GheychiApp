@@ -454,6 +454,7 @@
                                       VerticalAlignment="Center">
                                     <TextBlock Grid.Column="0"
                                                ctrl:SnippetText.Runs="{Binding SnippetRuns}"
+                                               ui:TextDirection.KeepSide="True"
                                                FontSize="13"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1"
