@@ -271,7 +271,8 @@ public sealed class ChatMessage : INotifyPropertyChanged
             if (SetField(ref _isDelivered, value))
             {
                 OnPropertyChanged(nameof(IsSending));
-                OnPropertyChanged(nameof(StatusGlyph));
+                OnPropertyChanged(nameof(HasTick));
+                OnPropertyChanged(nameof(HasDoubleTick));
             }
         }
     }
@@ -285,7 +286,8 @@ public sealed class ChatMessage : INotifyPropertyChanged
             if (SetField(ref _hasFailed, value))
             {
                 OnPropertyChanged(nameof(IsSending));
-                OnPropertyChanged(nameof(StatusGlyph));
+                OnPropertyChanged(nameof(HasTick));
+                OnPropertyChanged(nameof(HasDoubleTick));
             }
         }
     }
@@ -300,7 +302,8 @@ public sealed class ChatMessage : INotifyPropertyChanged
             if (SetField(ref _isSent, value))
             {
                 OnPropertyChanged(nameof(IsSending));
-                OnPropertyChanged(nameof(StatusGlyph));
+                OnPropertyChanged(nameof(HasTick));
+                OnPropertyChanged(nameof(HasDoubleTick));
             }
         }
     }
@@ -308,11 +311,9 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public bool IsSending => IsOutgoing && !IsSent && !IsDelivered && !HasFailed;
 
     // One tick once the carrier has it, two once it reached the phone; sending shows a spinner and failure the retry row.
-    public string StatusGlyph =>
-        !IsOutgoing || HasFailed ? string.Empty
-        : IsDelivered ? "✓✓"
-        : IsSent ? "✓"
-        : string.Empty;
+    public bool HasTick => IsOutgoing && !HasFailed && (IsSent || IsDelivered);
+
+    public bool HasDoubleTick => IsOutgoing && !HasFailed && IsDelivered;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

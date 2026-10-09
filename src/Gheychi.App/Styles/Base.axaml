@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Gheychi.App"
         xmlns:theme="clr-namespace:Gheychi.App.Theming"
         xmlns:ui="clr-namespace:Gheychi.App.Ui">
 
@@ -32,11 +33,12 @@
     <Style Selector="Button.textmenu">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
-        <Setter Property="FontSize" Value="14" />
-        <Setter Property="Padding" Value="14,9" />
+        <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Padding" Value="14,8" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="MinWidth" Value="0" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="12" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
     <Style Selector="Button.textmenu:pointerover /template/ ContentPresenter#PART_ContentPresenter">
