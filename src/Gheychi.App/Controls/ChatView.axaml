@@ -701,7 +701,7 @@
                     <c:ChatList.Template>
                         <ControlTemplate>
                             <ScrollViewer x:Name="PART_Scroll"
-                                          Padding="0,0,0,14"
+                                          Padding="0,0,0,10"
                                           HorizontalScrollBarVisibility="Disabled"
                                           VerticalScrollBarVisibility="Hidden">
                                 <ItemsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" />
