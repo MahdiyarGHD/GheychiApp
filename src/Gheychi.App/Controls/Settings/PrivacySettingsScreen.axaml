@@ -10,11 +10,11 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
             <StackPanel Margin="0,4,0,24">
-                <Border Classes="card" Padding="16" Background="{theme:ThemeBrush Light=#DDF0E4, Dark=#173527}">
+                <Border Classes="card" Padding="16" Background="{theme:AccentBrush Role=Wash}">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                         <Border Classes="badge" Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
                             <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
-                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                     Foreground="{theme:AccentBrush Role=Text}" />
                         </Border>
                         <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                             <TextBlock Text="{loc:Translate Settings_PrivacyCardTitle}" Classes="rowTitle" />

@@ -12,6 +12,7 @@ using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
 using Gheychi.Core.Updates;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App.Ui;
 
@@ -26,7 +27,7 @@ public partial class MainView : UserControl
     private const int SpamIndex = 1;
     private const int SettingsIndex = 2;
 
-    private static readonly IBrush TabActive = Palette.Pick("#1B5E43", "#6FD3A8");
+    private static readonly IBrush TabActive = Palette.Accent(AccentRole.Text);
     private static readonly IBrush TabInactive = Palette.Pick("#595C61", "#9AA0AB");
 
     private readonly Control?[] _pages = new Control?[3];

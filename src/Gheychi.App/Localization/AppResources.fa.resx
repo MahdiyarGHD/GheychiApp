@@ -643,7 +643,7 @@
     <value>ظاهر</value>
   </data>
   <data name="Settings_AppearanceHint" xml:space="preserve">
-    <value>پوسته و زبان</value>
+    <value>پوسته، رنگ تأکید و زبان</value>
   </data>
   <data name="Settings_Privacy" xml:space="preserve">
     <value>حریم خصوصی و ذخیره‌سازی</value>
@@ -943,7 +943,7 @@
     <value>پوسته جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>برای اعمال پوسته یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
+    <value>برای اعمال پوسته، رنگ تأکید یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>به‌روزرسانی موجود است</value>
@@ -1076,5 +1076,41 @@
   </data>
   <data name="TextMenu_SelectAll" xml:space="preserve">
     <value>انتخاب همه</value>
+  </data>
+  <data name="Settings_SectionAccent" xml:space="preserve">
+    <value>رنگ تأکید</value>
+  </data>
+  <data name="Settings_RestartAccentMessage" xml:space="preserve">
+    <value>رنگ تأکید جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
+  </data>
+  <data name="Accent_Green" xml:space="preserve">
+    <value>سبز</value>
+  </data>
+  <data name="Accent_Teal" xml:space="preserve">
+    <value>فیروزه‌ای</value>
+  </data>
+  <data name="Accent_Blue" xml:space="preserve">
+    <value>آبی</value>
+  </data>
+  <data name="Accent_Indigo" xml:space="preserve">
+    <value>نیلی</value>
+  </data>
+  <data name="Accent_Purple" xml:space="preserve">
+    <value>بنفش</value>
+  </data>
+  <data name="Accent_Pink" xml:space="preserve">
+    <value>صورتی</value>
+  </data>
+  <data name="Accent_Red" xml:space="preserve">
+    <value>قرمز</value>
+  </data>
+  <data name="Accent_Orange" xml:space="preserve">
+    <value>نارنجی</value>
+  </data>
+  <data name="Accent_Amber" xml:space="preserve">
+    <value>کهربایی</value>
+  </data>
+  <data name="Accent_Graphite" xml:space="preserve">
+    <value>گرافیتی</value>
   </data>
 </root>

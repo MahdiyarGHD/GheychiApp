@@ -23,6 +23,11 @@
                     </Grid>
                 </Border>
 
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionAccent}" Classes="sectionTitle" />
+                <Border Classes="card" Padding="6,14,6,6">
+                    <UniformGrid x:Name="AccentGrid" Columns="5" />
+                </Border>
+
                 <TextBlock Text="{settings:UpperTranslate Settings_SectionLanguage}" Classes="sectionTitle" />
                 <Border Classes="card" Padding="10">
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">

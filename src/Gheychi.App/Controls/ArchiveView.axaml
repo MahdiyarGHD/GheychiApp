@@ -145,7 +145,7 @@
                                      Width="24" Height="24"
                                      IsVisible="{Binding ShowIcon}"
                                      Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
-                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                     Foreground="{theme:AccentBrush Role=Text}" />
                             <TextBlock Margin="8,0,14,0"
                                        Text="{Binding Initials, Mode=OneTime}"
                                        IsVisible="{Binding ShowInitials}"

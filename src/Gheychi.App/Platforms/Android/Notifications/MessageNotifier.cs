@@ -7,6 +7,7 @@ using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 using AndroidXPerson = AndroidX.Core.App.Person;
 using AndroidXRemoteInput = AndroidX.Core.App.RemoteInput;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App.Platforms.Android.Notifications;
 
@@ -20,7 +21,7 @@ internal static class MessageNotifier
 
     private const int MinConversationsForSummary = 2;
 
-    internal static readonly int AccentColor = global::Android.Graphics.Color.ParseColor("#2E7D5B").ToArgb();
+    internal static readonly int AccentColor = global::Android.Graphics.Color.ParseColor(ThemeState.Accent.Hex(AccentRole.Solid, false)).ToArgb();
     private static int _smallIcon;
 
     /// <summary>A new message arrived: alert, unless <paramref name="silent"/>.</summary>

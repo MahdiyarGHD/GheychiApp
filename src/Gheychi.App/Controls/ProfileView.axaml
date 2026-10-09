@@ -126,14 +126,14 @@
                             Margin="0,6,0,8"
                             CornerRadius="58"
                             HorizontalAlignment="Center"
-                            Background="{theme:ThemeBrush Light=#E0E1E3, Dark=#1F4A35}">
+                            Background="{theme:AccentBrush Role=Soft, Light=#E0E1E3}">
                         <Panel>
                             <ui:Icon x:Name="AvatarIcon" Width="52" Height="52"
-                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                     Foreground="{theme:AccentBrush Role=Text}" />
                             <TextBlock x:Name="AvatarInitials"
                                        FontSize="40"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                                       Foreground="{theme:AccentBrush Role=Text}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
                         </Panel>
@@ -174,9 +174,9 @@
                     <Grid x:Name="ActionsGrid" Margin="16,24,16,0" ColumnSpacing="10">
                         <Border x:Name="CallButton" Classes="quick" Tapped="OnCallTapped">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <Border Classes="quickBadge" Background="{theme:ThemeBrush Light=#B9EBCB, Dark=#1F5A3F}">
+                                <Border Classes="quickBadge" Background="{theme:AccentBrush Role=Strong}">
                                     <ui:Icon Data="{StaticResource Icon.Phone}" Width="22" Height="22"
-                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                             Foreground="{theme:AccentBrush Role=Text}" />
                                 </Border>
                                 <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Call}" />
                             </StackPanel>
@@ -226,7 +226,7 @@
                                             Tapped="OnCallTapped"
                                             AutomationProperties.Name="{loc:Translate Profile_Call}">
                                         <ui:Icon Data="{StaticResource Icon.Phone}" Width="20" Height="20"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                                 Foreground="{theme:AccentBrush Role=Text}" />
                                     </Border>
                                 </Grid>
                             </Border>
@@ -296,7 +296,7 @@
                                                Text="{loc:Translate Profile_NotificationsCustom}"
                                                FontSize="13"
                                                FontFamily="{x:Static app:AppFonts.Bold}"
-                                               Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}"
+                                               Foreground="{theme:AccentBrush Role=Icon}"
                                                VerticalAlignment="Center" />
                                     <ui:Icon Grid.Column="3" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
                                              Foreground="#8A8F98" VerticalAlignment="Center" />
@@ -430,7 +430,7 @@
                                         CornerRadius="21"
                                         Background="{Binding IconBgColor, Mode=OneTime}">
                                     <ui:Icon Data="{StaticResource Icon.Link}" Width="20" Height="20"
-                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                             Foreground="{theme:AccentBrush Role=Text}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="0,0,10,0" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Title, Mode=OneTime}"

@@ -19,7 +19,7 @@
                                FontSize="11"
                                LetterSpacing="0.8"
                                FontFamily="{x:Static app:AppFonts.Bold}"
-                               Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}" />
+                               Foreground="{theme:AccentBrush Role=Icon}" />
                 </DataTemplate>
             </vm:ComposeRowTemplateSelector.Header>
 
@@ -28,11 +28,11 @@
                 <DataTemplate x:DataType="vm:ComposeRow">
                     <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
                         <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
-                                Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#1F4A35}">
+                                Background="{theme:AccentBrush Role=Soft}">
                             <TextBlock Text="{Binding Initials, Mode=OneTime}"
                                        FontSize="19"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                                       Foreground="{theme:AccentBrush Role=Text}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
                         </Border>
@@ -57,10 +57,10 @@
                 <DataTemplate x:DataType="vm:ComposeRow">
                     <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
                         <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
-                                Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#1F4A35}">
+                                Background="{theme:AccentBrush Role=Soft}">
                             <ui:Icon Data="{StaticResource Icon.Person}"
                                      Width="23" Height="23"
-                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                     Foreground="{theme:AccentBrush Role=Text}" />
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
@@ -97,7 +97,7 @@
                             <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
                                        FontSize="13"
                                        TextTrimming="CharacterEllipsis"
-                                       Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}" />
+                                       Foreground="{theme:AccentBrush Role=Icon}" />
                         </StackPanel>
                     </Grid>
                 </DataTemplate>
@@ -151,7 +151,7 @@
                            Text="{loc:Translate Compose_To}"
                            FontSize="13"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}"
+                           Foreground="{theme:AccentBrush Role=Icon}"
                            VerticalAlignment="Center" />
                 <TextBox x:Name="RecipientEntry"
                          Grid.Column="1"
@@ -192,7 +192,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <ui:Icon Data="{StaticResource Icon.SimCard}"
                                  Width="13" Height="13"
-                                 Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}"
+                                 Foreground="{theme:AccentBrush Role=Icon}"
                                  VerticalAlignment="Center" />
                         <TextBlock x:Name="SimLabel"
                                    FontSize="11"
@@ -246,11 +246,11 @@
                         HorizontalAlignment="Center">
                 <Border Width="64" Height="64"
                         CornerRadius="32"
-                        Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#28292B}"
+                        Background="{theme:AccentBrush Role=Soft, Dark=#28292B}"
                         HorizontalAlignment="Center">
                     <ui:Icon Data="{StaticResource Icon.Person}"
                              Width="26" Height="26"
-                             Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}" />
+                             Foreground="{theme:AccentBrush Role=Icon}" />
                 </Border>
                 <TextBlock x:Name="EmptyTitle"
                            FontSize="16"

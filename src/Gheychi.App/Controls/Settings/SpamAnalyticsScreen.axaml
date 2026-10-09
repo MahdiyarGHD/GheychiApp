@@ -82,9 +82,9 @@
                         <StackPanel>
                             <Border Classes="row">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                                    <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
+                                    <Border Classes="badge" Background="{theme:AccentBrush Role=Soft}">
                                         <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                                 Foreground="{theme:AccentBrush Role=Text}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                         <TextBlock x:Name="AccuracyValue" Classes="rowTitle" />

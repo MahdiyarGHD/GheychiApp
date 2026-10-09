@@ -25,6 +25,22 @@ public sealed class ThemeBrushExtension
     public IBrush ProvideValue(IServiceProvider? serviceProvider = null) => Palette.Pick(Light, Dark ?? Light);
 }
 
+/// <summary>
+/// <c>{theme:AccentBrush Role=Text}</c>: the brush of the chosen accent colour for a role. <c>Light</c> and <c>Dark</c>
+/// replace the accent in one theme where the other theme keeps a neutral.
+/// </summary>
+public sealed class AccentBrushExtension
+{
+    public AccentRole Role { get; set; }
+
+    public string? Light { get; set; }
+
+    public string? Dark { get; set; }
+
+    public IBrush ProvideValue(IServiceProvider? serviceProvider = null) =>
+        (ThemeState.IsDark ? Dark : Light) is { } neutral ? Palette.Brush(neutral) : Palette.Accent(Role);
+}
+
 /// <summary>Same as <see cref="ThemeBrushExtension"/> for properties that take a <see cref="Color"/>.</summary>
 public sealed class ThemeColorExtension
 {
