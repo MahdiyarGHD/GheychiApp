@@ -12,9 +12,7 @@
         <PackageReference Include="Microsoft.ML.FastTree" Version="5.0.0" />
         <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
         <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
-        <!-- The native SQLite of 2.1.11 is 3.49.1 (GHSA-2m69-gcr7-jv3q); bundle_green has no newer release, so its native libraries are pinned directly. -->
-        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" />
-        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.android" Version="2.1.13" />
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3.android" Version="2.1.11" />
     </ItemGroup>
 
     <ItemGroup>
