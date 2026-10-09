@@ -16,6 +16,7 @@ public partial class ShareView : UserControl
 {
     private readonly FastObservableCollection<ThreadItem> _visible = [];
     private MessagesViewModel? _vm;
+    private ScrollViewer? _scroll;
     private bool _open;
     private string _number = string.Empty;
     private long _lastTappedThreadId;
@@ -30,6 +31,7 @@ public partial class ShareView : UserControl
         InitializeComponent();
         ShareList.ItemsSource = _visible;
         Ui.RowPressEffect.Attach(ShareList, ShareHost);
+        ShareList.TemplateApplied += (_, e) => _scroll = e.NameScope.Find<ScrollViewer>("ShareScroll");
     }
 
     public void Initialize(MessagesViewModel vm)
@@ -51,6 +53,7 @@ public partial class ShareView : UserControl
         FilterEntry.Text = string.Empty;
         SharedTextLabel.Text = sharedText?.Trim() ?? string.Empty;
         SharedTextLabel.IsVisible = SharedTextLabel.Text.Length > 0;
+        ScrollToTop();
         RefreshVisible();
     }
 
@@ -60,6 +63,14 @@ public partial class ShareView : UserControl
         Unfocus();
         FilterEntry.Text = string.Empty;
         MessagesViewModel.ApplyItems(_visible, []);
+        ScrollToTop();
+    }
+
+    // A hidden list is not laid out, so the old offset would survive the emptied list and come back with the next one.
+    private void ScrollToTop()
+    {
+        if (_scroll is not null)
+            _scroll.Offset = default;
     }
 
     /// <returns>True when it consumed the back press.</returns>

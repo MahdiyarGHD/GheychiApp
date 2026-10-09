@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Gheychi.App.Controls;
 using Gheychi.App.Gestures;
 using Gheychi.App.Platforms.Android.Notifications;
@@ -99,6 +101,13 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         {
             InboxLayer.IsVisible = false;
             _ = ChatOverlay;
+
+            // Whatever happens to the request, a blank page is never left behind.
+            DispatcherTimer.RunOnce(() =>
+            {
+                if (!ChatLaunchRequests.HasPending && !ExternalSendRequests.HasPending)
+                    RevealInbox();
+            }, TimeSpan.FromSeconds(4));
         }
     }
 
@@ -485,7 +494,16 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     // Posted, not run inline: it is raised from inside the activity's OnResume, and the open has to start after that returns.
     private void OnChatLaunchRequested() =>
-        MainThread.BeginInvokeOnMainThread(() => _ = OpenRequestedChatAsync());
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (BelongsToCurrentView)
+                _ = OpenRequestedChatAsync();
+        });
+
+    // The requests are static events, and a page of an activity that was replaced can still be subscribed: only the
+    // page of the view that is on screen may take a request, or it would be answered in a window nobody sees.
+    private bool BelongsToCurrentView =>
+        MainView.Current is { } current && ReferenceEquals(this.FindAncestorOfType<MainView>(), current);
 
     /// <summary>Opens the conversation a tapped notification asked for.</summary>
     private async Task OpenRequestedChatAsync()
@@ -543,7 +561,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     /// <summary>Ends the cold-start hold (see the constructor); harmless when nothing was held.</summary>
     private void RevealInbox()
     {
-        if (IsChatClosed && IsShareClosed)
+        if (IsChatClosed && IsShareClosed && IsSearchClosed && IsComposeClosed && IsProfileClosed && !_archiveOpen && !_animating)
             UncoverInbox();
     }
 
@@ -554,14 +572,22 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     // ---- Other apps -----------------------------------------------------------------------------
 
     private void OnExternalSendRequested() =>
-        MainThread.BeginInvokeOnMainThread(() => _ = OpenExternalAsync());
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (BelongsToCurrentView)
+                _ = OpenExternalAsync();
+        });
 
     /// <summary>Does what another app asked for: a conversation with a number, or a place to send a shared text.</summary>
     private async Task OpenExternalAsync()
     {
         var request = ExternalSendRequests.Take();
         if (request is null)
+        {
+            // The inbox is held back while a request is pending (see the constructor); one taken elsewhere must not leave it blank.
+            RevealInbox();
             return;
+        }
 
         try
         {
@@ -640,6 +666,10 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private async Task OpenShareAsync(string text)
     {
+        // On a cold start the conversations to pick from are not read yet.
+        if (Vm is { } inbox)
+            await inbox.EnsureCachedInboxAsync();
+
         if (_animating)
             return;
         _animating = true;

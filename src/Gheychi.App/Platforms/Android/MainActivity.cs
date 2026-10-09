@@ -16,7 +16,9 @@ namespace Gheychi.App;
     Label = "Gheychi",
     Theme = "@style/Gheychi.Splash",
     MainLauncher = true,
-    LaunchMode = LaunchMode.SingleTop,
+    // One instance for the whole app: another app's intent (a contact's message button, the share sheet) used to start
+    // a second one in its own task, and both then answered the request through the same static events.
+    LaunchMode = LaunchMode.SingleTask,
     WindowSoftInputMode = SoftInput.AdjustResize,
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden | ConfigChanges.LayoutDirection)]
 [IntentFilter(
