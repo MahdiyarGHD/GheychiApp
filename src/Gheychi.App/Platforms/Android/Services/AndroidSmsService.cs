@@ -1042,6 +1042,9 @@ public sealed class AndroidSmsService : ISmsService
                     }
                 }
 
+                var oldestOnPage = messages.Count > 0 ? messages.Min(m => m.Timestamp) : DateTime.MaxValue;
+                List<(SmsMessage Message, ReactionParseResult Parsed)>? orphans = null;
+
                 for (var i = messages.Count - 1; i >= 0; i--)
                 {
                     var msg = messages[i];
@@ -1050,7 +1053,13 @@ public sealed class AndroidSmsService : ISmsService
                     {
                         var target = ReactionHelper.FindReactionTarget(messages, msg, parsed.Snippet);
 
-                        if (target != null)
+                        if (target == null)
+                        {
+                            // Never shown as a message of its own, even when its target is not on this page.
+                            (orphans ??= []).Add((msg, parsed));
+                            messages.RemoveAt(i);
+                        }
+                        else
                         {
                             var targetIdx = messages.IndexOf(target);
                             messages[targetIdx] = target with { Reaction = parsed.Emoji };
@@ -1075,6 +1084,9 @@ public sealed class AndroidSmsService : ISmsService
                     }
                 }
 
+                if (orphans is not null)
+                    StoreOlderReactions(context, smsUri, threadId, orphans, oldestOnPage);
+
                 if (limit.HasValue)
                     messages.Reverse();
 
@@ -1089,6 +1101,75 @@ public sealed class AndroidSmsService : ISmsService
                 return Array.Empty<SmsMessage>();
             }
         }, cancellationToken);
+
+    /// <summary>
+    /// A reaction at the top of a page may react to a message on an older page. Its target is looked up there and the
+    /// reaction is stored for it, so it shows when that page is loaded; the reaction itself is not listed.
+    /// </summary>
+    private void StoreOlderReactions(Context context, global::Android.Net.Uri smsUri, long threadId,
+        List<(SmsMessage Message, ReactionParseResult Parsed)> orphans, DateTime oldestOnPage)
+    {
+        if (_metadataRepo is null)
+            return;
+
+        try
+        {
+            var oldestMs = new DateTimeOffset(oldestOnPage).ToUnixTimeMilliseconds();
+            using var cursor = context.ContentResolver?.Query(
+                smsUri,
+                SmsProjection,
+                $"{Telephony.Sms.InterfaceConsts.ThreadId} = ? AND {Telephony.Sms.InterfaceConsts.Date} < ?",
+                [threadId.ToString(), oldestMs.ToString()],
+                "date DESC LIMIT 300");
+            if (cursor is null)
+                return;
+
+            var idCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Id);
+            var addressCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Address);
+            var bodyCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Body);
+            var dateCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Date);
+            var typeCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Type);
+
+            var older = new List<SmsMessage>();
+            while (cursor.MoveToNext())
+            {
+                older.Add(new SmsMessage(
+                    cursor.GetLong(idCol),
+                    threadId,
+                    cursor.GetString(addressCol) ?? string.Empty,
+                    cursor.GetString(bodyCol) ?? string.Empty,
+                    DateTimeOffset.FromUnixTimeMilliseconds(cursor.GetLong(dateCol)).LocalDateTime,
+                    SmsStatusHelper.IsOutgoingType(cursor.GetInt(typeCol)),
+                    false,
+                    false,
+                    0));
+            }
+
+            if (older.Count == 0)
+                return;
+
+            foreach (var (reaction, parsed) in orphans)
+            {
+                var target = ReactionHelper.FindReactionTarget(older, reaction, parsed.Snippet!);
+                if (target is null)
+                    continue;
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _metadataRepo.SetReactionAsync(target.Id, threadId, parsed.Emoji, reaction.IsOutgoing);
+                    }
+                    catch
+                    {
+                    }
+                });
+            }
+        }
+        catch (Exception)
+        {
+        }
+    }
 
     // How long a caller waits for the radio before showing the message as still sending. The
     // send itself is not cancelled: it can still go out, and the stored row follows the real result.
