@@ -21,9 +21,17 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         builder = base.CustomizeAppBuilder(builder);
-        if (SystemEmoji.Fallbacks is { } fallbacks)
-            builder = builder.With(new FontManagerOptions { FontFallbacks = fallbacks }).AfterSetup(_ => Task.Run(SystemEmoji.Register));
-        return builder;
+
+        var fallbacks = new List<FontFallback>();
+        if (AppFonts.PersianLetters is { } persian)
+            fallbacks.Add(persian);
+        if (SystemEmoji.Fallbacks is { } emoji)
+        {
+            fallbacks.AddRange(emoji);
+            builder = builder.AfterSetup(_ => Task.Run(SystemEmoji.Register));
+        }
+
+        return fallbacks.Count > 0 ? builder.With(new FontManagerOptions { FontFallbacks = fallbacks.ToArray() }) : builder;
     }
 
     // The services are built here and not when the first screen is: a text that arrives while the app is closed

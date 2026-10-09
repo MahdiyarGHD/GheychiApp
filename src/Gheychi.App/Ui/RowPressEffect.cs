@@ -18,12 +18,20 @@ public sealed class RowPressEffect
 {
     private static readonly TimeSpan ShowDelay = TimeSpan.FromMilliseconds(60);
     private static readonly TimeSpan MinimumShown = TimeSpan.FromMilliseconds(110);
+    private static readonly TimeSpan LongestShown = TimeSpan.FromMilliseconds(1500);
     private const double Slop = 10;
 
+    // A touch that lands on a list still flinging is meant to stop it, not to press a row.
+    private const long FlingGraceMs = 150;
+
+    private readonly Control _list;
     private readonly Panel _host;
     private readonly Border _glow;
     private readonly TranslateTransform _move = new();
     private readonly DispatcherTimer _timer = new();
+    private readonly DispatcherTimer _safety = new();
+    private ScrollViewer? _scroll;
+    private long _lastScrolled;
     private Visual? _row;
     private Point _start;
     private bool _shown;
@@ -31,6 +39,7 @@ public sealed class RowPressEffect
 
     private RowPressEffect(Control list, Panel host)
     {
+        _list = list;
         _host = host;
         _glow = new Border
         {
@@ -44,6 +53,8 @@ public sealed class RowPressEffect
         };
         host.Children.Add(_glow);
         _timer.Tick += OnTimer;
+        _safety.Interval = LongestShown;
+        _safety.Tick += (_, _) => Reset();
 
         list.AddHandler(InputElement.PointerPressedEvent, OnPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
         list.AddHandler(InputElement.PointerMovedEvent, OnMoved, Avalonia.Interactivity.RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -58,7 +69,9 @@ public sealed class RowPressEffect
     private void OnPressed(object? sender, PointerPressedEventArgs e)
     {
         Reset();
-        if (!e.GetCurrentPoint(_host).Properties.IsLeftButtonPressed || RowOf(e.Source as Visual) is not { } row)
+        WatchScroll();
+        if (Environment.TickCount64 - _lastScrolled < FlingGraceMs ||
+            !e.GetCurrentPoint(_host).Properties.IsLeftButtonPressed || RowOf(e.Source as Visual) is not { } row)
             return;
 
         _row = row;
@@ -102,6 +115,27 @@ public sealed class RowPressEffect
             Show();
     }
 
+    // The highlight is placed once; a list that scrolls under it would leave it on whatever row passes.
+    private void WatchScroll()
+    {
+        if (_scroll is not null)
+            return;
+
+        _scroll = _list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+        if (_scroll is not null)
+            _scroll.ScrollChanged += OnScrolled;
+    }
+
+    private void OnScrolled(object? sender, ScrollChangedEventArgs e)
+    {
+        if (e.OffsetDelta == default)
+            return;
+
+        _lastScrolled = Environment.TickCount64;
+        if (_row is not null || _glow.IsVisible)
+            Reset();
+    }
+
     private void Show()
     {
         if (_row is not { } row || row.TranslatePoint(default, _host) is not { } at)
@@ -112,6 +146,8 @@ public sealed class RowPressEffect
         _glow.Height = row.Bounds.Height;
         _glow.IsVisible = true;
         _glow.Opacity = 1;
+        _safety.Stop();
+        _safety.Start();
     }
 
     private void Fade()
@@ -125,6 +161,7 @@ public sealed class RowPressEffect
     private void Reset()
     {
         _timer.Stop();
+        _safety.Stop();
         _row = null;
         _shown = false;
         _glow.Opacity = 0;

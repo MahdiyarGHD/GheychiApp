@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 
 namespace Gheychi.App.Ui;
@@ -8,40 +10,52 @@ namespace Gheychi.App.Ui;
 public static class ScrollAnimator
 {
     private static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(260);
-    private static DispatcherTimer? _running;
+    private static Action? _stop;
 
     /// <summary>
-    /// Scrolls back to the top. A far-off list first jumps to within a few screens of it, so the rows it would
-    /// fly past are never built.
+    /// Scrolls back to the top, also while a fling is still running (it is ended, or it would carry the list on
+    /// past the top). A far-off list first jumps to within a few screens of it, so the rows it would fly past are
+    /// never built. A finger on the list stops it.
     /// </summary>
     public static void ToTop(ScrollViewer? scroll)
     {
-        _running?.Stop();
+        _stop?.Invoke();
         if (scroll is null || scroll.Offset.Y <= 0)
             return;
 
         var from = Math.Min(scroll.Offset.Y, Math.Max(scroll.Viewport.Height, 1) * 3);
-        var last = from;
         scroll.Offset = new Vector(scroll.Offset.X, from);
 
         var clock = Stopwatch.StartNew();
         var timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(16) };
+
+        void Stop()
+        {
+            timer.Stop();
+            scroll.RemoveHandler(InputElement.ScrollGestureEvent, EndFling);
+            scroll.RemoveHandler(InputElement.PointerPressedEvent, OnFinger);
+            _stop = null;
+        }
+
+        void EndFling(object? sender, ScrollGestureEventArgs e)
+        {
+            e.Handled = true;
+            e.ShouldEndScrollGesture = true;
+        }
+
+        void OnFinger(object? sender, PointerPressedEventArgs e) => Stop();
+
+        scroll.AddHandler(InputElement.ScrollGestureEvent, EndFling, RoutingStrategies.Tunnel);
+        scroll.AddHandler(InputElement.PointerPressedEvent, OnFinger, RoutingStrategies.Tunnel, handledEventsToo: true);
+
         timer.Tick += (_, _) =>
         {
-            // The finger took over.
-            if (Math.Abs(scroll.Offset.Y - last) > 1)
-            {
-                timer.Stop();
-                return;
-            }
-
             var t = Math.Min(1, clock.Elapsed / Duration);
-            last = from * Math.Pow(1 - t, 3);
-            scroll.Offset = new Vector(scroll.Offset.X, last);
+            scroll.Offset = new Vector(scroll.Offset.X, from * Math.Pow(1 - t, 3));
             if (t >= 1)
-                timer.Stop();
+                Stop();
         };
-        _running = timer;
+        _stop = Stop;
         timer.Start();
     }
 }

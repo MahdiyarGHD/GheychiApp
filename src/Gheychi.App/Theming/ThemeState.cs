@@ -1,6 +1,7 @@
 using System.Globalization;
 using Android.Content.Res;
 using Avalonia.Media;
+using Avalonia.Media.Fonts;
 using Avalonia.Media.Immutable;
 using Gheychi.App.Theming;
 
@@ -71,10 +72,21 @@ public static class AppFonts
     private static readonly bool Persian =
         CultureInfo.CurrentUICulture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase);
 
-    // Latin has no Persian letters: in the English UI they come from Vazirmatn, not the phone's fallback font.
-    public static FontFamily Regular { get; } = Persian ? new(Folder + "Vazirmatn") : new(Folder + "Plus Jakarta Sans, " + Folder + "Vazirmatn");
+    public static FontFamily Regular { get; } = new(Folder + (Persian ? "Vazirmatn" : "Plus Jakarta Sans"));
 
-    public static FontFamily Bold { get; } = Persian ? new(Folder + "Vazirmatn SemiBold") : new(Folder + "Plus Jakarta Sans SemiBold, " + Folder + "Vazirmatn SemiBold");
+    public static FontFamily Bold { get; } = new(Folder + (Persian ? "Vazirmatn SemiBold" : "Plus Jakarta Sans SemiBold"));
+
+    /// <summary>
+    /// Persian letters in the English UI come from Vazirmatn, not the phone's own font. A list of font families would
+    /// do it, but not with the SemiBold family: the whole list then falls back to the system font.
+    /// </summary>
+    public static FontFallback? PersianLetters => Persian
+        ? null
+        : new FontFallback
+        {
+            FontFamily = new FontFamily(Folder + "Vazirmatn"),
+            UnicodeRange = UnicodeRange.Parse("0600-06FF,0750-077F,08A0-08FF,FB50-FDFF,FE70-FEFF")
+        };
 
     /// <summary>
     /// A 13sp digit centred by its line box is not centred by its ink: from the fonts' metrics, Plus Jakarta Sans
