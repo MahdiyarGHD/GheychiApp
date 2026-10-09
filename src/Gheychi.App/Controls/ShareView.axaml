@@ -124,7 +124,8 @@
                     <ItemsControl x:Name="ShareList" Tapped="OnListTapped">
                         <ItemsControl.Template>
                             <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                                <ScrollViewer x:Name="ShareScroll"
+                                              VerticalScrollBarVisibility="Hidden"
                                               HorizontalScrollBarVisibility="Disabled">
                                     <ItemsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" />
                                 </ScrollViewer>
