@@ -11,6 +11,10 @@ public sealed class ThreadItem : INotifyPropertyChanged
     private static readonly IBrush DangerBrush = Palette.Brush("#D64545");
     private static readonly IBrush TimeNormalBrush = Palette.Brush("#8A8F98");
     private static readonly IBrush PreviewBrush = Palette.Pick("#5E665F", "#9AA0AB");
+    private static readonly IBrush NameReadBrush = Palette.Pick("#3A413C", "#C9CED4");
+    private static readonly IBrush NameUnreadBrush = Palette.Pick("#000000", "#FFFFFF");
+    private static readonly IBrush PreviewUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
+    private static readonly IBrush TimeUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
     private static readonly IBrush AvatarBgBrush = Palette.Pick("#E3E9E4", "#35423C");
     private static readonly IBrush AvatarBgSelectedBrush = Palette.Brush("#2E6B4C");
     private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#8FE0BE");
@@ -54,6 +58,11 @@ public sealed class ThreadItem : INotifyPropertyChanged
             if (_isUnread == value) return;
             _isUnread = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(NameColor));
+            OnPropertyChanged(nameof(NameFont));
+            OnPropertyChanged(nameof(PreviewColor));
+            OnPropertyChanged(nameof(PreviewFont));
+            OnPropertyChanged(nameof(TimeColor));
         }
     }
 
@@ -89,8 +98,12 @@ public sealed class ThreadItem : INotifyPropertyChanged
     /// <summary>False for sender names and short codes, which cannot be dialled.</summary>
     public bool CanCall => Gheychi.Core.Services.ThreadProfileActions.CanCall(Gheychi.Core.Services.PhoneNumberNormalizer.ToSendAddress(Phone));
 
-    public IBrush TimeColor => HasFailed ? DangerBrush : TimeNormalBrush;
-    public IBrush PreviewColor => HasFailed ? DangerBrush : PreviewBrush;
+    // Unread threads are brighter and bolder than read ones.
+    public IBrush NameColor => _isUnread ? NameUnreadBrush : NameReadBrush;
+    public FontFamily NameFont => _isUnread ? AppFonts.Bold : AppFonts.Regular;
+    public FontFamily PreviewFont => _isUnread ? AppFonts.Bold : AppFonts.Regular;
+    public IBrush TimeColor => HasFailed ? DangerBrush : _isUnread ? TimeUnreadBrush : TimeNormalBrush;
+    public IBrush PreviewColor => HasFailed ? DangerBrush : _isUnread ? PreviewUnreadBrush : PreviewBrush;
     public IBrush AvatarBgColor => IsSelected ? AvatarBgSelectedBrush : AvatarBgBrush;
     public IBrush AvatarTextColor => AvatarTextBrush;
 

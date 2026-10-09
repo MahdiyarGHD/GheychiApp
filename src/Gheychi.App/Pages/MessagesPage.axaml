@@ -90,38 +90,38 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:ThreadItem">
-                            <Grid Height="80"
+                            <Grid Height="76"
                                   ColumnDefinitions="Auto,*,Auto"
-                                  ColumnSpacing="16"
+                                  ColumnSpacing="15"
                                   Background="{Binding RowBackgroundColor}">
                                 <Border Grid.Column="0"
-                                        Width="52"
-                                        Height="52"
-                                        Margin="16,0,0,0"
-                                        CornerRadius="26"
+                                        Width="50"
+                                        Height="50"
+                                        Margin="15,0,0,0"
+                                        CornerRadius="25"
                                         VerticalAlignment="Center"
                                         IsHitTestVisible="False"
                                         Background="{Binding AvatarBgColor}">
                                     <Panel>
                                         <ui:Icon IsVisible="{Binding ShowIcon}"
                                                  Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}}"
-                                                 Width="28"
-                                                 Height="28"
+                                                 Width="27"
+                                                 Height="27"
                                                  Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding Initials}"
                                                    IsVisible="{Binding ShowInitials}"
                                                    Foreground="{Binding AvatarTextColor}"
-                                                   FontSize="22"
+                                                   FontSize="21"
                                                    FontFamily="{x:Static app:AppFonts.Bold}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    TextAlignment="Center" />
                                         <ui:Icon IsVisible="{Binding IsSelected}"
                                                  Data="{StaticResource Icon.Check}"
-                                                 Width="26"
-                                                 Height="26"
+                                                 Width="25"
+                                                 Height="25"
                                                  Foreground="White"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
@@ -131,22 +131,24 @@
                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <TextBlock Text="{Binding Name}"
                                                ui:TextDirection.KeepSide="True"
-                                               Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
-                                               FontSize="16"
-                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               Foreground="{Binding NameColor}"
+                                               FontSize="15"
+                                               FontFamily="{Binding NameFont}"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
                                     <TextBlock Text="{Binding Preview}"
                                                ui:TextDirection.KeepSide="True"
                                                Foreground="{Binding PreviewColor}"
-                                               FontSize="14"
+                                               FontFamily="{Binding PreviewFont}"
+                                               FontSize="13.5"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="2" Spacing="6" Margin="0,0,18,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsHitTestVisible="False">
+                                <StackPanel Grid.Column="2" Spacing="6" Margin="0,0,17,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsHitTestVisible="False">
                                     <TextBlock Text="{Binding Time}"
-                                               FontSize="12"
+                                               FontSize="11.5"
+                                               FontFamily="{Binding PreviewFont}"
                                                Foreground="{Binding TimeColor}"
                                                HorizontalAlignment="Right" />
                                     <Border IsVisible="{Binding IsUnread}"
@@ -155,7 +157,7 @@
                                             Background="{StaticResource PrimaryBrush}"
                                             HorizontalAlignment="Right">
                                         <TextBlock Text="{Binding CountText}"
-                                                   FontSize="12"
+                                                   FontSize="11.5"
                                                    FontFamily="{x:Static app:AppFonts.Bold}"
                                                    Foreground="White"
                                                    HorizontalAlignment="Center"
