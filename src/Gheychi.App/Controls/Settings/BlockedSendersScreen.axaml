@@ -1,5 +1,6 @@
 <settings:SettingsScreen xmlns="https://github.com/avaloniaui"
                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:app="clr-namespace:Gheychi.App"
                          xmlns:loc="clr-namespace:Gheychi.App.Localization"
                          xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
                          xmlns:theme="clr-namespace:Gheychi.App.Theming"
@@ -11,7 +12,11 @@
 
         <TextBlock Grid.Row="1" Text="{loc:Translate Settings_BlockedNote}" Classes="note" Margin="26,0,26,12" />
 
-        <ScrollViewer Grid.Row="2" Margin="8,0" VerticalScrollBarVisibility="Hidden">
+        <Border Grid.Row="2"
+                CornerRadius="28,28,0,0"
+                ClipToBounds="True"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#14251B}">
+        <ScrollViewer Margin="0,8,0,0" VerticalScrollBarVisibility="Hidden">
             <ItemsControl x:Name="BlockedList">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -20,12 +25,20 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:BlockedSenderRow">
-                        <Grid Margin="10,8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                            <Border Classes="badge" Background="{theme:ThemeBrush Light=#F7E3E1, Dark=#3A2224}">
-                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Block}"
-                                         Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                        <Grid MinHeight="68" Margin="16,6,10,6" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Width="44" Height="44" CornerRadius="22" VerticalAlignment="Center"
+                                    Background="{theme:ThemeBrush Light=#F7E3E1, Dark=#3A2224}">
+                                <Panel>
+                                    <ui:Icon IsVisible="{Binding HasNoInitials}" Data="{StaticResource Icon.Person}"
+                                             Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                                    <TextBlock Text="{Binding Initials}" FontSize="19"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                                </Panel>
                             </Border>
-                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Title}" Classes="rowTitle" />
                                 <TextBlock Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" Classes="rowSubtitle" />
                             </StackPanel>
@@ -41,6 +54,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+        </Border>
 
         <TextBlock x:Name="EmptyNote" Grid.Row="2" Text="{loc:Translate Settings_BlockedEmpty}" Margin="24,48,24,0"
                    Classes="note" TextAlignment="Center" VerticalAlignment="Top" IsVisible="False" />
