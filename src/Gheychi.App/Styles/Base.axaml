@@ -46,6 +46,6 @@
         <Setter Property="Background" Value="Transparent" />
     </Style>
     <Style Selector="Button.textmenu:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E8EDE6, Dark=#32363E}" />
+        <Setter Property="Background" Value="{theme:ThemeBrush Light=#E8EAED, Dark=#32363E}" />
     </Style>
 </Styles>

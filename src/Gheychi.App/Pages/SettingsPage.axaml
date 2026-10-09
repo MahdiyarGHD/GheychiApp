@@ -18,7 +18,7 @@
                     <StackPanel Spacing="14">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                             <Border Width="56" Height="56" CornerRadius="18" Background="#16382A" VerticalAlignment="Top">
-                                <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="28" Height="28" Foreground="#8FE0BE"
+                                <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="28" Height="28" Foreground="#6FD3A8"
                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
@@ -29,11 +29,11 @@
                                                Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
                                                VerticalAlignment="Center" />
                                     <Border Padding="7,2" CornerRadius="8" VerticalAlignment="Center"
-                                            Background="{theme:ThemeBrush Light=#E0E8DF, Dark=#203328}">
+                                            Background="{theme:ThemeBrush Light=#E2E3E5, Dark=#28292B}">
                                         <TextBlock x:Name="HeroVersion"
                                                    FontSize="11"
                                                    FontFamily="{x:Static local:AppFonts.Bold}"
-                                                   Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                                                   Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                                     </Border>
                                 </StackPanel>
                                 <TextBlock Text="{loc:Translate Settings_Tagline}" Classes="note" FontSize="13" />
@@ -75,9 +75,9 @@
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
-                                                Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#14251B}">
+                                                Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
                                             <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
-                                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <Border x:Name="ModelUpdateDot" Grid.Column="1" Width="9" Height="9" CornerRadius="5"
@@ -93,7 +93,7 @@
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
-                                                Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#14251B}">
+                                                Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
                                             <ui:Icon Data="{StaticResource Icon.Chart}" Width="16" Height="16"
                                                      Foreground="{theme:ThemeBrush Light=#9A4A2A, Dark=#F0B79A}"
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -147,7 +147,7 @@
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                     <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
                                         <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SimCard}"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                         <TextBlock Text="{loc:Translate Settings_Sims}" Classes="rowTitle" />
@@ -162,7 +162,7 @@
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                 <Border Classes="badge">
                                     <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                     <TextBlock Text="{loc:Translate Settings_Notifications}" Classes="rowTitle" />
@@ -180,7 +180,7 @@
                         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                             <Border Classes="badge">
                                 <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Palette}"
-                                         Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                         Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                 <TextBlock Text="{loc:Translate Settings_Appearance}" Classes="rowTitle" />
@@ -212,7 +212,7 @@
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                 <Border Classes="badge">
                                     <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Info}"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                     <TextBlock Text="{loc:Translate Settings_About}" Classes="rowTitle" />
@@ -227,11 +227,11 @@
                 <StackPanel Margin="24,28,24,0" Spacing="4" HorizontalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                         <ui:Icon Data="{StaticResource Icon.Shield}" Width="15" Height="15" VerticalAlignment="Center"
-                                 Foreground="{theme:ThemeBrush Light=#3A453D, Dark=#C9D2CB}" />
+                                 Foreground="{theme:ThemeBrush Light=#3D3F42, Dark=#CCCDCF}" />
                         <TextBlock Text="{loc:Translate Settings_FooterTitle}"
                                    FontSize="13"
                                    FontFamily="{x:Static local:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#3A453D, Dark=#C9D2CB}"
+                                   Foreground="{theme:ThemeBrush Light=#3D3F42, Dark=#CCCDCF}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Text="{loc:Translate Settings_FooterText}"
@@ -245,9 +245,9 @@
                         Padding="14,7"
                         HorizontalAlignment="Center"
                         BorderThickness="1"
-                        BorderBrush="{theme:ThemeBrush Light=#DCE5DB, Dark=#22392C}"
+                        BorderBrush="{theme:ThemeBrush Light=#DFE0E1, Dark=#2C2D2F}"
                         CornerRadius="16"
-                        Background="{theme:ThemeBrush Light=#EEF2EC, Dark=#14251B}"
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}"
                         Tapped="OnCreditTapped">
                     <StackPanel Orientation="Horizontal" Spacing="5">
                         <TextBlock Text="{loc:Translate Settings_CreditMadeWith}" FontSize="12" Foreground="#8A8F98" VerticalAlignment="Center" />
@@ -256,7 +256,7 @@
                         <TextBlock Text="MahdiyarGHD"
                                    FontSize="12"
                                    FontFamily="{x:Static local:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                   Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>

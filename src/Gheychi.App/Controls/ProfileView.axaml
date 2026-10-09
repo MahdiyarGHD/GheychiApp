@@ -6,7 +6,7 @@
              xmlns:theme="clr-namespace:Gheychi.App.Theming"
              xmlns:ui="clr-namespace:Gheychi.App.Ui"
              x:Class="Gheychi.App.Controls.ProfileView"
-             Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+             Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
 
     <UserControl.Resources>
         <ControlTemplate x:Key="ScrollList" TargetType="ItemsControl">
@@ -24,14 +24,14 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="LetterSpacing" Value="0.6" />
             <Setter Property="Margin" Value="26,22,16,8" />
-            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
             <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
         </Style>
 
         <Style Selector="Border.card">
             <Setter Property="Margin" Value="16,0" />
             <Setter Property="CornerRadius" Value="24" />
-            <Setter Property="Background" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E2320}" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#FFFFFF, Dark=#202021}" />
         </Style>
 
         <Style Selector="Border.row">
@@ -48,7 +48,7 @@
 
         <Style Selector="TextBlock.rowSubtitle">
             <Setter Property="FontSize" Value="13" />
-            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Setter Property="MaxLines" Value="2" />
@@ -59,13 +59,13 @@
             <Setter Property="Height" Value="42" />
             <Setter Property="CornerRadius" Value="21" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E7EEE6, Dark=#2A332D}" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E9EAEB, Dark=#2D2E30}" />
         </Style>
 
         <Style Selector="Border.quick">
             <Setter Property="Padding" Value="4,14" />
             <Setter Property="CornerRadius" Value="22" />
-            <Setter Property="Background" Value="{theme:ThemeBrush Light=#EEF1EA, Dark=#1E2320}" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#EDEDEE, Dark=#202021}" />
         </Style>
 
         <Style Selector="Border.quickBadge">
@@ -73,12 +73,12 @@
             <Setter Property="Height" Value="52" />
             <Setter Property="CornerRadius" Value="26" />
             <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E4EBE3, Dark=#2A332D}" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E6E7E8, Dark=#2D2E30}" />
         </Style>
 
         <Style Selector="TextBlock.quickLabel">
             <Setter Property="FontSize" Value="13" />
-            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
@@ -86,7 +86,7 @@
         <Style Selector="Border.divider">
             <Setter Property="Height" Value="1" />
             <Setter Property="Margin" Value="18,0" />
-            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E8EDE6, Dark=#2A302C}" />
+            <Setter Property="Background" Value="{theme:ThemeBrush Light=#E8EAED, Dark=#2C2D2E}" />
         </Style>
 
         <Style Selector="Border.backButton">
@@ -100,7 +100,7 @@
         <Style Selector="TextBlock.pageTitle">
             <Setter Property="FontSize" Value="20" />
             <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
-            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </UserControl.Styles>
@@ -113,7 +113,7 @@
                         Tapped="OnBackTapped"
                         AutomationProperties.Name="{loc:Translate Chat_Back}">
                     <ui:Icon Data="{StaticResource Icon.Back}" Width="22" Height="22"
-                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 </Border>
                 <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_Title}" />
             </Grid>
@@ -126,14 +126,14 @@
                             Margin="0,6,0,8"
                             CornerRadius="58"
                             HorizontalAlignment="Center"
-                            Background="{theme:ThemeBrush Light=#DCE7DE, Dark=#35423C}">
+                            Background="{theme:ThemeBrush Light=#E0E1E3, Dark=#1F4A35}">
                         <Panel>
                             <ui:Icon x:Name="AvatarIcon" Width="52" Height="52"
-                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                             <TextBlock x:Name="AvatarInitials"
                                        FontSize="40"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
                         </Panel>
@@ -152,20 +152,20 @@
                     <TextBlock x:Name="PhoneLabel"
                                Margin="24,2,24,0"
                                FontSize="14"
-                               Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                               Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
                                HorizontalAlignment="Center" />
                     <Border x:Name="SimPill"
                             IsVisible="False"
                             Margin="0,12,0,0"
                             Padding="14,6"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#E9EDE6, Dark=#232A25}"
+                            Background="{theme:ThemeBrush Light=#E9E9EA, Dark=#252628}"
                             HorizontalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Border Width="7" Height="7" CornerRadius="4" Background="{StaticResource PrimaryBrush}" VerticalAlignment="Center" />
                             <TextBlock x:Name="SimPillLabel"
                                        FontSize="12.5"
-                                       Foreground="{theme:ThemeBrush Light=#3A453D, Dark=#C9D2CB}"
+                                       Foreground="{theme:ThemeBrush Light=#3D3F42, Dark=#CCCDCF}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
@@ -176,7 +176,7 @@
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <Border Classes="quickBadge" Background="{theme:ThemeBrush Light=#B9EBCB, Dark=#1F5A3F}">
                                     <ui:Icon Data="{StaticResource Icon.Phone}" Width="22" Height="22"
-                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                                 </Border>
                                 <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Call}" />
                             </StackPanel>
@@ -185,7 +185,7 @@
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <Border Classes="quickBadge">
                                     <ui:Icon Data="{StaticResource Icon.Chat}" Width="22" Height="22"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Text}" />
                             </StackPanel>
@@ -194,7 +194,7 @@
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <Border Classes="quickBadge">
                                     <ui:Icon Data="{StaticResource Icon.Person}" Width="22" Height="22"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Details}" />
                             </StackPanel>
@@ -203,7 +203,7 @@
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <Border Classes="quickBadge">
                                     <ui:Icon Data="{StaticResource Icon.Search}" Width="22" Height="22"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <TextBlock Classes="quickLabel" Text="{loc:Translate Profile_Search}" />
                             </StackPanel>
@@ -226,7 +226,7 @@
                                             Tapped="OnCallTapped"
                                             AutomationProperties.Name="{loc:Translate Profile_Call}">
                                         <ui:Icon Data="{StaticResource Icon.Phone}" Width="20" Height="20"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                                     </Border>
                                 </Grid>
                             </Border>
@@ -242,7 +242,7 @@
                                         <Border Grid.Column="1"
                                                 Padding="14,8"
                                                 CornerRadius="18"
-                                                Background="{theme:ThemeBrush Light=#E9EDE6, Dark=#2A332D}"
+                                                Background="{theme:ThemeBrush Light=#E9E9EA, Dark=#2D2E30}"
                                                 VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <TextBlock x:Name="PreferredSimValue"
@@ -250,7 +250,7 @@
                                                            Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
                                                            VerticalAlignment="Center" />
                                                 <ui:Icon Data="{StaticResource Icon.Unfold}" Width="16" Height="16"
-                                                         Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                                                         Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
                                                          VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Border>
@@ -268,7 +268,7 @@
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                     <Border Grid.Column="0" Classes="rowBadge">
                                         <ui:Icon Data="{StaticResource Icon.Link}" Width="20" Height="20"
-                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_Links}" />
@@ -284,7 +284,7 @@
                                 <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
                                     <Border Grid.Column="0" Classes="rowBadge">
                                         <ui:Icon Data="{StaticResource Icon.Notifications}" Width="20" Height="20"
-                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_Notifications}" />
@@ -296,7 +296,7 @@
                                                Text="{loc:Translate Profile_NotificationsCustom}"
                                                FontSize="13"
                                                FontFamily="{x:Static app:AppFonts.Bold}"
-                                               Foreground="{theme:ThemeBrush Light=#2E6B4C, Dark=#8FE0BE}"
+                                               Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}"
                                                VerticalAlignment="Center" />
                                     <ui:Icon Grid.Column="3" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
                                              Foreground="#8A8F98" VerticalAlignment="Center" />
@@ -308,7 +308,7 @@
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                     <Border Grid.Column="0" Classes="rowBadge">
                                         <ui:Icon Data="{StaticResource Icon.Snooze}" Width="20" Height="20"
-                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_Snooze}" />
@@ -327,7 +327,7 @@
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                     <Border Grid.Column="0" Classes="rowBadge">
                                         <ui:Icon Data="{StaticResource Icon.Shield}" Width="20" Height="20"
-                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_SpamImmune}" />
@@ -347,7 +347,7 @@
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                         <Border Grid.Column="0" Classes="rowBadge">
                                             <ui:Icon Data="{StaticResource Icon.SpamAlert}" Width="20" Height="20"
-                                                     Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                     Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                         </Border>
                                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                             <TextBlock Classes="rowTitle" Text="{loc:Translate Profile_SpamMessages}" />
@@ -369,7 +369,7 @@
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                     <Border Grid.Column="0" Classes="rowBadge">
                                         <ui:Icon x:Name="ArchiveIcon" Width="20" Height="20"
-                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                         <TextBlock x:Name="ArchiveTitle" Classes="rowTitle" />
@@ -405,13 +405,13 @@
         <Grid x:Name="LinksPage"
               IsVisible="False"
               RowDefinitions="Auto,*"
-              Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+              Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
             <Grid Grid.Row="0" Margin="12,0,16,0" Height="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
                 <Border Classes="backButton"
                         Tapped="OnLinksBackTapped"
                         AutomationProperties.Name="{loc:Translate Chat_Back}">
                     <ui:Icon Data="{StaticResource Icon.Back}" Width="22" Height="22"
-                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 </Border>
                 <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_Links}" />
             </Grid>
@@ -430,7 +430,7 @@
                                         CornerRadius="21"
                                         Background="{Binding IconBgColor, Mode=OneTime}">
                                     <ui:Icon Data="{StaticResource Icon.Link}" Width="20" Height="20"
-                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                             Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="0,0,10,0" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Title, Mode=OneTime}"
@@ -451,7 +451,7 @@
                 <TextBlock x:Name="LinksEmpty"
                            IsVisible="False"
                            FontSize="15"
-                           Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center" />
             </Panel>
@@ -461,13 +461,13 @@
         <Grid x:Name="SpamListPage"
               IsVisible="False"
               RowDefinitions="Auto,*"
-              Background="{theme:ThemeBrush Light=#F7FAF4, Dark=#121413}">
+              Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
             <Grid Grid.Row="0" Margin="12,0,16,0" Height="60" ColumnDefinitions="Auto,*" ColumnSpacing="8">
                 <Border Classes="backButton"
                         Tapped="OnSpamListBackTapped"
                         AutomationProperties.Name="{loc:Translate Chat_Back}">
                     <ui:Icon Data="{StaticResource Icon.Back}" Width="22" Height="22"
-                             Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                             Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
                 </Border>
                 <TextBlock Grid.Column="1" Classes="pageTitle" Text="{loc:Translate Profile_SpamMessages}" />
             </Grid>
@@ -509,7 +509,7 @@
                                 </Border>
                             </Grid>
                             <Border Grid.Row="1" Margin="0,0,8,0"
-                                    Background="{theme:ThemeBrush Light=#EEF1EC, Dark=#24292A}" />
+                                    Background="{theme:ThemeBrush Light=#EEEEEF, Dark=#262728}" />
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

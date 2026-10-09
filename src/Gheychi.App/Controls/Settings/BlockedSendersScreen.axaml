@@ -15,7 +15,7 @@
         <Border Grid.Row="2"
                 CornerRadius="28,28,0,0"
                 ClipToBounds="True"
-                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#14251B}">
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
         <ScrollViewer Margin="0,8,0,0" VerticalScrollBarVisibility="Hidden">
             <ItemsControl x:Name="BlockedList">
                 <ItemsControl.ItemsPanel>
@@ -47,7 +47,7 @@
                                     AutomationProperties.Name="{loc:Translate Settings_BlockedUnblock}">
                                 <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16"
                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                         Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                                         Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                             </Border>
                         </Grid>
                     </DataTemplate>

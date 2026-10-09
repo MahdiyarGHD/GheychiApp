@@ -14,10 +14,10 @@ public sealed class ChatMessage : INotifyPropertyChanged
     private static readonly CornerRadius OutgoingCornersRtl = new(18, 18, 4, 18);
     private static readonly CornerRadius IncomingCornersRtl = new(18, 18, 18, 4);
 
-    private static readonly IBrush IncomingBg = Palette.Pick("#EDF1EB", "#1C1F24");
+    private static readonly IBrush IncomingBg = Palette.Pick("#FFFFFF", "#1E1F22");
     private static readonly IBrush TextBrush = Palette.Pick("#1B1E24", "#E8EAED");
     private static readonly IBrush TimeBrush = Palette.Brush("#8A8F98");
-    private static readonly IBrush PrimaryBrush = Palette.Brush("#2E6B4C");
+    private static readonly IBrush PrimaryBrush = Palette.Brush("#2E7D5B");
     private static readonly IBrush DangerBrush = Palette.Brush("#D64545");
     private static readonly IBrush UncheckedStroke = Palette.Pick("#9AA0AB", "#5C6370");
 

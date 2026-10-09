@@ -12,7 +12,7 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
             <StackPanel Margin="0,8,0,24">
                 <Border Width="72" Height="72" CornerRadius="22" Background="#16382A" HorizontalAlignment="Center">
-                    <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="34" Height="34" Foreground="#8FE0BE"
+                    <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="34" Height="34" Foreground="#6FD3A8"
                              HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <TextBlock Text="Gheychi"

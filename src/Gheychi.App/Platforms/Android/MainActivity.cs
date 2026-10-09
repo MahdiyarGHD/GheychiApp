@@ -51,7 +51,7 @@ public class MainActivity : AvaloniaMainActivity
     /// </summary>
     public static void UseAppBackground() =>
         Platform.CurrentActivity?.Window?.SetBackgroundDrawable(
-            new Android.Graphics.Drawables.ColorDrawable(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#0A1A11" : "#F6F8F4")));
+            new Android.Graphics.Drawables.ColorDrawable(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#121212" : "#F1F3F4")));
 
     // The bars are drawn over the app's own background, so their icons follow the theme in use.
     private void ApplySystemBarIcons()

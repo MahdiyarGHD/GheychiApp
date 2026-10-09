@@ -112,9 +112,9 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
     public bool ShowBadge { get; set; }
 
     private static readonly IBrush SelectedBackground = Palette.Pick("#386948", "#34D399");
-    private static readonly IBrush NormalBackground = Palette.Pick("#ECE1D3", "#1E2320");
-    private static readonly IBrush SelectedText = Palette.Pick("#FFFFFFFF", "#121413");
-    private static readonly IBrush NormalText = Palette.Pick("#59615A", "#DCE5DB");
+    private static readonly IBrush NormalBackground = Palette.Pick("#ECE1D3", "#202021");
+    private static readonly IBrush SelectedText = Palette.Pick("#FFFFFFFF", "#121212");
+    private static readonly IBrush NormalText = Palette.Pick("#595C61", "#DFE0E1");
     private static readonly IBrush SelectedBadgeBackground = Palette.Pick("#33FFFFFF", "#33000000");
     private static readonly IBrush NormalBadgeBackground = Palette.Pick("#1F000000", "#33FFFFFF");
 
@@ -144,16 +144,16 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
 
 public sealed class SearchResultItem
 {
-    private static readonly IBrush NameBrush = Palette.Pick("#2C342E", "#E8EAED");
+    private static readonly IBrush NameBrush = Palette.Pick("#2E3032", "#E8EAED");
     private static readonly IBrush TimeUnreadBrush = Palette.Pick("#386948", "#34D399");
-    private static readonly IBrush TimeBrush = Palette.Pick("#747D75", "#8A8F98");
-    private static readonly IBrush AvatarBgBrush = Palette.Pick("#E3E9E4", "#35423C");
-    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#8FE0BE");
+    private static readonly IBrush TimeBrush = Palette.Pick("#74787D", "#8A8F98");
+    private static readonly IBrush AvatarBgBrush = Palette.Pick("#DCEFE3", "#1F4A35");
+    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#6FD3A8");
     private static readonly IBrush MatchBgBrush = Palette.Pick("#ECE1D3", "#332E27");
     private static readonly IBrush MatchTextBrush = Palette.Pick("#665E53", "#DED3C5");
 
     // Same as the search page background, so the chip reads as cut out of the avatar.
-    private static readonly IBrush RingBrush = Palette.Pick("#F7FAF4", "#121413");
+    private static readonly IBrush RingBrush = Palette.Pick("#F1F3F4", "#121212");
 
     private static string? _spamTag;
     private static string? _archivedTag;
@@ -224,9 +224,9 @@ public sealed class SearchResultItem
 /// <summary>One link or place found in a message (Links / Places search results).</summary>
 public sealed class LinkResultItem
 {
-    private static readonly IBrush TitleBrush = Palette.Pick("#1B5E43", "#8FE0BE");
-    private static readonly IBrush MutedBrush = Palette.Pick("#747D75", "#8A8F98");
-    private static readonly IBrush IconBgBrush = Palette.Pick("#E3E9E4", "#35423C");
+    private static readonly IBrush TitleBrush = Palette.Pick("#1B5E43", "#6FD3A8");
+    private static readonly IBrush MutedBrush = Palette.Pick("#74787D", "#8A8F98");
+    private static readonly IBrush IconBgBrush = Palette.Pick("#DCEFE3", "#1F4A35");
 
     public long ThreadId { get; init; }
     public long MessageId { get; init; }
@@ -894,7 +894,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
             CategoryTabs[0].IsSelected = true;
     }
 
-    private static readonly IBrush SnippetNormalBrush = Palette.Pick("#59615A", "#9AA0AB");
+    private static readonly IBrush SnippetNormalBrush = Palette.Pick("#595C61", "#9AA0AB");
     private static readonly IBrush SnippetMatchBrush = Palette.Pick("#946300", "#FAD998");
 
     public static SnippetRun[] BuildSnippetRuns(string snippet, string? queryText)

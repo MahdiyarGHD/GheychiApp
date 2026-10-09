@@ -61,7 +61,7 @@ public sealed class SettingsHeader : Grid
                 Data = IconCatalog.Find("back.png"),
                 Width = 22,
                 Height = 22,
-                Foreground = Palette.Pick("#2C342E", "#E8EAED"),
+                Foreground = Palette.Pick("#2E3032", "#E8EAED"),
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             }

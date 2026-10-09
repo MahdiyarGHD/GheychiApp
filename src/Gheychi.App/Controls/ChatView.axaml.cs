@@ -706,7 +706,7 @@ public partial class ChatView : UserControl
         _targetAnchorX = msg.IsOutgoing ? 1.0 : 0.0;
         if (msg.IsOutgoing)
         {
-            ElevatedBubbleBorder.Background = Palette.Brush("#2E6B4C");
+            ElevatedBubbleBorder.Background = Palette.Brush("#2E7D5B");
             ElevatedBubbleBody.Foreground = Brushes.White;
         }
         else

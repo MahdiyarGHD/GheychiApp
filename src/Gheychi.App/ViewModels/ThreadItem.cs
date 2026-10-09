@@ -10,15 +10,15 @@ public sealed class ThreadItem : INotifyPropertyChanged
 {
     private static readonly IBrush DangerBrush = Palette.Brush("#D64545");
     private static readonly IBrush TimeNormalBrush = Palette.Brush("#8A8F98");
-    private static readonly IBrush PreviewBrush = Palette.Pick("#5E665F", "#9AA0AB");
-    private static readonly IBrush NameReadBrush = Palette.Pick("#3A413C", "#C9CED4");
+    private static readonly IBrush PreviewBrush = Palette.Pick("#5E6166", "#9AA0AB");
+    private static readonly IBrush NameReadBrush = Palette.Pick("#3B3D40", "#C9CED4");
     private static readonly IBrush NameUnreadBrush = Palette.Pick("#000000", "#FFFFFF");
     private static readonly IBrush PreviewUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
     private static readonly IBrush TimeUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
-    private static readonly IBrush AvatarBgBrush = Palette.Pick("#E3E9E4", "#35423C");
-    private static readonly IBrush AvatarBgSelectedBrush = Palette.Brush("#2E6B4C");
-    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#8FE0BE");
-    private static readonly IBrush IconTintBrush = Palette.Pick("#33443C", "#D9E3DD");
+    private static readonly IBrush AvatarBgBrush = Palette.Pick("#DCEFE3", "#1F4A35");
+    private static readonly IBrush AvatarBgSelectedBrush = Palette.Brush("#2E7D5B");
+    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#6FD3A8");
+    private static readonly IBrush IconTintBrush = Palette.Pick("#393B3E", "#DDDEDF");
     private static readonly IBrush SelectedRowBrush = Palette.Pick("#142E6B4C", "#262E6B4C");
 
     private static readonly Thickness FailedPreviewMargin = new(20, 0, 0, 0);

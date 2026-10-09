@@ -27,7 +27,7 @@
                     VerticalAlignment="Center"
                     Tapped="OnSettingsTapped"
                     AutomationProperties.Name="{loc:Translate Tab_Settings}">
-                <ui:Icon Data="{StaticResource Icon.TabSettings}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                <ui:Icon Data="{StaticResource Icon.TabSettings}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
             </Border>
             <Border Grid.Column="2"
                     Width="40"
@@ -37,7 +37,7 @@
                     VerticalAlignment="Center"
                     Tapped="OnSearchTapped"
                     AutomationProperties.Name="{loc:Translate Spam_SearchHint}">
-                <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2C342E, Dark=#E8EAED}" />
+                <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
             </Border>
         </Grid>
 
@@ -49,9 +49,9 @@
                 Padding="12,0,4,0"
                 Height="42"
                 CornerRadius="21"
-                Background="{theme:ThemeBrush Light=#E8EDE6, Dark=#1C1F24}">
+                Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1C1F24}">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Search}" Width="18" Height="18" Margin="0,0,8,0" Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Search}" Width="18" Height="18" Margin="0,0,8,0" Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                 <TextBox x:Name="SearchEntry"
                          Grid.Column="1"
                          Classes="plain"
@@ -69,7 +69,7 @@
                         Background="Transparent"
                         VerticalAlignment="Center"
                         Tapped="OnSearchCloseTapped">
-                    <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16" Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                    <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16" Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                 </Border>
             </Grid>
         </Border>
@@ -78,7 +78,7 @@
                 Grid.RowSpan="2"
                 CornerRadius="28,28,0,0"
                 ClipToBounds="True"
-                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#14251B}">
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
         <Grid RowDefinitions="Auto,*">
             <Grid Grid.Row="0" Margin="22,20,10,6" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
                 <TextBlock Grid.Row="0"
@@ -96,7 +96,7 @@
                            IsVisible="{Binding HasAny}"
                            FontSize="13"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}"
+                           Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
                            Padding="8,6"
                            Background="Transparent"
                            VerticalAlignment="Center"
@@ -133,7 +133,7 @@
                                        Padding="22,10,0,2"
                                        FontSize="12"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                         </DataTemplate>
                     </vm:SpamTemplateSelector.DateSeparatorTemplate>
                     <vm:SpamTemplateSelector.SpamTemplate>
@@ -186,7 +186,7 @@
                                            Text="{Binding Preview}"
                                            ui:TextDirection.KeepSide="True"
                                            FontSize="13.5"
-                                           Foreground="{theme:ThemeBrush Light=#5E665F, Dark=#9AA0AB}"
+                                           Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}"
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="Wrap"
                                            MaxLines="2" />
@@ -218,9 +218,9 @@
             <Border Width="56"
                     Height="56"
                     CornerRadius="28"
-                    Background="{theme:ThemeBrush Light=#E7EEE6, Dark=#2A332D}"
+                    Background="{theme:ThemeBrush Light=#E9EAEB, Dark=#2D2E30}"
                     HorizontalAlignment="Center">
-                <ui:Icon Data="{StaticResource Icon.Shield}" Width="24" Height="24" Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                <ui:Icon Data="{StaticResource Icon.Shield}" Width="24" Height="24" Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
             </Border>
             <TextBlock Text="{loc:Translate Spam_Placeholder}"
                        FontSize="13"

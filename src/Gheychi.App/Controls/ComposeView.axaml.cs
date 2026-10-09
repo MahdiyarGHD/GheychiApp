@@ -407,7 +407,7 @@ public partial class ComposeView : UserControl
     }
 
     private void UpdateCardFocus(bool focused) =>
-        RecipientCard.BorderBrush = focused ? Palette.Pick("#2E6B4C", "#8FE0BE") : Palette.Transparent;
+        RecipientCard.BorderBrush = focused ? Palette.Pick("#2E7D5B", "#6FD3A8") : Palette.Transparent;
 
     private void Choose(ComposeRow row)
     {

@@ -21,7 +21,7 @@
                         <Grid Margin="10,8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                             <Border Classes="badge">
                                 <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Person}"
-                                         Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                         Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                             </Border>
                             <TextBlock Grid.Column="1" Text="{Binding Display}" Classes="rowTitle" VerticalAlignment="Center" />
                             <Border Grid.Column="2" Width="36" Height="36" CornerRadius="18" Background="Transparent"
@@ -29,7 +29,7 @@
                                     AutomationProperties.Name="{loc:Translate Settings_TrustedRemove}">
                                 <ui:Icon Data="{StaticResource Icon.Close}" Width="16" Height="16"
                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                         Foreground="{theme:ThemeBrush Light=#59615A, Dark=#9AA0AB}" />
+                                         Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                             </Border>
                         </Grid>
                     </DataTemplate>

@@ -84,7 +84,7 @@
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                     <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
                                         <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                         <TextBlock x:Name="AccuracyValue" Classes="rowTitle" />
@@ -97,7 +97,7 @@
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                     <Border Classes="badge">
                                         <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.History}"
-                                                 Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                         <TextBlock x:Name="BusiestValue" Classes="rowTitle" />
@@ -118,7 +118,7 @@
                                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                                 <Border Classes="badge">
                                                     <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SpamAlert}"
-                                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                                 </Border>
                                                 <TextBlock Grid.Column="1" Text="{Binding Display}" Classes="rowTitle" VerticalAlignment="Center" />
                                                 <TextBlock Grid.Column="2" Text="{Binding Count}" Classes="valueChipLabel"

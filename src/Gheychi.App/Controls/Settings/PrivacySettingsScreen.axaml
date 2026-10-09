@@ -12,9 +12,9 @@
             <StackPanel Margin="0,4,0,24">
                 <Border Classes="card" Padding="16" Background="{theme:ThemeBrush Light=#DDF0E4, Dark=#173527}">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border Classes="badge" Background="{theme:ThemeBrush Light=#F6F8F4, Dark=#14251B}">
+                        <Border Classes="badge" Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
                             <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
-                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#8FE0BE}" />
+                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
                         </Border>
                         <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                             <TextBlock Text="{loc:Translate Settings_PrivacyCardTitle}" Classes="rowTitle" />
@@ -30,7 +30,7 @@
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                 <Border Classes="badge">
                                     <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Search}"
-                                             Foreground="{theme:ThemeBrush Light=#33443C, Dark=#D9E3DD}" />
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                     <TextBlock Text="{loc:Translate Settings_ClearSearches}" Classes="rowTitle" />

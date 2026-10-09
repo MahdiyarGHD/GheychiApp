@@ -26,8 +26,8 @@ public partial class MainView : UserControl
     private const int SpamIndex = 1;
     private const int SettingsIndex = 2;
 
-    private static readonly IBrush TabActive = Palette.Pick("#1B5E43", "#8FE0BE");
-    private static readonly IBrush TabInactive = Palette.Pick("#59615A", "#9AA0AB");
+    private static readonly IBrush TabActive = Palette.Pick("#1B5E43", "#6FD3A8");
+    private static readonly IBrush TabInactive = Palette.Pick("#595C61", "#9AA0AB");
 
     private readonly Control?[] _pages = new Control?[3];
     private int _selected = -1;
@@ -85,7 +85,7 @@ public partial class MainView : UserControl
                 insets.DisplayEdgeToEdgePreference = true;
 
             // Below Android 15 the bars have a colour of their own, which would show against the other theme.
-            insets.SystemBarColor = Color.Parse(ThemeState.IsDark ? "#0A1A11" : "#F6F8F4");
+            insets.SystemBarColor = Color.Parse(ThemeState.IsDark ? "#121212" : "#F1F3F4");
             insets.SafeAreaChanged += OnInsetsChanged;
         }
         if (_topLevel.InputPane is { } pane)
