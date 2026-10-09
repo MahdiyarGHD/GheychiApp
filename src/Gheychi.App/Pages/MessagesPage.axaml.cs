@@ -595,8 +595,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             // queries so page 1 + its history prefetch run uncontended.
             ChatViewModel.CancelPreload();
 
-            // Only cheap UI work before the slide: the chat is reset to its skeleton and the page is read
-            // on a worker thread meanwhile.
+            // An uncached chat is reset to its skeleton and its page is read on a worker thread meanwhile.
             var chat = ChatOverlay;
             var cached = chat.PrepareForTransition(thread);
             if (sim is not null)
@@ -606,9 +605,12 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             chat.IsVisible = true;
             ChatPresence.ChatOpened(thread.ThreadId);
 
-            var fetchTask = cached is not null
-                ? Task.FromResult<PreparedChatData?>(cached)
-                : chat.FetchMessagesAsync(thread, unreadHint: unreadCount);
+            var fetchTask = cached is null ? chat.FetchMessagesAsync(thread, unreadHint: unreadCount) : null;
+
+            // A cached page is bound while the chat is still off screen: it is there from the first frame of the slide
+            // (no skeleton) and the layout it costs is not part of the animation.
+            if (cached is not null)
+                chat.ApplyMessages(cached);
 
             if (animate)
             {
@@ -618,13 +620,16 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
             CoverInbox();
 
-            // The list is filled once the chat has arrived. Binding the rows before the slide delays its start and
-            // binding them during it takes UI-thread time away from the frames around it.
-            var preparedData = await fetchTask;
-            if (preparedData is not null)
-                chat.ApplyMessages(preparedData);
-            else
-                chat.HideSkeleton();
+            // A page that had to be read is bound once the chat has arrived: binding during the slide takes UI-thread
+            // time away from its frames.
+            if (fetchTask is not null)
+            {
+                var preparedData = await fetchTask;
+                if (preparedData is not null)
+                    chat.ApplyMessages(preparedData);
+                else
+                    chat.HideSkeleton();
+            }
 
             // Last, so the jump to the match is not undone by the chat settling at its bottom.
             if (!string.IsNullOrWhiteSpace(searchText))
