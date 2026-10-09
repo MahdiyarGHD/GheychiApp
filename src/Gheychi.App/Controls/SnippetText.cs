@@ -49,5 +49,6 @@ public static class SnippetText
         }
 
         inlines.AddRange(built);
+        Ui.TextDirection.ApplyToInlines(block);
     }
 }

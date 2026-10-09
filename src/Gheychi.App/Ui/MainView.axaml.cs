@@ -4,6 +4,7 @@ using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Gheychi.App.Gestures;
 using Gheychi.App.Localization;
 using Gheychi.App.Pages;
@@ -51,6 +52,7 @@ public partial class MainView : UserControl
         TopLevel.SetAutoSafeAreaPadding(this, false);
         FontFamily = AppFonts.Regular;
         FlowDirection = CultureService.GetFlowDirection();
+        DispatcherTimer.RunOnce(MainActivity.UseAppBackground, TimeSpan.FromMilliseconds(800));
 
         // A tapped notification opens a chat or the spam tab; the request is kept until this view is up.
         Select(ChatLaunchRequests.HasPending ? MessagesIndex : SpamTabRequests.Take() ? SpamIndex : MessagesIndex);
