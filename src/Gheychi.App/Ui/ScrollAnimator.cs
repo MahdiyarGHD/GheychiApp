@@ -45,7 +45,8 @@ public static class ScrollAnimator
 
         void OnFinger(object? sender, PointerPressedEventArgs e) => Stop();
 
-        scroll.AddHandler(InputElement.ScrollGestureEvent, EndFling, RoutingStrategies.Tunnel);
+        // The scroll viewer takes each step of the fling first; this ends it after that.
+        scroll.AddHandler(InputElement.ScrollGestureEvent, EndFling, RoutingStrategies.Bubble, handledEventsToo: true);
         scroll.AddHandler(InputElement.PointerPressedEvent, OnFinger, RoutingStrategies.Tunnel, handledEventsToo: true);
 
         timer.Tick += (_, _) =>
