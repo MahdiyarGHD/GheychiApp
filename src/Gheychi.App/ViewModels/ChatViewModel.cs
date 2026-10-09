@@ -1203,51 +1203,51 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         if (ReactionHelper.MapEmojiToVerb(emoji) is null)
             return;
 
-        var isToggleOff = message.ReactionEmoji == emoji;
-        var newEmoji = isToggleOff ? null : emoji;
+        // A sent reaction is an SMS and cannot be taken back: choosing the same one again does nothing, except
+        // sending it again when the first attempt failed.
+        if (message.ReactionEmoji == emoji)
+        {
+            if (message.HasReactionFailed)
+                await RetryReactionAsync(message);
+            return;
+        }
+
+        var newEmoji = emoji;
         message.ReactionEmoji = newEmoji;
 
         await _metadataRepo.SetReactionAsync(message.Id, Thread.ThreadId, newEmoji, fromMe: true);
 
-        if (!isToggleOff && !string.IsNullOrWhiteSpace(newEmoji))
+        message.IsReactionSending = true;
+        message.HasReactionFailed = false;
+
+        // Always the iPhone-compatible English template (verbs + curly quotes):
+        // no other SMS app recognizes any other template.
+        var reactionText = ReactionHelper.FormatReactionSms(newEmoji, message.Body);
+
+        var targetSubId = ResolveSubId(message.SubId);
+        var address = SendAddress;
+
+        _ = Task.Run(async () =>
         {
-            message.IsReactionSending = true;
-            message.HasReactionFailed = false;
-
-            // Always the iPhone-compatible English template (verbs + curly quotes):
-            // no other SMS app recognizes any other template.
-            var reactionText = ReactionHelper.FormatReactionSms(newEmoji, message.Body);
-
-            var targetSubId = ResolveSubId(message.SubId);
-            var address = SendAddress;
-
-            _ = Task.Run(async () =>
+            try
             {
-                try
+                var result = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
+                ShiftLoadedCount(1);
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    var result = await _smsService.SendSmsAsync(address, reactionText, targetSubId);
-                    ShiftLoadedCount(1);
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        message.IsReactionSending = false;
-                        message.HasReactionFailed = result == SmsSendResult.Failed;
-                    });
-                }
-                catch
+                    message.IsReactionSending = false;
+                    message.HasReactionFailed = result == SmsSendResult.Failed;
+                });
+            }
+            catch
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        message.IsReactionSending = false;
-                        message.HasReactionFailed = true;
-                    });
-                }
-            });
-        }
-        else
-        {
-            message.IsReactionSending = false;
-            message.HasReactionFailed = false;
-        }
+                    message.IsReactionSending = false;
+                    message.HasReactionFailed = true;
+                });
+            }
+        });
     }
 
     public async Task RetryReactionAsync(ChatMessage message)
