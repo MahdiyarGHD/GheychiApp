@@ -14,6 +14,8 @@ namespace Gheychi.App.Ui;
 /// otherwise an emoji or a number at its start jumps to the wrong end and the punctuation is placed backwards.
 /// A text with no letter keeps the app's direction, except a number (a phone number, a code such as "*123#") shown
 /// by a label in a right-to-left app: that one is ordered left to right, or its groups and its signs come out backwards.
+/// An emoji built from several joined by a zero-width joiner (the phoenix, a family) falls apart into its parts in a
+/// right-to-left line, so a text that is only such emoji is ordered left to right as well.
 /// </summary>
 public static class TextDirection
 {
@@ -28,6 +30,9 @@ public static class TextDirection
 
     private static readonly AttachedProperty<bool> NumberAlignedProperty =
         AvaloniaProperty.RegisterAttached<TextBlock, TextBlock, bool>("NumberAligned");
+
+    private static readonly AttachedProperty<bool> BoxAlignedProperty =
+        AvaloniaProperty.RegisterAttached<TextBox, TextBox, bool>("BoxAligned");
 
     public static bool GetKeepSide(TextBlock control) => control.GetValue(KeepSideProperty);
 
@@ -77,7 +82,9 @@ public static class TextDirection
         }
         else
         {
-            Set(control, Detect(text));
+            var direction = Detect(text);
+            var joined = direction is null && JoinsEmoji(text);
+            Set(control, joined ? FlowDirection.LeftToRight : direction, joined);
         }
     }
 
@@ -87,10 +94,12 @@ public static class TextDirection
         if (Detect(text) is { } direction)
             return (direction, false);
 
-        return AppDirection == FlowDirection.RightToLeft && text is not null && text.Any(char.IsDigit)
+        return AppDirection == FlowDirection.RightToLeft && text is not null && (text.Any(char.IsDigit) || JoinsEmoji(text))
             ? (FlowDirection.LeftToRight, true)
             : (null, false);
     }
+
+    private static bool JoinsEmoji(string? text) => text is not null && text.Contains('‍');
 
     private static void Set(Control control, FlowDirection? direction, bool number = false)
     {
@@ -99,6 +108,25 @@ public static class TextDirection
             control.FlowDirection = direction!.Value;
         else if (control.IsSet(Visual.FlowDirectionProperty))
             control.ClearValue(Visual.FlowDirectionProperty);
+
+        if (control is TextBox box)
+        {
+            if (differs && number)
+            {
+                if (!box.GetValue(BoxAlignedProperty))
+                {
+                    box.TextAlignment = TextAlignment.Right;
+                    box.SetValue(BoxAlignedProperty, true);
+                }
+            }
+            else if (box.GetValue(BoxAlignedProperty))
+            {
+                box.ClearValue(TextBox.TextAlignmentProperty);
+                box.SetValue(BoxAlignedProperty, false);
+            }
+
+            return;
+        }
 
         if (control is not TextBlock block)
             return;
