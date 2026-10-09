@@ -204,7 +204,7 @@
                             Margin="0,0,5,0"
                             Padding="0,10"
                             CornerRadius="14"
-                            Background="#2E7D5B"
+                            Background="{theme:AccentBrush Role=Solid}"
                             Tapped="OnRestoreTapped">
                         <TextBlock Text="{loc:Translate Spam_ActionRestoreShort}"
                                    FontSize="13"

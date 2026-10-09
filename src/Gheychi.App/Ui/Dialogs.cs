@@ -1,4 +1,6 @@
 using Android.Content;
+using Android.Graphics;
+using Gheychi.App.Theming;
 using AlertDialog = AndroidX.AppCompat.App.AlertDialog;
 
 namespace Gheychi.App.Ui;
@@ -25,6 +27,7 @@ public static class Dialogs
             var dialog = builder.Create()!;
             dialog.DismissEvent += (_, _) => result.TrySetResult(false);
             dialog.Show();
+            TintButtons(dialog);
         });
         return result.Task;
     }
@@ -51,7 +54,16 @@ public static class Dialogs
             var dialog = builder.Create()!;
             dialog.DismissEvent += (_, _) => result.TrySetResult(cancel);
             dialog.Show();
+            TintButtons(dialog);
         });
         return result.Task;
+    }
+
+    // The dialog is the system's, so its buttons take the colour from the theme in colors.xml; the accent is chosen at runtime.
+    internal static void TintButtons(AlertDialog dialog)
+    {
+        var accent = Color.ParseColor(ThemeState.Accent.Hex(AccentRole.Text, ThemeState.IsDark));
+        foreach (var which in new[] { -1, -2, -3 })
+            dialog.GetButton(which)?.SetTextColor(accent);
     }
 }

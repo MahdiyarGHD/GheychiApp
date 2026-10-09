@@ -96,7 +96,7 @@
                            IsVisible="{Binding HasAny}"
                            FontSize="13"
                            FontFamily="{x:Static app:AppFonts.Bold}"
-                           Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                           Foreground="{theme:AccentBrush Role=Text}"
                            Padding="8,6"
                            Background="Transparent"
                            VerticalAlignment="Center"
@@ -133,7 +133,7 @@
                                        Padding="22,10,0,2"
                                        FontSize="12"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                       Foreground="{theme:AccentBrush Role=Text}" />
                         </DataTemplate>
                     </vm:SpamTemplateSelector.DateSeparatorTemplate>
                     <vm:SpamTemplateSelector.SpamTemplate>
@@ -220,7 +220,7 @@
                     CornerRadius="28"
                     Background="{theme:ThemeBrush Light=#E9EAEB, Dark=#2D2E30}"
                     HorizontalAlignment="Center">
-                <ui:Icon Data="{StaticResource Icon.Shield}" Width="24" Height="24" Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                <ui:Icon Data="{StaticResource Icon.Shield}" Width="24" Height="24" Foreground="{theme:AccentBrush Role=Text}" />
             </Border>
             <TextBlock Text="{loc:Translate Spam_Placeholder}"
                        FontSize="13"

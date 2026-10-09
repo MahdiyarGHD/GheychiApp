@@ -7,6 +7,7 @@ public static class AppPreferences
     private const string LockScreenContentKey = "notification_lock_screen_content_v1";
     private const string ThemeKey = "app_theme_v1";
     private const string LanguageKey = "app_language_v1";
+    private const string AccentKey = "app_accent_v1";
 
     public const string LanguageEnglish = "en";
     public const string LanguagePersian = "fa";
@@ -30,6 +31,13 @@ public static class AppPreferences
         set => Committed.Edit()!.PutInt(ThemeKey, (int)value)!.Commit();
     }
 
+    /// <summary>The <see cref="Theming.AccentScheme.Id"/> picked in Appearance; empty for the default.</summary>
+    public static string Accent
+    {
+        get => Committed.GetString(AccentKey, string.Empty) ?? string.Empty;
+        set => Committed.Edit()!.PutString(AccentKey, value)!.Commit();
+    }
+
     /// <summary><see cref="LanguageEnglish"/>, <see cref="LanguagePersian"/>, or empty to follow the phone.</summary>
     public static string Language
     {
@@ -37,7 +45,7 @@ public static class AppPreferences
         set => Committed.Edit()!.PutString(LanguageKey, value)!.Commit();
     }
 
-    // Theme and language are applied by restarting the app, and Preferences writes to disk in the background:
+    // Theme, accent and language are applied by restarting the app, and Preferences writes to disk in the background:
     // the restart would end the process before the choice is saved. These are written synchronously instead.
     private static Android.Content.ISharedPreferences Committed =>
         Android.App.Application.Context.GetSharedPreferences("gheychi_restart_settings", Android.Content.FileCreationMode.Private)!;

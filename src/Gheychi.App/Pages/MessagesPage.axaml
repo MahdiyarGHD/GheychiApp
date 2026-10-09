@@ -107,7 +107,7 @@
                                                  Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}}"
                                                  Width="27"
                                                  Height="27"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                                                 Foreground="{theme:AccentBrush Role=Text}"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding Initials}"
@@ -210,7 +210,7 @@
                         <Border Margin="0,12,0,0"
                                 Padding="22,12"
                                 CornerRadius="22"
-                                Background="#2E7D5B"
+                                Background="{theme:AccentBrush Role=Solid}"
                                 HorizontalAlignment="Center"
                                 Tapped="OnSetDefaultTapped">
                             <TextBlock Text="{loc:Translate Messages_NotDefaultAction}"

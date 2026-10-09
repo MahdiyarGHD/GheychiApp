@@ -74,6 +74,7 @@ internal static class SpamReport
             .Create();
         dialog.DismissEvent += (_, _) => result.TrySetResult(null);
         dialog.Show();
+        Ui.Dialogs.TintButtons(dialog);
 
         // Nothing to send once the user has removed everything.
         var send = dialog.GetButton((int)Android.Content.DialogButtonType.Positive);

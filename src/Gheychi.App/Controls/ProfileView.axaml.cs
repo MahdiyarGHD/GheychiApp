@@ -13,13 +13,14 @@ using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
 using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App.Controls;
 
 /// <summary>The conversation's profile page: who it is with, what can be done with them, and per-conversation settings.</summary>
 public partial class ProfileView : UserControl
 {
-    private static readonly IBrush SwitchOnTrack = Palette.Brush("#2E7D5B");
+    private static readonly IBrush SwitchOnTrack = Palette.Accent(AccentRole.Solid);
     private static readonly IBrush SwitchOffTrack = Palette.Pick("#C6C8CB", "#46484A");
     private static readonly IBrush SwitchOnThumb = Palette.Brush("#FFFFFF");
     private static readonly IBrush SwitchOffThumb = Palette.Pick("#FFFFFF", "#9AA0AB");

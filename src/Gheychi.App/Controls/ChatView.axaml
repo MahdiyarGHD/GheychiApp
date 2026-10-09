@@ -228,11 +228,11 @@
                                                VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Time}"
                                                FontSize="11"
-                                               Foreground="#BFE8D2"
+                                               Foreground="{theme:AccentBrush Role=OnSolid}"
                                                VerticalAlignment="Bottom" />
                                     <c:SendingSpinner IsVisible="{Binding IsSending}"
                                                       Margin="4,0,0,0"
-                                                      Foreground="#BFE8D2"
+                                                      Foreground="{theme:AccentBrush Role=OnSolid}"
                                                       VerticalAlignment="Bottom" />
                                     <Panel Margin="2,0,0,1"
                                            VerticalAlignment="Bottom"
@@ -325,7 +325,7 @@
                                 <TextBlock FontSize="13" TextWrapping="Wrap">
                                     <Run Text="{Binding BodyBeforeLink}" Foreground="White" />
                                     <Run Text="{Binding Link}"
-                                         Foreground="#E3F8EC"
+                                         Foreground="{theme:AccentBrush Role=OnSolidBright}"
                                          TextDecorations="Underline" />
                                 </TextBlock>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
@@ -336,11 +336,11 @@
                                                VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Time}"
                                                FontSize="11"
-                                               Foreground="#BFE8D2"
+                                               Foreground="{theme:AccentBrush Role=OnSolid}"
                                                VerticalAlignment="Bottom" />
                                     <c:SendingSpinner IsVisible="{Binding IsSending}"
                                                       Margin="4,0,0,0"
-                                                      Foreground="#BFE8D2"
+                                                      Foreground="{theme:AccentBrush Role=OnSolid}"
                                                       VerticalAlignment="Bottom" />
                                     <Panel Margin="2,0,0,1"
                                            VerticalAlignment="Bottom"
@@ -417,7 +417,7 @@
                         BorderThickness="1"
                         BorderBrush="{StaticResource PrimaryBrush}"
                         CornerRadius="11"
-                        Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#142B1F}">
+                        Background="{theme:AccentBrush Role=Wash, Light=#EEEFF0}">
                     <TextBlock Text="{Binding Text}"
                                FontSize="11"
                                FontFamily="{x:Static app:AppFonts.Bold}"
@@ -465,7 +465,7 @@
                     <Border Grid.Column="1"
                             Width="40" Height="40"
                             CornerRadius="20"
-                            Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#1F4A35}"
+                            Background="{theme:AccentBrush Role=Soft}"
                             Tapped="OnHeaderTapped">
                         <Panel>
                             <ui:Icon IsVisible="{Binding Thread.HasIcon}"
@@ -476,7 +476,7 @@
                                      Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
                             <TextBlock IsVisible="{Binding Thread.HasNoIcon}"
                                        Text="{Binding Thread.Initials}"
-                                       Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                                       Foreground="{theme:AccentBrush Role=Text}"
                                        FontSize="14"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
                                        HorizontalAlignment="Center"
@@ -513,7 +513,7 @@
                                  Width="22" Height="22"
                                  HorizontalAlignment="Center"
                                  VerticalAlignment="Center"
-                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                 Foreground="{theme:AccentBrush Role=Text}" />
                     </Panel>
                     <Panel Grid.Column="4"
                            Width="40" Height="40"
@@ -741,7 +741,7 @@
                             HorizontalAlignment="Left" />
                     <Border Width="180" Height="52"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#D0E6DA, Dark=#173827}"
+                            Background="{theme:AccentBrush Role=Soft}"
                             HorizontalAlignment="Right" />
                     <Border Width="260" Height="46"
                             CornerRadius="16"
@@ -749,7 +749,7 @@
                             HorizontalAlignment="Left" />
                     <Border Width="230" Height="42"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#D0E6DA, Dark=#173827}"
+                            Background="{theme:AccentBrush Role=Soft}"
                             HorizontalAlignment="Right" />
                     <Border Width="160" Height="38"
                             CornerRadius="16"
@@ -791,7 +791,7 @@
                         <TextBlock Text="{loc:Translate Chat_Unblock}"
                                    FontSize="14"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                                   Foreground="{theme:AccentBrush Role=Text}"
                                    TextAlignment="Center" />
                         <TextBlock Text="{loc:Translate Chat_BlockedHint}"
                                    FontSize="11"
@@ -1017,7 +1017,7 @@
                                 <Border Grid.Row="1" Grid.Column="5"
                                         Padding="5,1"
                                         CornerRadius="6"
-                                        Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#142B1F}"
+                                        Background="{theme:AccentBrush Role=Wash, Light=#EEEFF0}"
                                         VerticalAlignment="Center">
                                     <TextBlock Text="{loc:Translate Chat_LinkBadge}"
                                                FontSize="9.5"

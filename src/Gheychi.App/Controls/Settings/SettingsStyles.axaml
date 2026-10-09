@@ -170,7 +170,7 @@
         </Setter>
     </Style>
     <Style Selector="ToggleButton.setting:checked /template/ Border#Track">
-        <Setter Property="Background" Value="#2E7D5B" />
+        <Setter Property="Background" Value="{theme:AccentBrush Role=Solid}" />
     </Style>
     <Style Selector="ToggleButton.setting:checked /template/ Border#Knob">
         <Setter Property="RenderTransform" Value="translateX(18px)" />
@@ -192,7 +192,7 @@
                             <RepeatButton Name="PART_DecreaseButton" Focusable="False">
                                 <RepeatButton.Template>
                                     <ControlTemplate>
-                                        <Border Height="4" CornerRadius="2" Background="#2E7D5B" VerticalAlignment="Center" />
+                                        <Border Height="4" CornerRadius="2" Background="{theme:AccentBrush Role=Solid}" VerticalAlignment="Center" />
                                     </ControlTemplate>
                                 </RepeatButton.Template>
                             </RepeatButton>
@@ -209,7 +209,7 @@
                         <Thumb Name="thumb" Width="22" Height="22">
                             <Thumb.Template>
                                 <ControlTemplate>
-                                    <Border CornerRadius="11" Background="#2E7D5B" />
+                                    <Border CornerRadius="11" Background="{theme:AccentBrush Role=Solid}" />
                                 </ControlTemplate>
                             </Thumb.Template>
                         </Thumb>
@@ -226,7 +226,7 @@
         <Setter Property="Background" Value="{theme:ThemeBrush Light=#E5E6E7, Dark=#252628}" />
     </Style>
     <Style Selector="Border.segment.on">
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#2E7D5B, Dark=#6FD3A8}" />
+        <Setter Property="Background" Value="{theme:AccentBrush Role=Icon}" />
     </Style>
 
     <Style Selector="Border.segment TextBlock.segmentTitle">
@@ -247,7 +247,7 @@
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
     </Style>
     <Style Selector="Border.segment.on TextBlock.segmentHint">
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#DDF3E8, Dark=#173527}" />
+        <Setter Property="Foreground" Value="{theme:AccentBrush Role=Wash}" />
     </Style>
 
     <!-- Status chips on the overview: OK, or with the "warn" class when something needs attention. -->
@@ -262,7 +262,7 @@
     <Style Selector="Border.chip">
         <Setter Property="Padding" Value="8,8" />
         <Setter Property="CornerRadius" Value="14" />
-        <Setter Property="Background" Value="{theme:ThemeBrush Light=#DDF0E4, Dark=#1B3A2B}" />
+        <Setter Property="Background" Value="{theme:AccentBrush Role=Wash}" />
     </Style>
     <Style Selector="Border.chip.warn">
         <Setter Property="Background" Value="{theme:ThemeBrush Light=#FCF2E1, Dark=#3A3020}" />
@@ -274,7 +274,7 @@
         <Setter Property="MaxLines" Value="1" />
         <Setter Property="FontFamily" Value="{x:Static local:AppFonts.Bold}" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+        <Setter Property="Foreground" Value="{theme:AccentBrush Role=Text}" />
     </Style>
     <Style Selector="Border.chip.warn TextBlock.chipLabel">
         <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#8A5A0E, Dark=#E8C27A}" />

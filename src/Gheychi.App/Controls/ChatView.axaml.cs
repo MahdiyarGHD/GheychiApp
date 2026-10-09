@@ -15,6 +15,7 @@ using Gheychi.App.Localization;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App.Controls;
 
@@ -706,7 +707,7 @@ public partial class ChatView : UserControl
         _targetAnchorX = msg.IsOutgoing ? 1.0 : 0.0;
         if (msg.IsOutgoing)
         {
-            ElevatedBubbleBorder.Background = Palette.Brush("#2E7D5B");
+            ElevatedBubbleBorder.Background = Palette.Accent(AccentRole.Solid);
             ElevatedBubbleBody.Foreground = Brushes.White;
         }
         else

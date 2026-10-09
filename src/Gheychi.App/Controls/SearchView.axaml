@@ -105,7 +105,7 @@
                                              Height="11"
                                              HorizontalAlignment="Center"
                                              VerticalAlignment="Center"
-                                             Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}" />
+                                             Foreground="{theme:AccentBrush Role=Text}" />
                                 </Border>
                             </StackPanel>
                         </Border>
@@ -225,7 +225,7 @@
                                    Text="{loc:Translate Search_ClearAll}"
                                    FontSize="12"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#2E7D5B, Dark=#2E7D5B}"
+                                   Foreground="{theme:AccentBrush Role=Solid}"
                                    Background="Transparent"
                                    VerticalAlignment="Center"
                                    IsVisible="{Binding HasRecentSearches}"
@@ -493,7 +493,7 @@
                                             Width="8"
                                             Height="8"
                                             CornerRadius="4"
-                                            Background="{theme:ThemeBrush Light=#2E7D5B, Dark=#2E7D5B}"
+                                            Background="{theme:AccentBrush Role=Solid}"
                                             VerticalAlignment="Center"
                                             IsVisible="{Binding IsUnread}" />
                                 </Grid>
@@ -513,11 +513,11 @@
                                          Width="18"
                                          Height="18"
                                          VerticalAlignment="Center"
-                                         Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}" />
+                                         Foreground="{theme:AccentBrush Role=Text}" />
                                 <TextBlock Text="{loc:Translate Search_DeepSearch}"
                                            FontSize="12"
                                            FontFamily="{x:Static app:AppFonts.Bold}"
-                                           Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}"
+                                           Foreground="{theme:AccentBrush Role=Text}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
@@ -628,11 +628,11 @@
                                          Width="18"
                                          Height="18"
                                          VerticalAlignment="Center"
-                                         Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}" />
+                                         Foreground="{theme:AccentBrush Role=Text}" />
                                 <TextBlock Text="{loc:Translate Search_DeepSearch}"
                                            FontSize="12"
                                            FontFamily="{x:Static app:AppFonts.Bold}"
-                                           Foreground="{theme:ThemeBrush Light=#386948, Dark=#34D399}"
+                                           Foreground="{theme:AccentBrush Role=Text}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
@@ -677,7 +677,7 @@
                                         Height="48"
                                         Margin="16,14,0,14"
                                         CornerRadius="24"
-                                        Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
+                                        Background="{theme:AccentBrush Role=Soft, Dark=#262729}" />
                                 <StackPanel Grid.Column="1"
                                             Spacing="10"
                                             Margin="0,0,16,0"
@@ -686,7 +686,7 @@
                                             Width="150"
                                             HorizontalAlignment="Left"
                                             CornerRadius="7"
-                                            Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
+                                            Background="{theme:AccentBrush Role=Soft, Dark=#262729}" />
                                     <Border Height="12"
                                             HorizontalAlignment="Stretch"
                                             CornerRadius="6"
@@ -708,7 +708,7 @@
                                     <Border Height="14"
                                             HorizontalAlignment="Stretch"
                                             CornerRadius="7"
-                                            Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
+                                            Background="{theme:AccentBrush Role=Soft, Dark=#262729}" />
                                     <Border Height="11"
                                             Width="110"
                                             HorizontalAlignment="Left"
@@ -726,7 +726,7 @@
                                         Margin="0,12,16,12"
                                         VerticalAlignment="Center"
                                         CornerRadius="20"
-                                        Background="{theme:ThemeBrush Light=#DCEFE3, Dark=#262729}" />
+                                        Background="{theme:AccentBrush Role=Soft, Dark=#262729}" />
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

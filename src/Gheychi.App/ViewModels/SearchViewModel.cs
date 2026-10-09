@@ -6,6 +6,7 @@ using System.Text.Json;
 using Avalonia.Media;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App.ViewModels;
 
@@ -111,7 +112,7 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
     public int? SimSlot { get; set; }
     public bool ShowBadge { get; set; }
 
-    private static readonly IBrush SelectedBackground = Palette.Pick("#386948", "#34D399");
+    private static readonly IBrush SelectedBackground = Palette.Accent(AccentRole.Text);
     private static readonly IBrush NormalBackground = Palette.Pick("#ECE1D3", "#202021");
     private static readonly IBrush SelectedText = Palette.Pick("#FFFFFFFF", "#121212");
     private static readonly IBrush NormalText = Palette.Pick("#595C61", "#DFE0E1");
@@ -145,10 +146,10 @@ public sealed class CategoryTabItem : INotifyPropertyChanged
 public sealed class SearchResultItem
 {
     private static readonly IBrush NameBrush = Palette.Pick("#2E3032", "#E8EAED");
-    private static readonly IBrush TimeUnreadBrush = Palette.Pick("#386948", "#34D399");
+    private static readonly IBrush TimeUnreadBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush TimeBrush = Palette.Pick("#74787D", "#8A8F98");
-    private static readonly IBrush AvatarBgBrush = Palette.Pick("#DCEFE3", "#1F4A35");
-    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#6FD3A8");
+    private static readonly IBrush AvatarBgBrush = Palette.Accent(AccentRole.Soft);
+    private static readonly IBrush AvatarTextBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush MatchBgBrush = Palette.Pick("#ECE1D3", "#332E27");
     private static readonly IBrush MatchTextBrush = Palette.Pick("#665E53", "#DED3C5");
 
@@ -224,9 +225,9 @@ public sealed class SearchResultItem
 /// <summary>One link or place found in a message (Links / Places search results).</summary>
 public sealed class LinkResultItem
 {
-    private static readonly IBrush TitleBrush = Palette.Pick("#1B5E43", "#6FD3A8");
+    private static readonly IBrush TitleBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush MutedBrush = Palette.Pick("#74787D", "#8A8F98");
-    private static readonly IBrush IconBgBrush = Palette.Pick("#DCEFE3", "#1F4A35");
+    private static readonly IBrush IconBgBrush = Palette.Accent(AccentRole.Soft);
 
     public long ThreadId { get; init; }
     public long MessageId { get; init; }
@@ -948,7 +949,7 @@ public sealed class SearchViewModel : INotifyPropertyChanged
         return [.. runs];
     }
 
-    private static readonly IBrush PrimaryColor = Palette.Pick("#386948", "#34D399");
+    private static readonly IBrush PrimaryColor = Palette.Accent(AccentRole.Text);
     private static readonly IBrush SecondaryColor = Palette.Pick("#665E53", "#9AA0AB");
     private static readonly IBrush TertiaryColor = Palette.Pick("#745C27", "#EBCB8B");
 

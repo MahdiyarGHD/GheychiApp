@@ -17,8 +17,8 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="14">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                            <Border Width="56" Height="56" CornerRadius="18" Background="#16382A" VerticalAlignment="Top">
-                                <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="28" Height="28" Foreground="#6FD3A8"
+                            <Border Width="56" Height="56" CornerRadius="18" Background="{theme:AccentBrush Role=Deep}" VerticalAlignment="Top">
+                                <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="28" Height="28" Foreground="{theme:AccentBrush Role=Glow}"
                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
@@ -77,7 +77,7 @@
                                         <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
                                                 Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
                                             <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
-                                                     Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                                                     Foreground="{theme:AccentBrush Role=Text}"
                                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <Border x:Name="ModelUpdateDot" Grid.Column="1" Width="9" Height="9" CornerRadius="5"
@@ -145,9 +145,9 @@
                             <Border Classes="divider" />
                             <Border Classes="row" Tapped="OnSimsTapped">
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                                    <Border Classes="badge" Background="{theme:ThemeBrush Light=#D7EEDF, Dark=#1F4A35}">
+                                    <Border Classes="badge" Background="{theme:AccentBrush Role=Soft}">
                                         <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.SimCard}"
-                                                 Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}" />
+                                                 Foreground="{theme:AccentBrush Role=Text}" />
                                     </Border>
                                     <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                         <TextBlock Text="{loc:Translate Settings_Sims}" Classes="rowTitle" />
@@ -256,7 +256,7 @@
                         <TextBlock Text="MahdiyarGHD"
                                    FontSize="12"
                                    FontFamily="{x:Static local:AppFonts.Bold}"
-                                   Foreground="{theme:ThemeBrush Light=#1B5E43, Dark=#6FD3A8}"
+                                   Foreground="{theme:AccentBrush Role=Text}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>

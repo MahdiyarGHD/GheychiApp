@@ -643,7 +643,7 @@
     <value>Appearance</value>
   </data>
   <data name="Settings_AppearanceHint" xml:space="preserve">
-    <value>Theme and language</value>
+    <value>Theme, accent colour and language</value>
   </data>
   <data name="Settings_Privacy" xml:space="preserve">
     <value>Privacy &amp; storage</value>
@@ -943,7 +943,7 @@
     <value>The new theme is applied after the app restarts.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>The app restarts to apply a new theme or language.</value>
+    <value>The app restarts to apply a new theme, accent colour or language.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>Update available</value>
@@ -1076,5 +1076,41 @@
   </data>
   <data name="TextMenu_SelectAll" xml:space="preserve">
     <value>Select all</value>
+  </data>
+  <data name="Settings_SectionAccent" xml:space="preserve">
+    <value>Accent colour</value>
+  </data>
+  <data name="Settings_RestartAccentMessage" xml:space="preserve">
+    <value>The new accent colour is applied after the app restarts.</value>
+  </data>
+  <data name="Accent_Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="Accent_Teal" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="Accent_Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="Accent_Indigo" xml:space="preserve">
+    <value>Indigo</value>
+  </data>
+  <data name="Accent_Purple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
+  <data name="Accent_Pink" xml:space="preserve">
+    <value>Pink</value>
+  </data>
+  <data name="Accent_Red" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="Accent_Orange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="Accent_Amber" xml:space="preserve">
+    <value>Amber</value>
+  </data>
+  <data name="Accent_Graphite" xml:space="preserve">
+    <value>Graphite</value>
   </data>
 </root>

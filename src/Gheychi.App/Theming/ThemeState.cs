@@ -2,6 +2,7 @@ using System.Globalization;
 using Android.Content.Res;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App;
 
@@ -13,12 +14,14 @@ public enum AppTheme
 }
 
 /// <summary>
-/// The theme is fixed for the life of the process: choosing one in Settings restarts the app. That lets every
-/// themed colour be resolved once, when its XAML loads, instead of tracking the theme through a binding.
+/// The theme and the accent colour are fixed for the life of the process: choosing either in Settings restarts the
+/// app. That lets every themed colour be resolved once, when its XAML loads, instead of tracking it through a binding.
 /// </summary>
 public static class ThemeState
 {
     public static bool IsDark { get; private set; }
+
+    public static AccentScheme Accent { get; private set; } = AccentScheme.Default;
 
     public static void Resolve()
     {
@@ -28,6 +31,7 @@ public static class ThemeState
             AppTheme.Dark => true,
             _ => SystemIsDark()
         };
+        Accent = AccentScheme.Find(Services.AppPreferences.Accent);
     }
 
     public static bool SystemIsDark() =>
@@ -50,6 +54,8 @@ public static class Palette
     }
 
     public static IImmutableBrush Pick(string light, string dark) => Brush(ThemeState.IsDark ? dark : light);
+
+    public static IImmutableBrush Accent(AccentRole role) => Brush(ThemeState.Accent.Hex(role, ThemeState.IsDark));
 
     public static IImmutableBrush Transparent { get; } = new ImmutableSolidColorBrush(Colors.Transparent);
 }

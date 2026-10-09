@@ -9,6 +9,7 @@ using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App.Controls;
 
@@ -407,7 +408,7 @@ public partial class ComposeView : UserControl
     }
 
     private void UpdateCardFocus(bool focused) =>
-        RecipientCard.BorderBrush = focused ? Palette.Pick("#2E7D5B", "#6FD3A8") : Palette.Transparent;
+        RecipientCard.BorderBrush = focused ? Palette.Accent(AccentRole.Icon) : Palette.Transparent;
 
     private void Choose(ComposeRow row)
     {

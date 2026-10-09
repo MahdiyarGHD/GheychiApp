@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Media;
+using Gheychi.App.Theming;
 
 namespace Gheychi.App.ViewModels;
 
@@ -15,9 +16,9 @@ public sealed class ThreadItem : INotifyPropertyChanged
     private static readonly IBrush NameUnreadBrush = Palette.Pick("#000000", "#FFFFFF");
     private static readonly IBrush PreviewUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
     private static readonly IBrush TimeUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
-    private static readonly IBrush AvatarBgBrush = Palette.Pick("#DCEFE3", "#1F4A35");
-    private static readonly IBrush AvatarBgSelectedBrush = Palette.Brush("#2E7D5B");
-    private static readonly IBrush AvatarTextBrush = Palette.Pick("#1B5E43", "#6FD3A8");
+    private static readonly IBrush AvatarBgBrush = Palette.Accent(AccentRole.Soft);
+    private static readonly IBrush AvatarBgSelectedBrush = Palette.Accent(AccentRole.Solid);
+    private static readonly IBrush AvatarTextBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush IconTintBrush = Palette.Pick("#393B3E", "#DDDEDF");
     private static readonly IBrush SelectedRowBrush = Palette.Pick("#142E6B4C", "#262E6B4C");
 
