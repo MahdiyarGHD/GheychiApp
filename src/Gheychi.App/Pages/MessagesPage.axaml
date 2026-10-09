@@ -128,6 +128,7 @@
 
                                 <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <TextBlock Text="{Binding Name}"
+                                               ui:TextDirection.KeepSide="True"
                                                Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                                                FontSize="14"
                                                FontFamily="{x:Static app:AppFonts.Bold}"

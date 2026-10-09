@@ -93,6 +93,10 @@ public partial class MainView : UserControl
         if (ContentView is { } content)
             content.LayoutChange += OnContentLayoutChanged;
         ApplyInsets();
+        // After the app restarts itself the first insets are read before the window has settled, and nothing reports
+        // the final ones (only the keyboard opening did, which is why a search fixed it).
+        DispatcherTimer.RunOnce(ApplyInsets, TimeSpan.FromMilliseconds(250));
+        DispatcherTimer.RunOnce(ApplyInsets, TimeSpan.FromMilliseconds(1000));
 
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
         SpamTabRequests.Requested += OnSpamTabRequested;
@@ -300,7 +304,7 @@ public partial class MainView : UserControl
 
     private Thickness ViewOffset()
     {
-        if (_topLevel is null || ContentView is not { } content || content.RootView is not { } window)
+        if (_topLevel is null || ContentView is not { Width: > 0, Height: > 0 } content || content.RootView is not { } window)
             return default;
 
         var at = new int[2];

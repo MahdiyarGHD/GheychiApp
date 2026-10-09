@@ -422,6 +422,7 @@
                                 <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding DisplayName}"
+                                               ui:TextDirection.KeepSide="True"
                                                FontSize="15"
                                                FontFamily="{x:Static app:AppFonts.Bold}"
                                                Foreground="{Binding NameColor}"
