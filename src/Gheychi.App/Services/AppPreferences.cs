@@ -8,6 +8,7 @@ public static class AppPreferences
     private const string ThemeKey = "app_theme_v1";
     private const string LanguageKey = "app_language_v1";
     private const string AccentKey = "app_accent_v1";
+    private const string TextSizeKey = "app_text_size_v1";
 
     public const string LanguageEnglish = "en";
     public const string LanguagePersian = "fa";
@@ -36,6 +37,13 @@ public static class AppPreferences
     {
         get => Committed.GetString(AccentKey, string.Empty) ?? string.Empty;
         set => Committed.Edit()!.PutString(AccentKey, value)!.Commit();
+    }
+
+    /// <summary>The index into <see cref="Theming.TextScale.Steps"/>; chosen in Appearance.</summary>
+    public static int TextSize
+    {
+        get => Committed.GetInt(TextSizeKey, Theming.TextScale.DefaultStep);
+        set => Committed.Edit()!.PutInt(TextSizeKey, value)!.Commit();
     }
 
     /// <summary><see cref="LanguageEnglish"/>, <see cref="LanguagePersian"/>, or empty to follow the phone.</summary>

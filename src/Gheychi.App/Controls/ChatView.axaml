@@ -50,7 +50,7 @@
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock Text="{Binding BodyBeforeLink}"
-                                       FontSize="13"
+                                       FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
                         </c:BubbleBorder>
@@ -58,23 +58,23 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#323840}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalAlignment="Bottom"
                                 HorizontalAlignment="Left">
                             <TextBlock Text="{Binding ReactionText}"
                                        Foreground="{Binding ReactionTextColor}"
-                                       FontSize="12"
+                                       FontSize="{StaticResource ChatReactionSize}"
                                        VerticalAlignment="Center" />
                         </Border>
                     </Panel>
 
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Time}"
-                                   FontSize="11"
+                                   FontSize="{StaticResource ChatMetaSize}"
                                    Foreground="#8A8F98"
                                    VerticalAlignment="Center" />
                         <TextBlock Text="★"
@@ -131,7 +131,7 @@
                                         CornerRadius="16"
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
-                            <TextBlock FontSize="13" TextWrapping="Wrap">
+                            <TextBlock FontSize="{StaticResource ChatBodySize}" TextWrapping="Wrap">
                                 <Run Text="{Binding BodyBeforeLink}"
                                      Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
                                 <Run Text="{Binding Link}"
@@ -143,23 +143,23 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#323840}"
                                 Padding="6,2"
                                 Margin="8,0,0,-8"
                                 VerticalAlignment="Bottom"
                                 HorizontalAlignment="Left">
                             <TextBlock Text="{Binding ReactionText}"
                                        Foreground="{Binding ReactionTextColor}"
-                                       FontSize="12"
+                                       FontSize="{StaticResource ChatReactionSize}"
                                        VerticalAlignment="Center" />
                         </Border>
                     </Panel>
 
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Time}"
-                                   FontSize="11"
+                                   FontSize="{StaticResource ChatMetaSize}"
                                    Foreground="#8A8F98"
                                    VerticalAlignment="Center" />
                         <TextBlock Text="★"
@@ -217,7 +217,7 @@
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="{Binding BodyBeforeLink}"
-                                           FontSize="13"
+                                           FontSize="{StaticResource ChatBodySize}"
                                            TextWrapping="Wrap"
                                            Foreground="White" />
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
@@ -227,7 +227,7 @@
                                                IsVisible="{Binding IsStarred}"
                                                VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Time}"
-                                               FontSize="11"
+                                               FontSize="{StaticResource ChatMetaSize}"
                                                Foreground="{theme:AccentBrush Role=OnSolid}"
                                                VerticalAlignment="Bottom" />
                                     <c:SendingSpinner IsVisible="{Binding IsSending}"
@@ -255,16 +255,16 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#323840}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalAlignment="Bottom"
                                 HorizontalAlignment="Right">
                             <TextBlock Text="{Binding ReactionText}"
                                        Foreground="{Binding ReactionTextColor}"
-                                       FontSize="12"
+                                       FontSize="{StaticResource ChatReactionSize}"
                                        VerticalAlignment="Center" />
                         </Border>
                     </Panel>
@@ -322,7 +322,7 @@
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
-                                <TextBlock FontSize="13" TextWrapping="Wrap">
+                                <TextBlock FontSize="{StaticResource ChatBodySize}" TextWrapping="Wrap">
                                     <Run Text="{Binding BodyBeforeLink}" Foreground="White" />
                                     <Run Text="{Binding Link}"
                                          Foreground="{theme:AccentBrush Role=OnSolidBright}"
@@ -335,7 +335,7 @@
                                                IsVisible="{Binding IsStarred}"
                                                VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Time}"
-                                               FontSize="11"
+                                               FontSize="{StaticResource ChatMetaSize}"
                                                Foreground="{theme:AccentBrush Role=OnSolid}"
                                                VerticalAlignment="Bottom" />
                                     <c:SendingSpinner IsVisible="{Binding IsSending}"
@@ -363,16 +363,16 @@
                         <Border Tag="reaction"
                                 IsVisible="{Binding HasReaction}"
                                 BorderThickness="1"
-                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#2A2E35}"
+                                BorderBrush="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}"
                                 CornerRadius="12"
-                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#323840}"
                                 Padding="6,2"
                                 Margin="0,0,8,-8"
                                 VerticalAlignment="Bottom"
                                 HorizontalAlignment="Right">
                             <TextBlock Text="{Binding ReactionText}"
                                        Foreground="{Binding ReactionTextColor}"
-                                       FontSize="12"
+                                       FontSize="{StaticResource ChatReactionSize}"
                                        VerticalAlignment="Center" />
                         </Border>
                     </Panel>
@@ -497,6 +497,7 @@
                                    TextTrimming="CharacterEllipsis"
                                    MaxLines="1" />
                         <TextBlock Text="{Binding Thread.Phone}"
+                                   ui:TextDirection.KeepSide="True"
                                    FontSize="12"
                                    Foreground="#8A8F98"
                                    TextTrimming="CharacterEllipsis"
@@ -799,20 +800,8 @@
                                    TextAlignment="Center" />
                     </StackPanel>
                 </Border>
-                <Grid x:Name="Composer" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+                <Grid x:Name="Composer" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
                     <Border Grid.Column="0"
-                            Width="40" Height="40"
-                            CornerRadius="20"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="{loc:Translate Chat_Attach}">
-                        <ui:Icon Data="{StaticResource Icon.Plus}"
-                                 Width="16" Height="16"
-                                 HorizontalAlignment="Center"
-                                 VerticalAlignment="Center"
-                                 Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
-                    </Border>
-                    <Border Grid.Column="1"
                             Padding="12,0"
                             MinHeight="44"
                             CornerRadius="22"
@@ -827,13 +816,13 @@
                                  PlaceholderText="{loc:Translate Chat_MessageHint}"
                                  PlaceholderForeground="#8A8F98"
                                  Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
-                                 FontSize="13"
+                                 FontSize="{StaticResource ChatBodySize}"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"
                                  MaxHeight="100"
                                  ScrollViewer.VerticalScrollBarVisibility="Hidden" />
                     </Border>
-                    <Border Grid.Column="2"
+                    <Border Grid.Column="1"
                             Width="40" Height="40"
                             CornerRadius="20"
                             Background="{Binding SimBadgeColor}"
@@ -854,7 +843,7 @@
                                        TextAlignment="Center" />
                         </Panel>
                     </Border>
-                    <Border Grid.Column="3"
+                    <Border Grid.Column="2"
                             Width="42" Height="42"
                             CornerRadius="21"
                             Background="{StaticResource PrimaryBrush}"

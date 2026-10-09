@@ -21,7 +21,7 @@ public sealed class Icon : Control
         IsHitTestVisibleProperty.OverrideDefaultValue<Icon>(false);
     }
 
-    private static readonly string[] DirectionalKeys = ["Icon.Back", "Icon.ChevronRight", "Icon.Send"];
+    private static readonly string[] DirectionalKeys = ["Icon.Back", "Icon.ChevronRight"];
     private static HashSet<Geometry>? _directional;
 
     public Geometry? Data
