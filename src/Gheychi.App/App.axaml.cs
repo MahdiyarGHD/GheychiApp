@@ -12,6 +12,7 @@ public partial class App : Avalonia.Application
     {
         RequestedThemeVariant = ThemeState.IsDark ? ThemeVariant.Dark : ThemeVariant.Light;
         Platforms.Android.LtrNumbers.Register();
+        TextDirection.Register();
         AvaloniaXamlLoader.Load(this);
     }
 

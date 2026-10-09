@@ -132,7 +132,7 @@ public static class TextMenu
                 box.SelectAll();
             });
 
-            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
             row.Children.AddRange([_cut, _copy, _paste, _all]);
 
             _card = new Border
@@ -140,10 +140,10 @@ public static class TextMenu
                 Background = Palette.Pick("#FFFFFF", "#272B33"),
                 BorderBrush = Palette.Pick("#E2E8DF", "#363B44"),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(16),
-                Padding = new Thickness(4),
+                CornerRadius = new CornerRadius(14),
+                Padding = new Thickness(3),
                 // Room for the shadow, which the popup would otherwise clip.
-                Margin = new Thickness(12),
+                Margin = new Thickness(8),
                 BoxShadow = new BoxShadows(new BoxShadow { OffsetY = 3, Blur = 14, Color = Color.FromArgb(0x38, 0, 0, 0) }),
                 Child = row
             };

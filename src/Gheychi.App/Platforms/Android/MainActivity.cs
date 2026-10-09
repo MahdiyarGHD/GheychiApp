@@ -45,6 +45,14 @@ public class MainActivity : AvaloniaMainActivity
         ApplySystemBarIcons();
     }
 
+    /// <summary>
+    /// Replaces the splash behind the app with the app's own background. The window shows through wherever the app has
+    /// not drawn yet: the keyboard's place while it slides up was the splash's colour, a white flash.
+    /// </summary>
+    public static void UseAppBackground() =>
+        Platform.CurrentActivity?.Window?.SetBackgroundDrawable(
+            new Android.Graphics.Drawables.ColorDrawable(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#0A1A11" : "#F6F8F4")));
+
     // The bars are drawn over the app's own background, so their icons follow the theme in use.
     private void ApplySystemBarIcons()
     {
