@@ -53,6 +53,9 @@ public partial class ChatView : UserControl
     private readonly IBlockedSenders? _blocked;
     private ChatMessage? _targetMessage;
 
+    // Where the list was when a message was held: the actions of the menu change rows, and the list has to stay where it is.
+    private ScrollAnchor[]? _heldAnchors;
+
     internal ChatViewModel? Vm => DataContext as ChatViewModel;
 
     public ChatView()
@@ -620,6 +623,15 @@ public partial class ChatView : UserControl
             OpenSelectionMenu(message, new MessageBounds(origin.Y, bubble.Bounds.Height, bubble.Bounds.Width));
             return;
         }
+
+        // Held beside the bubble, on the row: the message is the first one picked in the selection mode.
+        if (Vm is { } vm && (e.Source as StyledElement)?.DataContext is ChatMessage row)
+        {
+            _holdFired = true;
+            e.Handled = true;
+            TriggerHaptic(global::Android.Views.FeedbackConstants.LongPress);
+            SafePrependItems(() => vm.EnterSelectionMode(row));
+        }
     }
 
     // The part of the row that was touched: the nearest ancestor that carries a marker in its Tag.
@@ -740,6 +752,7 @@ public partial class ChatView : UserControl
         }
 
         _targetMessage = msg;
+        _heldAnchors = MessagesList.CaptureAnchors();
 
         ElevatedBubbleBody.Text = msg.Body;
         ElevatedBubbleTime.Text = msg.Time;
@@ -817,8 +830,18 @@ public partial class ChatView : UserControl
         {
             SelectionOverlay.IsVisible = false;
             ElevatedBubbleBorder.Width = double.NaN;
+            RestoreHeldPlace();
         }
     }
+
+    private void RestoreHeldPlace()
+    {
+        if (_heldAnchors is { Length: > 0 } anchors)
+            MessagesList.RestoreAnchor(anchors);
+    }
+
+    // The header and the checkboxes change with the mode, and the list must not move with them.
+    private void ExitSelection() => SafePrependItems(() => Vm?.ExitSelectionMode());
 
     // A compositor scale about the bubble's near edge, like the slides in OverlayAnimator.
     private static async Task ScaleAsync(Control control, double from, double to, TimeSpan duration, double anchorX)
@@ -895,7 +918,7 @@ public partial class ChatView : UserControl
         await DismissSelectionOverlayAsync();
         if (target is not null && Vm is not null)
         {
-            Vm.EnterSelectionMode(target);
+            SafePrependItems(() => Vm.EnterSelectionMode(target));
             TriggerHaptic();
         }
     }
@@ -970,7 +993,7 @@ public partial class ChatView : UserControl
 
     private void OnExitSelectionMode(object? sender, TappedEventArgs e)
     {
-        Vm?.ExitSelectionMode();
+        ExitSelection();
     }
 
     private void OnSelectAllTapped(object? sender, TappedEventArgs e)
@@ -987,7 +1010,7 @@ public partial class ChatView : UserControl
         {
             await Clipboard.Default.SetTextAsync(text);
             TriggerHaptic();
-            Vm.ExitSelectionMode();
+            ExitSelection();
         }
     }
 
@@ -997,7 +1020,7 @@ public partial class ChatView : UserControl
         {
             await Vm.StarSelectedMessagesAsync();
             TriggerHaptic();
-            Vm.ExitSelectionMode();
+            ExitSelection();
         }
     }
 
@@ -1056,7 +1079,7 @@ public partial class ChatView : UserControl
 
         if (Vm?.IsSelectionMode == true)
         {
-            Vm.ExitSelectionMode();
+            ExitSelection();
             return true;
         }
 

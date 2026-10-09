@@ -982,12 +982,16 @@
                             BorderBrush="{StaticResource PrimaryBrush}"
                             CornerRadius="16"
                             MaxHeight="240"
+                            ClipToBounds="True"
                             BoxShadow="0 8 20 0 #4D000000"
                             HorizontalAlignment="Left">
                         <StackPanel Spacing="3">
+                            <!-- A long message shows its first lines only: the copy must stay inside its box and above the menu -->
                             <TextBlock x:Name="ElevatedBubbleBody"
                                        FontSize="{StaticResource ChatBodySize}"
-                                       TextWrapping="Wrap" />
+                                       TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="8" />
                         </StackPanel>
                     </Border>
 
