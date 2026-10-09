@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -11,6 +12,7 @@ namespace Gheychi.App.Pages;
 public partial class SpamPage : UserControl
 {
     private bool _loaded;
+    private ScrollViewer? _scroll;
 
     private SpamViewModel? Vm => DataContext as SpamViewModel;
 
@@ -25,6 +27,9 @@ public partial class SpamPage : UserControl
             viewModel.Items.CollectionChanged += OnItemsChanged;
             _ = LoadAsync(viewModel);
         }
+
+        SpamList.TemplateApplied += (_, e) => _scroll = e.NameScope.Find<ScrollViewer>("SpamScroll");
+        Ui.RowPressEffect.Attach(SpamList, SpamHost);
     }
 
     /// <summary>Asked to open Settings on its spam section (the header's gear); the tab host does the switch.</summary>
@@ -41,6 +46,13 @@ public partial class SpamPage : UserControl
     {
         if (SearchBar.IsVisible)
             ClearFocus();
+    }
+
+    /// <summary>The Spam tab was tapped while shown: a menu or the search closes, otherwise the list goes to its top.</summary>
+    public void OnTabReselected()
+    {
+        if (!HandleBack())
+            Ui.ScrollAnimator.ToTop(_scroll);
     }
 
     /// <summary>True when it consumed the back press.</summary>
@@ -102,9 +114,9 @@ public partial class SpamPage : UserControl
         AppHeader.IsVisible = true;
     }
 
-    private void OnMoreTapped(object? sender, TappedEventArgs e)
+    private void OnListTapped(object? sender, TappedEventArgs e)
     {
-        if ((sender as Control)?.DataContext is SpamItem item)
+        if ((e.Source as StyledElement)?.DataContext is SpamItem item)
         {
             ClearFocus();
             Overlay.ShowMenu(item);

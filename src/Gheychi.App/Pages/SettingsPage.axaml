@@ -12,7 +12,7 @@
 
     <!-- The screen behind each row is built when first opened and added over the overview -->
     <Grid x:Name="Root">
-        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+        <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Hidden">
             <StackPanel Margin="0,16,0,24">
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="14">

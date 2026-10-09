@@ -163,12 +163,31 @@ public partial class MainView : UserControl
 
     private void OnTabTapped(object? sender, TappedEventArgs e)
     {
-        if (sender == MessagesTab)
-            Select(MessagesIndex);
-        else if (sender == SpamTab)
-            Select(SpamIndex);
-        else if (sender == SettingsTab)
-            Select(SettingsIndex);
+        var index = sender == MessagesTab ? MessagesIndex : sender == SpamTab ? SpamIndex : sender == SettingsTab ? SettingsIndex : -1;
+        if (index < 0)
+            return;
+
+        if (index == _selected)
+            Reselect(index);
+        else
+            Select(index);
+    }
+
+    // The tab that is already shown: back to its start (what the back button would do, in one tap), or to its top.
+    private void Reselect(int index)
+    {
+        switch (_pages[index])
+        {
+            case MessagesPage messages:
+                messages.OnTabReselected();
+                break;
+            case SpamPage spam:
+                spam.OnTabReselected();
+                break;
+            case SettingsPage settings:
+                settings.OnTabReselected();
+                break;
+        }
     }
 
     private void OnChatLaunchRequested() => MainThread.BeginInvokeOnMainThread(() => Select(MessagesIndex));
