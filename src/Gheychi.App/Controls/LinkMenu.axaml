@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             x:Class="Gheychi.App.Controls.LinkMenu"
+             IsVisible="False">
+
+    <!-- Full-page transparent layer: a tap anywhere outside the card closes it -->
+    <Grid Background="Transparent" Tapped="OnScrimTapped">
+        <Border x:Name="Card"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                MinWidth="190"
+                MaxWidth="280"
+                Padding="4"
+                BorderThickness="1"
+                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                CornerRadius="14"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
+                BoxShadow="0 6 18 0 #40000000"
+                Tapped="OnCardTapped">
+            <StackPanel>
+                <TextBlock x:Name="Subject"
+                           Margin="10,6,10,6"
+                           FontSize="12"
+                           Foreground="#8A8F98"
+                           TextTrimming="CharacterEllipsis"
+                           MaxLines="1" />
+                <Border Height="1"
+                        Margin="6,0,6,3"
+                        Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
+
+                <Border x:Name="PrimaryRow"
+                        Padding="10,10"
+                        CornerRadius="9"
+                        Background="Transparent"
+                        Tapped="OnPrimaryTapped">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <ui:Icon x:Name="PrimaryIcon"
+                                 Width="18" Height="18"
+                                 VerticalAlignment="Center"
+                                 Foreground="{theme:AccentBrush Role=Text}" />
+                        <TextBlock x:Name="PrimaryLabel"
+                                   Grid.Column="1"
+                                   FontSize="14"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:AccentBrush Role=Text}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+
+                <Border x:Name="CopyRow"
+                        Padding="10,10"
+                        CornerRadius="9"
+                        Background="Transparent"
+                        Tapped="OnCopyTapped">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <ui:Icon Width="18" Height="18"
+                                 VerticalAlignment="Center"
+                                 Data="{StaticResource Icon.Copy}"
+                                 Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
+                        <TextBlock x:Name="CopyLabel"
+                                   Grid.Column="1"
+                                   FontSize="14"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

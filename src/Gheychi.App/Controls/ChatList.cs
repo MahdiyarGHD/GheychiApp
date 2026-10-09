@@ -40,6 +40,9 @@ internal sealed class ChatList : ItemsControl
 
     public int LastVisibleIndex => Panel?.LastRealizedIndex ?? -1;
 
+    /// <summary>False until the list has had its first layout (a chat shown the same moment its messages arrive): nothing can be scrolled to before.</summary>
+    public bool IsLaidOut => Scroll is { Viewport.Height: > 0 } && Panel is { FirstRealizedIndex: >= 0 };
+
     /// <summary>True when the newest row is on screen and the list rests on its end.</summary>
     public bool IsAtBottom =>
         Scroll is not { } scroll ||
