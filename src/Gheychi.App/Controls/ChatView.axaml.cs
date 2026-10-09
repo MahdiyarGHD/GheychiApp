@@ -567,6 +567,8 @@ public partial class ChatView : UserControl
             case "bubble":
                 if (vm.IsSelectionMode)
                     vm.ToggleMessageSelection(message);
+                else if (message.HasLink && LinkAt(e, message) is { } link)
+                    OpenLink(message, link);
                 else if (!message.IsOutgoing)
                     vm.ToggleSimTag(message);
                 break;
@@ -612,6 +614,45 @@ public partial class ChatView : UserControl
         }
 
         return null;
+    }
+
+    // The link under the finger, if any: the text of the bubble is one block, so its layout says which character was hit.
+    private LinkSpan? LinkAt(TappedEventArgs e, ChatMessage message)
+    {
+        for (var visual = e.Source as Visual; visual is not null && !ReferenceEquals(visual, MessagesList); visual = visual.GetVisualParent())
+        {
+            if (visual is TextBlock block && block.DataContext == message)
+                return RichText.LinkAt(block, e.GetPosition(block), message);
+        }
+
+        return null;
+    }
+
+    private async void OpenLink(ChatMessage message, LinkSpan span)
+    {
+        try
+        {
+            var target = TextLinker.Target(message.Body, span);
+            if (span.Kind == LinkKind.Url)
+            {
+                TriggerHaptic();
+                if (!await Launcher.Default.OpenAsync(target))
+                    await Dialogs.AlertAsync(string.Empty, LocalizationManager.Instance["Chat_LinkOpenFailed"], "OK");
+                return;
+            }
+
+            var loc = LocalizationManager.Instance;
+            var shown = message.Body.Substring(span.Start, span.Length);
+            var choice = await Dialogs.ActionSheetAsync(shown, loc["Chat_Cancel"], null, loc["Chat_Call"], loc["Chat_CopyNumber"]);
+            if (choice == loc["Chat_Call"])
+                Platforms.Android.ProfileLauncher.Dial(target);
+            else if (choice == loc["Chat_CopyNumber"])
+                await Clipboard.Default.SetTextAsync(target);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Opening a link failed: {ex}");
+        }
     }
 
     private async void RetryReaction(ChatViewModel vm, ChatMessage message)
@@ -689,17 +730,7 @@ public partial class ChatView : UserControl
 
         _targetMessage = msg;
 
-        ElevatedBubbleBody.Text = msg.BodyBeforeLink;
-        if (msg.HasLink)
-        {
-            ElevatedBubbleLink.Text = msg.Link;
-            ElevatedBubbleLink.IsVisible = true;
-        }
-        else
-        {
-            ElevatedBubbleLink.IsVisible = false;
-        }
-
+        ElevatedBubbleBody.Text = msg.Body;
         ElevatedBubbleTime.Text = msg.Time;
 
         var isDark = ThemeState.IsDark;
@@ -721,7 +752,7 @@ public partial class ChatView : UserControl
         ReactionDock.HorizontalAlignment = side;
         ContextActionMenu.HorizontalAlignment = side;
 
-        CopyUrlActionRow.IsVisible = msg.HasLink;
+        CopyUrlActionRow.IsVisible = msg.HasUrl;
         MenuReportRow.IsVisible = !msg.IsOutgoing;
 
         var loc = LocalizationManager.Instance;
@@ -831,7 +862,7 @@ public partial class ChatView : UserControl
     {
         if (_targetMessage is not null)
         {
-            await Clipboard.Default.SetTextAsync(_targetMessage.FullBody);
+            await Clipboard.Default.SetTextAsync(_targetMessage.Body);
             TriggerHaptic();
         }
         await DismissSelectionOverlayAsync();
@@ -921,7 +952,7 @@ public partial class ChatView : UserControl
         var msg = _targetMessage;
         await DismissSelectionOverlayAsync();
         if (msg is not null)
-            await SpamReport.SubmitAsync($"{msg.BodyBeforeLink}{msg.Link}", isSpam: true);
+            await SpamReport.SubmitAsync(msg.Body, isSpam: true);
     }
 
     // ---- Selection mode -----------------------------------------------------------------------
