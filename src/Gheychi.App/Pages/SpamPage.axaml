@@ -109,13 +109,14 @@
                            FontSize="12"
                            Foreground="#8A8F98" />
             </Grid>
-        <Panel Grid.Row="1">
+        <Panel x:Name="SpamHost" Grid.Row="1">
         <ItemsControl x:Name="SpamList"
                       Margin="0,4,0,0"
-                      ItemsSource="{Binding Items}">
+                      ItemsSource="{Binding Items}"
+                      Tapped="OnListTapped">
             <ItemsControl.Template>
                 <ControlTemplate TargetType="ItemsControl">
-                    <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer x:Name="SpamScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
                         <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
                     </ScrollViewer>
                 </ControlTemplate>
@@ -138,8 +139,8 @@
                     </vm:SpamTemplateSelector.DateSeparatorTemplate>
                     <vm:SpamTemplateSelector.SpamTemplate>
                         <DataTemplate x:DataType="vm:SpamItem">
-                            <!-- One flat grid per row: the avatar spans both lines, the more button sits at the end. -->
-                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                            <!-- One flat grid per row: the avatar spans both lines; the whole row is the tap target. -->
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto,Auto" Background="Transparent">
                                 <Border Grid.Row="0"
                                         Grid.RowSpan="2"
                                         Grid.Column="0"
@@ -191,17 +192,6 @@
                                            TextWrapping="Wrap"
                                            MaxLines="2" />
 
-                                <Border Grid.Row="0"
-                                        Grid.RowSpan="2"
-                                        Grid.Column="4"
-                                        Width="34"
-                                        Height="34"
-                                        CornerRadius="17"
-                                        Background="Transparent"
-                                        VerticalAlignment="Center"
-                                        Tapped="OnMoreTapped">
-                                    <ui:Icon Data="{StaticResource Icon.More}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#8A8F98, Dark=#9AA0AB}" />
-                                </Border>
                             </Grid>
                         </DataTemplate>
                     </vm:SpamTemplateSelector.SpamTemplate>

@@ -99,6 +99,21 @@ public partial class SettingsPage : UserControl
         MainActivity.Resumed -= OnAppResumed;
     }
 
+    /// <summary>The Settings tab was tapped while shown: every open screen closes, otherwise the page goes to its top.</summary>
+    public void OnTabReselected()
+    {
+        if (_open.Count > 0)
+        {
+            while (_open.TryPop(out var screen))
+                screen.IsVisible = false;
+            RefreshRoot();
+        }
+        else
+        {
+            ScrollAnimator.ToTop(PageScroll);
+        }
+    }
+
     /// <summary>True when it closed an open screen.</summary>
     public bool HandleBack()
     {
@@ -173,12 +188,17 @@ public partial class SettingsPage : UserControl
         }
         else
         {
-            UpdateSpamSummary();
-            ShowAboutHint();
-            ShowBlockedHint();
-            _ = ShowModelVersionAsync();
-            _ = ShowModelUpdateAsync();
+            RefreshRoot();
         }
+    }
+
+    private void RefreshRoot()
+    {
+        UpdateSpamSummary();
+        ShowAboutHint();
+        ShowBlockedHint();
+        _ = ShowModelVersionAsync();
+        _ = ShowModelUpdateAsync();
     }
 
     private void OnSpamTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Spam);

@@ -25,6 +25,7 @@ public partial class ArchiveView : UserControl
     {
         InitializeComponent();
         ArchiveList.ItemsSource = _visible;
+        Ui.RowPressEffect.Attach(ArchiveList, ArchiveHost);
 
         // Releasing a finger that held a row also reports a tap; the next press starts a new gesture.
         ArchiveList.AddHandler(PointerPressedEvent, (_, _) => _holdFired = false, RoutingStrategies.Tunnel, handledEventsToo: true);

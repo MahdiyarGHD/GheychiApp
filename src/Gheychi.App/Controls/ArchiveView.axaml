@@ -118,7 +118,7 @@
                 </Grid>
             </Border>
 
-        <Panel Grid.Row="1">
+        <Panel x:Name="ArchiveHost" Grid.Row="1">
             <ItemsControl x:Name="ArchiveList"
                           Tapped="OnListTapped"
                           Holding="OnListHolding">

@@ -80,6 +80,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         InitializeComponent();
         DataContext = viewModel;
         viewModel.PreloadTargets = VisibleThreads;
+        Ui.RowPressEffect.Attach(ThreadsList, ThreadsHost);
 
         ThreadsList.TemplateApplied += (_, e) =>
         {
@@ -1281,6 +1282,18 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         // Same bookkeeping as a swipe that ends on the closed side.
         _swipeDragging = false;
         await SettleArchiveAsync(false, 1, 0);
+    }
+
+    /// <summary>The Messages tab was tapped while shown: the inbox goes to its top; with something open over it, that closes.</summary>
+    public void OnTabReselected()
+    {
+        if (_animating)
+            return;
+
+        if (IsChatClosed && IsSearchClosed && IsComposeClosed && IsProfileClosed && !_archiveOpen)
+            Ui.ScrollAnimator.ToTop(_threadsScroll);
+        else
+            HandleBack();
     }
 
     // ---- Back -----------------------------------------------------------------------------------
