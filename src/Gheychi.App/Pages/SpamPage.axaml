@@ -131,7 +131,8 @@
                     <vm:SpamTemplateSelector.DateSeparatorTemplate>
                         <DataTemplate x:DataType="vm:DateSeparatorItem">
                             <TextBlock Text="{Binding Text}"
-                                       Padding="22,10,0,2"
+                                       ui:TextDirection.KeepSide="True"
+                                       Padding="22,10,22,2"
                                        FontSize="12"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
                                        Foreground="{theme:AccentBrush Role=Text}" />
