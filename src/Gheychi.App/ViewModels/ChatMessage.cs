@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Media;
 using Gheychi.App.Theming;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
 
@@ -57,15 +58,31 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public long Id { get; set; }
     public DateTime Timestamp { get; init; }
 
-    public required string BodyBeforeLink { get; init; }
-    public string Link { get; init; } = string.Empty;
-    public string FullBody => string.IsNullOrEmpty(Link) ? BodyBeforeLink : $"{BodyBeforeLink}{Link}";
+    public required string Body { get; init; }
+
+    /// <summary>The links and phone numbers in <see cref="Body"/>; null for the many messages that have none.</summary>
+    public LinkSpan[]? Links { get; init; }
+
+    /// <summary>The first web address in the message, as it is written.</summary>
+    public string Link
+    {
+        get
+        {
+            foreach (var span in Links ?? [])
+            {
+                if (span.Kind == LinkKind.Url)
+                    return Body.Substring(span.Start, span.Length);
+            }
+
+            return string.Empty;
+        }
+    }
     public bool IsOutgoing { get; init; }
     public bool IsNotOutgoing => !IsOutgoing;
     public required string Time { get; init; }
     public bool HasMedia { get; init; }
-    public bool HasLink => !string.IsNullOrEmpty(Link);
-    public bool HasNoLink => string.IsNullOrEmpty(Link);
+    public bool HasLink => Links is not null;
+    public bool HasUrl => Link.Length > 0;
     public bool IsUnread { get; set; }
 
     private bool _isStarred;

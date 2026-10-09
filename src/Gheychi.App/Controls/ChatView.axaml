@@ -49,7 +49,7 @@
                                         CornerRadius="16"
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
-                            <TextBlock Text="{Binding BodyBeforeLink}"
+                            <TextBlock Text="{Binding Body}"
                                        FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
@@ -131,13 +131,11 @@
                                         CornerRadius="16"
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
-                            <TextBlock FontSize="{StaticResource ChatBodySize}" TextWrapping="Wrap">
-                                <Run Text="{Binding BodyBeforeLink}"
-                                     Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
-                                <Run Text="{Binding Link}"
-                                     Foreground="{StaticResource AccentTextBrush}"
-                                     TextDecorations="Underline" />
-                            </TextBlock>
+                            <TextBlock FontSize="{StaticResource ChatBodySize}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                       c:RichText.LinkBrush="{StaticResource AccentTextBrush}"
+                                       c:RichText.Message="{Binding}" />
                         </c:BubbleBorder>
 
                         <Border Tag="reaction"
@@ -216,7 +214,7 @@
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
-                                <TextBlock Text="{Binding BodyBeforeLink}"
+                                <TextBlock Text="{Binding Body}"
                                            FontSize="{StaticResource ChatBodySize}"
                                            TextWrapping="Wrap"
                                            Foreground="White" />
@@ -322,12 +320,11 @@
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
-                                <TextBlock FontSize="{StaticResource ChatBodySize}" TextWrapping="Wrap">
-                                    <Run Text="{Binding BodyBeforeLink}" Foreground="White" />
-                                    <Run Text="{Binding Link}"
-                                         Foreground="{theme:AccentBrush Role=OnSolidBright}"
-                                         TextDecorations="Underline" />
-                                </TextBlock>
+                                <TextBlock FontSize="{StaticResource ChatBodySize}"
+                                           TextWrapping="Wrap"
+                                           Foreground="White"
+                                           c:RichText.LinkBrush="{theme:AccentBrush Role=OnSolidBright}"
+                                           c:RichText.Message="{Binding}" />
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
                                     <TextBlock Text="★"
                                                FontSize="11"
@@ -946,14 +943,8 @@
                             HorizontalAlignment="Left">
                         <StackPanel Spacing="3">
                             <TextBlock x:Name="ElevatedBubbleBody"
-                                       FontSize="13"
+                                       FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap" />
-                            <TextBlock x:Name="ElevatedBubbleLink"
-                                       FontSize="13"
-                                       TextWrapping="Wrap"
-                                       Foreground="{StaticResource AccentTextBrush}"
-                                       TextDecorations="Underline"
-                                       IsVisible="False" />
                         </StackPanel>
                     </Border>
 

@@ -358,7 +358,6 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 newItems.Add(new UnreadSeparatorItem(unreadLabel));
             }
 
-            var (bodyBefore, link) = LinkDetector.ExtractLink(msg.Body);
             var timeStr = _dateFormatter.FormatMessageTime(msg.Timestamp, culture);
             var slot = ResolveSlot(msg.SubId, slotMap);
             var carrier = ResolveCarrier(msg.SubId, slot, carrierMap);
@@ -367,8 +366,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             {
                 Id = msg.Id,
                 Timestamp = msg.Timestamp,
-                BodyBeforeLink = bodyBefore,
-                Link = link,
+                Body = msg.Body,
+                Links = TextLinker.Find(msg.Body),
                 IsOutgoing = msg.IsOutgoing,
                 IsSent = msg.IsSent,
                 IsDelivered = msg.IsDelivered,
@@ -817,12 +816,11 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         Draft = string.Empty;
 
         var timeStr = _dateFormatter.FormatMessageTime(DateTime.Now, CultureInfo.CurrentUICulture);
-        var (before, link) = LinkDetector.ExtractLink(text);
 
         var outgoingMsg = new ChatMessage
         {
-            BodyBeforeLink = before,
-            Link = link,
+            Body = text,
+            Links = TextLinker.Find(text),
             IsOutgoing = true,
             IsDelivered = false,
             Time = timeStr,
@@ -843,10 +841,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         message.HasFailed = false;
         message.IsSent = false;
         message.IsDelivered = false;
-        var text = string.IsNullOrEmpty(message.Link) ? message.BodyBeforeLink : $"{message.BodyBeforeLink}{message.Link}";
 
         // The message's own SIM, not whichever SIM is selected now.
-        await DeliverAsync(message, text, ResolveSubId(message.SubId), storeFirst: message.Id <= 0);
+        await DeliverAsync(message, message.Body, ResolveSubId(message.SubId), storeFirst: message.Id <= 0);
     }
 
     // Shared by Send and Retry. The message is stored as outgoing before it is sent, so a killed
@@ -1219,7 +1216,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
             // Always the iPhone-compatible English template (verbs + curly quotes):
             // no other SMS app recognizes any other template.
-            var reactionText = ReactionHelper.FormatReactionSms(newEmoji, message.FullBody);
+            var reactionText = ReactionHelper.FormatReactionSms(newEmoji, message.Body);
 
             var targetSubId = ResolveSubId(message.SubId);
             var address = SendAddress;
@@ -1261,7 +1258,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         string reactionText;
         try
         {
-            reactionText = ReactionHelper.FormatReactionSms(message.ReactionEmoji, message.FullBody);
+            reactionText = ReactionHelper.FormatReactionSms(message.ReactionEmoji, message.Body);
         }
         catch (ArgumentException)
         {
@@ -1341,7 +1338,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public string GetSelectedMessagesText() => string.Join(Environment.NewLine, GetSelectedMessageBodies());
 
     public List<string> GetSelectedMessageBodies() =>
-        Messages.Where(m => m.IsSelected).OrderBy(m => m.Timestamp).Select(m => m.FullBody).ToList();
+        Messages.Where(m => m.IsSelected).OrderBy(m => m.Timestamp).Select(m => m.Body).ToList();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
