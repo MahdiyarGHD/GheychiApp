@@ -56,7 +56,7 @@ public partial class MainView : UserControl
         DispatcherTimer.RunOnce(MainActivity.UseAppBackground, TimeSpan.FromMilliseconds(800));
 
         // A tapped notification opens a chat or the spam tab; the request is kept until this view is up.
-        Select(ChatLaunchRequests.HasPending ? MessagesIndex : SpamTabRequests.Take() ? SpamIndex : MessagesIndex);
+        Select(ChatLaunchRequests.HasPending || ExternalSendRequests.HasPending ? MessagesIndex : SpamTabRequests.Take() ? SpamIndex : MessagesIndex);
 
         AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -101,6 +101,7 @@ public partial class MainView : UserControl
         DispatcherTimer.RunOnce(ApplyInsets, TimeSpan.FromMilliseconds(1000));
 
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
+        ExternalSendRequests.Requested += OnChatLaunchRequested;
         SpamTabRequests.Requested += OnSpamTabRequested;
         MainActivity.Resumed += OnAppResumed;
         SubscribeUpdates();
@@ -132,6 +133,7 @@ public partial class MainView : UserControl
         base.OnDetachedFromVisualTree(e);
 
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
+        ExternalSendRequests.Requested -= OnChatLaunchRequested;
         SpamTabRequests.Requested -= OnSpamTabRequested;
         MainActivity.Resumed -= OnAppResumed;
         // The pages subscribe to static events while shown; an activity that is gone must not keep answering them.

@@ -308,6 +308,21 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         private set => SetField(ref _hasPermission, value);
     }
 
+    /// <summary>The last known inbox, when the list is still empty: enough to know the names of the conversations.</summary>
+    public async Task EnsureCachedInboxAsync()
+    {
+        if (Threads.Count > 0)
+            return;
+
+        var cached = await (_snapshotTask ??= StartSnapshotLoad());
+        if (cached.Inbox.Count > 0 && Threads.Count == 0)
+        {
+            Threads.Reset(cached.Inbox);
+            if (ArchivedThreads.Count == 0)
+                ArchivedThreads.Reset(cached.Archived);
+        }
+    }
+
     public async Task InitializeAsync()
     {
         if (_initialized)
@@ -323,16 +338,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         _initialized = true;
 
         // Paint the last known inbox right away; the real query below refreshes it.
-        if (Threads.Count == 0)
-        {
-            var cached = await (_snapshotTask ??= StartSnapshotLoad());
-            if (cached.Inbox.Count > 0 && Threads.Count == 0)
-            {
-                Threads.Reset(cached.Inbox);
-                if (ArchivedThreads.Count == 0)
-                    ArchivedThreads.Reset(cached.Archived);
-            }
-        }
+        await EnsureCachedInboxAsync();
 
         await _smsService.EnsureDefaultSmsAppAsync();
         var granted = await _smsService.EnsurePermissionsAsync();
