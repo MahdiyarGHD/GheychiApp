@@ -64,7 +64,7 @@ public partial class ChatView : UserControl
         if (_blocked is not null)
             _blocked.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(RefreshBlocked);
 
-        SimDigit.RenderTransform = new TranslateTransform(0, AppFonts.BadgeDigitOffsetY);
+        SimDigit.RenderTransform = new TranslateTransform(0, AppFonts.BadgeDigitOffsetY + 1.4);
         TextInputOptions.SetReturnKeyType(SearchEntry, TextInputReturnKeyType.Search);
         // Without these the keyboard's enter key is a tick that closes it, instead of a new line.
         TextInputOptions.SetMultiline(MessageEntry, true);

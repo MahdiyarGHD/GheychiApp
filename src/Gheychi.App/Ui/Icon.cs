@@ -21,10 +21,44 @@ public sealed class Icon : Control
         IsHitTestVisibleProperty.OverrideDefaultValue<Icon>(false);
     }
 
+    private static readonly string[] DirectionalKeys = ["Icon.Back", "Icon.ChevronRight", "Icon.Send"];
+    private static HashSet<Geometry>? _directional;
+
     public Geometry? Data
     {
         get => GetValue(DataProperty);
         set => SetValue(DataProperty, value);
+    }
+
+    // A right-to-left layout is drawn mirrored, which would flip every icon with it; only the ones that point somewhere
+    // are meant to follow it.
+    protected override bool BypassFlowDirectionPolicies => !IsDirectional(Data);
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == DataProperty)
+            InvalidateMirrorTransform();
+    }
+
+    private static bool IsDirectional(Geometry? data)
+    {
+        if (data is null)
+            return false;
+
+        if (_directional is null)
+        {
+            var found = new HashSet<Geometry>();
+            foreach (var key in DirectionalKeys)
+            {
+                if (Application.Current?.TryFindResource(key, out var value) == true && value is Geometry geometry)
+                    found.Add(geometry);
+            }
+
+            _directional = found;
+        }
+
+        return _directional.Contains(data);
     }
 
     public IBrush? Foreground
