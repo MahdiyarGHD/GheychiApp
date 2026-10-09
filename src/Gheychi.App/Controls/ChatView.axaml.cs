@@ -66,6 +66,9 @@ public partial class ChatView : UserControl
 
         SimDigit.RenderTransform = new TranslateTransform(0, AppFonts.BadgeDigitOffsetY);
         TextInputOptions.SetReturnKeyType(SearchEntry, TextInputReturnKeyType.Search);
+        // Without these the keyboard's enter key is a tick that closes it, instead of a new line.
+        TextInputOptions.SetMultiline(MessageEntry, true);
+        TextInputOptions.SetReturnKeyType(MessageEntry, TextInputReturnKeyType.Return);
 
         // One handler per gesture for the whole list: a row has no handlers of its own.
         MessagesList.Scrolled += OnMessagesScrolled;
@@ -249,8 +252,8 @@ public partial class ChatView : UserControl
     // menu closed; a box that lost focus while its menu was open would leave them on screen after the chat is gone.
     private void DropSelection(TextBox box)
     {
-        var menuOpen = box.ContextFlyout?.IsOpen == true;
-        box.ContextFlyout?.Hide();
+        var menuOpen = TextMenu.IsOpen(box);
+        TextMenu.Close(box);
         if (!menuOpen && box.SelectionStart == box.SelectionEnd)
             return;
 

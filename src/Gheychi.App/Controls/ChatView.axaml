@@ -234,12 +234,20 @@
                                                       Margin="4,0,0,0"
                                                       Foreground="#BFE8D2"
                                                       VerticalAlignment="Bottom" />
-                                    <TextBlock Text="{Binding StatusGlyph}"
-                                               FontSize="11"
-                                               LetterSpacing="-4.5"
-                                               Margin="2,0,6,0"
-                                               Foreground="{StaticResource MintBrush}"
-                                               VerticalAlignment="Bottom" />
+                                    <Panel Margin="2,0,0,1"
+                                           VerticalAlignment="Bottom"
+                                           IsVisible="{Binding HasTick}">
+                                        <ui:Icon Data="{StaticResource Icon.Check}"
+                                                 Width="13" Height="13"
+                                                 HorizontalAlignment="Left"
+                                                 Foreground="{StaticResource MintBrush}" />
+                                        <ui:Icon Data="{StaticResource Icon.Check}"
+                                                 Width="13" Height="13"
+                                                 Margin="5,0,0,0"
+                                                 HorizontalAlignment="Left"
+                                                 IsVisible="{Binding HasDoubleTick}"
+                                                 Foreground="{StaticResource MintBrush}" />
+                                    </Panel>
                                 </StackPanel>
                             </StackPanel>
                         </c:BubbleBorder>
@@ -334,12 +342,20 @@
                                                       Margin="4,0,0,0"
                                                       Foreground="#BFE8D2"
                                                       VerticalAlignment="Bottom" />
-                                    <TextBlock Text="{Binding StatusGlyph}"
-                                               FontSize="11"
-                                               LetterSpacing="-4.5"
-                                               Margin="2,0,6,0"
-                                               Foreground="{StaticResource MintBrush}"
-                                               VerticalAlignment="Bottom" />
+                                    <Panel Margin="2,0,0,1"
+                                           VerticalAlignment="Bottom"
+                                           IsVisible="{Binding HasTick}">
+                                        <ui:Icon Data="{StaticResource Icon.Check}"
+                                                 Width="13" Height="13"
+                                                 HorizontalAlignment="Left"
+                                                 Foreground="{StaticResource MintBrush}" />
+                                        <ui:Icon Data="{StaticResource Icon.Check}"
+                                                 Width="13" Height="13"
+                                                 Margin="5,0,0,0"
+                                                 HorizontalAlignment="Left"
+                                                 IsVisible="{Binding HasDoubleTick}"
+                                                 Foreground="{StaticResource MintBrush}" />
+                                    </Panel>
                                 </StackPanel>
                             </StackPanel>
                         </c:BubbleBorder>
