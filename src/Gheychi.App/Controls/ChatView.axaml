@@ -808,7 +808,7 @@
                             Tapped="OnInputBarTapped">
                         <TextBox x:Name="MessageEntry"
                                  Classes="plain"
-                                 VerticalAlignment="Stretch"
+                                 VerticalAlignment="Center"
                                  Padding="0,10"
                                  Text="{Binding Draft}"
                                  PlaceholderText="{loc:Translate Chat_MessageHint}"
