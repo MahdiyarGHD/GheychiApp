@@ -37,6 +37,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private bool _timerRunning;
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
+    private bool _holdFired;
     private bool _overlaysWarmedUp;
     private bool _earlyPreloadStarted;
     private bool _inboxShown;
@@ -88,6 +89,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         DataContext = viewModel;
         viewModel.PreloadTargets = VisibleThreads;
         Ui.RowPressEffect.Attach(ThreadsList, ThreadsHost);
+
+        // Releasing a finger that held a row can also report a tap; the next press starts a new gesture.
+        ThreadsList.AddHandler(PointerPressedEvent, (_, _) => _holdFired = false, RoutingStrategies.Tunnel, handledEventsToo: true);
 
         ThreadsList.TemplateApplied += (_, e) =>
         {
@@ -439,7 +443,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsTapped(object? sender, TappedEventArgs e)
     {
-        if (_animating || !IsChatClosed || ThreadFrom(e) is not { } thread)
+        if (_holdFired || _animating || !IsChatClosed || ThreadFrom(e) is not { } thread)
             return;
 
         if (Vm?.IsSelectionMode == true)
@@ -452,6 +456,10 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         if (e.HoldingState != HoldingState.Started || _animating || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
             return;
+
+        // Avalonia cancels a started hold once the finger drifts 4 px, then reports the release, still inside the
+        // touch tap area, as a tap: that toggled the row just selected back off and left selection mode.
+        _holdFired = true;
 
         if (!Vm.IsSelectionMode)
             Vm.EnterSelectionMode(thread);
