@@ -1,5 +1,6 @@
 using System.Globalization;
 using Android.Content.Res;
+using AndroidX.AppCompat.App;
 using Avalonia.Media;
 using Avalonia.Media.Fonts;
 using Avalonia.Media.Immutable;
@@ -38,6 +39,30 @@ public static class ThemeState
 
     public static bool SystemIsDark() =>
         (Platform.AppContext.Resources?.Configuration?.UiMode & UiMode.NightMask) == UiMode.NightYes;
+
+    /// <summary>Tells Android the theme picked in the app, for what it draws itself: dialogs, pickers, the launch window.</summary>
+    public static void ApplyToSystem(AppTheme theme)
+    {
+        AppCompatDelegate.DefaultNightMode = theme switch
+        {
+            AppTheme.Light => AppCompatDelegate.ModeNightNo,
+            AppTheme.Dark => AppCompatDelegate.ModeNightYes,
+            _ => AppCompatDelegate.ModeNightFollowSystem
+        };
+
+        // From Android 12 the splash is drawn by the system before any app code runs. The system keeps this mode and
+        // picks the light or dark launch resources by it, so the splash follows the app's theme, not only the phone's.
+        // It is also what the next process starts with, so it is set before a restart for the new theme.
+        if (OperatingSystem.IsAndroidVersionAtLeast(31) && Platform.AppContext.GetSystemService(global::Android.Content.Context.UiModeService) is global::Android.App.UiModeManager uiMode)
+        {
+            uiMode.SetApplicationNightMode((int)(theme switch
+            {
+                AppTheme.Light => global::Android.App.UiNightMode.No,
+                AppTheme.Dark => global::Android.App.UiNightMode.Yes,
+                _ => global::Android.App.UiNightMode.Auto
+            }));
+        }
+    }
 }
 
 /// <summary>Frozen brushes shared by everything that uses the same colour; a view model never allocates one per row.</summary>

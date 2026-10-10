@@ -3,4 +3,7 @@
     <color name="colorPrimary">#2E7D5B</color>
     <color name="colorPrimaryDark">#1B5E43</color>
     <color name="colorAccent">#2E7D5B</color>
+    <!-- The page background of the light theme (MainView); values-night has the dark one. -->
+    <color name="launch_background">#F1F3F4</color>
+    <bool name="light_system_bars">true</bool>
 </resources>
