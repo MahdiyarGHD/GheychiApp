@@ -4,7 +4,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Rendering.Composition;
+using Avalonia.Threading;
 using Gheychi.App.Controls.Settings;
+using Gheychi.App.Gestures;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android;
 using Gheychi.App.Ui;
@@ -22,7 +24,9 @@ namespace Gheychi.App.Pages;
 public partial class SettingsPage : UserControl
 {
     private const double SlideDip = 32;
-    private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(160);
+    private const double ParallaxDip = 10;
+    private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan BackDuration = TimeSpan.FromMilliseconds(140);
     private const string AuthorProfileUrl = "https://github.com/MahdiyarGHD";
 
     private readonly ISmsService? _sms;
@@ -70,13 +74,22 @@ public partial class SettingsPage : UserControl
     /// <summary>Opens the spam settings on top of whatever is open, for the Spam tab's settings button (the legacy <c>//settings?section=spam</c>).</summary>
     public void OpenSpamSettings()
     {
-        while (_open.TryPop(out var screen))
-            screen.IsVisible = false;
+        CloseAll();
         Open(SettingsScreenKind.Spam);
     }
 
     /// <summary>The tab came into view (legacy OnAppearing).</summary>
     public void OnShown()
+    {
+        // The tab switch itself stays a visibility toggle; the refresh (binder calls, text changes) runs after its first frame.
+        Dispatcher.UIThread.Post(Refresh, DispatcherPriority.Background);
+
+        // Back from the default-app prompt or the system settings, what is allowed may have changed.
+        MainActivity.Resumed -= OnAppResumed;
+        MainActivity.Resumed += OnAppResumed;
+    }
+
+    private void Refresh()
     {
         UpdateStatus();
         UpdateSpamSummary();
@@ -87,10 +100,34 @@ public partial class SettingsPage : UserControl
         _ = ShowModelUpdateAsync();
         if (!_simsShown)
             _ = ShowSimsAsync();
+    }
 
-        // Back from the default-app prompt or the system settings, what is allowed may have changed.
-        MainActivity.Resumed -= OnAppResumed;
-        MainActivity.Resumed += OnAppResumed;
+    /// <summary>Builds the screens behind the rows one at a time while the user is idle, so the first open pays no XAML load.</summary>
+    public async Task WarmScreensAsync()
+    {
+        foreach (var kind in Enum.GetValues<SettingsScreenKind>())
+        {
+            await UserActivity.WaitForIdleAsync();
+            if (!_screens.TryGetValue(kind, out var screen))
+                _screens[kind] = screen = Build(kind);
+
+            // Shown once, invisibly, so its first measure and layout happen now: on the tap they would stall the UI
+            // thread right when the slide starts and the slide would be over before the first frame.
+            if (_open.Contains(screen))
+                continue;
+            screen.Opacity = 0;
+            screen.IsHitTestVisible = false;
+            screen.IsVisible = true;
+            await Task.Delay(250);
+            if (!_open.Contains(screen))
+            {
+                screen.IsVisible = false;
+                screen.Opacity = 1;
+                screen.IsHitTestVisible = true;
+            }
+
+            await Task.Delay(100);
+        }
     }
 
     /// <summary>The tab left the screen (legacy OnDisappearing).</summary>
@@ -104,8 +141,7 @@ public partial class SettingsPage : UserControl
     {
         if (_open.Count > 0)
         {
-            while (_open.TryPop(out var screen))
-                screen.IsVisible = false;
+            CloseAll();
             RefreshRoot();
         }
         else
@@ -155,25 +191,54 @@ public partial class SettingsPage : UserControl
         if (!_screens.TryGetValue(kind, out var screen))
             _screens[kind] = screen = Build(kind);
 
+        var below = _open.TryPeek(out var top) ? top : (Control)PageScroll;
         _open.Push(screen);
         screen.OnShown();
         // Screens are added in the order they are first built, not opened: the one opened last must be on top.
         screen.ZIndex = ++_zIndex;
         screen.Opacity = 0;
+        screen.IsHitTestVisible = true;
+        OverlayAnimator.SetTranslation(screen, SlideDip, 0);
         screen.IsVisible = true;
-        _ = SlideInAsync(screen);
+        _ = SlideInAsync(screen, below);
     }
 
-    private async Task SlideInAsync(SettingsScreen screen)
+    private async Task SlideInAsync(SettingsScreen screen, Control below)
     {
-        // A screen shown for the first time has no composition visual until the next frame.
+        // Let the layout of the newly shown screen finish first, so it is not part of the slide.
+        await OverlayAnimator.SettleAsync();
         if (ElementComposition.GetElementVisual(screen) is null)
             await OverlayAnimator.SettleAsync();
 
         // The window is mirrored in Persian, so a positive offset starts on the reading-direction end in both languages.
+        // What is underneath drifts the other way a little, so the two read as layers.
         await Task.WhenAll(
             OverlayAnimator.FadeAsync(screen, 0, 1, SlideDuration),
-            OverlayAnimator.SlideXAsync(screen, SlideDip, 0, SlideDuration, decelerate: true));
+            OverlayAnimator.SlideXAsync(screen, SlideDip, 0, SlideDuration, decelerate: true),
+            OverlayAnimator.SlideXAsync(below, 0, -ParallaxDip, SlideDuration, decelerate: true));
+    }
+
+    private async Task SlideOutAsync(SettingsScreen screen, Control below)
+    {
+        await Task.WhenAll(
+            OverlayAnimator.FadeAsync(screen, 1, 0, BackDuration),
+            OverlayAnimator.SlideXAsync(screen, 0, SlideDip, BackDuration, decelerate: false),
+            OverlayAnimator.SlideXAsync(below, -ParallaxDip, 0, BackDuration, decelerate: false));
+
+        // Opened again while it left: it is on screen again, leave it.
+        if (!_open.Contains(screen))
+            screen.IsVisible = false;
+    }
+
+    private void CloseAll()
+    {
+        while (_open.TryPop(out var screen))
+        {
+            screen.IsVisible = false;
+            OverlayAnimator.SetTranslation(screen, 0, 0);
+        }
+
+        OverlayAnimator.SetTranslation(PageScroll, 0, 0);
     }
 
     private void Back()
@@ -181,10 +246,11 @@ public partial class SettingsPage : UserControl
         if (!_open.TryPop(out var screen))
             return;
 
-        screen.IsVisible = false;
-        if (_open.TryPeek(out var below))
+        var below = _open.TryPeek(out var next) ? next : (Control)PageScroll;
+        _ = SlideOutAsync(screen, below);
+        if (next is not null)
         {
-            below.OnShown();
+            next.OnShown();
         }
         else
         {

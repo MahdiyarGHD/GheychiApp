@@ -263,6 +263,9 @@ public partial class MainView : UserControl
                 _pages[index] ??= CreatePage(index);
                 await Task.Delay(300);
             }
+
+            if (_pages[SettingsIndex] is SettingsPage settings)
+                await settings.WarmScreensAsync();
         }
         catch (Exception ex)
         {
