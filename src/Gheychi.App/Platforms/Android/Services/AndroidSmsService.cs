@@ -130,9 +130,12 @@ public sealed class AndroidSmsService : ISmsService
             {
                 try
                 {
+                    // Every column (null projection): "unread_count" and "last_sim_id" exist only in some vendors'
+                    // threads table. Naming them failed the whole query on AOSP-based phones, and the fallback below
+                    // left out every conversation without a recent message.
                     using var cursor = context.ContentResolver?.Query(
                         convUri,
-                        ["_id", "date", "message_count", "unread_count", "recipient_ids", "snippet", "last_sim_id", "error"],
+                        null,
                         null,
                         null,
                         "date DESC");
@@ -147,6 +150,9 @@ public sealed class AndroidSmsService : ISmsService
                         var snippetCol = cursor.GetColumnIndex("snippet");
                         var simCol = cursor.GetColumnIndex("last_sim_id");
                         var errorCol = cursor.GetColumnIndex("error");
+                        var stats = unreadCol < 0 || simCol < 0
+                            ? ReadThreadStats(context, cancellationToken)
+                            : null;
 
                         var list = new List<SmsThread>(cursor.Count);
                         while (cursor.MoveToNext())
@@ -158,11 +164,14 @@ public sealed class AndroidSmsService : ISmsService
 
                             var dateMs = dateCol >= 0 ? cursor.GetLong(dateCol) : 0;
                             var msgCount = countCol >= 0 ? cursor.GetInt(countCol) : 0;
-                            var unreadCount = unreadCol >= 0 ? cursor.GetInt(unreadCol) : 0;
                             var recipRaw = recipCol >= 0 ? cursor.GetString(recipCol) : null;
                             var snippet = snippetCol >= 0 ? cursor.GetString(snippetCol) ?? string.Empty : string.Empty;
-                            var subId = simCol >= 0 && !cursor.IsNull(simCol) ? cursor.GetInt(simCol) : 1;
                             var hasFailed = errorCol >= 0 && cursor.GetInt(errorCol) != 0;
+                            var threadStats = stats is not null && stats.TryGetValue(threadId, out var s) ? s : default;
+                            var unreadCount = unreadCol >= 0 ? cursor.GetInt(unreadCol) : threadStats.Unread;
+                            var subId = simCol >= 0
+                                ? (cursor.IsNull(simCol) ? 1 : cursor.GetInt(simCol))
+                                : threadStats.SubId ?? 1;
 
                             // A thread opened for a new conversation has no messages until the first send.
                             if (countCol >= 0 && msgCount <= 0)
@@ -206,13 +215,75 @@ public sealed class AndroidSmsService : ISmsService
                 {
                     throw;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Reading the conversations failed, building them from the messages: {ex}");
                 }
             }
 
             return GetThreadsLegacy(context, contactMap, cancellationToken);
         }, cancellationToken);
+
+    /// <summary>
+    /// Per conversation, the unread incoming SMS and the SIM of the newest message: what the threads table of an AOSP
+    /// provider lacks. One pass over four small columns of the SMS table.
+    /// </summary>
+    private static Dictionary<long, (int Unread, int? SubId)> ReadThreadStats(Context context, CancellationToken cancellationToken)
+    {
+        var stats = new Dictionary<long, (int Unread, int? SubId)>();
+        var smsUri = Telephony.Sms.ContentUri;
+        if (smsUri == null)
+            return stats;
+
+        try
+        {
+            using var cursor = context.ContentResolver?.Query(
+                smsUri,
+                [Telephony.Sms.InterfaceConsts.ThreadId, Telephony.Sms.InterfaceConsts.Read, Telephony.Sms.InterfaceConsts.Type, "sub_id"],
+                null,
+                null,
+                "date DESC");
+            if (cursor == null)
+                return stats;
+
+            var threadCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.ThreadId);
+            var readCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Read);
+            var typeCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Type);
+            var subIdCol = cursor.GetColumnIndex("sub_id");
+
+            while (cursor.MoveToNext())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var threadId = threadCol >= 0 ? cursor.GetLong(threadCol) : 0;
+                if (threadId <= 0)
+                    continue;
+
+                var unread = readCol >= 0 && cursor.GetInt(readCol) == 0
+                    && typeCol >= 0 && cursor.GetInt(typeCol) == (int)SmsMessageType.Inbox;
+                if (stats.TryGetValue(threadId, out var known))
+                {
+                    if (unread)
+                        stats[threadId] = known with { Unread = known.Unread + 1 };
+                }
+                else
+                {
+                    var subId = subIdCol >= 0 && !cursor.IsNull(subIdCol) ? cursor.GetInt(subIdCol) : (int?)null;
+                    stats[threadId] = (unread ? 1 : 0, subId);
+                }
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading unread counts failed: {ex}");
+        }
+
+        return stats;
+    }
 
     private static IReadOnlyList<SmsThread> GetThreadsLegacy(Context context, Dictionary<string, string> contactMap, CancellationToken cancellationToken)
     {
@@ -228,7 +299,7 @@ public sealed class AndroidSmsService : ISmsService
                 SmsProjection,
                 null,
                 null,
-                "date DESC LIMIT 500");
+                "date DESC");
 
             if (cursor == null)
                 return Array.Empty<SmsThread>();
@@ -283,8 +354,13 @@ public sealed class AndroidSmsService : ISmsService
                 }
             }
         }
-        catch (Exception)
+        catch (System.OperationCanceledException)
         {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Building the conversations from the messages failed: {ex}");
             return Array.Empty<SmsThread>();
         }
 
@@ -895,6 +971,10 @@ public sealed class AndroidSmsService : ISmsService
         return threadIds;
     }
 
+    // Messages with the same timestamp (a multipart burst, a restored backup) have no defined order by date alone,
+    // so separate LIMIT/OFFSET pages could repeat some of them and skip others. The id makes the order total.
+    private const string NewestFirst = "date DESC, _id DESC";
+
     private static void ForEachMessage(
         Context context,
         string? selection,
@@ -907,7 +987,7 @@ public sealed class AndroidSmsService : ISmsService
         if (smsUri == null)
             return;
 
-        using var cursor = context.ContentResolver?.Query(smsUri, SmsProjection, selection, selectionArgs, "date DESC");
+        using var cursor = context.ContentResolver?.Query(smsUri, SmsProjection, selection, selectionArgs, NewestFirst);
         if (cursor == null)
             return;
 
@@ -953,8 +1033,8 @@ public sealed class AndroidSmsService : ISmsService
                 return Array.Empty<SmsMessage>();
 
             var sortOrder = limit.HasValue
-                ? $"date DESC LIMIT {limit.Value} OFFSET {offset}"
-                : "date ASC";
+                ? $"{NewestFirst} LIMIT {limit.Value} OFFSET {offset}"
+                : "date ASC, _id ASC";
 
             try
             {
