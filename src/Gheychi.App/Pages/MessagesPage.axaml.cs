@@ -646,7 +646,16 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             return;
         }
 
-        var thread = FindThread(threadId) ?? CreateNewThreadItem(threadId, new ComposeRecipient(address, null, null));
+        // A contact's "message" button hands over only the number. With no conversation yet the inbox has no name
+        // for it, so it is looked up; PhoneLookup matches however the number is written in the address book.
+        var thread = FindThread(threadId);
+        if (thread is null)
+        {
+            var context = Platform.AppContext;
+            var name = await Task.Run(() => ConversationReader.ReadContactName(context, address));
+            thread = CreateNewThreadItem(threadId, new ComposeRecipient(address, name, null));
+        }
+
         await OpenThreadWithTextAsync(thread, text);
     }
 
