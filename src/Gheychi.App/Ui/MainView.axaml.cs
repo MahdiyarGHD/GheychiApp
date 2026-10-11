@@ -115,8 +115,8 @@ public partial class MainView : UserControl
         }
     }
 
-    // The splash theme paints the bars dark green; the navigation bar sits under the tab bar, so it takes the tab bar's
-    // colour (MainView.axaml) and the status bar the page's.
+    // The splash theme paints the bars in the phone's light or dark page colour; the navigation bar sits under the tab
+    // bar, so it takes the tab bar's colour (MainView.axaml) and the status bar the page's.
     private static void ColorSystemBars()
     {
         if (Platform.CurrentActivity?.Window is not { } window)
