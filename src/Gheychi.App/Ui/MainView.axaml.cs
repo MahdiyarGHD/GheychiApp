@@ -78,6 +78,10 @@ public partial class MainView : UserControl
         _swipe = new HorizontalSwipeTracker(slop);
 
         _topLevel.BackRequested += OnBackRequested;
+        // Until Avalonia's surface exists its scaling is a placeholder 1, and the bars' insets (pixels) were taken as
+        // that many DIPs: a launch could keep a band of several times the bar height above and below the app.
+        // The insets are read again once the real scaling is known, which happens before the first frame.
+        _topLevel.ScalingChanged += OnScalingChanged;
         if (_topLevel.InsetsManager is { } insets)
         {
             // Edge to edge from Android 11: the window is then never resized for the keyboard, which redrew the whole
@@ -95,10 +99,6 @@ public partial class MainView : UserControl
         if (ContentView is { } content)
             content.LayoutChange += OnContentLayoutChanged;
         ApplyInsets();
-        // After the app restarts itself the first insets are read before the window has settled, and nothing reports
-        // the final ones (only the keyboard opening did, which is why a search fixed it).
-        DispatcherTimer.RunOnce(ApplyInsets, TimeSpan.FromMilliseconds(250));
-        DispatcherTimer.RunOnce(ApplyInsets, TimeSpan.FromMilliseconds(1000));
 
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
         ExternalSendRequests.Requested += OnChatLaunchRequested;
@@ -149,6 +149,7 @@ public partial class MainView : UserControl
         if (_topLevel is not null)
         {
             _topLevel.BackRequested -= OnBackRequested;
+            _topLevel.ScalingChanged -= OnScalingChanged;
             if (_topLevel.InsetsManager is { } insets)
                 insets.SafeAreaChanged -= OnInsetsChanged;
             if (_topLevel.InputPane is { } pane)
@@ -335,6 +336,8 @@ public partial class MainView : UserControl
     // ---- Keyboard and system bars --------------------------------------------------------------
 
     private void OnInsetsChanged(object? sender, EventArgs e) => ApplyInsets();
+
+    private void OnScalingChanged(object? sender, EventArgs e) => ApplyInsets();
 
     private global::Android.Views.View? ContentView =>
         Platform.CurrentActivity?.FindViewById(global::Android.Resource.Id.Content);
