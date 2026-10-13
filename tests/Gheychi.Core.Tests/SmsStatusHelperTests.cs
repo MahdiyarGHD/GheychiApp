@@ -78,4 +78,30 @@ public sealed class SmsStatusHelperTests
     {
         Assert.False(SmsStatusHelper.IsSent(type, status));
     }
+
+    [Fact]
+    public void Outbox_WithoutAnswer_BecomesUnconfirmedNotFailed()
+    {
+        const long sentAt = 1_000_000;
+        var later = sentAt + SmsStatusHelper.UnconfirmedAfterMs + 1;
+
+        Assert.False(SmsStatusHelper.IsUnconfirmed(SmsStatusHelper.TypeOutbox, sentAt, sentAt + 1000));
+        Assert.True(SmsStatusHelper.IsUnconfirmed(SmsStatusHelper.TypeOutbox, sentAt, later));
+        Assert.False(SmsStatusHelper.HasFailed(SmsStatusHelper.TypeOutbox, SmsStatusHelper.StatusPending));
+    }
+
+    [Theory]
+    [InlineData(SmsStatusHelper.TypeSent)]
+    [InlineData(SmsStatusHelper.TypeFailed)]
+    public void SettledMessage_IsNeverUnconfirmed(int type)
+    {
+        Assert.False(SmsStatusHelper.IsUnconfirmed(type, 0, SmsStatusHelper.UnconfirmedAfterMs * 10));
+    }
+
+    [Fact]
+    public void GetInfoStatus_Unconfirmed_IsNeitherSentNorFailed()
+    {
+        Assert.Equal(MessageInfoStatus.Unconfirmed, SmsStatusHelper.GetInfoStatus(true, false, false, false, isUnconfirmed: true));
+        Assert.Equal(MessageInfoStatus.Failed, SmsStatusHelper.GetInfoStatus(true, true, false, false, isUnconfirmed: true));
+    }
 }

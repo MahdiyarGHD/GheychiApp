@@ -23,6 +23,7 @@ public partial class LinkMenu : UserControl
     private readonly IBrush _pressed = Palette.Pick("#14000000", "#1AFFFFFF");
     private LinkKind _kind;
     private string _target = string.Empty;
+    private Rect _anchor;
 
     public LinkMenu()
     {
@@ -32,6 +33,12 @@ public partial class LinkMenu : UserControl
     }
 
     public bool IsOpen => IsVisible;
+
+    /// <summary>What the actions use: the address with its scheme, or the number as digits.</summary>
+    public string Target => _target;
+
+    /// <summary>The contact under the actions was tapped (with the number as written): their conversation is to be opened.</summary>
+    public event Action<string>? ConversationRequested;
 
     /// <param name="anchor">The tapped text, in the coordinates of this control.</param>
     /// <param name="shown">The text as it is written in the message.</param>
@@ -56,10 +63,28 @@ public partial class LinkMenu : UserControl
             CopyLabel.Text = loc["Chat_Copy"];
         }
 
-        // Measured where it will be shown, so the card is put beside the text without guessing its size.
+        _anchor = anchor;
+        ContactSection.IsVisible = false;
         Opacity = 0;
-        Card.Margin = default;
         IsVisible = true;
+        Place();
+
+        _ = OverlayAnimator.FadeAsync(this, 0, 1, FadeIn);
+    }
+
+    /// <summary>The number on the card is a contact's: they are shown under the actions.</summary>
+    public void ShowContact(string name, string number)
+    {
+        Contact.Show(name, number);
+        ContactSection.IsVisible = true;
+        Place();
+    }
+
+    // Measured where it will be shown, so the card is put beside the text without guessing its size.
+    private void Place()
+    {
+        var anchor = _anchor;
+        Card.Margin = default;
         UpdateLayout();
 
         var size = Card.Bounds.Size;
@@ -69,8 +94,6 @@ public partial class LinkMenu : UserControl
             ? below
             : Math.Max(Edge, anchor.Top - Gap - size.Height);
         Card.Margin = new Thickness(x, y, 0, 0);
-
-        _ = OverlayAnimator.FadeAsync(this, 0, 1, FadeIn);
     }
 
     public void Hide()
@@ -112,6 +135,14 @@ public partial class LinkMenu : UserControl
         {
             System.Diagnostics.Debug.WriteLine($"Opening a link failed: {ex}");
         }
+    }
+
+    private void OnContactTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        Hide();
+        ChatView.TriggerHaptic();
+        ConversationRequested?.Invoke(Contact.Number);
     }
 
     private async void OnCopyTapped(object? sender, TappedEventArgs e)

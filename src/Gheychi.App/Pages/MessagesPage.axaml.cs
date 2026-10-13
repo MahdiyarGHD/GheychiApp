@@ -120,6 +120,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         chat.ProfileRequested += OnChatProfileRequested;
         chat.SectionRequested += OnChatSectionRequested;
         chat.ArchiveRequested += archive => OnProfileArchiveRequested(chat, archive);
+        chat.ConversationRequested += OnChatConversationRequested;
         chat.IsArchivedLookup = IsArchived;
         Overlays.Children.Add(chat);
         return chat;
@@ -973,6 +974,26 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Open profile failed: {ex}");
+        }
+    }
+
+    // A contact under a number selected in the chat: their conversation takes the place of this one.
+    private async void OnChatConversationRequested(string number)
+    {
+        try
+        {
+            if (_animating || IsChatClosed)
+                return;
+
+            if (ChatOverlay.Vm?.Thread is { } open && PhoneNumberNormalizer.ToContactKey(number) == PhoneNumberNormalizer.ToLookupKey(open.Phone))
+                return;
+
+            await CloseChatAsync();
+            await OpenConversationAsync(number, null);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Opening a selected contact's conversation failed: {ex}");
         }
     }
 

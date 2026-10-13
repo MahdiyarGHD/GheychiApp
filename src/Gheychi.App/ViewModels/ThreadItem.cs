@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Media;
 using Gheychi.App.Theming;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
 
@@ -32,7 +33,12 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public required string Initials { get; init; }
     public string? IconFile { get; init; }
     public required string Time { get; init; }
-    public required string Preview { get; init; }
+    private readonly string _preview = string.Empty;
+    public required string Preview
+    {
+        get => _preview;
+        init => _preview = MessagePreview.SingleLine(value);
+    }
     public string Phone { get; init; } = string.Empty;
     public bool HasFailed { get; init; }
     public int TotalCount { get; init; }

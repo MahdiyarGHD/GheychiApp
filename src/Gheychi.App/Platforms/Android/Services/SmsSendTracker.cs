@@ -16,8 +16,8 @@ internal static class SmsSendTracker
     public const string ExtraToken = "com.evergreen.gheychiapp.SMS_TOKEN";
     public const string ExtraRowId = "com.evergreen.gheychiapp.SMS_ROW_ID";
 
-    /// <summary>Raised when the carrier accepted or rejected a stored outgoing message (rowId, success).</summary>
-    public static event Action<long, bool>? OutgoingUpdated;
+    /// <summary>Raised when the carrier accepted or rejected a stored outgoing message (rowId, threadId, success).</summary>
+    public static event Action<long, long, bool>? OutgoingUpdated;
 
     /// <summary>Raised when a delivery report confirmed a stored outgoing message reached the phone (rowId, threadId).</summary>
     public static event Action<long, long>? Delivered;
@@ -35,11 +35,11 @@ internal static class SmsSendTracker
     private static readonly Dictionary<string, PendingSend> Pending = [];
     private static readonly object PendingLock = new();
 
-    public static void RaiseOutgoingUpdated(long rowId, bool ok)
+    public static void RaiseOutgoingUpdated(long rowId, long threadId, bool ok)
     {
         try
         {
-            OutgoingUpdated?.Invoke(rowId, ok);
+            OutgoingUpdated?.Invoke(rowId, threadId, ok);
         }
         catch (Exception ex)
         {

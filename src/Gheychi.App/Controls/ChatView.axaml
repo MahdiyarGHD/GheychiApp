@@ -49,7 +49,7 @@
                                         CornerRadius="16"
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
-                            <TextBlock Text="{Binding Body}"
+                            <TextBlock Classes="body" Text="{Binding Body}"
                                        FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
@@ -131,10 +131,11 @@
                                         CornerRadius="16"
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
-                            <TextBlock FontSize="{StaticResource ChatBodySize}"
+                            <TextBlock Classes="body" FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
                                        c:RichText.LinkBrush="{StaticResource AccentTextBrush}"
+                                       c:RichText.NumberBrush="{theme:AccentBrush Role=Solid, Alpha=38}"
                                        c:RichText.Message="{Binding}" />
                         </c:BubbleBorder>
 
@@ -214,7 +215,7 @@
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
-                                <TextBlock Text="{Binding Body}"
+                                <TextBlock Classes="body" Text="{Binding Body}"
                                            FontSize="{StaticResource ChatBodySize}"
                                            TextWrapping="Wrap"
                                            Foreground="White" />
@@ -272,14 +273,14 @@
                                 Spacing="5"
                                 HorizontalAlignment="Right"
                                 Background="Transparent"
-                                IsVisible="{Binding HasFailed}">
+                                IsVisible="{Binding HasRetry}">
                         <ui:Icon Data="{StaticResource Icon.Failed}"
                                  Width="14" Height="14"
-                                 Foreground="{StaticResource DangerBrush}"
+                                 Foreground="{Binding RetryBrush}"
                                  VerticalAlignment="Center" />
-                        <TextBlock Text="{loc:Translate Chat_NotDelivered}"
+                        <TextBlock Text="{Binding RetryText}"
                                    FontSize="12"
-                                   Foreground="{StaticResource DangerBrush}"
+                                   Foreground="{Binding RetryBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </StackPanel>
@@ -320,10 +321,11 @@
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
-                                <TextBlock FontSize="{StaticResource ChatBodySize}"
+                                <TextBlock Classes="body" FontSize="{StaticResource ChatBodySize}"
                                            TextWrapping="Wrap"
                                            Foreground="White"
                                            c:RichText.LinkBrush="{theme:AccentBrush Role=OnSolidBright}"
+                                           c:RichText.NumberBrush="#30FFFFFF"
                                            c:RichText.Message="{Binding}" />
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
                                     <TextBlock Text="★"
@@ -379,14 +381,14 @@
                                 Spacing="5"
                                 HorizontalAlignment="Right"
                                 Background="Transparent"
-                                IsVisible="{Binding HasFailed}">
+                                IsVisible="{Binding HasRetry}">
                         <ui:Icon Data="{StaticResource Icon.Failed}"
                                  Width="14" Height="14"
-                                 Foreground="{StaticResource DangerBrush}"
+                                 Foreground="{Binding RetryBrush}"
                                  VerticalAlignment="Center" />
-                        <TextBlock Text="{loc:Translate Chat_NotDelivered}"
+                        <TextBlock Text="{Binding RetryText}"
                                    FontSize="12"
-                                   Foreground="{StaticResource DangerBrush}"
+                                   Foreground="{Binding RetryBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </StackPanel>
@@ -714,6 +716,24 @@
                         </ItemsPanelTemplate>
                     </c:ChatList.ItemsPanel>
                 </c:ChatList>
+
+                <!--
+                    Part of a message selected (double tap): a read-only box laid over the bubble's text, with the same
+                    letters in the same places. It draws only the selection and its handles; the text seen under them
+                    is still the bubble's own, links and numbers included. Placed in code (ChatView.Selection.cs).
+                -->
+                <Canvas x:Name="SelectionLayer" ClipToBounds="True" Focusable="True">
+                    <TextBox x:Name="SelectionBox"
+                             Classes="plain"
+                             IsVisible="False"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalContentAlignment="Top"
+                             Foreground="Transparent"
+                             CaretBrush="Transparent"
+                             SelectionForegroundBrush="Transparent" />
+                </Canvas>
 
                 <Border Margin="0,8,0,0"
                         Padding="12,4"

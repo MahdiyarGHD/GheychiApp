@@ -995,14 +995,12 @@ public sealed class AndroidSmsService : ISmsService
 
                     var isOutgoing = SmsStatusHelper.IsOutgoingType(type);
 
-                    // An Outbox row nobody reported on for this long was lost with its process (the
-                    // result broadcast never arrived); show it as failed so it can be retried
-                    // instead of spinning forever.
-                    var staleOutbox = type == SmsStatusHelper.TypeOutbox &&
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - dateMs > StaleOutboxMs;
-                    var hasFailed = staleOutbox || SmsStatusHelper.HasFailed(type, status);
-                    var isDelivered = !staleOutbox && SmsStatusHelper.IsDelivered(type, status);
-                    var isSent = !staleOutbox && SmsStatusHelper.IsSent(type, status);
+                    // No answer from the radio for this long: shown as unconfirmed instead of spinning forever,
+                    // and not as failed, since it may well have gone out.
+                    var unconfirmed = SmsStatusHelper.IsUnconfirmed(type, dateMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                    var hasFailed = SmsStatusHelper.HasFailed(type, status);
+                    var isDelivered = SmsStatusHelper.IsDelivered(type, status);
+                    var isSent = SmsStatusHelper.IsSent(type, status);
                     var isRead = read != 0 || isOutgoing;
 
                     messages.Add(new SmsMessage(
@@ -1016,7 +1014,8 @@ public sealed class AndroidSmsService : ISmsService
                         hasFailed,
                         subId,
                         isRead,
-                        IsSent: isSent));
+                        IsSent: isSent,
+                        IsUnconfirmed: unconfirmed));
                 }
 
                 if (_metadataRepo != null && messages.Count > 0)
@@ -1174,7 +1173,6 @@ public sealed class AndroidSmsService : ISmsService
     // How long a caller waits for the radio before showing the message as still sending. The
     // send itself is not cancelled: it can still go out, and the stored row follows the real result.
     private static readonly TimeSpan SendWaitLimit = TimeSpan.FromSeconds(60);
-    private const long StaleOutboxMs = 10 * 60 * 1000;
 
     public Task<long> QueueOutgoingAsync(string address, string text, int subId, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
@@ -1243,7 +1241,24 @@ public sealed class AndroidSmsService : ISmsService
         }
 
         InvalidateSearchCaches();
-        SmsSendTracker.RaiseOutgoingUpdated(rowId, ok);
+        SmsSendTracker.RaiseOutgoingUpdated(rowId, ThreadIdOf(context, rowId), ok);
+    }
+
+    private static long ThreadIdOf(Context context, long rowId)
+    {
+        try
+        {
+            if (Telephony.Sms.ContentUri is not { } smsUri)
+                return 0;
+
+            using var cursor = context.ContentResolver?.Query(
+                ContentUris.WithAppendedId(smsUri, rowId), [Telephony.Sms.InterfaceConsts.ThreadId], null, null, null);
+            return cursor is not null && cursor.MoveToFirst() ? cursor.GetLong(0) : 0;
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
     }
 
     public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId)
@@ -1263,7 +1278,6 @@ public sealed class AndroidSmsService : ISmsService
     /// <summary>A delivery report confirmed the message reached the phone.</summary>
     internal static void MarkDelivered(Context context, long rowId)
     {
-        long threadId = 0;
         try
         {
             var smsUri = Telephony.Sms.ContentUri;
@@ -1277,18 +1291,13 @@ public sealed class AndroidSmsService : ISmsService
                 [rowId.ToString()]) ?? 0;
             if (updated == 0)
                 return;
-
-            var rowUri = ContentUris.WithAppendedId(smsUri, rowId);
-            using var cursor = context.ContentResolver?.Query(rowUri, [Telephony.Sms.InterfaceConsts.ThreadId], null, null, null);
-            if (cursor is not null && cursor.MoveToFirst())
-                threadId = cursor.GetLong(0);
         }
         catch (Exception)
         {
             return;
         }
 
-        SmsSendTracker.RaiseDelivered(rowId, threadId);
+        SmsSendTracker.RaiseDelivered(rowId, ThreadIdOf(context, rowId));
     }
 
     private static void SetOutgoingPending(Context context, long rowId)
@@ -1302,7 +1311,7 @@ public sealed class AndroidSmsService : ISmsService
             var values = new ContentValues();
             values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Outbox);
             values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusPending);
-            // Resent now; also keeps the stale-Outbox check from flagging the retry straight away.
+            // Resent now; also keeps the retry from counting as unconfirmed straight away.
             values.Put(Telephony.Sms.InterfaceConsts.Date, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             context.ContentResolver?.Update(smsUri, values, $"{Telephony.Sms.InterfaceConsts.Id} = ?", [rowId.ToString()]);
         }
@@ -1809,6 +1818,10 @@ public sealed class AndroidSmsService : ISmsService
 
         return entries;
     }
+
+    public Task<string?> FindContactNameAsync(string number) =>
+        Task.Run(() => PhoneNumberNormalizer.ToContactKey(number) is { } key &&
+                       LoadContacts(Platform.AppContext).TryGetValue(key, out var name) ? name : null);
 
     public Task<long> GetOrCreateThreadIdAsync(string address) =>
         Task.Run(() =>

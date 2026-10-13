@@ -5,7 +5,9 @@ namespace Gheychi.Core.Services;
 public enum LinkKind
 {
     Url,
-    Phone
+    Phone,
+    /// <summary>A code, an amount, a reference number: highlighted and easy to select, but not a link (a tap does nothing).</summary>
+    Number
 }
 
 /// <summary>A link or a phone number inside a message: where it is in the text, and what it is.</summary>
@@ -21,6 +23,7 @@ public static partial class TextLinker
     private const int MinPlainPhoneDigits = 10;
     private const int MaxPhoneDigits = 15;
     private const int MaxDigitsInOneGroup = 5;
+    private const int MinNumberDigits = 4;
 
     private const string TrailingPunctuation = ".,;:!?'\"»›«‹…،؛؟";
 
@@ -36,10 +39,11 @@ public static partial class TextLinker
     [GeneratedRegex(@"^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$|^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}$")]
     private static partial Regex DateRegex();
 
+    /// <param name="numbers">Also the other numbers worth picking out (<see cref="LinkKind.Number"/>).</param>
     /// <returns>The links in order of appearance, or null when there are none (nearly every message).</returns>
-    public static LinkSpan[]? Find(string? text)
+    public static LinkSpan[]? Find(string? text, bool numbers = false)
     {
-        if (string.IsNullOrEmpty(text) || !MayContainLink(text))
+        if (string.IsNullOrEmpty(text) || !MayContainLink(text, numbers))
             return null;
 
         List<LinkSpan>? found = null;
@@ -57,6 +61,8 @@ public static partial class TextLinker
         }
 
         FindPhones(ref found, text);
+        if (numbers)
+            FindNumbers(ref found, text);
 
         if (found is null)
             return null;
@@ -86,15 +92,16 @@ public static partial class TextLinker
         return new string(digits, 0, length);
     }
 
-    private static bool MayContainLink(string text)
+    private static bool MayContainLink(string text, bool numbers)
     {
         var digits = 0;
+        var enough = numbers ? MinNumberDigits : MinPhoneDigits;
         foreach (var c in text)
         {
             if (c == '.' || c == '/')
                 return true;
 
-            if (char.IsDigit(c) && ++digits >= MinPhoneDigits)
+            if (char.IsDigit(c) && ++digits >= enough)
                 return true;
         }
 
@@ -208,6 +215,57 @@ public static partial class TextLinker
 
         return end;
     }
+
+    /// <summary>
+    /// Whole numbers, not their digits: a code ("123456", "G-884213"), a card number in groups, an amount ("12,500,000").
+    /// A number glued to a letter ("4G", "A1234"), a short one, a date and what is already a link are left alone.
+    /// </summary>
+    private static void FindNumbers(ref List<LinkSpan>? found, string text)
+    {
+        var i = 0;
+        while (i < text.Length)
+        {
+            if (!char.IsDigit(text[i]) || (i > 0 && (char.IsLetterOrDigit(text[i - 1]) || text[i - 1] == '+')))
+            {
+                i++;
+                continue;
+            }
+
+            var digits = 0;
+            var end = i;
+            var j = i;
+            var separator = '\0';
+            while (j < text.Length)
+            {
+                if (char.IsDigit(text[j]))
+                {
+                    digits++;
+                    end = ++j;
+                }
+                // Groups set apart by one kind of separator: "6037 9911", "12,500", "۱۲٬۵۰۰" (Arabic separators). A date is
+                // read whole too ("1403/05/12"), so it is recognised and left out, and the time after it is not joined on.
+                else if (IsNumberSeparator(text[j]) && (separator == '\0' || text[j] == separator) &&
+                         j + 1 < text.Length && char.IsDigit(text[j + 1]))
+                {
+                    separator = text[j];
+                    j++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            var glued = end < text.Length && char.IsLetter(text[end]);
+            if (digits >= MinNumberDigits && !glued && !Overlaps(found, i, end - i) &&
+                !DateRegex().IsMatch(text.AsSpan(i, end - i)))
+                (found ??= []).Add(new LinkSpan(i, end - i, LinkKind.Number));
+
+            i = end;
+        }
+    }
+
+    private static bool IsNumberSeparator(char c) => c is ' ' or ' ' or '-' or '.' or '/' or ',' or '٬' or '٫';
 
     private static bool IsSeparator(char c) => c is ' ' or '-' or '.' or '(' or ')' or ' ';
 

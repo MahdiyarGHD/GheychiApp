@@ -9,8 +9,9 @@ namespace Gheychi.App.Controls;
 
 /// <summary>
 /// <c>ctrl:RichText.Message="{Binding}"</c>: fills a TextBlock with a message's text, its links and phone numbers
-/// highlighted. Only messages that have any use it; the rest stay a plain text. The inlines are rebuilt only when a
-/// recycled row gets another message.
+/// highlighted, and its other numbers (codes, amounts) marked by a soft background. Only messages that have any use it;
+/// the rest stay a plain text. The inlines are rebuilt only when a recycled row gets another message. Nothing here
+/// changes the size of a letter: the selection drawn over the text (see ChatView) is laid out from the plain text.
 /// </summary>
 public static class RichText
 {
@@ -19,6 +20,9 @@ public static class RichText
 
     public static readonly AttachedProperty<IBrush?> LinkBrushProperty =
         AvaloniaProperty.RegisterAttached<TextBlock, IBrush?>("LinkBrush", typeof(RichText));
+
+    public static readonly AttachedProperty<IBrush?> NumberBrushProperty =
+        AvaloniaProperty.RegisterAttached<TextBlock, IBrush?>("NumberBrush", typeof(RichText));
 
     static RichText()
     {
@@ -32,6 +36,10 @@ public static class RichText
     public static IBrush? GetLinkBrush(TextBlock block) => block.GetValue(LinkBrushProperty);
 
     public static void SetLinkBrush(TextBlock block, IBrush? value) => block.SetValue(LinkBrushProperty, value);
+
+    public static IBrush? GetNumberBrush(TextBlock block) => block.GetValue(NumberBrushProperty);
+
+    public static void SetNumberBrush(TextBlock block, IBrush? value) => block.SetValue(NumberBrushProperty, value);
 
     // A fingertip is far wider than a line of text: a tap this close to a link still means the link.
     private const double TouchSlop = 14;
@@ -54,6 +62,10 @@ public static class RichText
         var bestDistance = TouchSlop * TouchSlop;
         foreach (var span in links)
         {
+            // Marked, not a link: a tap on a number does nothing.
+            if (span.Kind == LinkKind.Number)
+                continue;
+
             foreach (var rect in layout.HitTestTextRange(span.Start, span.Length))
             {
                 var dx = Math.Max(Math.Max(rect.Left - point.X, point.X - rect.Right), 0);
@@ -90,16 +102,16 @@ public static class RichText
         var built = new List<Inline>();
         var position = 0;
         var linkBrush = GetLinkBrush(block);
+        var numberBrush = GetNumberBrush(block);
         foreach (var span in message.Links ?? [])
         {
             if (span.Start > position)
                 built.Add(new Run(text[position..span.Start]));
 
-            built.Add(new Run(text.Substring(span.Start, span.Length))
-            {
-                Foreground = linkBrush,
-                TextDecorations = TextDecorations.Underline
-            });
+            var shown = text.Substring(span.Start, span.Length);
+            built.Add(span.Kind == LinkKind.Number
+                ? new Run(shown) { Background = numberBrush }
+                : new Run(shown) { Foreground = linkBrush, TextDecorations = TextDecorations.Underline });
             position = span.End;
         }
 

@@ -1170,4 +1170,31 @@
   <data name="Share_Empty" xml:space="preserve">
     <value>هنوز گفتگویی نیست. برای شروع یک شماره بنویسید.</value>
   </data>
+  <data name="Chat_Unconfirmed" xml:space="preserve">
+    <value>تأیید نشد · ارسال دوباره</value>
+  </data>
+  <data name="Chat_InfoUnconfirmed" xml:space="preserve">
+    <value>تأیید نشد</value>
+  </data>
+  <data name="Chat_ResendTitle" xml:space="preserve">
+    <value>دوباره ارسال شود؟</value>
+  </data>
+  <data name="Chat_ResendUnconfirmedMessage" xml:space="preserve">
+    <value>گوشی تأیید نکرد که این پیام ارسال شده یا نه. ممکن است رسیده باشد و ارسال دوباره باعث شود دو بار برسد.</value>
+  </data>
+  <data name="Chat_ResendButton" xml:space="preserve">
+    <value>ارسال دوباره</value>
+  </data>
+  <data name="Chat_StillSendingTitle" xml:space="preserve">
+    <value>هنوز در حال ارسال</value>
+  </data>
+  <data name="Chat_StillSendingMessage" xml:space="preserve">
+    <value>همین پیام هنوز در حال ارسال است. ارسال دوباره ممکن است باعث شود دو بار برسد.</value>
+  </data>
+  <data name="Chat_SendAnyway" xml:space="preserve">
+    <value>باز هم ارسال شود</value>
+  </data>
+  <data name="Chat_OpenConversation" xml:space="preserve">
+    <value>باز کردن گفتگو</value>
+  </data>
 </root>

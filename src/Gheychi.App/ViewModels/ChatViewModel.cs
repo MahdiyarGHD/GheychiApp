@@ -367,11 +367,12 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 Id = msg.Id,
                 Timestamp = msg.Timestamp,
                 Body = msg.Body,
-                Links = TextLinker.Find(msg.Body),
+                Links = TextLinker.Find(msg.Body, numbers: true),
                 IsOutgoing = msg.IsOutgoing,
                 IsSent = msg.IsSent,
                 IsDelivered = msg.IsDelivered,
                 HasFailed = msg.HasFailed,
+                IsUnconfirmed = msg.IsUnconfirmed,
                 Time = timeStr,
                 IsUnread = !msg.IsRead,
                 IsStarred = msg.IsStarred,
@@ -816,14 +817,17 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         Draft = string.Empty;
 
         var timeStr = _dateFormatter.FormatMessageTime(DateTime.Now, CultureInfo.CurrentUICulture);
+        var subId = ResolveSubId(0);
 
         var outgoingMsg = new ChatMessage
         {
             Body = text,
-            Links = TextLinker.Find(text),
+            Links = TextLinker.Find(text, numbers: true),
             IsOutgoing = true,
             IsDelivered = false,
             Time = timeStr,
+            // Kept so a retry goes out on the SIM this was sent with, not on whichever one is selected by then.
+            SubId = subId,
             SimSlot = _simSlot,
             IsDualSim = _isDualSim ?? false,
             Timestamp = DateTime.Now
@@ -833,12 +837,23 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         EvictCache(Thread.ThreadId);
 
-        await DeliverAsync(outgoingMsg, text, ResolveSubId(0), storeFirst: true);
+        await DeliverAsync(outgoingMsg, text, subId, storeFirst: true);
+    }
+
+    /// <summary>
+    /// True when the same text is still on its way, or its outcome is unknown: sending it again because it seems stuck
+    /// is how a message reaches the recipient twice.
+    /// </summary>
+    public bool IsUnsettled(string text)
+    {
+        text = text.Trim();
+        return Messages.Any(m => (m.IsSending || m.IsUnconfirmed) && m.Body == text);
     }
 
     public async void Retry(ChatMessage message)
     {
         message.HasFailed = false;
+        message.IsUnconfirmed = false;
         message.IsSent = false;
         message.IsDelivered = false;
 
@@ -888,7 +903,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
     }
 
-    private void OnOutgoingUpdated(long rowId, bool ok)
+    private void OnOutgoingUpdated(long rowId, long threadId, bool ok)
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -899,6 +914,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
                 message.IsSent = ok;
                 message.HasFailed = !ok;
+                message.IsUnconfirmed = false;
                 break;
             }
         });

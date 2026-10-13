@@ -95,4 +95,46 @@ public class TextLinkerTests
 
         Assert.Equal(expected, TextLinker.Target(text, span));
     }
+
+    private static string[] Numbers(string text) =>
+        (TextLinker.Find(text, numbers: true) ?? [])
+        .Where(span => span.Kind == LinkKind.Number)
+        .Select(span => text.Substring(span.Start, span.Length))
+        .ToArray();
+
+    [Theory]
+    [InlineData("Your code is 123456", "123456")]
+    [InlineData("کد تایید شما: ۴۸۲۱۹ است", "۴۸۲۱۹")]
+    [InlineData("G-884213 is your Google verification code.", "884213")]
+    [InlineData("Card 6037 9911 1111 1111 expires soon", "6037 9911 1111 1111")]
+    [InlineData("Amount: 12,500,000 Rials", "12,500,000")]
+    [InlineData("مبلغ ۱۲٬۵۰۰٬۰۰۰ ریال", "۱۲٬۵۰۰٬۰۰۰")]
+    [InlineData("Ref #A12 tracking 4471-2290.", "4471-2290")]
+    public void Numbers_AreFoundWhole(string text, string expected) =>
+        Assert.Equal([expected], Numbers(text));
+
+    [Theory]
+    [InlineData("4G and 5G, 10GB, A1234 and 12abc")]
+    [InlineData("On 2024-01-15 at 10:30")]
+    [InlineData("تاریخ ۱۴۰۳/۰۵/۱۲")]
+    [InlineData("Code 123, then 45")]
+    [InlineData("Plain message with no numbers.")]
+    public void ShortGluedOrDateNumbers_AreNotPickedOut(string text) =>
+        Assert.Empty(Numbers(text));
+
+    [Fact]
+    public void PhoneNumber_StaysAPhoneNotANumber()
+    {
+        const string text = "Call 09121234567 and use code 5521";
+
+        Assert.Equal(["09121234567"], Shown(text, LinkKind.Phone));
+        Assert.Equal(["5521"], Numbers(text));
+    }
+
+    [Fact]
+    public void WithoutNumbers_FindIsUnchanged()
+    {
+        Assert.Null(TextLinker.Find("Your code is 123456"));
+        Assert.Equal([LinkKind.Url, LinkKind.Number], TextLinker.Find("https://a.com code 9921", numbers: true)!.Select(s => s.Kind));
+    }
 }

@@ -41,7 +41,13 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
         NotificationActionReceiver.ThreadsChanged += OnSmsReceived;
-        // A delivery report usually arrives after the chat was closed; its cached page would still show one tick.
+        // A send result or delivery report often arrives after the chat was closed; its cached page would still show
+        // the spinner or one tick.
+        SmsSendTracker.OutgoingUpdated += (_, threadId, _) =>
+        {
+            if (threadId > 0)
+                ChatViewModel.InvalidateThread(threadId);
+        };
         SmsSendTracker.Delivered += (_, threadId) =>
         {
             if (threadId > 0)

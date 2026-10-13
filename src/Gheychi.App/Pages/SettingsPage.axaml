@@ -35,12 +35,14 @@
                                                    FontFamily="{x:Static local:AppFonts.Bold}"
                                                    Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                                     </Border>
+                                    <Border x:Name="AppUpdateDot" Classes="updateDot" VerticalAlignment="Center" IsVisible="False" />
                                 </StackPanel>
                                 <TextBlock Text="{loc:Translate Settings_Tagline}" Classes="note" FontSize="13" />
                             </StackPanel>
                         </Grid>
 
-                        <Grid ColumnDefinitions="*,1.25*,*" ColumnSpacing="6">
+                        <!-- Only what still needs the user's attention; the columns follow the chips shown (see UpdateStatus). -->
+                        <Grid x:Name="StatusChips" ColumnDefinitions="*,1.25*,*" ColumnSpacing="6" IsVisible="False">
                             <Border x:Name="DefaultChip" Grid.Column="0" Classes="chip" Tapped="OnDefaultChipTapped">
                                 <StackPanel Spacing="2">
                                     <StackPanel Orientation="Horizontal" Spacing="5">
@@ -73,19 +75,20 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0" Classes="tile" Tapped="OnModelTileTapped">
                                 <StackPanel Spacing="8">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
-                                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
-                                            <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
-                                                     Foreground="{theme:AccentBrush Role=Text}"
-                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                        <Border x:Name="ModelUpdateDot" Grid.Column="1" Width="9" Height="9" CornerRadius="5"
-                                                Background="#2E9B63" VerticalAlignment="Top" IsVisible="False" />
-                                    </Grid>
+                                    <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
+                                            Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+                                        <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
+                                                 Foreground="{theme:AccentBrush Role=Text}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
                                     <StackPanel Spacing="1">
                                         <TextBlock Text="{loc:Translate Settings_TileModel}" Classes="tileCaption" />
-                                        <TextBlock x:Name="TileModelValue" Classes="tileValue" />
+                                        <!-- Left-aligned, so the dot sits right after the version instead of at the tile's edge. -->
+                                        <DockPanel HorizontalAlignment="Left">
+                                            <Border x:Name="ModelUpdateDot" DockPanel.Dock="Right" Classes="updateDot" Margin="6,0,0,0"
+                                                    VerticalAlignment="Center" IsVisible="False" />
+                                            <TextBlock x:Name="TileModelValue" Classes="tileValue" />
+                                        </DockPanel>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

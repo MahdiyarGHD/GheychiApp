@@ -25,6 +25,8 @@ public interface ISmsService
     Task<bool> IsDualSimAsync();
     /// <summary>Every phone number in the address book, sorted by name. Empty without contacts permission.</summary>
     Task<IReadOnlyList<ContactEntry>> GetContactsAsync(CancellationToken cancellationToken = default);
+    /// <summary>The address-book name of a number picked out of a message, matched the way the inbox names its senders; null when it is no contact's (see <see cref="PhoneNumberNormalizer.ToContactKey"/>).</summary>
+    Task<string?> FindContactNameAsync(string number);
     /// <summary>Id of the conversation with <paramref name="address"/>, created when there is none yet; 0 on failure.</summary>
     Task<long> GetOrCreateThreadIdAsync(string address);
     Task<IReadOnlyList<SearchResultChat>> SearchChatsAsync(SearchQuery query, CancellationToken cancellationToken = default);

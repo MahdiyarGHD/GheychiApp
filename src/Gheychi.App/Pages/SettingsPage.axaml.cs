@@ -325,6 +325,7 @@ public partial class SettingsPage : UserControl
             SetChip(DefaultChip, DefaultLabel, _sms?.IsDefaultSmsApp() ?? true, "Settings_Default", "Settings_NotDefault");
             SetChip(NotificationsChip, NotificationsLabel, AppStatus.NotificationsEnabled(), "Settings_NotificationsOn", "Settings_NotificationsOff");
             SetChip(ContactsChip, ContactsLabel, await AppStatus.ContactsAllowedAsync(), "Settings_ContactsOn", "Settings_ContactsOff");
+            LayOutChips();
         }
         catch (Exception ex)
         {
@@ -332,10 +333,27 @@ public partial class SettingsPage : UserControl
         }
     }
 
+    // A chip only stays while it still asks for something.
     private static void SetChip(Border chip, TextBlock label, bool ok, string okKey, string warnKey)
     {
+        chip.IsVisible = !ok;
         chip.Classes.Set("warn", !ok);
         label.Text = LocalizationManager.Instance[ok ? okKey : warnKey];
+    }
+
+    // The chips left share the whole row; the notifications one, the longest label, gets a little more when not alone.
+    private void LayOutChips()
+    {
+        Border[] shown = [.. new[] { DefaultChip, NotificationsChip, ContactsChip }.Where(chip => chip.IsVisible)];
+        StatusChips.ColumnDefinitions.Clear();
+        for (var i = 0; i < shown.Length; i++)
+        {
+            var weight = shown.Length > 1 && shown[i] == NotificationsChip ? 1.25 : 1;
+            StatusChips.ColumnDefinitions.Add(new ColumnDefinition(weight, GridUnitType.Star));
+            Grid.SetColumn(shown[i], i);
+        }
+
+        StatusChips.IsVisible = shown.Length > 0;
     }
 
     private void OnDefaultChipTapped(object? sender, TappedEventArgs e)
@@ -417,7 +435,9 @@ public partial class SettingsPage : UserControl
     {
         var loc = LocalizationManager.Instance;
         var version = SettingsUi.Digits(AppInfo.Current.VersionString);
-        AboutHint.Text = string.Format(loc[_appUpdates?.GetAvailable() is null ? "Settings_AboutHint" : "Settings_AboutUpdateHint"], version);
+        var update = _appUpdates?.GetAvailable() is not null;
+        AboutHint.Text = string.Format(loc[update ? "Settings_AboutUpdateHint" : "Settings_AboutHint"], version);
+        AppUpdateDot.IsVisible = update;
     }
 
     private async Task ShowModelVersionAsync()
