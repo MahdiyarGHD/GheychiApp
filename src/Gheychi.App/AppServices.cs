@@ -58,6 +58,7 @@ internal static class AppServices
         services.AddSingleton<ActiveChatState>();
         services.AddSingleton<IActiveChatState>(sp => sp.GetRequiredService<ActiveChatState>());
         services.AddSingleton<IThreadSettings, Services.PreferencesThreadSettings>();
+        services.AddSingleton<IDraftStore, Services.PreferencesDraftStore>();
         services.AddSingleton<INotificationRule, ActiveChatRule>();
         services.AddSingleton<INotificationRule, SnoozeRule>();
         services.AddSingleton<NotificationPolicy>();

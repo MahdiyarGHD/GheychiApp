@@ -42,6 +42,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public string Phone { get; init; } = string.Empty;
     public bool HasFailed { get; init; }
     public int TotalCount { get; init; }
+    public bool HasDraft { get; init; }
 
     private int _count;
     public int Count
@@ -124,6 +125,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
         Preview == other.Preview &&
         Phone == other.Phone &&
         HasFailed == other.HasFailed &&
+        HasDraft == other.HasDraft &&
         TotalCount == other.TotalCount &&
         Count == other.Count &&
         IsUnread == other.IsUnread;

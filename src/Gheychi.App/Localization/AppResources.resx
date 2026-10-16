@@ -1218,4 +1218,7 @@
   <data name="Notification_NotDeliveredHidden" xml:space="preserve">
     <value>Message not delivered</value>
   </data>
+  <data name="Inbox_DraftPreview" xml:space="preserve">
+    <value>Draft: {0}</value>
+  </data>
 </root>

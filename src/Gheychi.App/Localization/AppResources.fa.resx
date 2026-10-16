@@ -1218,4 +1218,7 @@
   <data name="Notification_NotDeliveredHidden" xml:space="preserve">
     <value>پیام تحویل داده نشد</value>
   </data>
+  <data name="Inbox_DraftPreview" xml:space="preserve">
+    <value>پیش‌نویس: {0}</value>
+  </data>
 </root>

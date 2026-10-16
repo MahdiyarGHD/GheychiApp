@@ -13,6 +13,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 {
     private readonly ISmsService _smsService;
     private readonly IDateFormattingService _dateFormatter;
+    private readonly IDraftStore? _drafts;
     private bool _isLoading;
     private bool _hasPermission = true;
     private static readonly TimeSpan ReturnRefreshDelay = TimeSpan.FromMilliseconds(400);
@@ -33,6 +34,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     {
         _smsService = smsService ?? IPlatformApplication.Current?.Services.GetService<ISmsService>() ?? throw new InvalidOperationException("ISmsService not resolved");
         _dateFormatter = dateFormatter ?? IPlatformApplication.Current?.Services.GetService<IDateFormattingService>() ?? new DateFormattingService();
+        _drafts = IPlatformApplication.Current?.Services.GetService<IDraftStore>();
 
         // Normally read while the XAML is inflated. Opened from a notification, the inbox is not what is
         // waited for: the CPU belongs to the chat until it is up, so the read waits for InitializeAsync.
@@ -156,6 +158,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         var threadIds = selected.Select(t => t.ThreadId).ToList();
         var success = await _smsService.DeleteThreadsAsync(threadIds);
+        if (success)
+            _drafts?.Remove(threadIds);
 
         // A failed delete (not the default SMS app, provider error) must not look like it worked:
         // the threads would vanish here and come back on the next reload.
@@ -421,6 +425,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var archivedIds = GetArchivedThreadIds();
         var now = DateTime.Now;
         var culture = CultureInfo.CurrentUICulture;
+        var draftPreview = Gheychi.App.Localization.LocalizationManager.Instance["Inbox_DraftPreview"];
+        rawThreads = DraftInbox.Merge(rawThreads, _drafts?.GetAll() ?? []);
 
         var items = new List<ThreadItem>(rawThreads.Count);
         var archived = new List<ThreadItem>();
@@ -443,7 +449,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 Count = t.UnreadCount,
                 TotalCount = t.TotalCount,
                 Time = _dateFormatter.FormatThreadTime(t.Timestamp, now, culture),
-                Preview = t.Snippet,
+                Preview = t.HasDraft ? string.Format(draftPreview, t.Snippet) : t.Snippet,
+                HasDraft = t.HasDraft,
                 IsUnread = t.UnreadCount > 0,
                 HasFailed = t.HasFailed
             });

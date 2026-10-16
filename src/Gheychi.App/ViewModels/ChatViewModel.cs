@@ -43,6 +43,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     private readonly IDateFormattingService _dateFormatter;
     private readonly IMessageMetadataRepository _metadataRepo;
     private readonly IThreadSettings? _threadSettings;
+    private readonly IDraftStore? _drafts;
     private string _draft = string.Empty;
     private int _simSlot = 1;
     private string _stickyDate = string.Empty;
@@ -58,8 +59,11 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _metadataRepo = metadataRepo ?? IPlatformApplication.Current?.Services.GetService<IMessageMetadataRepository>() ?? new Gheychi.Infrastructure.Data.MessageMetadataRepository();
 
         _threadSettings = IPlatformApplication.Current?.Services.GetService<IThreadSettings>();
+        _drafts = IPlatformApplication.Current?.Services.GetService<IDraftStore>();
 
         _thread = thread ?? ThreadItem.Empty;
+        if (_thread.ThreadId > 0)
+            _draft = _drafts?.Get(_thread.ThreadId)?.Text ?? string.Empty;
         Items = [];
         Messages = [];
 
@@ -82,7 +86,16 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public ThreadItem Thread
     {
         get => _thread;
-        set => SetField(ref _thread, value);
+        set
+        {
+            var previous = _thread.ThreadId;
+            // What was typed belongs to the conversation being left; the box then shows the new one's own draft.
+            if (value.ThreadId != previous)
+                FlushDraft();
+
+            if (SetField(ref _thread, value) && value.ThreadId != previous)
+                RestoreDraft();
+        }
     }
 
     public FastObservableCollection<object> Items { get; }
@@ -100,8 +113,69 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public string Draft
     {
         get => _draft;
-        set => SetField(ref _draft, value);
+        set
+        {
+            if (SetField(ref _draft, value) && !_restoringDraft)
+                ScheduleDraftSave();
+        }
     }
+
+    // ---- Drafts ---------------------------------------------------------------------------------
+
+    private static readonly TimeSpan DraftSaveDelay = TimeSpan.FromMilliseconds(500);
+    private static ChatViewModel? _active;
+    private CancellationTokenSource? _draftSave;
+    private bool _restoringDraft;
+
+    private void RestoreDraft()
+    {
+        _restoringDraft = true;
+        try
+        {
+            Draft = Thread.ThreadId > 0 ? _drafts?.Get(Thread.ThreadId)?.Text ?? string.Empty : string.Empty;
+        }
+        finally
+        {
+            _restoringDraft = false;
+        }
+    }
+
+    // Saved a moment after the last key, not on each one.
+    private void ScheduleDraftSave()
+    {
+        if (_drafts is null || Thread.ThreadId <= 0)
+            return;
+
+        _draftSave?.Cancel();
+        _draftSave?.Dispose();
+        var save = _draftSave = new CancellationTokenSource();
+        _ = Task.Delay(DraftSaveDelay, save.Token).ContinueWith(
+            t =>
+            {
+                if (!t.IsCanceled)
+                    MainThread.BeginInvokeOnMainThread(FlushDraft);
+            },
+            TaskScheduler.Default);
+    }
+
+    /// <summary>Saves what is typed now, without waiting: the chat is closing, or the app is leaving the screen.</summary>
+    public void FlushDraft()
+    {
+        _draftSave?.Cancel();
+        _draftSave?.Dispose();
+        _draftSave = null;
+
+        if (_drafts is null || Thread.ThreadId <= 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_draft))
+            _drafts.Remove(Thread.ThreadId);
+        else
+            _drafts.Save(new MessageDraft(Thread.ThreadId, SendAddress, Thread.Name, Thread.SubId, _draft, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
+    }
+
+    /// <summary>The open chat's draft, saved now. The app may be killed while it is in the background.</summary>
+    public static void FlushActiveDraft() => _active?.FlushDraft();
 
     public string StickyDate
     {
@@ -815,6 +889,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         var text = Draft.Trim();
         Draft = string.Empty;
+        FlushDraft();
 
         var timeStr = _dateFormatter.FormatMessageTime(DateTime.Now, CultureInfo.CurrentUICulture);
         var subId = ResolveSubId(0);
@@ -966,6 +1041,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             return;
 
         _live = true;
+        _active = this;
         SmsDeliverReceiver.SmsReceived += OnIncomingSms;
         SmsSendTracker.OutgoingUpdated += OnOutgoingUpdated;
         SmsSendTracker.Delivered += OnDelivered;
@@ -977,6 +1053,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         if (!_live)
             return;
 
+        FlushDraft();
+        if (ReferenceEquals(_active, this))
+            _active = null;
         _live = false;
         SmsDeliverReceiver.SmsReceived -= OnIncomingSms;
         SmsSendTracker.OutgoingUpdated -= OnOutgoingUpdated;

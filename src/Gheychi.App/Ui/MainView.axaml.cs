@@ -126,7 +126,12 @@ public partial class MainView : UserControl
         window.SetNavigationBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#1A1B1E" : "#EFF0F1"));
     }
 
-    private static void OnAppResumed() => _ = Services.UpdateAutoCheck.RunAsync();
+    private void OnAppResumed()
+    {
+        _ = Services.UpdateAutoCheck.RunAsync();
+        // The keyboard and the bars may have changed while the app was away without a callback reaching it.
+        Dispatcher.UIThread.Post(ApplyInsets, DispatcherPriority.Background);
+    }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -357,6 +362,18 @@ public partial class MainView : UserControl
             (window.Height - at[1] - content.Height) / scale);
     }
 
+    // Coming back to the app with the keyboard up, the pane can briefly report a rectangle that is not the keyboard (the
+    // whole window, or one that starts at the top). Taken as the keyboard's room it left the page no height at all, with
+    // only the tab bar showing at the top. The keyboard is never taller than its own rectangle nor most of the window.
+    private static double KeyboardHeight(Rect occluded, double windowHeight)
+    {
+        if (windowHeight <= 0 || occluded.Height <= 0)
+            return 0;
+
+        var height = Math.Min(windowHeight - occluded.Top, occluded.Height);
+        return height is > 0 && height <= windowHeight * 0.6 ? height : 0;
+    }
+
     private void OnContentLayoutChanged(object? sender, global::Android.Views.View.LayoutChangeEventArgs e) => ApplyInsets();
 
     private void ApplyInsets()
@@ -380,7 +397,7 @@ public partial class MainView : UserControl
         var keyboard = 0.0;
         // Where the window is not edge to edge (before Android 11) the system shrinks it for the keyboard itself.
         if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true && _topLevel.InputPane is { State: InputPaneState.Open } pane)
-            keyboard = Math.Max(0, _topLevel.Bounds.Height - pane.OccludedRect.Top);
+            keyboard = KeyboardHeight(pane.OccludedRect, _topLevel.Bounds.Height);
 
         // The keyboard covers the navigation bar, so while it is up it alone sets the bottom edge.
         _safeBottom = keyboard > 0 ? 0 : safe.Bottom;

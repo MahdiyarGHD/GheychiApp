@@ -163,6 +163,7 @@ public class MainActivity : AvaloniaMainActivity
 
     protected override void OnPause()
     {
+        ViewModels.ChatViewModel.FlushActiveDraft();
         ChatPresence.AppVisibilityChanged(false);
         base.OnPause();
     }
