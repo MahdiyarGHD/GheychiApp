@@ -27,6 +27,10 @@ public static class TextMenu
     public static readonly AttachedProperty<bool> EnabledProperty =
         AvaloniaProperty.RegisterAttached<TextBox, TextBox, bool>("Enabled");
 
+    /// <summary>Something about the selected text, shown under the buttons (a contact the selected number belongs to).</summary>
+    public static readonly AttachedProperty<Control?> FooterProperty =
+        AvaloniaProperty.RegisterAttached<TextBox, TextBox, Control?>("Footer");
+
     private static readonly ConditionalWeakTable<TextBox, Bar> Bars = new();
 
     static TextMenu()
@@ -36,7 +40,16 @@ public static class TextMenu
             if (e.GetNewValue<bool>() && !Bars.TryGetValue(box, out _))
                 Bars.Add(box, new Bar(box));
         });
+        FooterProperty.Changed.AddClassHandler<TextBox>((box, _) =>
+        {
+            if (Bars.TryGetValue(box, out var bar))
+                bar.UpdateFooter();
+        });
     }
+
+    public static Control? GetFooter(TextBox box) => box.GetValue(FooterProperty);
+
+    public static void SetFooter(TextBox box, Control? value) => box.SetValue(FooterProperty, value);
 
     public static bool GetEnabled(TextBox box) => box.GetValue(EnabledProperty);
 
@@ -50,12 +63,20 @@ public static class TextMenu
             bar.Hide();
     }
 
+    /// <summary>Opens the bar over a selection made in code, which the box itself never offers a menu for.</summary>
+    public static void Show(TextBox box)
+    {
+        if (Bars.TryGetValue(box, out var bar))
+            bar.Show();
+    }
+
     private sealed class Bar
     {
         private readonly TextBox _box;
         private Border _card = null!;
         private Popup _popup = null!;
         private Button _cut = null!, _copy = null!, _paste = null!, _all = null!;
+        private Decorator? _footer;
         private bool _reopen;
         private int _settleVersion;
 
@@ -134,6 +155,8 @@ public static class TextMenu
 
             var row = new StackPanel { Orientation = Orientation.Horizontal };
             row.Children.AddRange([_cut, _copy, _paste, _all]);
+            var footer = _footer = new Decorator();
+            UpdateFooter();
 
             _card = new Border
             {
@@ -145,7 +168,7 @@ public static class TextMenu
                 // Room for the shadow, which the popup would otherwise clip.
                 Margin = new Thickness(8),
                 BoxShadow = new BoxShadows(new BoxShadow { OffsetY = 3, Blur = 14, Color = Color.FromArgb(0x38, 0, 0, 0) }),
-                Child = row
+                Child = new StackPanel { Children = { row, footer } }
             };
 
             _popup = new Popup
@@ -161,6 +184,15 @@ public static class TextMenu
             _popup.Opened += (_, _) => _ = OverlayAnimator.FadeAsync(_card, 0, 1, FadeIn);
         }
 
+        public void UpdateFooter()
+        {
+            if (_footer is null)
+                return;
+
+            _footer.Child = GetFooter(_box);
+            _footer.IsVisible = _footer.Child is not null;
+        }
+
         public void Hide()
         {
             if (!IsOpen)
@@ -170,7 +202,7 @@ public static class TextMenu
             ((ISetLogicalParent)_popup).SetParent(null);
         }
 
-        private void Show()
+        public void Show()
         {
             if (_popup is null)
                 Build();

@@ -8,9 +8,10 @@ using Gheychi.Core.Services;
 namespace Gheychi.App.Controls;
 
 /// <summary>
-/// <c>ctrl:RichText.Message="{Binding}"</c>: fills a TextBlock with a message's text, its links and phone numbers
-/// highlighted. Only messages that have any use it; the rest stay a plain text. The inlines are rebuilt only when a
-/// recycled row gets another message.
+/// <c>ctrl:RichText.Message="{Binding}"</c>: fills a TextBlock with a message's text, its links, phone numbers,
+/// USSD codes and one-time codes highlighted. Only messages that have any use it; the rest stay a plain text. The inlines are rebuilt only
+/// when a recycled row gets another message. Nothing here changes the size of a letter: the selection drawn over the
+/// text (see ChatView) is laid out from the plain text.
 /// </summary>
 public static class RichText
 {

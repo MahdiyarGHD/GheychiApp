@@ -13,5 +13,6 @@ public sealed record SmsMessage(
     bool IsRead = true,
     bool IsStarred = false,
     string? Reaction = null,
-    bool IsSent = false
+    bool IsSent = false,
+    bool IsUnconfirmed = false
 );

@@ -63,9 +63,6 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>Send</value>
   </data>
-  <data name="Chat_SimTitle" xml:space="preserve">
-    <value>Send via</value>
-  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -1169,5 +1166,32 @@
   </data>
   <data name="Share_Empty" xml:space="preserve">
     <value>No conversations yet. Type a number above to start one.</value>
+  </data>
+  <data name="Chat_Unconfirmed" xml:space="preserve">
+    <value>Not confirmed · Send again</value>
+  </data>
+  <data name="Chat_InfoUnconfirmed" xml:space="preserve">
+    <value>Not confirmed</value>
+  </data>
+  <data name="Chat_ResendTitle" xml:space="preserve">
+    <value>Send again?</value>
+  </data>
+  <data name="Chat_ResendUnconfirmedMessage" xml:space="preserve">
+    <value>The phone never confirmed whether this message went out. It may already have been delivered, and sending it again could deliver it twice.</value>
+  </data>
+  <data name="Chat_ResendButton" xml:space="preserve">
+    <value>Send again</value>
+  </data>
+  <data name="Chat_StillSendingTitle" xml:space="preserve">
+    <value>Still sending</value>
+  </data>
+  <data name="Chat_StillSendingMessage" xml:space="preserve">
+    <value>The same message is still being sent. Sending it again could deliver it twice.</value>
+  </data>
+  <data name="Chat_SendAnyway" xml:space="preserve">
+    <value>Send anyway</value>
+  </data>
+  <data name="Chat_OpenConversation" xml:space="preserve">
+    <value>Open conversation</value>
   </data>
 </root>

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:c="clr-namespace:Gheychi.App.Controls"
              xmlns:theme="clr-namespace:Gheychi.App.Theming"
              xmlns:ui="clr-namespace:Gheychi.App.Ui"
              x:Class="Gheychi.App.Controls.LinkMenu"
@@ -67,6 +68,14 @@
                                    VerticalAlignment="Center" />
                     </Grid>
                 </Border>
+
+                <!-- A phone number that is a contact's: the contact, to open their conversation -->
+                <StackPanel x:Name="ContactSection" IsVisible="False">
+                    <Border Height="1"
+                            Margin="6,3,6,3"
+                            Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
+                    <c:ContactChip x:Name="Contact" Tapped="OnContactTapped" />
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>
