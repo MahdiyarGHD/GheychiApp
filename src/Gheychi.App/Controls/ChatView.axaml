@@ -721,6 +721,8 @@
                     Part of a message selected (double tap): a read-only box laid over the bubble's text, with the same
                     letters in the same places. It draws only the selection and its handles; the text seen under them
                     is still the bubble's own, links and numbers included. Placed in code (ChatView.Selection.cs).
+                    No SelectionForegroundBrush: the text is transparent already, and a selection foreground splits the
+                    text into runs, which makes the handles' hit test throw on a Latin word in right-to-left text.
                 -->
                 <Canvas x:Name="SelectionLayer" ClipToBounds="True" Focusable="True">
                     <TextBox x:Name="SelectionBox"
@@ -732,7 +734,7 @@
                              VerticalContentAlignment="Top"
                              Foreground="Transparent"
                              CaretBrush="Transparent"
-                             SelectionForegroundBrush="Transparent" />
+                             SelectionForegroundBrush="{x:Null}" />
                 </Canvas>
 
                 <Border Margin="0,8,0,0"
