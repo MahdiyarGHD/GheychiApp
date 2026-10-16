@@ -436,12 +436,20 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             var slot = ResolveSlot(msg.SubId, slotMap);
             var carrier = ResolveCarrier(msg.SubId, slot, carrierMap);
 
+            // A code is only offered while it is fresh, on a message that came in.
+            var links = TextLinker.Find(msg.Body);
+            var code = !msg.IsOutgoing && links is not null && now - msg.Timestamp <= OtpDetector.FreshFor
+                ? TextLinker.FindOtp(msg.Body, links)
+                : null;
+
             var chatMsg = new ChatMessage
             {
                 Id = msg.Id,
                 Timestamp = msg.Timestamp,
                 Body = msg.Body,
-                Links = TextLinker.Find(msg.Body),
+                Links = links,
+                CopyableCode = code?.Code,
+                IsDynamicPassword = code?.Kind == OtpKind.DynamicPassword,
                 IsOutgoing = msg.IsOutgoing,
                 IsSent = msg.IsSent,
                 IsDelivered = msg.IsDelivered,

@@ -18,6 +18,7 @@ internal static class NotificationIds
     public const string ExtraAddress = "com.evergreen.gheychiapp.ADDRESS";
     public const string ExtraName = "com.evergreen.gheychiapp.NAME";
     public const string ExtraSubId = "com.evergreen.gheychiapp.SUB_ID";
+    public const string ExtraCode = "com.evergreen.gheychiapp.CODE";
     public const string ExtraOpenSpamTab = "com.evergreen.gheychiapp.OPEN_SPAM_TAB";
 
     private const int ThreadIdBase = 1000;
@@ -32,6 +33,7 @@ internal static class NotificationIds
     {
         Open = 0,
         MarkRead = 1,
-        Reply = 2
+        Reply = 2,
+        CopyCode = 3
     }
 }

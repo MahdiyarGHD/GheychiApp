@@ -19,6 +19,7 @@ public partial class NotificationSettingsScreen : SettingsScreen
         _binding = true;
         LockScreenSwitch.IsChecked = AppPreferences.ShowContentOnLockScreen;
         DeliverySwitch.IsChecked = AppPreferences.DeliveryNotifications;
+        AutoCopySwitch.IsChecked = AppPreferences.AutoCopyDynamicPassword;
         _binding = false;
     }
 
@@ -32,6 +33,12 @@ public partial class NotificationSettingsScreen : SettingsScreen
     {
         if (!_binding)
             AppPreferences.DeliveryNotifications = DeliverySwitch.IsChecked == true;
+    }
+
+    private void OnAutoCopyToggled(object? sender, RoutedEventArgs e)
+    {
+        if (!_binding)
+            AppPreferences.AutoCopyDynamicPassword = AutoCopySwitch.IsChecked == true;
     }
 
     private void OnSystemSettingsTapped(object? sender, TappedEventArgs e)

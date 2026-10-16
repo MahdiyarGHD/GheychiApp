@@ -155,6 +155,34 @@
                         </Border>
                     </Panel>
 
+                    <!-- A code that just arrived: one tap copies it. Only on new messages (see ChatViewModel). -->
+                    <Border Tag="copycode"
+                            IsVisible="{Binding ShowCopyCode}"
+                            Padding="12,7"
+                            CornerRadius="16"
+                            Background="{theme:AccentBrush Role=Soft}"
+                            HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="6" IsHitTestVisible="False">
+                            <ui:Icon IsVisible="{Binding ShowCopyIcon}"
+                                     Data="{StaticResource Icon.Copy}"
+                                     Width="14"
+                                     Height="14"
+                                     Foreground="{theme:AccentBrush Role=Text}"
+                                     VerticalAlignment="Center" />
+                            <ui:Icon IsVisible="{Binding CodeCopied}"
+                                     Data="{StaticResource Icon.Check}"
+                                     Width="14"
+                                     Height="14"
+                                     Foreground="{theme:AccentBrush Role=Text}"
+                                     VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding CopyCodeText}"
+                                       FontSize="12.5"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:AccentBrush Role=Text}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Time}"
                                    FontSize="{StaticResource ChatMetaSize}"

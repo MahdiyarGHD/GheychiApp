@@ -6,6 +6,7 @@ public static class AppPreferences
     private const string DefaultSubIdKey = "default_sim_sub_id_v1";
     private const string LockScreenContentKey = "notification_lock_screen_content_v1";
     private const string DeliveryNotificationsKey = "notification_delivery_reports_v1";
+    private const string AutoCopyDynamicKey = "otp_auto_copy_dynamic_v1";
     private const string ThemeKey = "app_theme_v1";
     private const string LanguageKey = "app_language_v1";
     private const string AccentKey = "app_accent_v1";
@@ -32,6 +33,13 @@ public static class AppPreferences
     {
         get => Preferences.Default.Get(DeliveryNotificationsKey, false);
         set => Preferences.Default.Set(DeliveryNotificationsKey, value);
+    }
+
+    /// <summary>A bank's dynamic password (رمز پویا) goes to the clipboard as soon as its message arrives. Off until asked for.</summary>
+    public static bool AutoCopyDynamicPassword
+    {
+        get => Preferences.Default.Get(AutoCopyDynamicKey, false);
+        set => Preferences.Default.Set(AutoCopyDynamicKey, value);
     }
 
     public static AppTheme Theme

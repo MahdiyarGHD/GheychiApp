@@ -1155,6 +1155,33 @@
   <data name="Chat_LinkOpenFailed" xml:space="preserve">
     <value>برنامه‌ای برای باز کردن این پیوند وجود ندارد.</value>
   </data>
+  <data name="Chat_CopyCode" xml:space="preserve">
+    <value>کپی کد</value>
+  </data>
+  <data name="Chat_CopyDynamicPassword" xml:space="preserve">
+    <value>کپی رمز پویا</value>
+  </data>
+  <data name="Chat_CodeCopied" xml:space="preserve">
+    <value>کپی شد</value>
+  </data>
+  <data name="Notification_CopyCode" xml:space="preserve">
+    <value>کپی کد</value>
+  </data>
+  <data name="Notification_CopyDynamicPassword" xml:space="preserve">
+    <value>کپی رمز پویا</value>
+  </data>
+  <data name="Notification_CodeCopied" xml:space="preserve">
+    <value>کد کپی شد</value>
+  </data>
+  <data name="Notification_CodeLabel" xml:space="preserve">
+    <value>کد تأیید</value>
+  </data>
+  <data name="Settings_AutoCopyDynamic" xml:space="preserve">
+    <value>کپی خودکار رمز پویا</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicHint" xml:space="preserve">
+    <value>رمز پویای بانک‌ها به‌محض رسیدن پیامک، کپی می‌شود.</value>
+  </data>
   <data name="Chat_Copy" xml:space="preserve">
     <value>کپی</value>
   </data>

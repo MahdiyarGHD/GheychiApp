@@ -13,12 +13,44 @@ public class TextLinkerTests
 
     [Theory]
     [InlineData("Plain message with no links.")]
-    [InlineData("Order 123456 has shipped")]
     [InlineData("On 2024-01-15 at 10:30")]
-    [InlineData("Card 6037 9911 1111 1111 expires soon")]
+    [InlineData("Wait 2 minutes")]
     [InlineData("file.txt and hello.world")]
     [InlineData("")]
     public void Find_PlainText_ReturnsNull(string text) => Assert.Null(TextLinker.Find(text));
+
+    [Theory]
+    [InlineData("Order 123456 has shipped", "123456")]
+    [InlineData("Balance 1,250,000 Rial", "1,250,000")]
+    [InlineData("موجودی ۲۵۰۰۰ ریال", "۲۵۰۰۰")]
+    [InlineData("Card 6037 9911 1111 1111 expires soon", "6037 9911 1111 1111")]
+    [InlineData("Paid 1250.50 USD", "1250.50")]
+    public void Find_Number_IsFoundWhole(string text, string expected) => Assert.Equal([expected], Shown(text, LinkKind.Number));
+
+    [Fact]
+    public void Find_Number_NotInsideAPhoneNumberOrACode()
+    {
+        const string text = "Call 09121234567. Your code is 482913.";
+
+        Assert.Empty(Shown(text, LinkKind.Number));
+        Assert.Equal(["09121234567"], Shown(text, LinkKind.Phone));
+        Assert.Equal(["482913"], Shown(text, LinkKind.Code));
+    }
+
+    [Fact]
+    public void FindOtp_IsTheCodeOfTheMessage()
+    {
+        var code = TextLinker.FindOtp("رمز پویا: ۱۲۳۴۵۶ مبلغ 25,000 ریال")!.Value;
+
+        Assert.Equal("123456", code.Code);
+        Assert.Equal(OtpKind.DynamicPassword, code.Kind);
+    }
+
+    [Theory]
+    [InlineData("Order 123456 has shipped")]
+    [InlineData("Plain")]
+    [InlineData("")]
+    public void FindOtp_NoCode_IsNull(string text) => Assert.Null(TextLinker.FindOtp(text));
 
     [Fact]
     public void Find_Url_KeepsTheTextAfterIt()

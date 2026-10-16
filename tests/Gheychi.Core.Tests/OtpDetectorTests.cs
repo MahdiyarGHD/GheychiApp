@@ -36,6 +36,27 @@ public class OtpDetectorTests
     [InlineData("۱۲۳۴۵۶ کد تایید شماست", "123456")]
     [InlineData("بانک ملی\nرمز پویا: 123456\nمعتبر تا 2 دقیقه", "123456")]
     [InlineData("سلام، کد ورود به اسنپ: ۷۳۲۱۰. لطفا آن را به کسی ندهید", "73210")]
+    // More of what banks and apps send
+    [InlineData("Use 123456 to log in to Facebook", "123456")]
+    [InlineData("Use code 998877 to verify your phone number", "998877")]
+    [InlineData("Your Apple ID Code is: 123456. Don't share it with anyone.", "123456")]
+    [InlineData("Login code: 12345. Do not give this code to anyone, even if they say they are from Telegram!", "12345")]
+    [InlineData("12345 is your Instagram code. Don't share it.", "12345")]
+    [InlineData("Use 123456 to reset your password", "123456")]
+    [InlineData("Your temporary password is 482913", "482913")]
+    [InlineData("PIN: 4321", "4321")]
+    [InlineData("<#> 5678 is your Snapp verification code\nabcDEF12345A", "5678")]
+    [InlineData("رمز پویای شما: ۱۲۳۴۵۶", "123456")]
+    [InlineData("رمزپویا: 98765432", "98765432")]
+    [InlineData("رمز دوم پویا ۵۴۳۲۱۰ برای خرید ۱,۲۰۰,۰۰۰ ریال", "543210")]
+    [InlineData("بانک ملت\nرمز پویا: 123456\nمبلغ: 1,500,000 ریال\nپذیرنده: دیجی‌کالا", "123456")]
+    [InlineData("رمز یک بار مصرف: 123456\nبانک ملی", "123456")]
+    [InlineData("رمز پویا 123456 تا ساعت 14:30 معتبر است", "123456")]
+    [InlineData("کد اعتبارسنجی شما ۱۲۳۴۵", "12345")]
+    [InlineData("رمز ورود موقت شما ۸۳۹۲۷۱ است", "839271")]
+    [InlineData("کد 4567 را وارد کنید", "4567")]
+    [InlineData("شما درخواست بازیابی رمز عبور دارید. کد بازیابی: 55421", "55421")]
+    [InlineData("کد:۱۲۳۴۵۶", "123456")]
     // Arabic
     [InlineData("رمز التحقق الخاص بك هو 482913", "482913")]
     [InlineData("كود التحقق: ٤٨٢٩١٣", "482913")]
@@ -61,9 +82,34 @@ public class OtpDetectorTests
     [InlineData("Invoice no 556677")]
     [InlineData("Your zip code is 90210")]
     [InlineData("Use code WELCOME5 on your first order")]
+    [InlineData("Verification pending, call 1234 for support")]
+    [InlineData("کد 1234 را به شماره 30001 ارسال کنید")]
+    [InlineData("کد ملی شما 0012345678 ثبت شد")]
+    [InlineData("موجودی شما 1,250,000 ریال است")]
+    [InlineData("Your order #123456 has shipped")]
     [InlineData("Plain message with nothing in it")]
     [InlineData("")]
     public void Find_NotACode(string text) => Assert.Null(OtpDetector.Find(text));
+
+    [Theory]
+    [InlineData("رمز پویا: 123456 مبلغ 25000 ریال")]
+    [InlineData("رمز دوم پویا ۱۲۳۴۵۶")]
+    [InlineData("رمز پویای شما: ۱۲۳۴۵۶")]
+    [InlineData("بانک ملی\nرمز یکبار مصرف: 123456")]
+    [InlineData("Your dynamic password is 123456")]
+    public void Kind_IsADynamicPassword(string text) => Assert.Equal(OtpKind.DynamicPassword, OtpDetector.Find(text)!.Value.Kind);
+
+    [Theory]
+    [InlineData("Your verification code is 482913")]
+    [InlineData("رمز یکبار مصرف شما در دیجی‌کالا: 12345")]
+    [InlineData("کد تایید شما: ۴۸۲۱۹")]
+    [InlineData("سلام پویا، کد ورود شما 4821 است")]
+    public void Kind_IsAVerificationCode(string text) => Assert.Equal(OtpKind.Verification, OtpDetector.Find(text)!.Value.Kind);
+
+    [Theory]
+    [InlineData("رمز پویا: 123456\nمبلغ: 25,000 ریال")]
+    [InlineData("بانک ملت\nرمز دوم پویا ۱۲۳۴۵۶۷۸")]
+    public void IsConfident_ForABanksDynamicPassword(string text) => Assert.True(OtpDetector.Find(text)!.Value.IsConfident);
 
     [Fact]
     public void Find_Span_IsTheCodeAsWritten()

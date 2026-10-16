@@ -78,6 +78,33 @@ public sealed class ChatMessage : INotifyPropertyChanged
             return string.Empty;
         }
     }
+
+    /// <summary>The code the pill under a new message copies; null when the message has none, or it is not new.</summary>
+    public string? CopyableCode { get; init; }
+
+    public bool IsDynamicPassword { get; init; }
+
+    public bool ShowCopyCode => CopyableCode is not null;
+
+    private bool _codeCopied;
+    public bool CodeCopied
+    {
+        get => _codeCopied;
+        set
+        {
+            if (SetField(ref _codeCopied, value))
+            {
+                OnPropertyChanged(nameof(CopyCodeText));
+                OnPropertyChanged(nameof(ShowCopyIcon));
+            }
+        }
+    }
+
+    public bool ShowCopyIcon => !_codeCopied;
+
+    public string CopyCodeText => Localization.LocalizationManager.Instance[
+        _codeCopied ? "Chat_CodeCopied" : IsDynamicPassword ? "Chat_CopyDynamicPassword" : "Chat_CopyCode"];
+
     public bool IsOutgoing { get; init; }
     public bool IsNotOutgoing => !IsOutgoing;
     public required string Time { get; init; }

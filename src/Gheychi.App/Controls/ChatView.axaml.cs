@@ -12,6 +12,7 @@ using Avalonia.Rendering.Composition.Animations;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gheychi.App.Localization;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
@@ -26,6 +27,7 @@ public partial class ChatView : UserControl
 {
     private const int OlderTriggerAhead = 40;
 
+    private static readonly TimeSpan CodeCopiedShown = TimeSpan.FromMilliseconds(2200);
     private static readonly TimeSpan ButtonFade = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan OverlayOpen = TimeSpan.FromMilliseconds(180);
     private static readonly TimeSpan OverlayClose = TimeSpan.FromMilliseconds(150);
@@ -600,6 +602,13 @@ public partial class ChatView : UserControl
                     RetryReaction(vm, message);
                 break;
 
+            case "copycode":
+                if (vm.IsSelectionMode)
+                    vm.ToggleMessageSelection(message);
+                else
+                    CopyCode(message);
+                break;
+
             case "bubble":
                 if (vm.IsSelectionMode)
                     vm.ToggleMessageSelection(message);
@@ -690,6 +699,21 @@ public partial class ChatView : UserControl
         }
 
         return null;
+    }
+
+    // The pill under a new message: the code is on the clipboard, and the pill says so for a moment.
+    private async void CopyCode(ChatMessage message)
+    {
+        if (message.CopyableCode is not { } code || message.CodeCopied)
+            return;
+
+        TriggerHaptic();
+        if (!OtpClipboard.Copy(Platform.AppContext, code, sensitive: false))
+            return;
+
+        message.CodeCopied = true;
+        await Task.Delay(CodeCopiedShown);
+        message.CodeCopied = false;
     }
 
     private void ShowLinkMenu(ChatMessage message, LinkSpan span, Rect anchor)

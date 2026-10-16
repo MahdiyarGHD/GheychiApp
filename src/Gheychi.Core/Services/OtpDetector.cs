@@ -4,12 +4,22 @@ namespace Gheychi.Core.Services;
 
 /// <summary>A one-time code found in a message: where it is as written, and the code itself as Latin digits (or letters) only.</summary>
 /// <param name="Score">How sure the detector is; only codes that passed the bar are returned.</param>
+/// <param name="Kind">What the message calls it: a verification code, or a bank's dynamic password (رمز پویا).</param>
 /// <param name="IsConfident">
 /// Sure enough to be filled in without asking: the message names it plainly, and nothing else in it competes for being the code.
 /// </param>
-public readonly record struct OtpCode(int Start, int Length, string Code, double Score, bool IsConfident)
+public readonly record struct OtpCode(int Start, int Length, string Code, double Score, bool IsConfident, OtpKind Kind = OtpKind.Verification)
 {
     public int End => Start + Length;
+}
+
+public enum OtpKind
+{
+    /// <summary>A code that proves who the reader is: a login, a sign-up, a new device.</summary>
+    Verification,
+
+    /// <summary>The "رمز پویا" of an Iranian bank (or any dynamic password): it confirms one payment, and is typed into a bank's page.</summary>
+    DynamicPassword
 }
 
 /// <summary>
@@ -21,6 +31,9 @@ public readonly record struct OtpCode(int Start, int Length, string Code, double
 /// </summary>
 public static partial class OtpDetector
 {
+    /// <summary>How long after it arrives a code is still offered for copying: codes last a few minutes.</summary>
+    public static readonly TimeSpan FreshFor = TimeSpan.FromMinutes(10);
+
     private const double AcceptScore = 9;
     private const double ConfidentScore = 11;
     private const double ConfidentMargin = 3;
@@ -36,11 +49,11 @@ public static partial class OtpDetector
     private static partial Regex OriginBoundRegex();
 
     // A whole run of digits on its own: not a part of a longer number, an amount, a time or a word ("A1234", "4G").
-    [GeneratedRegex(@"(?<![\w.,٬٫/:+*#])(?<!\d-)\d{4,8}(?!\w|[.,٬٫/:\-]\d)", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"(?<![\w.,٬٫/+*#])(?<!\d[:\-])\d{4,8}(?!\w|[.,٬٫/:\-]\d)", RegexOptions.CultureInvariant)]
     private static partial Regex DigitsRegex();
 
     // "123 456", "1234-5678": a code written in two groups.
-    [GeneratedRegex(@"(?<![\w.,٬٫/:+*#\-])(?<!\d[ \-])\d{3,4}[ \-]\d{3,4}(?!\w|[ \-.,٬٫/:]\d)", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"(?<![\w.,٬٫/+*#\-])(?<!\d[:\- ])\d{3,4}[ \-]\d{3,4}(?!\w|[ \-.,٬٫/:]\d)", RegexOptions.CultureInvariant)]
     private static partial Regex GroupedRegex();
 
     // "X7K2P9": capitals and digits mixed.
@@ -60,13 +73,29 @@ public static partial class OtpDetector
     [GeneratedRegex(@"\b(?:enter|use|type|input|submit)\b|وارد|استفاده", RegexOptions.CultureInvariant)]
     private static partial Regex EnterRegex();
 
+    // "رمز پویا", "رمز دوم پویا", "dynamic password": the name Iranian banks give to a payment's one-time password.
+    [GeneratedRegex(@"(?:رمز|کد|پسورد|گذرواژه)\s*(?:دوم\s*)?پویا|dynamic\s*(?:password|pin|code|otp)", RegexOptions.CultureInvariant)]
+    private static partial Regex DynamicNameRegex();
+
+    // "رمز یکبار مصرف" is a bank's too, when the message is about a payment or a card.
+    [GeneratedRegex(@"رمز\s*(?:دوم\s*)?یکبارمصرف", RegexOptions.CultureInvariant)]
+    private static partial Regex OneTimePasswordRegex();
+
+    [GeneratedRegex(@"بانک|تراکنش|پرداخت|خرید|کارت|شتاب|پذیرنده|bank|transaction|payment|purchase|card", RegexOptions.CultureInvariant)]
+    private static partial Regex BankingRegex();
+
+    // Two words that are one: "log in", "یک بار مصرف". Joined, with the space moved to the end so every index holds.
+    [GeneratedRegex(@"\b(?:log|sign) in\b|\bone time\b|\bpass code\b|یک ?بار ?مصرف", RegexOptions.CultureInvariant)]
+    private static partial Regex GlueRegex();
+
     // Words that name a code in a way that makes it a one-time code.
     private static readonly HashSet<string> Strong = new(StringComparer.Ordinal)
     {
         "otp", "verification", "verify", "verifying", "authentication", "authenticate", "authorization", "authorisation",
         "passcode", "2fa", "onetime", "one-time", "security", "login", "log-in", "signin", "sign-in", "confirmation",
         "confirm", "validation", "activation", "doğrulama", "verificación", "vérification", "подтверждения", "проверочный",
-        "تایید", "تاییدیه", "تأیید", "احراز", "پویا", "فعال", "یکبار", "یکبارمصرف", "امنیتی", "فعالسازی", "التحقق", "تحقق"
+        "تایید", "تاییدیه", "تأیید", "احراز", "پویا", "فعال", "یکبار", "یکبارمصرف", "امنیتی", "فعالسازی", "التحقق", "تحقق",
+        "موقت", "اعتبارسنجی", "temporary", "dynamic", "mfa", "mtan", "reset", "recovery", "بازیابی"
     };
 
     // Words that name a code that may or may not be a one-time one.
@@ -82,7 +111,7 @@ public static partial class OtpDetector
         "tracking", "track", "promo", "promotional", "discount", "coupon", "voucher", "referral", "invite", "invitation",
         "zip", "postal", "post", "area", "country", "dial", "order", "invoice", "receipt", "reference", "ref", "booking",
         "reservation", "ticket", "flight", "account", "acct", "iban", "card", "amount", "balance", "total", "price", "bill",
-        "id", "policy", "case", "پیگیری", "رهگیری", "سفارش", "تخفیف", "کوپن", "معرف", "دعوت", "پستی", "ملی", "مبلغ",
+        "policy", "case", "call", "تماس", "پیگیری", "رهگیری", "سفارش", "تخفیف", "کوپن", "معرف", "دعوت", "پستی", "ملی", "مبلغ",
         "موجودی", "حساب", "کارت", "قبض", "شناسه", "مرسوله", "بلیط", "پرواز", "فاکتور", "رزرو", "شماره", "شبا"
     };
 
@@ -93,6 +122,12 @@ public static partial class OtpDetector
         "dollars", "euro", "euros", "درصد", "percent", "gb", "mb", "kb", "km", "kg", "گیگ", "مگ", "میلیون", "میلیارد", "هزار",
         "million", "billion", "thousand", "min", "mins", "minute", "minutes", "sec", "secs", "second", "seconds", "hour",
         "hours", "دقیقه", "ثانیه", "ساعت", "روز", "days", "day"
+    };
+
+    // "12345 is your Instagram code": the words that only join the number to its name.
+    private static readonly HashSet<string> Filler = new(StringComparer.Ordinal)
+    {
+        "is", "your", "the", "a", "an", "this", "our", "for", "to", "شما", "است", "ما", "تان", "خود", "برای"
     };
 
     private const string Punctuation = ":#-=()[]{}\"'«»<>.,;!?؟،؛*_/\\|~٬";
@@ -129,7 +164,7 @@ public static partial class OtpDetector
             return found;
         }
 
-        var normal = Normalize(text);
+        var normal = Glue(Normalize(text));
         var masked = DateMask.Apply(normal);
         var context = ContextBonus(normal);
         var warned = ShareWarningRegex().IsMatch(normal) || ValidityRegex().IsMatch(normal);
@@ -145,11 +180,12 @@ public static partial class OtpDetector
             Consider(match, "mixed");
 
         found.Sort(static (a, b) => a.Start.CompareTo(b.Start));
+        var kind = KindOf(normal);
         for (var i = 0; i < found.Count; i++)
         {
             var code = found[i];
             var rival = found.Any(other => other.Code != code.Code && other.Score > code.Score - ConfidentMargin);
-            found[i] = code with { IsConfident = code.Score >= ConfidentScore && !rival };
+            found[i] = code with { IsConfident = code.Score >= ConfidentScore && !rival, Kind = kind };
         }
 
         return found;
@@ -246,7 +282,7 @@ public static partial class OtpDetector
                 else
                 {
                     qualifier |= kind == Word.Qualifier;
-                    if (++gap > MaxLabelWords)
+                    if (!Filler.Contains(word) && ++gap > MaxLabelWords)
                         break;
                 }
             }
@@ -297,7 +333,7 @@ public static partial class OtpDetector
                 else
                 {
                     qualifier |= kind == Word.Qualifier;
-                    if (++gap > MaxLabelWords)
+                    if (!Filler.Contains(word) && ++gap > MaxLabelWords)
                         break;
                 }
             }
@@ -336,9 +372,29 @@ public static partial class OtpDetector
         return gap;
     }
 
+    private static OtpKind KindOf(string text) =>
+        DynamicNameRegex().IsMatch(text) || (OneTimePasswordRegex().IsMatch(text) && BankingRegex().IsMatch(text))
+            ? OtpKind.DynamicPassword
+            : OtpKind.Verification;
+
+    private static string Glue(string text) =>
+        GlueRegex().IsMatch(text)
+            ? GlueRegex().Replace(text, static match =>
+            {
+                var gaps = 0;
+                foreach (var c in match.Value)
+                {
+                    if (c == ' ')
+                        gaps++;
+                }
+
+                return match.Value.Replace(" ", string.Empty) + new string(' ', gaps);
+            })
+            : text;
+
     private static double ContextBonus(string text)
     {
-        var bonus = 0;
+        double bonus = 0;
         if (ShareWarningRegex().IsMatch(text))
             bonus++;
         if (ValidityRegex().IsMatch(text))
@@ -349,8 +405,15 @@ public static partial class OtpDetector
             bonus++;
 
         bonus = Math.Min(bonus, 3);
+        if (SendInstructionRegex().IsMatch(text))
+            bonus -= PromoPenalty;
+
         return PromoRegex().IsMatch(text) ? bonus - PromoPenalty : bonus;
     }
+
+    // "کد 1234 را به شماره 30001 ارسال کنید": a number to send somewhere, not one to type.
+    [GeneratedRegex(@"ارسال\s*(?:کنید|نمایید|نمائید|فرمایید)|بفرستید|send\s+(?:\w+\s+){0,2}to\s+\d{3,}", RegexOptions.CultureInvariant)]
+    private static partial Regex SendInstructionRegex();
 
     // A sale, not a login: "use code 1234 at checkout for 20% off".
     [GeneratedRegex(@"\boff\b|discount|checkout|\bsale\b|\bsave\b|\bfree\b|\boffer\b|\bgift\b|promo|تخفیف|هدیه|رایگان|\d%|٪", RegexOptions.CultureInvariant)]
@@ -366,10 +429,27 @@ public static partial class OtpDetector
         if (Strong.Contains(word))
             return Word.Strong;
 
+        // "رمزپویا", written as one word.
+        if (word.StartsWith("رمز", StringComparison.Ordinal) && word.Contains("پویا", StringComparison.Ordinal))
+            return Word.Strong;
+
         if (Weak.Contains(word) || (word.StartsWith("رمز", StringComparison.Ordinal) && !word.StartsWith("رمزارز", StringComparison.Ordinal)))
             return Word.Weak;
 
-        return Qualifier.Contains(word) ? Word.Qualifier : Word.None;
+        if (Qualifier.Contains(word))
+            return Word.Qualifier;
+
+        // "پویای شما", "کدی": the same word with the Persian suffix.
+        if (word.Length > 3 && word[^1] == 'ی')
+        {
+            var stem = word[..^1];
+            if (Strong.Contains(stem))
+                return Word.Strong;
+            if (Weak.Contains(stem))
+                return Word.Weak;
+        }
+
+        return Word.None;
     }
 
     private static bool LooksLikeYear(ReadOnlySpan<char> digits) =>
@@ -444,7 +524,16 @@ public static partial class OtpDetector
 
     private static bool IsSentenceEnd(string text, int i) =>
         text[i] is '!' or '?' or '؟' or '؛' or ';' ||
-        (text[i] == '.' && (i + 1 >= text.Length || char.IsWhiteSpace(text[i + 1])));
+        (text[i] == '.' && (i + 1 >= text.Length || (char.IsWhiteSpace(text[i + 1]) && !NumberFollows(text, i + 1))));
+
+    // "Rs. 5000", "No. 12": the full stop belongs to the abbreviation.
+    private static bool NumberFollows(string text, int from)
+    {
+        while (from < text.Length && char.IsWhiteSpace(text[from]))
+            from++;
+
+        return from < text.Length && char.IsDigit(text[from]);
+    }
 
     private static string Strip(ReadOnlySpan<char> word) => word.Trim(Punctuation).ToString();
 

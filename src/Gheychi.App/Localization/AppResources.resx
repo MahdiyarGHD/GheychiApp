@@ -1155,6 +1155,33 @@
   <data name="Chat_LinkOpenFailed" xml:space="preserve">
     <value>No app can open this link.</value>
   </data>
+  <data name="Chat_CopyCode" xml:space="preserve">
+    <value>Copy code</value>
+  </data>
+  <data name="Chat_CopyDynamicPassword" xml:space="preserve">
+    <value>Copy password</value>
+  </data>
+  <data name="Chat_CodeCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Notification_CopyCode" xml:space="preserve">
+    <value>Copy code</value>
+  </data>
+  <data name="Notification_CopyDynamicPassword" xml:space="preserve">
+    <value>Copy password</value>
+  </data>
+  <data name="Notification_CodeCopied" xml:space="preserve">
+    <value>Code copied</value>
+  </data>
+  <data name="Notification_CodeLabel" xml:space="preserve">
+    <value>Verification code</value>
+  </data>
+  <data name="Settings_AutoCopyDynamic" xml:space="preserve">
+    <value>Copy dynamic passwords</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicHint" xml:space="preserve">
+    <value>Copies a bank&#8217;s dynamic password (رمز پویا) as soon as its message arrives.</value>
+  </data>
   <data name="Chat_Copy" xml:space="preserve">
     <value>Copy</value>
   </data>

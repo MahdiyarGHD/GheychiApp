@@ -9,7 +9,9 @@ public enum LinkKind
     /// <summary>A USSD code ("*815*3453#"): a tap opens the dialer with it filled in.</summary>
     Ussd,
     /// <summary>A one-time code ("Your code is 482913"): a tap offers to copy it.</summary>
-    Code
+    Code,
+    /// <summary>Any other number worth the eye (an amount, a balance, a count): shown bold, nothing to tap.</summary>
+    Number
 }
 
 /// <summary>A link, a phone number, a USSD code or a one-time code inside a message: where it is in the text, and what it is.</summary>
@@ -27,6 +29,8 @@ public static partial class TextLinker
     private const int MaxDigitsInOneGroup = 5;
     private const int MaxUssdLength = 32;
     private const int MinCodeDigits = 4;
+    private const int MinNumberDigits = 3;
+    private const int MaxNumbers = 40;
 
     private const string TrailingPunctuation = ".,;:!?'\"»›«‹…،؛؟";
 
@@ -42,6 +46,10 @@ public static partial class TextLinker
     // "*100#", "*815*3453#", "*#06#": stars, digits and hashes, set apart from the words around it, ending in a hash.
     [GeneratedRegex(@"(?<![\w*#])(?=[*#]*\d)[*#][\d*#]{1,31}#(?!\w)", RegexOptions.CultureInvariant)]
     private static partial Regex UssdRegex();
+
+    // An amount or a count as written: digits, in groups of thousands or with decimals. Not part of a word, a date, a time or a range.
+    [GeneratedRegex(@"(?<![\w.,٬٫/:+*#\-])(?:\d{4}(?:[ \-]\d{4}){3}(?![\w.,٬٫]\d)|\d+(?:[,٬٫.]\d+)*)(?![A-Za-z0-9_])", RegexOptions.CultureInvariant)]
+    private static partial Regex NumberRegex();
 
     /// <returns>The links in order of appearance, or null when there are none (nearly every message).</returns>
     public static LinkSpan[]? Find(string? text)
@@ -66,12 +74,38 @@ public static partial class TextLinker
         FindUssd(ref found, text);
         FindPhones(ref found, DateMask.Apply(text));
         FindCodes(ref found, text);
+        FindNumbers(ref found, text);
 
         if (found is null)
             return null;
 
         found.Sort(static (a, b) => a.Start.CompareTo(b.Start));
         return found.ToArray();
+    }
+
+    /// <summary>
+    /// The one-time code of a message, the way the message's links were found: a number that is part of a link or a phone
+    /// number is never the code. Null when it has none.
+    /// </summary>
+    public static OtpCode? FindOtp(string? text, LinkSpan[]? links = null)
+    {
+        if (string.IsNullOrEmpty(text))
+            return null;
+
+        links ??= Find(text);
+        if (links is null || !Array.Exists(links, static span => span.Kind == LinkKind.Code))
+            return null;
+
+        return OtpDetector.Find(text, (start, length) =>
+        {
+            foreach (var span in links)
+            {
+                if (span.Kind is not (LinkKind.Code or LinkKind.Number) && start < span.End && span.Start < start + length)
+                    return true;
+            }
+
+            return false;
+        });
     }
 
     /// <summary>
@@ -105,7 +139,7 @@ public static partial class TextLinker
             if (c == '.' || c == '/' || c == '#')
                 return true;
 
-            if (char.IsDigit(c) && ++digits >= MinCodeDigits)
+            if (char.IsDigit(c) && ++digits >= MinNumberDigits)
                 return true;
         }
 
@@ -238,6 +272,34 @@ public static partial class TextLinker
         var taken = found;
         foreach (var code in OtpDetector.FindAll(text, (start, length) => Overlaps(taken, start, length)))
             (found ??= []).Add(new LinkSpan(code.Start, code.Length, LinkKind.Code));
+    }
+
+    private static void FindNumbers(ref List<LinkSpan>? found, string text)
+    {
+        // The dates are blanked first: "1405/07/29" is a date, not a number to stress.
+        var masked = DateMask.Apply(text);
+        var added = 0;
+        foreach (Match match in NumberRegex().Matches(masked))
+        {
+            if (CountDigits(match.ValueSpan) < MinNumberDigits || Overlaps(found, match.Index, match.Length))
+                continue;
+
+            (found ??= []).Add(new LinkSpan(match.Index, match.Length, LinkKind.Number));
+            if (++added == MaxNumbers)
+                return;
+        }
+    }
+
+    private static int CountDigits(ReadOnlySpan<char> text)
+    {
+        var digits = 0;
+        foreach (var c in text)
+        {
+            if (char.IsDigit(c))
+                digits++;
+        }
+
+        return digits;
     }
 
     private static bool IsSeparator(char c) => c is ' ' or '-' or '.' or '(' or ')' or ' ';

@@ -157,6 +157,13 @@ public partial class ChatView
         _openingSelection = true;
         try
         {
+            // The selection is laid out from the plain text: bold digits are wider, so they are plain while it is open.
+            if (message.Links is not null)
+            {
+                RichText.SetEmphasis(block, false);
+                block.UpdateLayout();
+            }
+
             OpenTextSelectionCore(block, message, start, end);
         }
         finally
@@ -231,6 +238,9 @@ public partial class ChatView
     {
         if (!IsTextSelected)
             return;
+
+        if (_selectedBlock is { } selected && ReferenceEquals(RichText.GetMessage(selected), _selectedMessage))
+            RichText.SetEmphasis(selected, true);
 
         _selectedBlock = null;
         _selectedMessage = null;
