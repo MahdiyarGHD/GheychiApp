@@ -96,45 +96,65 @@ public class TextLinkerTests
         Assert.Equal(expected, TextLinker.Target(text, span));
     }
 
-    private static string[] Numbers(string text) =>
-        (TextLinker.Find(text, numbers: true) ?? [])
-        .Where(span => span.Kind == LinkKind.Number)
-        .Select(span => text.Substring(span.Start, span.Length))
-        .ToArray();
+    [Theory]
+    [InlineData("Dial *815*3453# now", "*815*3453#")]
+    [InlineData("کد *۸۱۵*۳۴۵۳# را بگیرید", "*۸۱۵*۳۴۵۳#")]
+    [InlineData("Balance: *100#.", "*100#")]
+    [InlineData("IMEI *#06# shows it", "*#06#")]
+    [InlineData("Send *123*1*2# or #777#", "*123*1*2#")]
+    public void Find_Ussd(string text, string expected) =>
+        Assert.Equal([expected], Shown(text, LinkKind.Ussd).Take(1));
 
     [Theory]
-    [InlineData("Your code is 123456", "123456")]
-    [InlineData("کد تایید شما: ۴۸۲۱۹ است", "۴۸۲۱۹")]
-    [InlineData("G-884213 is your Google verification code.", "884213")]
-    [InlineData("Card 6037 9911 1111 1111 expires soon", "6037 9911 1111 1111")]
-    [InlineData("Amount: 12,500,000 Rials", "12,500,000")]
-    [InlineData("مبلغ ۱۲٬۵۰۰٬۰۰۰ ریال", "۱۲٬۵۰۰٬۰۰۰")]
-    [InlineData("Ref #A12 tracking 4471-2290.", "4471-2290")]
-    public void Numbers_AreFoundWhole(string text, string expected) =>
-        Assert.Equal([expected], Numbers(text));
+    [InlineData("C# and F# are languages")]
+    [InlineData("Order #1234 shipped")]
+    [InlineData("Rated 5*** by users")]
+    [InlineData("###")]
+    [InlineData("Code *123#4 is wrong")]
+    public void Find_NotUssd(string text) => Assert.Empty(Shown(text, LinkKind.Ussd));
 
     [Theory]
-    [InlineData("4G and 5G, 10GB, A1234 and 12abc")]
-    [InlineData("On 2024-01-15 at 10:30")]
-    [InlineData("تاریخ ۱۴۰۳/۰۵/۱۲")]
-    [InlineData("Code 123, then 45")]
-    [InlineData("Plain message with no numbers.")]
-    public void ShortGluedOrDateNumbers_AreNotPickedOut(string text) =>
-        Assert.Empty(Numbers(text));
+    [InlineData("*815*3453#", "*815*3453#")]
+    [InlineData("*۸۱۵*۳۴۵۳#", "*815*3453#")]
+    public void Target_Ussd_KeepsStarsAndHashesWithLatinDigits(string text, string expected)
+    {
+        var span = TextLinker.Find(text)!.Single();
+
+        Assert.Equal(LinkKind.Ussd, span.Kind);
+        Assert.Equal(expected, TextLinker.Target(text, span));
+    }
+
+    [Theory]
+    [InlineData("1405.07.29 00")]
+    [InlineData("تاریخ 1405.07.29 00:15 مبلغ")]
+    [InlineData("on 2024/01/15 10:30:45 paid")]
+    [InlineData("پرداخت ۱۴۰۵/۰۷/۲۹ ۲۳:۵۹")]
+    [InlineData("15.01.2024 12")]
+    [InlineData("1405-07-29 09")]
+    public void Find_DateAndTime_AreNotAPhone(string text) => Assert.Null(TextLinker.Find(text));
 
     [Fact]
-    public void PhoneNumber_StaysAPhoneNotANumber()
+    public void Find_PhoneNextToADate_StaysAPhone()
     {
-        const string text = "Call 09121234567 and use code 5521";
+        const string text = "1405.07.29 09121234567";
 
         Assert.Equal(["09121234567"], Shown(text, LinkKind.Phone));
-        Assert.Equal(["5521"], Numbers(text));
     }
 
     [Fact]
-    public void WithoutNumbers_FindIsUnchanged()
+    public void Find_PhoneWithDottedGroups_IsNotTakenForADate()
     {
-        Assert.Null(TextLinker.Find("Your code is 123456"));
-        Assert.Equal([LinkKind.Url, LinkKind.Number], TextLinker.Find("https://a.com code 9921", numbers: true)!.Select(s => s.Kind));
+        const string text = "Call 0912.345.6789";
+
+        Assert.Equal(["0912.345.6789"], Shown(text, LinkKind.Phone));
+    }
+
+    [Fact]
+    public void Find_PhoneUssdAndUrl_KeepEach()
+    {
+        const string text = "Call 09121234567 or dial *100# or open https://a.com/x#top";
+        var spans = TextLinker.Find(text)!;
+
+        Assert.Equal([LinkKind.Phone, LinkKind.Ussd, LinkKind.Url], spans.Select(s => s.Kind));
     }
 }

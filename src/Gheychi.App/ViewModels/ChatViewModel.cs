@@ -367,7 +367,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 Id = msg.Id,
                 Timestamp = msg.Timestamp,
                 Body = msg.Body,
-                Links = TextLinker.Find(msg.Body, numbers: true),
+                Links = TextLinker.Find(msg.Body),
                 IsOutgoing = msg.IsOutgoing,
                 IsSent = msg.IsSent,
                 IsDelivered = msg.IsDelivered,
@@ -822,7 +822,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         var outgoingMsg = new ChatMessage
         {
             Body = text,
-            Links = TextLinker.Find(text, numbers: true),
+            Links = TextLinker.Find(text),
             IsOutgoing = true,
             IsDelivered = false,
             Time = timeStr,

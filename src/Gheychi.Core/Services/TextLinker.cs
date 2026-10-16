@@ -6,24 +6,24 @@ public enum LinkKind
 {
     Url,
     Phone,
-    /// <summary>A code, an amount, a reference number: highlighted and easy to select, but not a link (a tap does nothing).</summary>
-    Number
+    /// <summary>A USSD code ("*815*3453#"): a tap opens the dialer with it filled in.</summary>
+    Ussd
 }
 
-/// <summary>A link or a phone number inside a message: where it is in the text, and what it is.</summary>
+/// <summary>A link, a phone number or a USSD code inside a message: where it is in the text, and what it is.</summary>
 public readonly record struct LinkSpan(int Start, int Length, LinkKind Kind)
 {
     public int End => Start + Length;
 }
 
-/// <summary>Finds the links and the phone numbers in a message, so they can be shown highlighted and be tapped.</summary>
+/// <summary>Finds the links, phone numbers and USSD codes in a message, so they can be shown highlighted and be tapped.</summary>
 public static partial class TextLinker
 {
     private const int MinPhoneDigits = 8;
     private const int MinPlainPhoneDigits = 10;
     private const int MaxPhoneDigits = 15;
     private const int MaxDigitsInOneGroup = 5;
-    private const int MinNumberDigits = 4;
+    private const int MaxUssdLength = 32;
 
     private const string TrailingPunctuation = ".,;:!?'\"»›«‹…،؛؟";
 
@@ -36,14 +36,21 @@ public static partial class TextLinker
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex BareUrlRegex();
 
-    [GeneratedRegex(@"^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$|^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}$")]
+    // Three groups of digits with one separator: whether it is a date is decided by the numbers (see IsDate). The time
+    // that follows ("1405.07.29 00:15", or just the hour) belongs to it, or it would be joined onto the digits of a phone number.
+    [GeneratedRegex(
+        @"(?<![\d/.\-])(?<a>\d{1,4})(?<s>[/.\-])(?<b>\d{1,2})\k<s>(?<c>\d{1,4})(?:[ T]+\d{1,2}(?::\d{2}){0,2}(?!\d))?(?!\d|[/.\-]\d)",
+        RegexOptions.CultureInvariant)]
     private static partial Regex DateRegex();
 
-    /// <param name="numbers">Also the other numbers worth picking out (<see cref="LinkKind.Number"/>).</param>
+    // "*100#", "*815*3453#", "*#06#": stars, digits and hashes, set apart from the words around it, ending in a hash.
+    [GeneratedRegex(@"(?<![\w*#])(?=[*#]*\d)[*#][\d*#]{1,31}#(?!\w)", RegexOptions.CultureInvariant)]
+    private static partial Regex UssdRegex();
+
     /// <returns>The links in order of appearance, or null when there are none (nearly every message).</returns>
-    public static LinkSpan[]? Find(string? text, bool numbers = false)
+    public static LinkSpan[]? Find(string? text)
     {
-        if (string.IsNullOrEmpty(text) || !MayContainLink(text, numbers))
+        if (string.IsNullOrEmpty(text) || !MayContainLink(text))
             return null;
 
         List<LinkSpan>? found = null;
@@ -60,9 +67,8 @@ public static partial class TextLinker
             }
         }
 
-        FindPhones(ref found, text);
-        if (numbers)
-            FindNumbers(ref found, text);
+        FindUssd(ref found, text);
+        FindPhones(ref found, MaskDates(text));
 
         if (found is null)
             return null;
@@ -71,37 +77,38 @@ public static partial class TextLinker
         return found.ToArray();
     }
 
-    /// <summary>What a tap on the link opens: a web address with its scheme, or a number as digits (with a leading "+" if it had one).</summary>
+    /// <summary>
+    /// What a tap on the link opens: a web address with its scheme, a number as digits (with a leading "+" if it had
+    /// one), or a USSD code with its stars and hashes and Latin digits.
+    /// </summary>
     public static string Target(string text, LinkSpan span)
     {
         var shown = text.Substring(span.Start, span.Length);
         if (span.Kind == LinkKind.Url)
             return shown.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? shown : "https://" + shown;
 
-        var digits = new char[shown.Length + 1];
+        var target = new char[shown.Length];
         var length = 0;
-        if (shown.StartsWith('+'))
-            digits[length++] = '+';
-
         foreach (var c in shown)
         {
             if (char.IsDigit(c))
-                digits[length++] = (char)('0' + (int)char.GetNumericValue(c));
+                target[length++] = (char)('0' + (int)char.GetNumericValue(c));
+            else if (c == '*' || c == '#' || (c == '+' && length == 0))
+                target[length++] = c;
         }
 
-        return new string(digits, 0, length);
+        return new string(target, 0, length);
     }
 
-    private static bool MayContainLink(string text, bool numbers)
+    private static bool MayContainLink(string text)
     {
         var digits = 0;
-        var enough = numbers ? MinNumberDigits : MinPhoneDigits;
         foreach (var c in text)
         {
-            if (c == '.' || c == '/')
+            if (c == '.' || c == '/' || c == '#')
                 return true;
 
-            if (char.IsDigit(c) && ++digits >= enough)
+            if (char.IsDigit(c) && ++digits >= MinPhoneDigits)
                 return true;
         }
 
@@ -216,56 +223,54 @@ public static partial class TextLinker
         return end;
     }
 
-    /// <summary>
-    /// Whole numbers, not their digits: a code ("123456", "G-884213"), a card number in groups, an amount ("12,500,000").
-    /// A number glued to a letter ("4G", "A1234"), a short one, a date and what is already a link are left alone.
-    /// </summary>
-    private static void FindNumbers(ref List<LinkSpan>? found, string text)
+    private static void FindUssd(ref List<LinkSpan>? found, string text)
     {
-        var i = 0;
-        while (i < text.Length)
+        if (!text.Contains('#'))
+            return;
+
+        foreach (Match match in UssdRegex().Matches(text))
         {
-            if (!char.IsDigit(text[i]) || (i > 0 && (char.IsLetterOrDigit(text[i - 1]) || text[i - 1] == '+')))
-            {
-                i++;
-                continue;
-            }
-
-            var digits = 0;
-            var end = i;
-            var j = i;
-            var separator = '\0';
-            while (j < text.Length)
-            {
-                if (char.IsDigit(text[j]))
-                {
-                    digits++;
-                    end = ++j;
-                }
-                // Groups set apart by one kind of separator: "6037 9911", "12,500", "۱۲٬۵۰۰" (Arabic separators). A date is
-                // read whole too ("1403/05/12"), so it is recognised and left out, and the time after it is not joined on.
-                else if (IsNumberSeparator(text[j]) && (separator == '\0' || text[j] == separator) &&
-                         j + 1 < text.Length && char.IsDigit(text[j + 1]))
-                {
-                    separator = text[j];
-                    j++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            var glued = end < text.Length && char.IsLetter(text[end]);
-            if (digits >= MinNumberDigits && !glued && !Overlaps(found, i, end - i) &&
-                !DateRegex().IsMatch(text.AsSpan(i, end - i)))
-                (found ??= []).Add(new LinkSpan(i, end - i, LinkKind.Number));
-
-            i = end;
+            if (match.Length <= MaxUssdLength && !Overlaps(found, match.Index, match.Length))
+                (found ??= []).Add(new LinkSpan(match.Index, match.Length, LinkKind.Ussd));
         }
     }
 
-    private static bool IsNumberSeparator(char c) => c is ' ' or ' ' or '-' or '.' or '/' or ',' or '٬' or '٫';
+    /// <summary>The text with its dates (and the time after them) blanked out by letters, so that no phone number is read from their digits.</summary>
+    private static string MaskDates(string text)
+    {
+        if (!text.Contains('.') && !text.Contains('/') && !text.Contains('-'))
+            return text;
+
+        return DateRegex().Replace(text, static match =>
+            IsDate(match.Groups["a"].Value, match.Groups["b"].Value, match.Groups["c"].Value)
+                ? new string('x', match.Length)
+                : match.Value);
+    }
+
+    // year-month-day (Gregorian or Jalali, "1405.07.29"), or day-month-year and the two-digit years of both.
+    private static bool IsDate(string a, string b, string c)
+    {
+        var (first, second, third) = (Number(a), Number(b), Number(c));
+        if (second is < 1 or > 12)
+            return false;
+
+        if (a.Length == 4)
+            return c.Length <= 2 && third is >= 1 and <= 31;
+
+        if (c.Length == 4)
+            return a.Length <= 2 && first is >= 1 and <= 31;
+
+        return a.Length <= 2 && c.Length <= 2 && ((first is >= 1 and <= 31) || (third is >= 1 and <= 31));
+    }
+
+    private static int Number(string digits)
+    {
+        var value = 0;
+        foreach (var c in digits)
+            value = value * 10 + (int)char.GetNumericValue(c);
+
+        return value;
+    }
 
     private static bool IsSeparator(char c) => c is ' ' or '-' or '.' or '(' or ')' or ' ';
 
@@ -275,9 +280,6 @@ public static partial class TextLinker
             return false;
 
         var plus = text[start] == '+';
-        if (!(plus ? digits >= MinPhoneDigits : digits >= MinPlainPhoneDigits) || digits > MaxPhoneDigits)
-            return false;
-
-        return !DateRegex().IsMatch(text.AsSpan(start, end - start));
+        return (plus ? digits >= MinPhoneDigits : digits >= MinPlainPhoneDigits) && digits <= MaxPhoneDigits;
     }
 }

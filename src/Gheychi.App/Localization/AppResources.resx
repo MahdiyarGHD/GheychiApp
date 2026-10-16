@@ -63,9 +63,6 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>Send</value>
   </data>
-  <data name="Chat_SimTitle" xml:space="preserve">
-    <value>Send via</value>
-  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>

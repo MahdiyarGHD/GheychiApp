@@ -745,36 +745,13 @@ public partial class ChatView : UserControl
             ScrollToEnd();
     }
 
-    private async void OnSimTap(object? sender, TappedEventArgs e)
+    private void OnSimTap(object? sender, TappedEventArgs e)
     {
-        if (Vm is null)
+        if (Vm is not { ActiveSims.Count: > 1 } vm)
             return;
 
-        var loc = LocalizationManager.Instance;
-        var sims = Vm.ActiveSims;
-        if (sims.Count <= 1)
-            return;
-
-        var options = new string[sims.Count];
-        for (var i = 0; i < sims.Count; i++)
-        {
-            var sim = sims[i];
-            options[i] = $"{sim.SlotIndex}. {sim.DisplayName}";
-        }
-
-        var choice = await Dialogs.ActionSheetAsync(loc["Chat_SimTitle"], loc["Chat_Cancel"], null, options);
-
-        if (string.IsNullOrWhiteSpace(choice) || choice == loc["Chat_Cancel"])
-            return;
-
-        for (var i = 0; i < sims.Count; i++)
-        {
-            if (choice.StartsWith($"{sims[i].SlotIndex}.", StringComparison.Ordinal))
-            {
-                Vm.SelectSim(sims[i].SlotIndex, sims[i].SubId);
-                break;
-            }
-        }
+        vm.ToggleSim();
+        TriggerHaptic();
     }
 
     // A tap inside a popup belongs to the popup: it must not reach the scrim or the page behind it.

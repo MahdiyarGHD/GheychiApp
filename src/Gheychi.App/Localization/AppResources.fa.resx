@@ -63,9 +63,6 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>ارسال</value>
   </data>
-  <data name="Chat_SimTitle" xml:space="preserve">
-    <value>ارسال با</value>
-  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>انصراف</value>
   </data>

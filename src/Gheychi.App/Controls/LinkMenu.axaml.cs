@@ -11,7 +11,7 @@ using Gheychi.Core.Services;
 namespace Gheychi.App.Controls;
 
 /// <summary>
-/// The small card that opens on a tapped link or phone number: open or call, and copy. It fills the page it is
+/// The small card that opens on a tapped link, phone number or USSD code: open or call, and copy. It fills the page it is
 /// placed on (a tap outside the card closes it) and puts the card next to the text that was tapped.
 /// </summary>
 public partial class LinkMenu : UserControl
@@ -126,7 +126,7 @@ public partial class LinkMenu : UserControl
 
         try
         {
-            if (kind == LinkKind.Phone)
+            if (kind != LinkKind.Url)
                 Platforms.Android.ProfileLauncher.Dial(target);
             else if (!await Launcher.Default.OpenAsync(target))
                 await Dialogs.AlertAsync(string.Empty, LocalizationManager.Instance["Chat_LinkOpenFailed"], "OK");

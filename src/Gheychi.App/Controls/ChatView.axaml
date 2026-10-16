@@ -135,7 +135,6 @@
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
                                        c:RichText.LinkBrush="{StaticResource AccentTextBrush}"
-                                       c:RichText.NumberBrush="{theme:AccentBrush Role=Solid, Alpha=38}"
                                        c:RichText.Message="{Binding}" />
                         </c:BubbleBorder>
 
@@ -325,7 +324,6 @@
                                            TextWrapping="Wrap"
                                            Foreground="White"
                                            c:RichText.LinkBrush="{theme:AccentBrush Role=OnSolidBright}"
-                                           c:RichText.NumberBrush="#30FFFFFF"
                                            c:RichText.Message="{Binding}" />
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
                                     <TextBlock Text="★"
