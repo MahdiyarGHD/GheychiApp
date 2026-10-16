@@ -255,6 +255,12 @@
   <data name="Messages_MarkAsUnread" xml:space="preserve">
     <value>Mark as unread</value>
   </data>
+  <data name="Messages_Pin" xml:space="preserve">
+    <value>Pin</value>
+  </data>
+  <data name="Messages_Unpin" xml:space="preserve">
+    <value>Unpin</value>
+  </data>
   <data name="Messages_MarkAsRead" xml:space="preserve">
     <value>Mark as read</value>
   </data>

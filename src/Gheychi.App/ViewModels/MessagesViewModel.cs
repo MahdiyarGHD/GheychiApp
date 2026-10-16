@@ -14,6 +14,9 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private readonly ISmsService _smsService;
     private readonly IDateFormattingService _dateFormatter;
     private readonly IDraftStore? _drafts;
+    private readonly IPinStore? _pins;
+    private bool _reordering;
+    private BuiltThreads? _deferred;
     private bool _isLoading;
     private bool _hasPermission = true;
     private static readonly TimeSpan ReturnRefreshDelay = TimeSpan.FromMilliseconds(400);
@@ -35,6 +38,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         _smsService = smsService ?? IPlatformApplication.Current?.Services.GetService<ISmsService>() ?? throw new InvalidOperationException("ISmsService not resolved");
         _dateFormatter = dateFormatter ?? IPlatformApplication.Current?.Services.GetService<IDateFormattingService>() ?? new DateFormattingService();
         _drafts = IPlatformApplication.Current?.Services.GetService<IDraftStore>();
+        _pins = IPlatformApplication.Current?.Services.GetService<IPinStore>();
 
         // Normally read while the XAML is inflated. Opened from a notification, the inbox is not what is
         // waited for: the CPU belongs to the chat until it is up, so the read waits for InitializeAsync.
@@ -72,7 +76,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
     public FastObservableCollection<ThreadItem> ArchivedThreads { get; } = [];
 
-    private readonly record struct BuiltThreads(List<ThreadItem> Inbox, List<ThreadItem> Archived);
+    private readonly record struct BuiltThreads(List<ThreadItem> Inbox, List<ThreadItem> Archived, int PinVersion);
 
     private bool _isSelectionMode;
     public bool IsSelectionMode
@@ -95,6 +99,13 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     public bool AnySelectedUnread => SelectedThreads.Any(t => t.IsUnread);
 
     public bool AnySelectedRead => SelectedThreads.Any(t => !t.IsUnread);
+
+    public bool AnySelectedPinned => SelectedThreads.Any(t => t.IsPinned);
+
+    public bool AnySelectedNotPinned => SelectedThreads.Any(t => !t.IsPinned);
+
+    /// <summary>How many rows are pinned: they are always the first ones of the list.</summary>
+    public int PinnedCount => Threads.TakeWhile(t => t.IsPinned).Count();
 
     public void EnterSelectionMode(ThreadItem initial)
     {
@@ -130,6 +141,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedThreads));
         OnPropertyChanged(nameof(AnySelectedUnread));
         OnPropertyChanged(nameof(AnySelectedRead));
+        OnPropertyChanged(nameof(AnySelectedPinned));
+        OnPropertyChanged(nameof(AnySelectedNotPinned));
     }
 
     public Task<bool> UnarchiveThreadsAsync(IReadOnlyList<ThreadItem> threads)
@@ -162,7 +175,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var threadIds = selected.Select(t => t.ThreadId).ToList();
         var success = await _smsService.DeleteThreadsAsync(threadIds);
         if (success)
+        {
             _drafts?.Remove(threadIds);
+            _pins?.Unpin(threadIds);
+        }
 
         // A failed delete (not the default SMS app, provider error) must not look like it worked:
         // the threads would vanish here and come back on the next reload.
@@ -190,6 +206,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var archivedIds = GetArchivedThreadIds();
         archivedIds.Add(thread.ThreadId);
         SaveArchivedThreadIds(archivedIds);
+        // An archived conversation is not pinned any more.
+        _pins?.Unpin([thread.ThreadId]);
 
         // The row moves to the archive straight away; the reload rebuilds both lists.
         MainThread.BeginInvokeOnMainThread(() =>
@@ -197,6 +215,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             var row = Threads.FirstOrDefault(t => t.ThreadId == thread.ThreadId);
             if (row is not null)
             {
+                row.IsPinned = false;
                 Threads.Remove(row);
                 ArchivedThreads.Add(row);
             }
@@ -219,6 +238,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             archivedIds.Add(t.ThreadId);
         }
         SaveArchivedThreadIds(archivedIds);
+        _pins?.Unpin(selected.Select(t => t.ThreadId).ToList());
 
         // The moved rows are shown in the archive straight away; the reload below rebuilds both lists.
         MainThread.BeginInvokeOnMainThread(() =>
@@ -227,6 +247,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             {
                 Threads.Remove(t);
                 t.IsSelected = false;
+                t.IsPinned = false;
             }
             ExitSelectionMode();
             ArchivedThreads.AddRange(selected);
@@ -234,6 +255,85 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         });
 
         return Task.FromResult(true);
+    }
+
+    public Task PinSelectedAsync()
+    {
+        if (_pins is null)
+            return Task.CompletedTask;
+
+        // In the order they are listed, so pinning several keeps them as they were.
+        var ids = Threads.Where(t => t.IsSelected && !t.IsPinned).Select(t => t.ThreadId).ToList();
+        if (ids.Count > 0)
+        {
+            _pins.PinToTop(ids);
+            ApplyPinOrder();
+        }
+
+        ExitSelectionMode();
+        return Task.CompletedTask;
+    }
+
+    public Task UnpinSelectedAsync()
+    {
+        if (_pins is null)
+            return Task.CompletedTask;
+
+        var ids = Threads.Where(t => t.IsSelected && t.IsPinned).Select(t => t.ThreadId).ToList();
+        if (ids.Count > 0)
+        {
+            _pins.Unpin(ids);
+            ApplyPinOrder();
+        }
+
+        ExitSelectionMode();
+        return Task.CompletedTask;
+    }
+
+    // Brings the list in line with the pins without reading anything: the pinned rows go to the top in their order, the
+    // others back to where their date puts them. Only the rows that are out of place move.
+    private void ApplyPinOrder()
+    {
+        var order = _pins?.GetOrder() ?? [];
+        var pinned = order.ToHashSet();
+        foreach (var t in Threads)
+            t.IsPinned = pinned.Contains(t.ThreadId);
+
+        var byDate = Threads.OrderByDescending(t => t.Timestamp).ToList();
+        var wanted = PinnedOrder.Apply(byDate, order, t => t.ThreadId);
+        for (var index = 0; index < wanted.Count; index++)
+        {
+            if (ReferenceEquals(Threads[index], wanted[index]))
+                continue;
+
+            Threads.Move(Threads.IndexOf(wanted[index]), index);
+        }
+    }
+
+    /// <summary>Held while a pinned row is being dragged: what is read from the provider meanwhile waits for the drop.</summary>
+    public void BeginReorder() => _reordering = true;
+
+    public void EndReorder()
+    {
+        _reordering = false;
+        if (_deferred is { } waiting)
+        {
+            _deferred = null;
+            ShowBuilt(waiting);
+        }
+    }
+
+    /// <summary>A pinned row dropped into another slot among the pinned rows.</summary>
+    public void MovePinned(int from, int to)
+    {
+        if (_pins is null || from == to || from < 0 || to < 0 || from >= Threads.Count || to >= Threads.Count)
+            return;
+
+        if (!Threads[from].IsPinned || !Threads[to].IsPinned)
+            return;
+
+        Threads.Move(from, to);
+        _pins.SetOrder(Threads.TakeWhile(t => t.IsPinned).Select(t => t.ThreadId).ToList());
     }
 
     public Task MarkSelectedAsReadAsync() => MarkSelectedAsync(unread: false);
@@ -402,11 +502,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
             var items = await Task.Run(() => BuildItems(rawThreads));
 
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                ApplyItems(Threads, items.Inbox);
-                ApplyItems(ArchivedThreads, items.Archived);
-            });
+            MainThread.BeginInvokeOnMainThread(() => ShowBuilt(items));
 
             if (HasPermission)
                 _ = Task.Run(() => ThreadSnapshotStore.Save(SnapshotPath, rawThreads));
@@ -433,8 +529,30 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
     }
 
+    // On the UI thread. A list built before the pins changed would undo the change on screen.
+    private void ShowBuilt(BuiltThreads built)
+    {
+        if (_reordering)
+        {
+            _deferred = built;
+            return;
+        }
+
+        if ((_pins?.Version ?? 0) != built.PinVersion)
+        {
+            _ = LoadThreadsAsync();
+            return;
+        }
+
+        ApplyItems(Threads, built.Inbox);
+        ApplyItems(ArchivedThreads, built.Archived);
+    }
+
     private BuiltThreads BuildItems(IReadOnlyList<SmsThread> rawThreads)
     {
+        var pinVersion = _pins?.Version ?? 0;
+        var pinOrder = _pins?.GetOrder() ?? [];
+        var pinned = pinOrder.ToHashSet();
         var archivedIds = GetArchivedThreadIds();
         var now = DateTime.Now;
         var culture = CultureInfo.CurrentUICulture;
@@ -451,7 +569,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                     ? t.Address
                     : PhoneNumberNormalizer.FormatDisplay(t.Address);
 
-            (archivedIds.Contains(t.ThreadId) ? archived : items).Add(new ThreadItem
+            var isArchived = archivedIds.Contains(t.ThreadId);
+            (isArchived ? archived : items).Add(new ThreadItem
             {
                 ThreadId = t.ThreadId,
                 SubId = t.SubId,
@@ -464,12 +583,15 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 Time = _dateFormatter.FormatThreadTime(t.Timestamp, now, culture),
                 Preview = t.HasDraft ? string.Format(draftPreview, t.Snippet) : t.Snippet,
                 HasDraft = t.HasDraft,
+                Timestamp = t.Timestamp,
+                IsPinned = !isArchived && pinned.Contains(t.ThreadId),
                 IsUnread = t.UnreadCount > 0,
                 HasFailed = t.HasFailed
             });
         }
 
-        return new BuiltThreads(items, archived);
+        var ordered = PinnedOrder.Apply(items, pinOrder, t => t.ThreadId);
+        return new BuiltThreads(ordered as List<ThreadItem> ?? ordered.ToList(), archived, pinVersion);
     }
 
     // A full Reset drops the scroll position and rebinds every visible row, so refreshes

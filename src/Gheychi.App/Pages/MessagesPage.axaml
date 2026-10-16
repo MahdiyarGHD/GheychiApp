@@ -153,18 +153,25 @@
                                                FontFamily="{Binding PreviewFont}"
                                                Foreground="{Binding TimeColor}"
                                                HorizontalAlignment="Right" />
-                                    <Border IsVisible="{Binding IsUnread}"
-                                            Padding="8,2"
-                                            CornerRadius="11"
-                                            Background="{StaticResource PrimaryBrush}"
-                                            HorizontalAlignment="Right">
-                                        <TextBlock Text="{Binding CountText}"
-                                                   FontSize="11.5"
-                                                   FontFamily="{x:Static app:AppFonts.Bold}"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center" />
-                                    </Border>
+                                    <StackPanel IsVisible="{Binding ShowBadgeRow}" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                        <ui:Icon IsVisible="{Binding IsPinned}"
+                                                 Data="{StaticResource Icon.Pin}"
+                                                 Width="15"
+                                                 Height="15"
+                                                 Foreground="{Binding TimeColor}"
+                                                 VerticalAlignment="Center" />
+                                        <Border IsVisible="{Binding IsUnread}"
+                                                Padding="8,2"
+                                                CornerRadius="11"
+                                                Background="{StaticResource PrimaryBrush}">
+                                            <TextBlock Text="{Binding CountText}"
+                                                       FontSize="11.5"
+                                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+                                    </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
@@ -241,6 +248,24 @@
                     VerticalAlignment="Top"
                     Tapped="OnSelectBoxTapEater">
                 <StackPanel>
+                    <Grid x:Name="PinItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnPinTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Pin}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_Pin}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="UnpinItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnUnpinTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Pin}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_Unpin}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
                     <Grid x:Name="MarkReadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnMarkAsReadTapped">
                         <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Check}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="1"

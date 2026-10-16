@@ -255,6 +255,12 @@
   <data name="Messages_MarkAsUnread" xml:space="preserve">
     <value>علامت‌گذاری به‌عنوان خوانده‌نشده</value>
   </data>
+  <data name="Messages_Pin" xml:space="preserve">
+    <value>سنجاق کردن</value>
+  </data>
+  <data name="Messages_Unpin" xml:space="preserve">
+    <value>برداشتن سنجاق</value>
+  </data>
   <data name="Messages_MarkAsRead" xml:space="preserve">
     <value>علامت‌گذاری به‌عنوان خوانده‌شده</value>
   </data>

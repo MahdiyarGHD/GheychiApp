@@ -45,6 +45,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private bool _archiveOpen;
     private bool _swipeDragging;
     private ScrollViewer? _threadsScroll;
+    private readonly RowReorder _reorder;
+    private ThreadItem? _toggleOnRelease;
+    private bool _selectedByHold;
 
     private ChatView? _chatOverlay;
     private SearchView? _searchOverlay;
@@ -90,8 +93,22 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         viewModel.PreloadTargets = VisibleThreads;
         Ui.RowPressEffect.Attach(ThreadsList, ThreadsHost);
 
+        // The pinned rows at the top of the list are moved by holding one and dragging it.
+        _reorder = new RowReorder(
+            ThreadsList, RowHeight, () => Vm?.PinnedCount ?? 0,
+            () => Vm?.BeginReorder(), (from, to) => Vm?.MovePinned(from, to), () => Vm?.EndReorder());
+        ThreadsList.AddHandler(PointerMovedEvent, (_, e) => _reorder.OnMoved(e), RoutingStrategies.Tunnel, handledEventsToo: true);
+        ThreadsList.AddHandler(PointerReleasedEvent, OnThreadsReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        ThreadsList.AddHandler(PointerCaptureLostEvent, (_, e) => _reorder.OnCaptureLost(e), RoutingStrategies.Tunnel, handledEventsToo: true);
+
         // Releasing a finger that held a row can also report a tap; the next press starts a new gesture.
-        ThreadsList.AddHandler(PointerPressedEvent, (_, _) => _holdFired = false, RoutingStrategies.Tunnel, handledEventsToo: true);
+        ThreadsList.AddHandler(PointerPressedEvent, (_, e) =>
+        {
+            _holdFired = false;
+            _toggleOnRelease = null;
+            _selectedByHold = false;
+            _reorder.OnPressed(e);
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
 
         ThreadsList.TemplateApplied += (_, e) =>
         {
@@ -269,6 +286,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     public void OnHidden()
     {
         _inboxShown = false;
+        _reorder.Cancel();
         // A selection or an open menu does not wait for the user to come back to the tab.
         SelectBoxOverlay.IsVisible = false;
         Vm?.ExitSelectionMode();
@@ -447,7 +465,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsTapped(object? sender, TappedEventArgs e)
     {
-        if (_holdFired || _animating || !IsChatClosed || ThreadFrom(e) is not { } thread)
+        if (_holdFired || _animating || _reorder.IsBusy || !IsChatClosed || ThreadFrom(e) is not { } thread)
             return;
 
         if (Vm?.IsSelectionMode == true)
@@ -458,17 +476,50 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsHolding(object? sender, HoldingRoutedEventArgs e)
     {
-        if (e.HoldingState != HoldingState.Started || _animating || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
+        if (e.HoldingState != HoldingState.Started || _animating || _reorder.IsBusy || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
             return;
 
         // Avalonia cancels a started hold once the finger drifts 4 px, then reports the release, still inside the
         // touch tap area, as a tap: that toggled the row just selected back off and left selection mode.
         _holdFired = true;
 
+        // A pinned row can be dragged from here: whether the hold selects it waits for the finger to say.
+        if (thread.IsPinned && Vm.Threads.IndexOf(thread) is var index and >= 0)
+            _reorder.Arm(index);
+
         if (!Vm.IsSelectionMode)
+        {
+            _selectedByHold = thread.IsPinned;
             Vm.EnterSelectionMode(thread);
+        }
+        else if (thread.IsPinned)
+        {
+            _toggleOnRelease = thread;
+        }
         else
+        {
             ToggleSelectionSafely(thread);
+        }
+    }
+
+    private void OnThreadsReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        var dragged = _reorder.OnReleased();
+        var toggle = _toggleOnRelease;
+        _toggleOnRelease = null;
+
+        if (dragged)
+        {
+            // The selection was only the hold that lifted the row.
+            if (_selectedByHold)
+                Vm?.ExitSelectionMode();
+        }
+        else if (toggle is not null)
+        {
+            ToggleSelectionSafely(toggle);
+        }
+
+        _selectedByHold = false;
     }
 
     private void ToggleSelectionSafely(ThreadItem thread)
@@ -834,6 +885,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreeDotsTapped(object? sender, TappedEventArgs e)
     {
+        PinItem.IsVisible = Vm?.AnySelectedNotPinned ?? false;
+        UnpinItem.IsVisible = Vm?.AnySelectedPinned ?? false;
         // Only what would change something: "mark as read" for a chat that is read already does nothing.
         MarkReadItem.IsVisible = Vm?.AnySelectedUnread ?? false;
         MarkUnreadItem.IsVisible = Vm?.AnySelectedRead ?? false;
@@ -843,6 +896,26 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private void OnCloseSelectBoxTapped(object? sender, TappedEventArgs e) => SelectBoxOverlay.IsVisible = false;
 
     private void OnSelectBoxTapEater(object? sender, TappedEventArgs e) => e.Handled = true;
+
+    private async void OnPinTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.PinSelectedAsync();
+    }
+
+    private async void OnUnpinTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.UnpinSelectedAsync();
+    }
 
     private async void OnMarkAsReadTapped(object? sender, TappedEventArgs e)
     {
@@ -1475,7 +1548,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         get
         {
-            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true
+            if (_animating || _reorder.IsBusy || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true
                 || IsDefaultAppGateShown)
                 return 0;
 

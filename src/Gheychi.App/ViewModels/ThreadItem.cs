@@ -44,6 +44,22 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public int TotalCount { get; init; }
     public bool HasDraft { get; init; }
 
+    /// <summary>The moment the conversation sorts by (its last message or draft); a row that is unpinned goes back by it.</summary>
+    public DateTime Timestamp { get; init; }
+
+    private bool _isPinned;
+    public bool IsPinned
+    {
+        get => _isPinned;
+        set
+        {
+            if (_isPinned == value) return;
+            _isPinned = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ShowBadgeRow));
+        }
+    }
+
     private int _count;
     public int Count
     {
@@ -71,6 +87,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
             OnPropertyChanged(nameof(PreviewColor));
             OnPropertyChanged(nameof(PreviewFont));
             OnPropertyChanged(nameof(TimeColor));
+            OnPropertyChanged(nameof(ShowBadgeRow));
         }
     }
 
@@ -97,6 +114,8 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public bool ShowIcon => HasIcon && !_isSelected;
     public bool ShowInitials => HasNoIcon && !_isSelected;
     public IBrush RowBackgroundColor => _isSelected ? SelectedRowBrush : Palette.Transparent;
+    /// <summary>The line under the time: the unread count, the pin, or both.</summary>
+    public bool ShowBadgeRow => _isUnread || _isPinned;
     public string CountText => Count > 0 ? Count.ToString() : string.Empty;
     public Thickness PreviewMargin => HasFailed ? FailedPreviewMargin : default;
     public bool HasIcon => !string.IsNullOrEmpty(IconFile);
@@ -126,6 +145,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
         Phone == other.Phone &&
         HasFailed == other.HasFailed &&
         HasDraft == other.HasDraft &&
+        IsPinned == other.IsPinned &&
         TotalCount == other.TotalCount &&
         Count == other.Count &&
         IsUnread == other.IsUnread;
