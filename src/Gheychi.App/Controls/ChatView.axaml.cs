@@ -742,7 +742,10 @@ public partial class ChatView : UserControl
         var count = vm.Items.Count;
         vm.Send();
         if (vm.Items.Count > count)
+        {
+            ReleaseInputFocus();
             ScrollToEnd();
+        }
     }
 
     private void OnSimTap(object? sender, TappedEventArgs e)
