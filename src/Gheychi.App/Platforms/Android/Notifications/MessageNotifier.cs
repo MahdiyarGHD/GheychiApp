@@ -54,8 +54,9 @@ internal static class MessageNotifier
                 cancelled = true;
             }
 
-            // A group of one is just that notification; a lone summary would leave an empty header behind.
-            if (cancelled && active.Count < MinConversationsForSummary)
+            // Android removes a group's children along with its summary, so the summary may only go once none are left:
+            // a group of one is shown as that notification alone.
+            if (cancelled && active.Count == 0)
                 manager.Cancel(NotificationIds.SummaryId);
         }
         catch (Exception ex)
