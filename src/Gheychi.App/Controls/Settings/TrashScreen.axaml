@@ -22,8 +22,15 @@
                 CornerRadius="28,28,0,0"
                 ClipToBounds="True"
                 Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
-        <ScrollViewer Margin="0,8,0,0" VerticalScrollBarVisibility="Hidden">
-            <ItemsControl x:Name="TrashList">
+            <ItemsControl x:Name="TrashList" Margin="0,8,0,0">
+                <!-- The scroll viewer is part of the list's own template: only then do the rows virtualize. -->
+                <ItemsControl.Template>
+                    <ControlTemplate>
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <VirtualizingStackPanel />
@@ -66,7 +73,6 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </ScrollViewer>
         </Border>
 
         <TextBlock x:Name="EmptyNote" Grid.Row="2" Text="{loc:Translate Trash_Empty}" Margin="24,48,24,0"

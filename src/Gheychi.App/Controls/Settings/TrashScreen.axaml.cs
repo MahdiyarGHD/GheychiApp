@@ -16,6 +16,11 @@ public partial class TrashScreen : SettingsScreen
     private int _loadVersion;
     private List<TrashRow>? _rows;
 
+    // A contact lookup is a query to the system: kept for a while, the list and each restore would repeat them.
+    private static readonly TimeSpan NameCacheLife = TimeSpan.FromMinutes(5);
+    private readonly Dictionary<string, string> _names = [];
+    private DateTime _namesFrom = DateTime.MinValue;
+
     public TrashScreen()
     {
         InitializeComponent();
@@ -38,7 +43,14 @@ public partial class TrashScreen : SettingsScreen
             var now = DateTime.Now;
             await _trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(now));
             var groups = TrashPolicy.Group(await _trash.GetAllAsync());
-            // Off the UI thread: one contacts lookup per sender.
+            if (now - _namesFrom > NameCacheLife)
+            {
+                lock (_names)
+                    _names.Clear();
+                _namesFrom = now;
+            }
+
+            // Off the UI thread: one contacts lookup per sender, once.
             var rows = await Task.Run(() => groups.Select(group => ToRow(group, now)).ToList());
             if (version != _loadVersion)
                 return;
@@ -51,6 +63,21 @@ public partial class TrashScreen : SettingsScreen
         }
     }
 
+    private string NameOf(string address)
+    {
+        lock (_names)
+        {
+            if (_names.TryGetValue(address, out var known))
+                return known;
+        }
+
+        var name = ConversationReader.ReadContactName(Platform.AppContext, address)
+                   ?? (PhoneNumberNormalizer.IsAlphanumeric(address) ? address : PhoneNumberNormalizer.FormatDisplay(address));
+        lock (_names)
+            _names[address] = name;
+        return name;
+    }
+
     private void Show(List<TrashRow> rows)
     {
         _rows = rows;
@@ -59,11 +86,10 @@ public partial class TrashScreen : SettingsScreen
         EmptyAll.IsVisible = rows.Count > 0;
     }
 
-    private static TrashRow ToRow(TrashGroup group, DateTime now)
+    private TrashRow ToRow(TrashGroup group, DateTime now)
     {
         var loc = LocalizationManager.Instance;
-        var title = ConversationReader.ReadContactName(Platform.AppContext, group.Address)
-                    ?? (PhoneNumberNormalizer.IsAlphanumeric(group.Address) ? group.Address : PhoneNumberNormalizer.FormatDisplay(group.Address));
+        var title = NameOf(group.Address);
         var days = string.Format(loc["Trash_DaysLeft"], SettingsUi.Number(TrashPolicy.DaysLeft(group.TrashedAtMs, now)));
         var meta = group.Messages.Count > 1
             ? string.Format(loc["Trash_MessageCount"], SettingsUi.Number(group.Messages.Count)) + " · " + days
@@ -87,9 +113,13 @@ public partial class TrashScreen : SettingsScreen
             var restored = await _sms.RestoreMessagesAsync(row.Group.Messages);
             // Only what came back leaves the trash: a partial restore keeps the rest to try again.
             if (restored == row.Group.Messages.Count)
+            {
+                // The list already shows it gone: nothing to read again.
                 await _trash.DeleteAsync(row.Group.Ids);
-            else
-                Toast.Show(loc["Trash_RestoreFailed"]);
+                return;
+            }
+
+            Toast.Show(loc["Trash_RestoreFailed"]);
         }
         catch (Exception ex)
         {
@@ -97,6 +127,7 @@ public partial class TrashScreen : SettingsScreen
             Toast.Show(loc["Trash_RestoreFailed"]);
         }
 
+        // Something did not come back: show what is still in the trash.
         await LoadAsync();
     }
 

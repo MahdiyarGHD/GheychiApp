@@ -1655,8 +1655,12 @@ public sealed class AndroidSmsService : ISmsService
         }
     }
 
+    // The provider recomputes the conversation for every row it takes. Restored in small batches, with a breath between,
+    // it stays free for the chat that is being opened meanwhile.
+    private const int RestoreBatchSize = 50;
+
     public Task<int> RestoreMessagesAsync(IReadOnlyList<TrashedMessage> messages) =>
-        Task.Run(() =>
+        Task.Run(async () =>
         {
             var context = Platform.AppContext;
             var smsUri = Telephony.Sms.ContentUri;
@@ -1680,16 +1684,19 @@ public sealed class AndroidSmsService : ISmsService
                 rows.Add(values);
             }
 
-            // One call for all of them: a conversation is hundreds of rows, and a call each was the slow part.
-            int restored;
+            var restored = 0;
             try
             {
-                restored = context.ContentResolver?.BulkInsert(smsUri, rows.ToArray()) ?? 0;
+                foreach (var batch in rows.Chunk(RestoreBatchSize))
+                {
+                    restored += context.ContentResolver?.BulkInsert(smsUri, batch) ?? 0;
+                    if (restored < rows.Count)
+                        await Task.Delay(20);
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Restoring messages failed: {ex}");
-                return 0;
             }
 
             if (restored > 0)
