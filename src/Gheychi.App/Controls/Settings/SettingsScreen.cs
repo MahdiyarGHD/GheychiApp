@@ -12,6 +12,7 @@ public enum SettingsScreenKind
     Spam,
     Trusted,
     Blocked,
+    Trash,
     Sims,
     Notifications,
     Appearance,

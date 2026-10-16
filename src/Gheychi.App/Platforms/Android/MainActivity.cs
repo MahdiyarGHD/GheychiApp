@@ -155,6 +155,7 @@ public class MainActivity : AvaloniaMainActivity
         base.OnResume();
         Platform.CurrentActivity = this;
         ChatPresence.AppVisibilityChanged(true);
+        ViewModels.ChatViewModel.MarkActiveThreadSeen();
         ChatLaunchRequests.RaiseIfPending();
         SpamTabRequests.RaiseIfPending();
         ExternalSendRequests.RaiseIfPending();

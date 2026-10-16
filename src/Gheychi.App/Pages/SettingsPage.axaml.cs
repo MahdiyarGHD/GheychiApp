@@ -171,6 +171,7 @@ public partial class SettingsPage : UserControl
             SettingsScreenKind.Spam => new SpamSettingsScreen(),
             SettingsScreenKind.Trusted => new TrustedSendersScreen(),
             SettingsScreenKind.Blocked => new BlockedSendersScreen(),
+            SettingsScreenKind.Trash => new TrashScreen(),
             SettingsScreenKind.Sims => new SimSettingsScreen(),
             SettingsScreenKind.Notifications => new NotificationSettingsScreen(),
             SettingsScreenKind.Appearance => new AppearanceSettingsScreen(),
@@ -270,6 +271,8 @@ public partial class SettingsPage : UserControl
     private void OnSpamTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Spam);
 
     private void OnBlockedTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Blocked);
+
+    private void OnTrashTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Trash);
 
     private void OnSimsTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Sims);
 

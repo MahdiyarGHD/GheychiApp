@@ -12,6 +12,13 @@ public sealed record BlockedSenderRow(string Key, string Title, string Subtitle)
     public bool HasNoInitials => Initials.Length == 0;
 }
 
+/// <summary>Messages deleted together: the sender over the newest text, and how many there are and how long they stay.</summary>
+public sealed record TrashRow(Gheychi.Core.Services.TrashGroup Group, string Title, string Preview, string Meta)
+{
+    public string Initials => ThreadItem.GenerateInitials(Title);
+    public bool HasNoInitials => Initials.Length == 0;
+}
+
 public sealed record LicenseRow(string Name, string License, string Url);
 
 public sealed record TopSenderRow(string Display, string Count);

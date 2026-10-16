@@ -1590,6 +1590,7 @@ public sealed class AndroidSmsService : ISmsService
             {
                 var idStrings = threadIds.Select(id => id.ToString()).ToArray();
                 var placeholders = string.Join(",", threadIds.Select(_ => "?"));
+                await KeepInTrashAsync(context, $"{Telephony.Sms.InterfaceConsts.ThreadId} IN ({placeholders})", idStrings);
                 var deleted = context.ContentResolver?.Delete(
                     smsUri,
                     $"{Telephony.Sms.InterfaceConsts.ThreadId} IN ({placeholders})",
@@ -1612,6 +1613,101 @@ public sealed class AndroidSmsService : ISmsService
             }
         }, cancellationToken);
 
+    /// <summary>
+    /// Copies the rows about to be deleted into the trash. A failure to keep them does not stop the delete: the user asked
+    /// for it, and the messages are on their way out either way.
+    /// </summary>
+    private static async Task KeepInTrashAsync(Context context, string where, string[] args)
+    {
+        try
+        {
+            var trash = IPlatformApplication.Current?.Services.GetService<ITrashRepository>();
+            var smsUri = Telephony.Sms.ContentUri;
+            if (trash is null || smsUri is null)
+                return;
+
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var kept = new List<TrashedMessage>();
+            using (var cursor = context.ContentResolver?.Query(
+                smsUri,
+                [Telephony.Sms.InterfaceConsts.Address, Telephony.Sms.InterfaceConsts.Body, Telephony.Sms.InterfaceConsts.Date, Telephony.Sms.InterfaceConsts.Type, "sub_id"],
+                where,
+                args,
+                null))
+            {
+                while (cursor is not null && cursor.MoveToNext())
+                {
+                    var type = cursor.GetInt(3);
+                    if (type == SmsStatusHelper.TypeDraft)
+                        continue;
+
+                    kept.Add(new TrashedMessage(0, cursor.GetString(0) ?? string.Empty, cursor.GetString(1) ?? string.Empty,
+                        cursor.GetLong(2), type, cursor.IsNull(4) ? -1 : cursor.GetInt(4), now));
+                }
+            }
+
+            await trash.AddAsync(kept);
+            await trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Keeping the messages in the trash failed: {ex}");
+        }
+    }
+
+    public Task<int> RestoreMessagesAsync(IReadOnlyList<TrashedMessage> messages) =>
+        Task.Run(() =>
+        {
+            var context = Platform.AppContext;
+            var smsUri = Telephony.Sms.ContentUri;
+            if (smsUri is null || messages.Count == 0)
+                return 0;
+
+            var restored = 0;
+            var threads = new HashSet<long>();
+            foreach (var message in messages)
+            {
+                try
+                {
+                    var type = TrashPolicy.RestoredType(message.Type);
+                    var values = new ContentValues();
+                    values.Put(Telephony.Sms.InterfaceConsts.Address, message.Address);
+                    values.Put(Telephony.Sms.InterfaceConsts.Body, message.Body);
+                    values.Put(Telephony.Sms.InterfaceConsts.Date, message.DateMs);
+                    values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
+                    values.Put(Telephony.Sms.InterfaceConsts.Type, type);
+                    if (type == SmsStatusHelper.TypeFailed)
+                        values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusFailed);
+                    if (message.SubId > 0)
+                        values.Put("sub_id", message.SubId);
+
+                    if (context.ContentResolver?.Insert(smsUri, values) is not { } row)
+                        continue;
+
+                    restored++;
+                    if (ConversationReader.ReadThreadId(context, row) is > 0 and var threadId)
+                        threads.Add(threadId);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Restoring a message failed: {ex}");
+                }
+            }
+
+            if (restored > 0)
+            {
+                InvalidateSearchCaches();
+                // The inbox and an open chat read the store again; threadId 0 would drop every cached page, so the exact ones go.
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    foreach (var threadId in threads)
+                        Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.RaiseSmsReceived(threadId);
+                });
+            }
+
+            return restored;
+        });
+
     public Task<bool> DeleteMessagesAsync(IReadOnlyList<long> messageIds, CancellationToken cancellationToken = default) =>
         Task.Run(async () =>
         {
@@ -1627,6 +1723,7 @@ public sealed class AndroidSmsService : ISmsService
             {
                 var idStrings = messageIds.Select(id => id.ToString()).ToArray();
                 var placeholders = string.Join(",", messageIds.Select(_ => "?"));
+                await KeepInTrashAsync(context, $"{Telephony.Sms.InterfaceConsts.Id} IN ({placeholders})", idStrings);
                 var deleted = context.ContentResolver?.Delete(
                     smsUri,
                     $"{Telephony.Sms.InterfaceConsts.Id} IN ({placeholders})",

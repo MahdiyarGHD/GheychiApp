@@ -1123,6 +1123,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         var sendInFlight = Messages.Any(m => m.Id == 0 && m.IsOutgoing);
 
         var appended = 0;
+        var seen = ChatPresence.IsAppVisible;
         ChatMessage? lastIncoming = null;
 
         foreach (var fetched in data.Messages)
@@ -1137,8 +1138,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             if (sendInFlight && fetched.IsOutgoing)
                 continue;
 
-            // The chat is open and on screen: what arrives is read.
-            fetched.IsUnread = false;
+            // Read when the chat is on screen. With the app in the background (another app opened over it) the message
+            // stays unread, or its notification would be dismissed before it was ever seen.
+            fetched.IsUnread = !seen && fetched.IsUnread;
             AppendMessage(fetched);
             appended++;
             if (!fetched.IsOutgoing)
@@ -1158,7 +1160,21 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         ShiftLoadedCount(appended);
         EvictCache(threadId);
         MessagesAppended?.Invoke();
-        _ = _smsService.MarkThreadAsReadAsync(threadId);
+        if (seen)
+            _ = _smsService.MarkThreadAsReadAsync(threadId);
+    }
+
+    /// <summary>The app is back on screen: what arrived while it was away is seen now.</summary>
+    public static void MarkActiveThreadSeen() => _active?.MarkThreadSeen();
+
+    private void MarkThreadSeen()
+    {
+        if (Thread.ThreadId <= 0)
+            return;
+
+        foreach (var message in Messages)
+            message.IsUnread = false;
+        _ = _smsService.MarkThreadAsReadAsync(Thread.ThreadId);
     }
 
     // Adds a message at the bottom, under a new day header when it is the first message of its day.

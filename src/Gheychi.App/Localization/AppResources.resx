@@ -124,13 +124,13 @@
     <value>Delete message?</value>
   </data>
   <data name="Chat_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>This message will be permanently deleted from your phone.</value>
+    <value>This message will be moved to the Trash, where it is kept for 30 days.</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>Delete {0} messages?</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>These messages will be permanently deleted from your phone.</value>
+    <value>These messages will be moved to the Trash, where they are kept for 30 days.</value>
   </data>
   <data name="Chat_DeleteConfirmButton" xml:space="preserve">
     <value>Delete</value>
@@ -262,13 +262,13 @@
     <value>Delete conversation?</value>
   </data>
   <data name="Messages_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>This conversation will be permanently deleted from your phone.</value>
+    <value>This conversation will be moved to the Trash, where it is kept for 30 days.</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>Delete {0} conversations?</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>These conversations will be permanently deleted from your phone.</value>
+    <value>These conversations will be moved to the Trash, where they are kept for 30 days.</value>
   </data>
   <data name="Search_MessagesNumbers" xml:space="preserve">
     <value>Search messages, numbers...</value>
@@ -1220,5 +1220,53 @@
   </data>
   <data name="Inbox_DraftPreview" xml:space="preserve">
     <value>Draft: {0}</value>
+  </data>
+  <data name="Settings_Trash" xml:space="preserve">
+    <value>Trash</value>
+  </data>
+  <data name="Settings_TrashHint" xml:space="preserve">
+    <value>Restore deleted messages</value>
+  </data>
+  <data name="Trash_Note" xml:space="preserve">
+    <value>Deleted messages stay here for {0} days, then are erased for good.</value>
+  </data>
+  <data name="Trash_Empty" xml:space="preserve">
+    <value>The trash is empty.</value>
+  </data>
+  <data name="Trash_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="Trash_DeleteForever" xml:space="preserve">
+    <value>Delete for good</value>
+  </data>
+  <data name="Trash_EmptyAll" xml:space="preserve">
+    <value>Empty trash</value>
+  </data>
+  <data name="Trash_EmptyAllTitle" xml:space="preserve">
+    <value>Empty the trash?</value>
+  </data>
+  <data name="Trash_EmptyAllMessage" xml:space="preserve">
+    <value>Everything in it will be erased for good.</value>
+  </data>
+  <data name="Trash_EmptyAllButton" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="Trash_DeleteForeverTitle" xml:space="preserve">
+    <value>Delete for good?</value>
+  </data>
+  <data name="Trash_DeleteForeverMessage" xml:space="preserve">
+    <value>This cannot be undone.</value>
+  </data>
+  <data name="Trash_MessageCount" xml:space="preserve">
+    <value>{0} messages</value>
+  </data>
+  <data name="Trash_DaysLeft" xml:space="preserve">
+    <value>{0} days left</value>
+  </data>
+  <data name="Trash_Restored" xml:space="preserve">
+    <value>Restored</value>
+  </data>
+  <data name="Trash_RestoreFailed" xml:space="preserve">
+    <value>Could not restore. Is Gheychi the default SMS app?</value>
   </data>
 </root>

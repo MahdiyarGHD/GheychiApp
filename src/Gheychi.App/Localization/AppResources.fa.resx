@@ -124,13 +124,13 @@
     <value>حذف پیام؟</value>
   </data>
   <data name="Chat_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>این پیام برای همیشه از گوشی شما حذف خواهد شد.</value>
+    <value>این پیام به سطل زباله منتقل می‌شود و ۳۰ روز نگهداری می‌شود.</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>حذف {0} پیام؟</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>این پیام‌ها برای همیشه از گوشی شما حذف خواهند شد.</value>
+    <value>این پیام‌ها به سطل زباله منتقل می‌شوند و ۳۰ روز نگهداری می‌شوند.</value>
   </data>
   <data name="Chat_DeleteConfirmButton" xml:space="preserve">
     <value>حذف</value>
@@ -262,13 +262,13 @@
     <value>حذف گفتگو؟</value>
   </data>
   <data name="Messages_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>این گفتگو به‌طور دائم از گوشی شما حذف خواهد شد.</value>
+    <value>این گفتگو به سطل زباله منتقل می‌شود و ۳۰ روز نگهداری می‌شود.</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>حذف {0} گفتگو؟</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>این گفتگوها به‌طور دائم از گوشی شما حذف خواهند شد.</value>
+    <value>این گفتگوها به سطل زباله منتقل می‌شوند و ۳۰ روز نگهداری می‌شوند.</value>
   </data>
   <data name="Search_MessagesNumbers" xml:space="preserve">
     <value>جستجوی پیام‌ها، شماره‌ها...</value>
@@ -1220,5 +1220,53 @@
   </data>
   <data name="Inbox_DraftPreview" xml:space="preserve">
     <value>پیش‌نویس: {0}</value>
+  </data>
+  <data name="Settings_Trash" xml:space="preserve">
+    <value>سطل زباله</value>
+  </data>
+  <data name="Settings_TrashHint" xml:space="preserve">
+    <value>بازگردانی پیام‌های حذف‌شده</value>
+  </data>
+  <data name="Trash_Note" xml:space="preserve">
+    <value>پیام‌های حذف‌شده {0} روز اینجا می‌مانند و سپس برای همیشه پاک می‌شوند.</value>
+  </data>
+  <data name="Trash_Empty" xml:space="preserve">
+    <value>سطل زباله خالی است.</value>
+  </data>
+  <data name="Trash_Restore" xml:space="preserve">
+    <value>بازگردانی</value>
+  </data>
+  <data name="Trash_DeleteForever" xml:space="preserve">
+    <value>حذف برای همیشه</value>
+  </data>
+  <data name="Trash_EmptyAll" xml:space="preserve">
+    <value>خالی کردن سطل زباله</value>
+  </data>
+  <data name="Trash_EmptyAllTitle" xml:space="preserve">
+    <value>سطل زباله خالی شود؟</value>
+  </data>
+  <data name="Trash_EmptyAllMessage" xml:space="preserve">
+    <value>همه چیز برای همیشه پاک می‌شود.</value>
+  </data>
+  <data name="Trash_EmptyAllButton" xml:space="preserve">
+    <value>خالی کن</value>
+  </data>
+  <data name="Trash_DeleteForeverTitle" xml:space="preserve">
+    <value>برای همیشه حذف شود؟</value>
+  </data>
+  <data name="Trash_DeleteForeverMessage" xml:space="preserve">
+    <value>این کار قابل بازگشت نیست.</value>
+  </data>
+  <data name="Trash_MessageCount" xml:space="preserve">
+    <value>{0} پیام</value>
+  </data>
+  <data name="Trash_DaysLeft" xml:space="preserve">
+    <value>{0} روز مانده</value>
+  </data>
+  <data name="Trash_Restored" xml:space="preserve">
+    <value>بازگردانی شد</value>
+  </data>
+  <data name="Trash_RestoreFailed" xml:space="preserve">
+    <value>بازگردانی ممکن نشد. آیا قیچی برنامه پیامک پیش‌فرض است؟</value>
   </data>
 </root>

@@ -26,6 +26,7 @@ internal static class AppServices
         services.AddSingleton<ITrustedSenders, Services.PreferencesTrustedSenders>();
         services.AddSingleton<IBlockedSenders, Services.PreferencesBlockedSenders>();
         services.AddSingleton<ISpamMessageRepository>(_ => new SpamMessageRepository(databasePath));
+        services.AddSingleton<ITrashRepository>(_ => new TrashRepository(databasePath));
         services.AddSingleton<ISpamStatsRepository>(_ => new SpamStatRepository(databasePath));
         services.AddSingleton(_ => new SpamModelStore(
             Path.Combine(FileSystem.AppDataDirectory, "spam-model"),

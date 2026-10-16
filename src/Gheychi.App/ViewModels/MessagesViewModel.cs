@@ -351,6 +351,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
 
         _initialized = true;
+        if (IPlatformApplication.Current?.Services.GetService<ITrashRepository>() is { } trash)
+            _ = Task.Run(() => trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now)));
 
         // Paint the last known inbox right away; the real query below refreshes it.
         await EnsureCachedInboxAsync();

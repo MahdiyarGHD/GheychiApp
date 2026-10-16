@@ -18,6 +18,8 @@ public interface ISmsService
     Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> MarkThreadAsUnreadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> DeleteThreadsAsync(IReadOnlyList<long> threadIds, CancellationToken cancellationToken = default);
+    /// <summary>Puts messages from the trash back into the SMS store as they were. Returns how many came back.</summary>
+    Task<int> RestoreMessagesAsync(IReadOnlyList<TrashedMessage> messages);
     Task<bool> DeleteMessagesAsync(IReadOnlyList<long> messageIds, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SimCardInfo>> GetActiveSimsAsync();
     Task<IReadOnlyDictionary<int, int>> GetSimSlotMapAsync();
