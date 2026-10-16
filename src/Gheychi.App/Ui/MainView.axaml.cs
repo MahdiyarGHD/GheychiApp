@@ -364,14 +364,15 @@ public partial class MainView : UserControl
 
     // Coming back to the app with the keyboard up, the pane can briefly report a rectangle that is not the keyboard (the
     // whole window, or one that starts at the top). Taken as the keyboard's room it left the page no height at all, with
-    // only the tab bar showing at the top. The keyboard is never taller than its own rectangle nor most of the window.
+    // only the tab bar showing at the top. The room is measured to the window's bottom edge, as the keyboard's rectangle
+    // may stop short of it (the navigation bar); a keyboard never takes most of the window.
     private static double KeyboardHeight(Rect occluded, double windowHeight)
     {
         if (windowHeight <= 0 || occluded.Height <= 0)
             return 0;
 
-        var height = Math.Min(windowHeight - occluded.Top, occluded.Height);
-        return height is > 0 && height <= windowHeight * 0.6 ? height : 0;
+        var height = windowHeight - occluded.Top;
+        return height > 0 && height <= windowHeight * 0.6 ? height : 0;
     }
 
     private void OnContentLayoutChanged(object? sender, global::Android.Views.View.LayoutChangeEventArgs e) => ApplyInsets();
