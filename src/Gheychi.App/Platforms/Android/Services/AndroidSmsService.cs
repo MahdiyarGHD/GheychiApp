@@ -1356,7 +1356,14 @@ public sealed class AndroidSmsService : ISmsService
     }
 
     /// <summary>A delivery report confirmed the message reached the phone.</summary>
-    internal static void MarkDelivered(Context context, long rowId)
+    internal static void MarkDelivered(Context context, long rowId) =>
+        ApplyReport(context, rowId, SmsStatusHelper.StatusComplete, delivered: true);
+
+    /// <summary>A delivery report said the carrier gave up: the message never reached the phone.</summary>
+    internal static void MarkDeliveryFailed(Context context, long rowId) =>
+        ApplyReport(context, rowId, SmsStatusHelper.StatusFailed, delivered: false);
+
+    private static void ApplyReport(Context context, long rowId, int status, bool delivered)
     {
         try
         {
@@ -1365,9 +1372,15 @@ public sealed class AndroidSmsService : ISmsService
                 return;
 
             var values = new ContentValues();
-            values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusComplete);
+            values.Put(Telephony.Sms.InterfaceConsts.Status, status);
+            // Only a sent message not already settled the same way: a report that arrives twice (the carrier repeats
+            // them) must neither notify twice nor undo a delivery.
+            var column = Telephony.Sms.InterfaceConsts.Status;
+            var unsettled = delivered
+                ? $"({column} IS NULL OR {column} <> {SmsStatusHelper.StatusComplete})"
+                : $"({column} IS NULL OR {column} NOT IN ({SmsStatusHelper.StatusComplete}, {SmsStatusHelper.StatusFailed}))";
             var updated = context.ContentResolver?.Update(smsUri, values,
-                $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Sent}",
+                $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Sent} AND {unsettled}",
                 [rowId.ToString()]) ?? 0;
             if (updated == 0)
                 return;
@@ -1377,7 +1390,14 @@ public sealed class AndroidSmsService : ISmsService
             return;
         }
 
-        SmsSendTracker.RaiseDelivered(rowId, ThreadIdOf(context, rowId));
+        InvalidateSearchCaches();
+        var threadId = ThreadIdOf(context, rowId);
+        if (delivered)
+            SmsSendTracker.RaiseDelivered(rowId, threadId);
+        else
+            SmsSendTracker.RaiseDeliveryFailed(rowId, threadId);
+
+        DeliveryNotifier.Show(context, rowId, delivered);
     }
 
     private static void SetOutgoingPending(Context context, long rowId)

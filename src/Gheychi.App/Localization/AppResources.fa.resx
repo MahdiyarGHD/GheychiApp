@@ -1194,4 +1194,28 @@
   <data name="Chat_OpenConversation" xml:space="preserve">
     <value>باز کردن گفتگو</value>
   </data>
+  <data name="Settings_DeliveryReports" xml:space="preserve">
+    <value>گزارش تحویل</value>
+  </data>
+  <data name="Settings_DeliveryReportsHint" xml:space="preserve">
+    <value>وقتی پیامی که فرستاده‌اید تحویل داده شد یا اپراتور از رساندن آن منصرف شد، اعلان نمایش داده می‌شود</value>
+  </data>
+  <data name="Notification_ChannelDelivery" xml:space="preserve">
+    <value>گزارش تحویل</value>
+  </data>
+  <data name="Notification_ChannelDeliveryDescription" xml:space="preserve">
+    <value>اینکه پیام‌های ارسالی شما به گوشی مقصد رسیده‌اند یا نه</value>
+  </data>
+  <data name="Notification_DeliveredTo" xml:space="preserve">
+    <value>به {0} تحویل داده شد</value>
+  </data>
+  <data name="Notification_NotDeliveredTo" xml:space="preserve">
+    <value>به {0} تحویل داده نشد</value>
+  </data>
+  <data name="Notification_DeliveredHidden" xml:space="preserve">
+    <value>پیام تحویل داده شد</value>
+  </data>
+  <data name="Notification_NotDeliveredHidden" xml:space="preserve">
+    <value>پیام تحویل داده نشد</value>
+  </data>
 </root>

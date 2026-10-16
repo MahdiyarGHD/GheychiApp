@@ -10,6 +10,10 @@ internal static class NotificationIds
     public const string SpamDigestGroupKey = "com.evergreen.gheychiapp.SPAM_DIGEST";
     public const int SpamDigestId = 2;
 
+    public const string ChannelDelivery = "delivery_reports";
+    public const string DeliveryGroupKey = "com.evergreen.gheychiapp.DELIVERY";
+    public const string DeliveryTag = "delivery";
+
     public const string ExtraThreadId = "com.evergreen.gheychiapp.THREAD_ID";
     public const string ExtraAddress = "com.evergreen.gheychiapp.ADDRESS";
     public const string ExtraName = "com.evergreen.gheychiapp.NAME";

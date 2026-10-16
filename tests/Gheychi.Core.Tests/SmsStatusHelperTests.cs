@@ -30,6 +30,19 @@ public sealed class SmsStatusHelperTests
         Assert.False(SmsStatusHelper.IsDelivered(SmsStatusHelper.TypeInbox, SmsStatusHelper.StatusNone));
     }
 
+    [Theory]
+    [InlineData(0, DeliveryOutcome.Delivered)]
+    [InlineData(1, DeliveryOutcome.Delivered)]
+    [InlineData(31, DeliveryOutcome.Delivered)]
+    [InlineData(32, DeliveryOutcome.Pending)]
+    [InlineData(63, DeliveryOutcome.Pending)]
+    [InlineData(64, DeliveryOutcome.Failed)]
+    [InlineData(96, DeliveryOutcome.Failed)]
+    [InlineData(127, DeliveryOutcome.Failed)]
+    [InlineData(-1, DeliveryOutcome.Pending)]
+    public void ClassifyReport_ReadsTpStatus(int status, DeliveryOutcome expected) =>
+        Assert.Equal(expected, SmsStatusHelper.ClassifyReport(status));
+
     [Fact]
     public void GetInfoStatus_Incoming_AlwaysReceived()
     {

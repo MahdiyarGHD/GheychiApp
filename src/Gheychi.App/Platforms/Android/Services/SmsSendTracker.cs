@@ -15,12 +15,16 @@ internal static class SmsSendTracker
     public const string ActionSmsDelivered = "com.evergreen.gheychiapp.SMS_DELIVERED";
     public const string ExtraToken = "com.evergreen.gheychiapp.SMS_TOKEN";
     public const string ExtraRowId = "com.evergreen.gheychiapp.SMS_ROW_ID";
+    public const string ExtraParts = "com.evergreen.gheychiapp.SMS_PARTS";
 
     /// <summary>Raised when the carrier accepted or rejected a stored outgoing message (rowId, threadId, success).</summary>
     public static event Action<long, long, bool>? OutgoingUpdated;
 
     /// <summary>Raised when a delivery report confirmed a stored outgoing message reached the phone (rowId, threadId).</summary>
     public static event Action<long, long>? Delivered;
+
+    /// <summary>Raised when a delivery report said the carrier gave up on a stored outgoing message (rowId, threadId).</summary>
+    public static event Action<long, long>? DeliveryFailed;
 
     private static int _requestCodeSeed = Random.Shared.Next(1 << 20, 1 << 30);
 
@@ -59,7 +63,19 @@ internal static class SmsSendTracker
         }
     }
 
-    private static PendingIntent? CreateDeliveryIntent(Context context, long rowId)
+    public static void RaiseDeliveryFailed(long rowId, long threadId)
+    {
+        try
+        {
+            DeliveryFailed?.Invoke(rowId, threadId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DeliveryFailed handler failed: {ex}");
+        }
+    }
+
+    private static PendingIntent? CreateDeliveryIntent(Context context, long rowId, int parts)
     {
         if (rowId <= 0)
             return null;
@@ -69,6 +85,7 @@ internal static class SmsSendTracker
             var intent = new Intent(ActionSmsDelivered);
             intent.SetPackage(context.PackageName);
             intent.PutExtra(ExtraRowId, rowId);
+            intent.PutExtra(ExtraParts, parts);
             var requestCode = Interlocked.Increment(ref _requestCodeSeed);
             // Mutable: the platform adds the status report ("pdu", "format") to this intent.
             return PendingIntent.GetBroadcast(
@@ -110,14 +127,13 @@ internal static class SmsSendTracker
     {
         var multipart = parts != null && parts.Count > 1;
         var token = Register(multipart ? parts!.Count : 1);
-        var deliveryIntent = CreateDeliveryIntent(context, rowId);
 
         try
         {
             if (multipart)
             {
                 var sentIntents = new List<PendingIntent>(parts!.Count);
-                // Only the last part asks for a report: it is the one that completes the message on the phone.
+                // Every part asks for its own report: the message is delivered only when all of them are.
                 var deliveryIntents = new List<PendingIntent?>(parts.Count);
                 foreach (var _ in parts)
                 {
@@ -128,10 +144,10 @@ internal static class SmsSendTracker
                         return Task.FromResult(false);
                     }
                     sentIntents.Add(sentIntent);
-                    deliveryIntents.Add(deliveryIntents.Count == parts.Count - 1 ? deliveryIntent : null);
+                    deliveryIntents.Add(CreateDeliveryIntent(context, rowId, parts.Count));
                 }
 
-                smsManager.SendMultipartTextMessage(address, null, parts, sentIntents, deliveryIntent is null ? null : deliveryIntents!);
+                smsManager.SendMultipartTextMessage(address, null, parts, sentIntents, rowId > 0 && deliveryIntents.All(i => i is not null) ? deliveryIntents! : null);
             }
             else
             {
@@ -142,7 +158,7 @@ internal static class SmsSendTracker
                     return Task.FromResult(false);
                 }
 
-                smsManager.SendTextMessage(address, null, text, sentIntent, deliveryIntent);
+                smsManager.SendTextMessage(address, null, text, sentIntent, CreateDeliveryIntent(context, rowId, 1));
             }
         }
         catch

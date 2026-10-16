@@ -12,6 +12,7 @@ internal static class NotificationChannels
 
     private static volatile bool _created;
     private static volatile bool _spamDigestCreated;
+    private static volatile bool _deliveryCreated;
 
     public static void Ensure(Context context)
     {
@@ -56,6 +57,27 @@ internal static class NotificationChannels
 
         manager.CreateNotificationChannel(channel);
         _spamDigestCreated = true;
+    }
+
+    /// <summary>Default importance: the user asked for these, but the system settings let them quiet the channel.</summary>
+    public static void EnsureDelivery(Context context)
+    {
+        if (_deliveryCreated || !OperatingSystem.IsAndroidVersionAtLeast(26))
+            return;
+
+        if (context.GetSystemService(Context.NotificationService) is not NotificationManager manager)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        var channel = new NotificationChannel(NotificationIds.ChannelDelivery, loc["Notification_ChannelDelivery"], NotificationImportance.Default)
+        {
+            Description = loc["Notification_ChannelDeliveryDescription"],
+            LockscreenVisibility = NotificationVisibility.Private
+        };
+        channel.SetShowBadge(false);
+
+        manager.CreateNotificationChannel(channel);
+        _deliveryCreated = true;
     }
 
     /// <summary>

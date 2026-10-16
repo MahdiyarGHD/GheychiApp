@@ -10,6 +10,19 @@ public enum MessageInfoStatus
     Unconfirmed
 }
 
+/// <summary>What a carrier's delivery report says about the message.</summary>
+public enum DeliveryOutcome
+{
+    /// <summary>The message reached the phone.</summary>
+    Delivered,
+
+    /// <summary>The carrier is still trying, or the report says nothing usable: a final report may follow.</summary>
+    Pending,
+
+    /// <summary>The carrier gave up.</summary>
+    Failed
+}
+
 public static class SmsStatusHelper
 {
     public const int TypeInbox = 1;
@@ -52,6 +65,16 @@ public static class SmsStatusHelper
     public static bool IsDelivered(int type, int status) =>
         !HasFailed(type, status) &&
         (status == StatusComplete || (type == TypeSent && status == StatusNone));
+
+    /// <summary>
+    /// Reads the TP-Status of a status report (3GPP TS 23.040): below 32 the message reached the phone, 32-63 the carrier
+    /// is still trying, 64 and above it gave up (permanently, or after it stopped trying).
+    /// </summary>
+    public static DeliveryOutcome ClassifyReport(int tpStatus) =>
+        tpStatus < 0 ? DeliveryOutcome.Pending
+        : tpStatus < StatusPending ? DeliveryOutcome.Delivered
+        : tpStatus < StatusFailed ? DeliveryOutcome.Pending
+        : DeliveryOutcome.Failed;
 
     public static MessageInfoStatus GetInfoStatus(bool isOutgoing, bool hasFailed, bool isDelivered, bool isSending, bool isUnconfirmed = false) =>
         !isOutgoing ? MessageInfoStatus.Received

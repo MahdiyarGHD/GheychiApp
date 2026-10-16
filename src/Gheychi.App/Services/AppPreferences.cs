@@ -5,6 +5,7 @@ public static class AppPreferences
 {
     private const string DefaultSubIdKey = "default_sim_sub_id_v1";
     private const string LockScreenContentKey = "notification_lock_screen_content_v1";
+    private const string DeliveryNotificationsKey = "notification_delivery_reports_v1";
     private const string ThemeKey = "app_theme_v1";
     private const string LanguageKey = "app_language_v1";
     private const string AccentKey = "app_accent_v1";
@@ -24,6 +25,13 @@ public static class AppPreferences
     {
         get => Preferences.Default.Get(LockScreenContentKey, true);
         set => Preferences.Default.Set(LockScreenContentKey, value);
+    }
+
+    /// <summary>A notification when a sent message is delivered, or the carrier gives up on it. Off until asked for.</summary>
+    public static bool DeliveryNotifications
+    {
+        get => Preferences.Default.Get(DeliveryNotificationsKey, false);
+        set => Preferences.Default.Set(DeliveryNotificationsKey, value);
     }
 
     public static AppTheme Theme

@@ -188,7 +188,7 @@ internal static class MessageNotifier
             context, NotificationIds.SummaryId, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
     }
 
-    private static PendingIntent? OpenIntent(Context context, long threadId, string address, string name, int subId)
+    internal static PendingIntent? OpenIntent(Context context, long threadId, string address, string name, int subId)
     {
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);

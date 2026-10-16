@@ -935,6 +935,22 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         });
     }
 
+    private void OnDeliveryFailed(long rowId, long threadId)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var message in Messages)
+            {
+                if (message.Id != rowId)
+                    continue;
+
+                message.IsDelivered = false;
+                message.HasFailed = true;
+                break;
+            }
+        });
+    }
+
     // ---- Live updates while the chat is open --------------------------------------------------
 
     private bool _live;
@@ -953,6 +969,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         SmsDeliverReceiver.SmsReceived += OnIncomingSms;
         SmsSendTracker.OutgoingUpdated += OnOutgoingUpdated;
         SmsSendTracker.Delivered += OnDelivered;
+        SmsSendTracker.DeliveryFailed += OnDeliveryFailed;
     }
 
     public void StopLiveUpdates()
@@ -964,6 +981,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         SmsDeliverReceiver.SmsReceived -= OnIncomingSms;
         SmsSendTracker.OutgoingUpdated -= OnOutgoingUpdated;
         SmsSendTracker.Delivered -= OnDelivered;
+        SmsSendTracker.DeliveryFailed -= OnDeliveryFailed;
     }
 
     private void OnIncomingSms(long threadId)

@@ -53,6 +53,11 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             if (threadId > 0)
                 ChatViewModel.InvalidateThread(threadId);
         };
+        SmsSendTracker.DeliveryFailed += (_, threadId) =>
+        {
+            if (threadId > 0)
+                ChatViewModel.InvalidateThread(threadId);
+        };
     }
 
     private Task<BuiltThreads> StartSnapshotLoad()

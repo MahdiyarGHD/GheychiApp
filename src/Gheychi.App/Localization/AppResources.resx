@@ -1194,4 +1194,28 @@
   <data name="Chat_OpenConversation" xml:space="preserve">
     <value>Open conversation</value>
   </data>
+  <data name="Settings_DeliveryReports" xml:space="preserve">
+    <value>Delivery reports</value>
+  </data>
+  <data name="Settings_DeliveryReportsHint" xml:space="preserve">
+    <value>Notify when a message you sent is delivered, or the carrier gives up on it</value>
+  </data>
+  <data name="Notification_ChannelDelivery" xml:space="preserve">
+    <value>Delivery reports</value>
+  </data>
+  <data name="Notification_ChannelDeliveryDescription" xml:space="preserve">
+    <value>Whether the messages you sent reached the phone</value>
+  </data>
+  <data name="Notification_DeliveredTo" xml:space="preserve">
+    <value>Delivered to {0}</value>
+  </data>
+  <data name="Notification_NotDeliveredTo" xml:space="preserve">
+    <value>Not delivered to {0}</value>
+  </data>
+  <data name="Notification_DeliveredHidden" xml:space="preserve">
+    <value>Message delivered</value>
+  </data>
+  <data name="Notification_NotDeliveredHidden" xml:space="preserve">
+    <value>Message not delivered</value>
+  </data>
 </root>
