@@ -230,7 +230,8 @@
         <Panel x:Name="SelectBoxOverlay" IsVisible="False" Background="Transparent" Tapped="OnCloseSelectBoxTapped">
             <Border Margin="0,56,16,0"
                     Padding="4"
-                    Width="200"
+                    MinWidth="200"
+                    MaxWidth="300"
                     BorderThickness="1"
                     BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                     CornerRadius="12"
