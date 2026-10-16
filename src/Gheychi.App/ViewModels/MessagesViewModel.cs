@@ -92,7 +92,9 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     public int SelectedCount => Threads.Count(t => t.IsSelected);
     public string SelectedCountText => SelectedCount.ToString();
     public IReadOnlyList<ThreadItem> SelectedThreads => Threads.Where(t => t.IsSelected).ToList();
-    public bool AllSelectedAreUnread => SelectedThreads.Count > 0 && SelectedThreads.All(t => t.IsUnread);
+    public bool AnySelectedUnread => SelectedThreads.Any(t => t.IsUnread);
+
+    public bool AnySelectedRead => SelectedThreads.Any(t => !t.IsUnread);
 
     public void EnterSelectionMode(ThreadItem initial)
     {
@@ -126,7 +128,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(SelectedCountText));
         OnPropertyChanged(nameof(SelectedThreads));
-        OnPropertyChanged(nameof(AllSelectedAreUnread));
+        OnPropertyChanged(nameof(AnySelectedUnread));
+        OnPropertyChanged(nameof(AnySelectedRead));
     }
 
     public Task<bool> UnarchiveThreadsAsync(IReadOnlyList<ThreadItem> threads)
@@ -233,29 +236,37 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         return Task.FromResult(true);
     }
 
-    public async Task MarkSelectedAsUnreadAsync()
+    public Task MarkSelectedAsReadAsync() => MarkSelectedAsync(unread: false);
+
+    public Task MarkSelectedAsUnreadAsync() => MarkSelectedAsync(unread: true);
+
+    private Task MarkSelectedAsync(bool unread)
     {
         var selected = SelectedThreads;
         if (selected.Count == 0)
-            return;
-
-        var makeUnread = !AllSelectedAreUnread;
+            return Task.CompletedTask;
 
         foreach (var t in selected)
         {
-            if (makeUnread)
+            // Already in the wanted state: nothing to write, and no notification to dismiss.
+            if (t.IsUnread == unread)
+                continue;
+
+            var threadId = t.ThreadId;
+            if (unread)
             {
                 t.MarkAsUnread();
-                _ = Task.Run(() => _smsService.MarkThreadAsUnreadAsync(t.ThreadId));
+                _ = Task.Run(() => _smsService.MarkThreadAsUnreadAsync(threadId));
             }
             else
             {
                 t.MarkAsRead();
-                _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(t.ThreadId));
+                _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(threadId));
             }
         }
 
         ExitSelectionMode();
+        return Task.CompletedTask;
     }
 
     private static HashSet<long> GetArchivedThreadIds()

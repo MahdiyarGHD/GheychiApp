@@ -269,6 +269,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     public void OnHidden()
     {
         _inboxShown = false;
+        // A selection or an open menu does not wait for the user to come back to the tab.
+        SelectBoxOverlay.IsVisible = false;
+        Vm?.ExitSelectionMode();
         MainActivity.Resumed -= OnAppResumed;
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         ExternalSendRequests.Requested -= OnExternalSendRequested;
@@ -829,12 +832,27 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         await Vm.ArchiveSelectedThreadsAsync();
     }
 
-    private void OnThreeDotsTapped(object? sender, TappedEventArgs e) =>
+    private void OnThreeDotsTapped(object? sender, TappedEventArgs e)
+    {
+        // Only what would change something: "mark as read" for a chat that is read already does nothing.
+        MarkReadItem.IsVisible = Vm?.AnySelectedUnread ?? false;
+        MarkUnreadItem.IsVisible = Vm?.AnySelectedRead ?? false;
         SelectBoxOverlay.IsVisible = !SelectBoxOverlay.IsVisible;
+    }
 
     private void OnCloseSelectBoxTapped(object? sender, TappedEventArgs e) => SelectBoxOverlay.IsVisible = false;
 
     private void OnSelectBoxTapEater(object? sender, TappedEventArgs e) => e.Handled = true;
+
+    private async void OnMarkAsReadTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.MarkSelectedAsReadAsync();
+    }
 
     private async void OnMarkAsUnreadTapped(object? sender, TappedEventArgs e)
     {

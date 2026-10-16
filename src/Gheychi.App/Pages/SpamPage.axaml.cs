@@ -46,6 +46,14 @@ public partial class SpamPage : UserControl
     {
         if (SearchBar.IsVisible)
             ClearFocus();
+
+        // Back on the tab it starts from its top: menus and the search closed, the list at its first row.
+        for (var layers = 0; layers < 4 && HandleBack(); layers++)
+        {
+        }
+
+        if (_scroll is not null)
+            _scroll.Offset = default;
     }
 
     /// <summary>The Spam tab was tapped while shown: a menu or the search closes, otherwise the list goes to its top.</summary>

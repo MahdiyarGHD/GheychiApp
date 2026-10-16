@@ -239,15 +239,26 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Tapped="OnSelectBoxTapEater">
-                <Grid Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnMarkAsUnreadTapped">
-                    <ui:Icon Grid.Column="0" Data="{StaticResource Icon.TabMessages}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1"
-                               Text="{loc:Translate Messages_MarkAsUnread}"
-                               FontSize="13"
-                               FontFamily="{x:Static app:AppFonts.Bold}"
-                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
-                               VerticalAlignment="Center" />
-                </Grid>
+                <StackPanel>
+                    <Grid x:Name="MarkReadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnMarkAsReadTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Check}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_MarkAsRead}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="MarkUnreadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnMarkAsUnreadTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.TabMessages}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_MarkAsUnread}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
             </Border>
         </Panel>
 

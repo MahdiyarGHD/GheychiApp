@@ -14,7 +14,7 @@ public partial class TrashScreen : SettingsScreen
     private readonly ITrashRepository? _trash;
     private readonly ISmsService? _sms;
     private int _loadVersion;
-    private bool _busy;
+    private List<TrashRow>? _rows;
 
     public TrashScreen()
     {
@@ -43,14 +43,20 @@ public partial class TrashScreen : SettingsScreen
             if (version != _loadVersion)
                 return;
 
-            TrashList.ItemsSource = rows;
-            EmptyNote.IsVisible = rows.Count == 0;
-            EmptyAll.IsVisible = rows.Count > 0;
+            Show(rows);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Listing the trash failed: {ex}");
         }
+    }
+
+    private void Show(List<TrashRow> rows)
+    {
+        _rows = rows;
+        TrashList.ItemsSource = rows;
+        EmptyNote.IsVisible = rows.Count == 0;
+        EmptyAll.IsVisible = rows.Count > 0;
     }
 
     private static TrashRow ToRow(TrashGroup group, DateTime now)
@@ -67,34 +73,31 @@ public partial class TrashScreen : SettingsScreen
 
     private async void OnRestoreTapped(object? sender, TappedEventArgs e)
     {
-        if ((sender as Control)?.DataContext is not TrashRow row || _trash is null || _sms is null || _busy)
+        if ((sender as Control)?.DataContext is not TrashRow row || _trash is null || _sms is null || _rows is null)
             return;
 
-        _busy = true;
+        // The row leaves the list and the toast shows at once; the store is written behind it. Waiting for the write made
+        // the tap look dead for a couple of seconds.
+        var loc = LocalizationManager.Instance;
+        Show(_rows.Where(r => !ReferenceEquals(r, row)).ToList());
+        Toast.Show(loc["Trash_Restored"]);
+
         try
         {
-            var loc = LocalizationManager.Instance;
             var restored = await _sms.RestoreMessagesAsync(row.Group.Messages);
-            if (restored == 0)
-            {
-                Toast.Show(loc["Trash_RestoreFailed"]);
-                return;
-            }
-
             // Only what came back leaves the trash: a partial restore keeps the rest to try again.
             if (restored == row.Group.Messages.Count)
                 await _trash.DeleteAsync(row.Group.Ids);
-            Toast.Show(loc["Trash_Restored"]);
-            await LoadAsync();
+            else
+                Toast.Show(loc["Trash_RestoreFailed"]);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Restoring from the trash failed: {ex}");
+            Toast.Show(loc["Trash_RestoreFailed"]);
         }
-        finally
-        {
-            _busy = false;
-        }
+
+        await LoadAsync();
     }
 
     private async void OnDeleteForeverTapped(object? sender, TappedEventArgs e)

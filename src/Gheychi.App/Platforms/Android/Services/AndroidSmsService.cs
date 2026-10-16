@@ -1663,41 +1663,45 @@ public sealed class AndroidSmsService : ISmsService
             if (smsUri is null || messages.Count == 0)
                 return 0;
 
-            var restored = 0;
-            var threads = new HashSet<long>();
+            var rows = new List<ContentValues>(messages.Count);
             foreach (var message in messages)
             {
-                try
-                {
-                    var type = TrashPolicy.RestoredType(message.Type);
-                    var values = new ContentValues();
-                    values.Put(Telephony.Sms.InterfaceConsts.Address, message.Address);
-                    values.Put(Telephony.Sms.InterfaceConsts.Body, message.Body);
-                    values.Put(Telephony.Sms.InterfaceConsts.Date, message.DateMs);
-                    values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
-                    values.Put(Telephony.Sms.InterfaceConsts.Type, type);
-                    if (type == SmsStatusHelper.TypeFailed)
-                        values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusFailed);
-                    if (message.SubId > 0)
-                        values.Put("sub_id", message.SubId);
+                var type = TrashPolicy.RestoredType(message.Type);
+                var values = new ContentValues();
+                values.Put(Telephony.Sms.InterfaceConsts.Address, message.Address);
+                values.Put(Telephony.Sms.InterfaceConsts.Body, message.Body);
+                values.Put(Telephony.Sms.InterfaceConsts.Date, message.DateMs);
+                values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
+                values.Put(Telephony.Sms.InterfaceConsts.Type, type);
+                if (type == SmsStatusHelper.TypeFailed)
+                    values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusFailed);
+                if (message.SubId > 0)
+                    values.Put("sub_id", message.SubId);
+                rows.Add(values);
+            }
 
-                    if (context.ContentResolver?.Insert(smsUri, values) is not { } row)
-                        continue;
-
-                    restored++;
-                    if (ConversationReader.ReadThreadId(context, row) is > 0 and var threadId)
-                        threads.Add(threadId);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Restoring a message failed: {ex}");
-                }
+            // One call for all of them: a conversation is hundreds of rows, and a call each was the slow part.
+            int restored;
+            try
+            {
+                restored = context.ContentResolver?.BulkInsert(smsUri, rows.ToArray()) ?? 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Restoring messages failed: {ex}");
+                return 0;
             }
 
             if (restored > 0)
             {
                 InvalidateSearchCaches();
-                // The inbox and an open chat read the store again; threadId 0 would drop every cached page, so the exact ones go.
+                var threads = messages
+                    .Select(m => m.Address)
+                    .Distinct()
+                    .Select(address => Telephony.Threads.GetOrCreateThreadId(context, address))
+                    .Where(id => id > 0)
+                    .ToList();
+                // The inbox and an open chat read the store again.
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     foreach (var threadId in threads)

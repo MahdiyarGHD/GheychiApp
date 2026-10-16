@@ -134,6 +134,10 @@ public partial class SettingsPage : UserControl
     public void OnHidden()
     {
         MainActivity.Resumed -= OnAppResumed;
+
+        // Back on the tab it starts from its top, not from the screen it was left on.
+        CloseAll();
+        PageScroll.Offset = default;
     }
 
     /// <summary>The Settings tab was tapped while shown: every open screen closes, otherwise the page goes to its top.</summary>
