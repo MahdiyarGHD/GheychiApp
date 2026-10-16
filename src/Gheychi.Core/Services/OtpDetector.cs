@@ -84,6 +84,14 @@ public static partial class OtpDetector
     [GeneratedRegex(@"بانک|تراکنش|پرداخت|خرید|کارت|شتاب|پذیرنده|bank|transaction|payment|purchase|card", RegexOptions.CultureInvariant)]
     private static partial Regex BankingRegex();
 
+    // A message about moving money ("مبلغ 121,000,000 ریال", "انتقال به ..."): a bank's, whoever signs it.
+    [GeneratedRegex(@"مبلغ|انتقال|تراکنش|خرید|پرداخت|برداشت|واریز|amount|transfer|payment|purchase", RegexOptions.CultureInvariant)]
+    private static partial Regex TransactionRegex();
+
+    // Banks call their payment password just "رمز" ("رمز 407359", "زمان اعتبار رمز"): the word on its own, not "رمز عبور" or "رمز ورود".
+    [GeneratedRegex(@"(?<![\u0600-\u06FF])رمز(?![\u0600-\u06FF])(?!\s*(?:عبور|ورود|اینترنت|ثابت|ارز))", RegexOptions.CultureInvariant)]
+    private static partial Regex PlainPasswordRegex();
+
     // Two words that are one: "log in", "یک بار مصرف". Joined, with the space moved to the end so every index holds.
     [GeneratedRegex(@"\b(?:log|sign) in\b|\bone time\b|\bpass code\b|یک ?بار ?مصرف", RegexOptions.CultureInvariant)]
     private static partial Regex GlueRegex();
@@ -373,7 +381,9 @@ public static partial class OtpDetector
     }
 
     private static OtpKind KindOf(string text) =>
-        DynamicNameRegex().IsMatch(text) || (OneTimePasswordRegex().IsMatch(text) && BankingRegex().IsMatch(text))
+        DynamicNameRegex().IsMatch(text) ||
+        (OneTimePasswordRegex().IsMatch(text) && BankingRegex().IsMatch(text)) ||
+        (PlainPasswordRegex().IsMatch(text) && TransactionRegex().IsMatch(text))
             ? OtpKind.DynamicPassword
             : OtpKind.Verification;
 

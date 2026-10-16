@@ -637,7 +637,28 @@
     <value>{0} this week</value>
   </data>
   <data name="Settings_SectionProtection" xml:space="preserve">
-    <value>Protection &amp; messaging</value>
+    <value>Protection</value>
+  </data>
+  <data name="Settings_SectionMessaging" xml:space="preserve">
+    <value>Messaging</value>
+  </data>
+  <data name="Settings_Codes" xml:space="preserve">
+    <value>Verification codes</value>
+  </data>
+  <data name="Settings_CodesHint" xml:space="preserve">
+    <value>Copy buttons and auto-copy</value>
+  </data>
+  <data name="Settings_CodesCardTitle" xml:space="preserve">
+    <value>Codes made easy</value>
+  </data>
+  <data name="Settings_CodesCardText" xml:space="preserve">
+    <value>A code in a new message is shown in bold, with a Copy code button under it. The notification has the same button.</value>
+  </data>
+  <data name="Settings_SectionAutoCopy" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicNote" xml:space="preserve">
+    <value>Only for a bank's dynamic password. Any other code is copied only when you tap Copy code.</value>
   </data>
   <data name="Settings_SectionPersonal" xml:space="preserve">
     <value>Personalization</value>
@@ -1180,7 +1201,7 @@
     <value>Copy dynamic passwords</value>
   </data>
   <data name="Settings_AutoCopyDynamicHint" xml:space="preserve">
-    <value>Copies a bank&#8217;s dynamic password (رمز پویا) as soon as its message arrives.</value>
+    <value>Copies a bank's dynamic password the moment its message arrives.</value>
   </data>
   <data name="Chat_Copy" xml:space="preserve">
     <value>Copy</value>

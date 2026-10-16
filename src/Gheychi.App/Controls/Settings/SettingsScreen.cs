@@ -15,6 +15,7 @@ public enum SettingsScreenKind
     Trash,
     Sims,
     Notifications,
+    Codes,
     Appearance,
     Privacy,
     About,

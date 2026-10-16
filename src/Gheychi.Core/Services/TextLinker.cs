@@ -48,7 +48,7 @@ public static partial class TextLinker
     private static partial Regex UssdRegex();
 
     // An amount or a count as written: digits, in groups of thousands or with decimals. Not part of a word, a date, a time or a range.
-    [GeneratedRegex(@"(?<![\w.,٬٫/:+*#\-])(?:\d{4}(?:[ \-]\d{4}){3}(?![\w.,٬٫]\d)|\d+(?:[,٬٫.]\d+)*)(?![A-Za-z0-9_])", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"(?<![\w.,٬٫/:+*#\-])(?:\d{4,6}(?:[ \-]?[*•]+)+[ \-]?\d{4}|\d{4}(?:[ \-]\d{4}){3}(?![\w.,٬٫]\d)|\d+(?:[,٬٫.]\d+)*)(?![A-Za-z0-9_])", RegexOptions.CultureInvariant)]
     private static partial Regex NumberRegex();
 
     /// <returns>The links in order of appearance, or null when there are none (nearly every message).</returns>

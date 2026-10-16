@@ -144,6 +144,39 @@
                                 <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
                             </Grid>
                         </Border>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionMessaging}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row" Tapped="OnNotificationsTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Notifications}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_NotificationsHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnCodesTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Copy}"
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Codes}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_CodesHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
                         <Border Classes="divider" />
                         <Border Classes="row" Tapped="OnTrashTapped">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
@@ -174,20 +207,6 @@
                                 </Grid>
                             </Border>
                         </StackPanel>
-                        <Border Classes="divider" />
-                        <Border Classes="row" Tapped="OnNotificationsTapped">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                                <Border Classes="badge">
-                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
-                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
-                                </Border>
-                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{loc:Translate Settings_Notifications}" Classes="rowTitle" />
-                                    <TextBlock Text="{loc:Translate Settings_NotificationsHint}" Classes="rowSubtitle" />
-                                </StackPanel>
-                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
-                            </Grid>
-                        </Border>
                     </StackPanel>
                 </Border>
 

@@ -637,7 +637,28 @@
     <value>{0} در این هفته</value>
   </data>
   <data name="Settings_SectionProtection" xml:space="preserve">
-    <value>محافظت و پیام‌رسانی</value>
+    <value>محافظت</value>
+  </data>
+  <data name="Settings_SectionMessaging" xml:space="preserve">
+    <value>پیام‌رسانی</value>
+  </data>
+  <data name="Settings_Codes" xml:space="preserve">
+    <value>کدهای تأیید</value>
+  </data>
+  <data name="Settings_CodesHint" xml:space="preserve">
+    <value>دکمه‌ی کپی و کپی خودکار</value>
+  </data>
+  <data name="Settings_CodesCardTitle" xml:space="preserve">
+    <value>کدها یک‌لمسی</value>
+  </data>
+  <data name="Settings_CodesCardText" xml:space="preserve">
+    <value>کد پیامک‌های تازه پررنگ می‌شود و دکمه‌ی «کپی کد» زیرش می‌آید. همین دکمه در اعلان هم هست.</value>
+  </data>
+  <data name="Settings_SectionAutoCopy" xml:space="preserve">
+    <value>خودکار</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicNote" xml:space="preserve">
+    <value>فقط برای رمز پویای بانک‌ها. کدهای دیگر فقط با زدن «کپی کد» کپی می‌شوند.</value>
   </data>
   <data name="Settings_SectionPersonal" xml:space="preserve">
     <value>شخصی‌سازی</value>
@@ -1159,7 +1180,7 @@
     <value>کپی کد</value>
   </data>
   <data name="Chat_CopyDynamicPassword" xml:space="preserve">
-    <value>کپی رمز پویا</value>
+    <value>کپی رمز</value>
   </data>
   <data name="Chat_CodeCopied" xml:space="preserve">
     <value>کپی شد</value>
@@ -1168,7 +1189,7 @@
     <value>کپی کد</value>
   </data>
   <data name="Notification_CopyDynamicPassword" xml:space="preserve">
-    <value>کپی رمز پویا</value>
+    <value>کپی رمز</value>
   </data>
   <data name="Notification_CodeCopied" xml:space="preserve">
     <value>کد کپی شد</value>

@@ -25,6 +25,8 @@ public class TextLinkerTests
     [InlineData("موجودی ۲۵۰۰۰ ریال", "۲۵۰۰۰")]
     [InlineData("Card 6037 9911 1111 1111 expires soon", "6037 9911 1111 1111")]
     [InlineData("Paid 1250.50 USD", "1250.50")]
+    [InlineData("انتقال به 621986*4040 مبلغ", "621986*4040")]
+    [InlineData("کارت 6037 **** **** 1234 برداشت", "6037 **** **** 1234")]
     public void Find_Number_IsFoundWhole(string text, string expected) => Assert.Equal([expected], Shown(text, LinkKind.Number));
 
     [Fact]

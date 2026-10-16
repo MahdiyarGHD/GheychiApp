@@ -97,6 +97,8 @@ public class OtpDetectorTests
     [InlineData("رمز پویای شما: ۱۲۳۴۵۶")]
     [InlineData("بانک ملی\nرمز یکبار مصرف: 123456")]
     [InlineData("Your dynamic password is 123456")]
+    [InlineData("بانک سامان\n انتقال به\n 621986*4040  \nمبلغ 121,000,000 ريال\nرمز 407359\nزمان اعتبار رمز 10:19:43")]
+    [InlineData("خرید اینترنتی\nمبلغ 250,000 ریال\nرمز 5532")]
     public void Kind_IsADynamicPassword(string text) => Assert.Equal(OtpKind.DynamicPassword, OtpDetector.Find(text)!.Value.Kind);
 
     [Theory]
@@ -104,11 +106,14 @@ public class OtpDetectorTests
     [InlineData("رمز یکبار مصرف شما در دیجی‌کالا: 12345")]
     [InlineData("کد تایید شما: ۴۸۲۱۹")]
     [InlineData("سلام پویا، کد ورود شما 4821 است")]
+    [InlineData("رمز ورود شما 48215 است. مبلغ اشتراک 50,000 تومان")]
+    [InlineData("رمز 5532 را وارد کنید")]
     public void Kind_IsAVerificationCode(string text) => Assert.Equal(OtpKind.Verification, OtpDetector.Find(text)!.Value.Kind);
 
     [Theory]
     [InlineData("رمز پویا: 123456\nمبلغ: 25,000 ریال")]
     [InlineData("بانک ملت\nرمز دوم پویا ۱۲۳۴۵۶۷۸")]
+    [InlineData("بانک سامان\n انتقال به\n 621986*4040  \nمبلغ 121,000,000 ريال\nرمز 407359\nزمان اعتبار رمز 10:19:43")]
     public void IsConfident_ForABanksDynamicPassword(string text) => Assert.True(OtpDetector.Find(text)!.Value.IsConfident);
 
     [Fact]
