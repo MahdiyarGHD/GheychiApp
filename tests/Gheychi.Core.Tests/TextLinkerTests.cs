@@ -13,7 +13,7 @@ public class TextLinkerTests
 
     [Theory]
     [InlineData("Plain message with no links.")]
-    [InlineData("Your code is 123456")]
+    [InlineData("Order 123456 has shipped")]
     [InlineData("On 2024-01-15 at 10:30")]
     [InlineData("Card 6037 9911 1111 1111 expires soon")]
     [InlineData("file.txt and hello.world")]
@@ -156,5 +156,44 @@ public class TextLinkerTests
         var spans = TextLinker.Find(text)!;
 
         Assert.Equal([LinkKind.Phone, LinkKind.Ussd, LinkKind.Url], spans.Select(s => s.Kind));
+    }
+
+    [Theory]
+    [InlineData("Your code is 123456", "123456")]
+    [InlineData("123456 is your verification code.", "123456")]
+    [InlineData("G-884213 is your Google verification code.", "884213")]
+    [InlineData("Your PIN: 4821", "4821")]
+    [InlineData("کد تایید شما: ۴۸۲۱۹ است", "۴۸۲۱۹")]
+    [InlineData("رمز دوم پویا: 123456 مبلغ 25000 ریال", "123456")]
+    [InlineData("مبلغ 25000 ریال کد 4411", "4411")]
+    [InlineData("Amount 12,500 rial, OTP 7788", "7788")]
+    public void Find_OneTimeCode(string text, string expected) =>
+        Assert.Equal([expected], Shown(text, LinkKind.Code));
+
+    [Theory]
+    [InlineData("Order 123456 has shipped")]
+    [InlineData("Your code is 12")]
+    [InlineData("Code A1234 and 4G")]
+    [InlineData("Your code is 123456789012")]
+    [InlineData("Call 09121234567 for the code")]
+    [InlineData("کد 1405.07.29 ثبت شد")]
+    public void Find_NotACode(string text) => Assert.Empty(Shown(text, LinkKind.Code));
+
+    [Fact]
+    public void Find_Code_NextToAPhoneAndAUssd_KeepsEach()
+    {
+        const string text = "Your code is 5521. Call 09121234567 or dial *100#";
+        var spans = TextLinker.Find(text)!;
+
+        Assert.Equal([LinkKind.Code, LinkKind.Phone, LinkKind.Ussd], spans.Select(s => s.Kind));
+    }
+
+    [Fact]
+    public void Target_Code_IsLatinDigits()
+    {
+        const string text = "کد تایید: ۴۸۲۱۹";
+        var span = TextLinker.Find(text)!.Single();
+
+        Assert.Equal("48219", TextLinker.Target(text, span));
     }
 }

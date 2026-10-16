@@ -11,7 +11,7 @@ using Gheychi.Core.Services;
 namespace Gheychi.App.Controls;
 
 /// <summary>
-/// The small card that opens on a tapped link, phone number or USSD code: open or call, and copy. It fills the page it is
+/// The small card that opens on a tapped link, phone number, USSD code or one-time code: open or call, and copy. It fills the page it is
 /// placed on (a tap outside the card closes it) and puts the card next to the text that was tapped.
 /// </summary>
 public partial class LinkMenu : UserControl
@@ -50,6 +50,8 @@ public partial class LinkMenu : UserControl
 
         var loc = LocalizationManager.Instance;
         Subject.Text = shown;
+        // A one-time code has nothing to open: copying it is all there is to do.
+        PrimaryRow.IsVisible = kind != LinkKind.Code;
         if (kind == LinkKind.Url)
         {
             PrimaryIcon.Data = this.FindResource("Icon.OpenInNew") as Geometry;

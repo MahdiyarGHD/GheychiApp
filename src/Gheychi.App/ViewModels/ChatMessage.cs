@@ -61,7 +61,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
 
     public required string Body { get; init; }
 
-    /// <summary>The links, phone numbers and USSD codes in <see cref="Body"/>; null for the many messages that have none.</summary>
+    /// <summary>The links, phone numbers, USSD codes and one-time codes in <see cref="Body"/>; null for the many messages that have none.</summary>
     public LinkSpan[]? Links { get; init; }
 
     /// <summary>The first web address in the message, as it is written.</summary>
