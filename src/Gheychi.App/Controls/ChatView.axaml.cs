@@ -63,6 +63,8 @@ public partial class ChatView : UserControl
     public ChatView()
     {
         InitializeComponent();
+        // Room for two lines more than the box had at the default text size, whatever the size is.
+        MessageEntry.MaxHeight += 2 * Gheychi.App.Theming.TextScale.Body * 1.4;
 
         var initialVm = new ChatViewModel();
         initialVm.SafeDispatcher = SafePrependItems;
