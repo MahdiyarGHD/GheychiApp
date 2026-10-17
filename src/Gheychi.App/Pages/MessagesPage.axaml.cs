@@ -1786,17 +1786,12 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         await SettleArchiveAsync(false, 1, 0);
     }
 
-    /// <summary>The Messages tab was tapped while shown: the inbox goes to its top; with something open over it, that closes.</summary>
-    public void OnTabReselected()
-    {
-        if (_animating)
-            return;
+    private void OnSpamButtonTapped(object? sender, TappedEventArgs e) => Ui.MainView.Current?.ShowSpam();
 
-        if (IsChatClosed && IsSearchClosed && IsComposeClosed && IsProfileClosed && !_archiveOpen)
-            Ui.ScrollAnimator.ToTop(_threadsScroll);
-        else
-            HandleBack();
-    }
+    private void OnSettingsButtonTapped(object? sender, TappedEventArgs e) => Ui.MainView.Current?.ShowSettings();
+
+    /// <summary>The dot on the settings button: an update is waiting.</summary>
+    public void SetSettingsBadge(bool visible) => SettingsBadge.IsVisible = visible;
 
     // ---- Back -----------------------------------------------------------------------------------
 

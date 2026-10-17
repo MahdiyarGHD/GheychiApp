@@ -17,9 +17,9 @@ using Gheychi.App.Theming;
 namespace Gheychi.App.Ui;
 
 /// <summary>
-/// The whole window: the three tabs, a layer above them for the full-screen overlays (chat, search, compose...) and the
-/// soft keyboard and system bars. Overlays cover the tab bar by sitting above it, so opening one never relayouts the page
-/// beneath, and the pages stay built across tab switches.
+/// The whole window: the inbox, the Spam page and the Settings page (the last two are opened from the inbox's header), a
+/// layer above them for the full-screen overlays (chat, search, compose...) and the soft keyboard and system bars. The
+/// pages stay built across switches, and opening an overlay never relayouts the page beneath.
 /// </summary>
 public partial class MainView : UserControl
 {
@@ -27,14 +27,12 @@ public partial class MainView : UserControl
     private const int SpamIndex = 1;
     private const int SettingsIndex = 2;
 
-    private static readonly IBrush TabActive = Palette.Accent(AccentRole.Text);
-    private static readonly IBrush TabInactive = Palette.Pick("#595C61", "#9AA0AB");
-
     private readonly Control?[] _pages = new Control?[3];
     private int _selected = -1;
     private TopLevel? _topLevel;
     private double _safeBottom;
     private bool _detached;
+    private bool _settingsBadge;
 
     private HorizontalSwipeTracker? _swipe;
     private IPageSwipeClient? _swipeClient;
@@ -115,15 +113,14 @@ public partial class MainView : UserControl
         }
     }
 
-    // The splash theme paints the bars in the phone's light or dark page colour; the navigation bar sits under the tab
-    // bar, so it takes the tab bar's colour (MainView.axaml) and the status bar the page's.
+    // The splash theme paints the bars in the phone's light or dark page colour; both take the page's.
     private static void ColorSystemBars()
     {
         if (Platform.CurrentActivity?.Window is not { } window)
             return;
 
         window.SetStatusBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#121212" : "#F1F3F4"));
-        window.SetNavigationBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#1A1B1E" : "#EFF0F1"));
+        window.SetNavigationBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#121212" : "#F1F3F4"));
     }
 
     private void OnAppResumed()
@@ -163,40 +160,11 @@ public partial class MainView : UserControl
         }
     }
 
-    public void SetTabBarVisible(bool visible) => TabBar.IsVisible = visible;
-
     public void SelectMessagesTab() => Select(MessagesIndex);
 
-    // ---- Tabs ----------------------------------------------------------------------------------
+    public void ShowSpam() => Select(SpamIndex);
 
-    private void OnTabTapped(object? sender, TappedEventArgs e)
-    {
-        var index = sender == MessagesTab ? MessagesIndex : sender == SpamTab ? SpamIndex : sender == SettingsTab ? SettingsIndex : -1;
-        if (index < 0)
-            return;
-
-        if (index == _selected)
-            Reselect(index);
-        else
-            Select(index);
-    }
-
-    // The tab that is already shown: back to its start (what the back button would do, in one tap), or to its top.
-    private void Reselect(int index)
-    {
-        switch (_pages[index])
-        {
-            case MessagesPage messages:
-                messages.OnTabReselected();
-                break;
-            case SpamPage spam:
-                spam.OnTabReselected();
-                break;
-            case SettingsPage settings:
-                settings.OnTabReselected();
-                break;
-        }
-    }
+    public void ShowSettings() => Select(SettingsIndex);
 
     private void OnChatLaunchRequested() => MainThread.BeginInvokeOnMainThread(() => Select(MessagesIndex));
 
@@ -224,10 +192,6 @@ public partial class MainView : UserControl
         page.IsVisible = true;
         NotifyShown(page);
 
-        Style(MessagesPill, MessagesIcon, MessagesLabel, index == MessagesIndex);
-        Style(SpamPill, SpamIcon, SpamLabel, index == SpamIndex);
-        Style(SettingsPill, SettingsIcon, SettingsLabel, index == SettingsIndex);
-
         if (previous < 0)
             _ = BuildOtherTabsAsync();
     }
@@ -241,6 +205,8 @@ public partial class MainView : UserControl
             _ => new MessagesPage()
         };
         page.IsVisible = false;
+        if (page is MessagesPage messages)
+            messages.SetSettingsBadge(_settingsBadge);
         PageHost.Children.Add(page);
         return page;
     }
@@ -277,15 +243,6 @@ public partial class MainView : UserControl
         {
             System.Diagnostics.Debug.WriteLine($"Building the other tabs failed: {ex}");
         }
-    }
-
-    private static void Style(Border pill, Icon icon, TextBlock label, bool selected)
-    {
-        pill.IsVisible = selected;
-        var brush = selected ? TabActive : TabInactive;
-        icon.Foreground = brush;
-        label.Foreground = brush;
-        label.FontFamily = selected ? AppFonts.Bold : AppFonts.Regular;
     }
 
     private static void NotifyShown(Control page)
@@ -340,6 +297,14 @@ public partial class MainView : UserControl
             SettingsPage settings => settings.HandleBack(),
             _ => false
         };
+
+        // Back from the Spam or Settings page goes to the inbox, not out of the app.
+        if (!handled && _selected != MessagesIndex)
+        {
+            Select(MessagesIndex);
+            handled = true;
+        }
+
         if (handled)
             e.Handled = true;
     }
@@ -409,7 +374,7 @@ public partial class MainView : UserControl
         // The keyboard covers the navigation bar, so while it is up it alone sets the bottom edge.
         _safeBottom = keyboard > 0 ? 0 : safe.Bottom;
         Root.Padding = new Thickness(safe.Left, safe.Top, safe.Right, keyboard);
-        TabBar.Padding = new Thickness(0, 0, 0, _safeBottom);
+        PageHost.Margin = new Thickness(0, 0, 0, _safeBottom);
         OverlayHost.Margin = new Thickness(0, 0, 0, _safeBottom);
     }
 
@@ -443,11 +408,15 @@ public partial class MainView : UserControl
             var model = !app && services?.GetService<SpamModelUpdates>() is { } models
                 && await Task.Run(() => models.GetAvailableAsync()) is not null;
 
-            MainThread.BeginInvokeOnMainThread(() => SettingsBadge.IsVisible = app || model);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _settingsBadge = app || model;
+                (_pages[MessagesIndex] as MessagesPage)?.SetSettingsBadge(_settingsBadge);
+            });
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Settings tab badge failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Settings badge failed: {ex}");
         }
     }
 

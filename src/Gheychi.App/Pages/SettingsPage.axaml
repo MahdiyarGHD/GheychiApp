@@ -13,7 +13,25 @@
     <!-- The screen behind each row is built when first opened and added over the overview -->
     <Grid x:Name="Root">
         <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Hidden">
-            <StackPanel Margin="0,16,0,24">
+            <StackPanel Margin="0,6,0,24">
+                <Grid Margin="10,0,16,10" ColumnDefinitions="Auto,*">
+                    <Border Width="40"
+                            Height="40"
+                            CornerRadius="20"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            Tapped="OnBackToInboxTapped"
+                            AutomationProperties.Name="{loc:Translate Tab_Messages}">
+                        <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                    </Border>
+                    <TextBlock Grid.Column="1"
+                               Text="{loc:Translate Tab_Settings}"
+                               Margin="6,0,0,0"
+                               FontSize="22"
+                               FontFamily="{x:Static local:AppFonts.Bold}"
+                               Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
+                               VerticalAlignment="Center" />
+                </Grid>
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="14">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">

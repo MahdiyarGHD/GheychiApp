@@ -140,19 +140,7 @@ public partial class SettingsPage : UserControl
         PageScroll.Offset = default;
     }
 
-    /// <summary>The Settings tab was tapped while shown: every open screen closes, otherwise the page goes to its top.</summary>
-    public void OnTabReselected()
-    {
-        if (_open.Count > 0)
-        {
-            CloseAll();
-            RefreshRoot();
-        }
-        else
-        {
-            ScrollAnimator.ToTop(PageScroll);
-        }
-    }
+    private void OnBackToInboxTapped(object? sender, TappedEventArgs e) => Ui.MainView.Current?.SelectMessagesTab();
 
     /// <summary>True when it closed an open screen.</summary>
     public bool HandleBack()

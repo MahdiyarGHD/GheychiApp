@@ -8,56 +8,7 @@
     <Border x:Name="Root" Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
     <Panel>
 
-        <Grid RowDefinitions="*,Auto">
-            <Panel x:Name="PageHost" />
-
-            <Border x:Name="TabBar"
-                    Grid.Row="1"
-                    BorderThickness="0,1,0,0"
-                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#222325}"
-                    Background="{theme:ThemeBrush Light=#EFF0F1, Dark=#1A1B1E}">
-                <Grid ColumnDefinitions="*,*,*" Height="64">
-
-                    <Panel x:Name="MessagesTab" Grid.Column="0" Background="Transparent" Tapped="OnTabTapped">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" IsHitTestVisible="False">
-                            <Panel Width="60" Height="30" HorizontalAlignment="Center">
-                                <Border x:Name="MessagesPill" CornerRadius="15" Background="{theme:AccentBrush Role=Soft}" />
-                                <ui:Icon x:Name="MessagesIcon" Data="{StaticResource Icon.TabMessages}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Panel>
-                            <TextBlock x:Name="MessagesLabel" Text="{loc:Translate Tab_Messages}" FontSize="12" HorizontalAlignment="Center" />
-                        </StackPanel>
-                    </Panel>
-
-                    <Panel x:Name="SpamTab" Grid.Column="1" Background="Transparent" Tapped="OnTabTapped">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" IsHitTestVisible="False">
-                            <Panel Width="60" Height="30" HorizontalAlignment="Center">
-                                <Border x:Name="SpamPill" CornerRadius="15" Background="{theme:AccentBrush Role=Soft}" />
-                                <ui:Icon x:Name="SpamIcon" Data="{StaticResource Icon.TabSpam}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Panel>
-                            <TextBlock x:Name="SpamLabel" Text="{loc:Translate Tab_Spam}" FontSize="12" HorizontalAlignment="Center" />
-                        </StackPanel>
-                    </Panel>
-
-                    <Panel x:Name="SettingsTab" Grid.Column="2" Background="Transparent" Tapped="OnTabTapped">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" IsHitTestVisible="False">
-                            <Panel Width="60" Height="30" HorizontalAlignment="Center">
-                                <Border x:Name="SettingsPill" CornerRadius="15" Background="{theme:AccentBrush Role=Soft}" />
-                                <ui:Icon x:Name="SettingsIcon" Data="{StaticResource Icon.TabSettings}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <Ellipse x:Name="SettingsBadge"
-                                         Width="9"
-                                         Height="9"
-                                         Margin="0,1,14,0"
-                                         HorizontalAlignment="Right"
-                                         VerticalAlignment="Top"
-                                         Fill="{StaticResource DangerBrush}"
-                                         IsVisible="False" />
-                            </Panel>
-                            <TextBlock x:Name="SettingsLabel" Text="{loc:Translate Tab_Settings}" FontSize="12" HorizontalAlignment="Center" />
-                        </StackPanel>
-                    </Panel>
-                </Grid>
-            </Border>
-        </Grid>
+        <Panel x:Name="PageHost" />
 
         <Panel x:Name="OverlayHost" />
     </Panel>
