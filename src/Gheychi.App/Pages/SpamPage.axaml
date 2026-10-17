@@ -11,49 +11,7 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,*">
 
-        <!-- App header -->
-        <Grid x:Name="AppHeader" Grid.Row="0" Margin="10,10,10,12" ColumnDefinitions="Auto,*,Auto,Auto">
-            <Border Grid.Column="0"
-                    Width="40"
-                    Height="40"
-                    CornerRadius="20"
-                    Background="Transparent"
-                    VerticalAlignment="Center"
-                    Tapped="OnBackToInboxTapped"
-                    AutomationProperties.Name="{loc:Translate Tab_Messages}">
-                <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
-            </Border>
-            <TextBlock Grid.Column="1"
-                       Text="Gheychi"
-                       ui:TextDirection.KeepSide="True"
-                       Margin="6,0,0,0"
-                       FontSize="22"
-                       FontFamily="{x:Static app:AppFonts.Bold}"
-                       Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
-                       VerticalAlignment="Center" />
-            <Border Grid.Column="2"
-                    Width="40"
-                    Height="40"
-                    CornerRadius="20"
-                    Background="Transparent"
-                    VerticalAlignment="Center"
-                    Tapped="OnSettingsTapped"
-                    AutomationProperties.Name="{loc:Translate Tab_Settings}">
-                <ui:Icon Data="{StaticResource Icon.TabSettings}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
-            </Border>
-            <Border Grid.Column="3"
-                    Width="40"
-                    Height="40"
-                    CornerRadius="20"
-                    Background="Transparent"
-                    VerticalAlignment="Center"
-                    Tapped="OnSearchTapped"
-                    AutomationProperties.Name="{loc:Translate Spam_SearchHint}">
-                <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
-            </Border>
-        </Grid>
-
-        <!-- Search bar, in place of the header while searching -->
+        <!-- Search bar, above the list while searching -->
         <Border x:Name="SearchBar"
                 Grid.Row="0"
                 IsVisible="False"
@@ -88,13 +46,26 @@
 
         <Border Grid.Row="2"
                 Grid.RowSpan="2"
+                Margin="0,8,0,0"
                 CornerRadius="28,28,0,0"
                 ClipToBounds="True"
                 Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
         <Grid RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Margin="22,20,10,6" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+            <Grid Grid.Row="0" Margin="10,12,10,6" ColumnDefinitions="Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
+                <Border Grid.Row="0"
+                        Grid.Column="0"
+                        Width="40"
+                        Height="40"
+                        CornerRadius="20"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnBackToInboxTapped"
+                        AutomationProperties.Name="{loc:Translate Tab_Messages}">
+                    <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                </Border>
                 <TextBlock Grid.Row="0"
-                           Grid.Column="0"
+                           Grid.Column="1"
+                           Margin="6,0,0,0"
                            Text="{loc:Translate Spam_PageTitle}"
                            FontSize="22"
                            FontFamily="{x:Static app:AppFonts.Bold}"
@@ -102,8 +73,30 @@
                            TextTrimming="CharacterEllipsis"
                            MaxLines="1"
                            VerticalAlignment="Center" />
+                <Border Grid.Row="0"
+                        Grid.Column="3"
+                        Width="40"
+                        Height="40"
+                        CornerRadius="20"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnSettingsTapped"
+                        AutomationProperties.Name="{loc:Translate Tab_Settings}">
+                    <ui:Icon Data="{StaticResource Icon.TabSettings}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                </Border>
+                <Border Grid.Row="0"
+                        Grid.Column="4"
+                        Width="40"
+                        Height="40"
+                        CornerRadius="20"
+                        Background="Transparent"
+                        VerticalAlignment="Center"
+                        Tapped="OnSearchTapped"
+                        AutomationProperties.Name="{loc:Translate Spam_SearchHint}">
+                    <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                </Border>
                 <TextBlock Grid.Row="0"
-                           Grid.Column="1"
+                           Grid.Column="2"
                            Text="{loc:Translate Spam_ClearAll}"
                            IsVisible="{Binding HasAny}"
                            FontSize="13"
@@ -114,9 +107,9 @@
                            VerticalAlignment="Center"
                            Tapped="OnClearAllTapped" />
                 <TextBlock Grid.Row="1"
-                           Grid.Column="0"
-                           Grid.ColumnSpan="2"
-                           Margin="0,2,0,0"
+                           Grid.Column="1"
+                           Grid.ColumnSpan="4"
+                           Margin="6,2,0,0"
                            Text="{Binding Subtitle}"
                            FontSize="12"
                            Foreground="#8A8F98" />
