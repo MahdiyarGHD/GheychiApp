@@ -12,9 +12,9 @@
         <Grid x:Name="InboxLayer" RowDefinitions="Auto,*">
 
             <!-- Header: the normal one (as the Spam tab's) or the one shown while threads are selected -->
-            <Panel Grid.Row="0">
-                <StackPanel IsVisible="{Binding IsNotSelectionMode}">
-                    <Grid Margin="22,10,10,12" ColumnDefinitions="*,Auto,Auto,Auto">
+            <StackPanel Grid.Row="0">
+                <Panel Height="62">
+                    <Grid IsVisible="{Binding IsNotSelectionMode}" Margin="22,10,10,12" ColumnDefinitions="*,Auto,Auto,Auto">
                         <TextBlock Grid.Column="0"
                                    Text="Gheychi"
                                    ui:TextDirection.KeepSide="True"
@@ -73,6 +73,37 @@
                             <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </Grid>
+                <Grid IsVisible="{Binding IsSelectionMode}"
+                      Margin="16,0"
+                      ColumnDefinitions="Auto,*,Auto,Auto,Auto"
+                      ColumnSpacing="6"
+                      VerticalAlignment="Center">
+                    <Border Grid.Column="0" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnExitSelectionModeTapped">
+                        <ui:Icon Data="{StaticResource Icon.Close}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding SelectedCountText}"
+                               FontSize="18"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Left"
+                               Margin="8,0,0,0" />
+
+                    <Border Grid.Column="2" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnDeleteSelectedThreadsTapped">
+                        <ui:Icon Data="{StaticResource Icon.Trash}" Width="21" Height="21" Foreground="#EF4444" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+
+                    <Border Grid.Column="3" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnArchiveSelectedThreadsTapped">
+                        <ui:Icon Data="{StaticResource Icon.Archive}" Width="21" Height="21" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+
+                    <Border Grid.Column="4" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnThreeDotsTapped">
+                        <ui:Icon Data="{StaticResource Icon.MoreVert}" Width="21" Height="21" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </Grid>
+                </Panel>
                     <!-- The folder tabs: nothing here until the user makes a folder -->
                     <ui:DragScroll x:Name="FolderScroll"
                                    IsVisible="{Binding FolderBar.IsVisible}"
@@ -124,40 +155,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ui:DragScroll>
-                </StackPanel>
-
-                <Grid IsVisible="{Binding IsSelectionMode}"
-                      Margin="16,8"
-                      Height="52"
-                      ColumnDefinitions="Auto,*,Auto,Auto,Auto"
-                      ColumnSpacing="6"
-                      VerticalAlignment="Center">
-                    <Border Grid.Column="0" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnExitSelectionModeTapped">
-                        <ui:Icon Data="{StaticResource Icon.Close}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding SelectedCountText}"
-                               FontSize="18"
-                               FontFamily="{x:Static app:AppFonts.Bold}"
-                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Left"
-                               Margin="8,0,0,0" />
-
-                    <Border Grid.Column="2" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnDeleteSelectedThreadsTapped">
-                        <ui:Icon Data="{StaticResource Icon.Trash}" Width="21" Height="21" Foreground="#EF4444" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-
-                    <Border Grid.Column="3" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnArchiveSelectedThreadsTapped">
-                        <ui:Icon Data="{StaticResource Icon.Archive}" Width="21" Height="21" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-
-                    <Border Grid.Column="4" Width="42" Height="42" CornerRadius="21" Background="Transparent" Tapped="OnThreeDotsTapped">
-                        <ui:Icon Data="{StaticResource Icon.MoreVert}" Width="21" Height="21" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                </Grid>
-            </Panel>
+            </StackPanel>
 
             <Panel Grid.Row="1">
                 <Border CornerRadius="28,28,0,0"
