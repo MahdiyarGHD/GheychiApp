@@ -50,6 +50,7 @@
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock Classes="body" Text="{Binding Body}"
+                                       FontFamily="{x:Static app:AppFonts.Message}"
                                        FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
@@ -243,6 +244,7 @@
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
                                 <TextBlock Classes="body" Text="{Binding Body}"
+                                           FontFamily="{x:Static app:AppFonts.Message}"
                                            FontSize="{StaticResource ChatBodySize}"
                                            TextWrapping="Wrap"
                                            Foreground="White" />
@@ -1046,6 +1048,7 @@
                         <StackPanel Spacing="3">
                             <!-- A long message shows its first lines only: the copy must stay inside its box and above the menu -->
                             <TextBlock x:Name="ElevatedBubbleBody"
+                                       FontFamily="{x:Static app:AppFonts.Message}"
                                        FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        TextTrimming="CharacterEllipsis"

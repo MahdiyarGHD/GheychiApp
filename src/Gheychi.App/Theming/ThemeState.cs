@@ -97,9 +97,16 @@ public static class AppFonts
     private static readonly bool Persian =
         CultureInfo.CurrentUICulture.Name.StartsWith("fa", StringComparison.OrdinalIgnoreCase);
 
-    public static FontFamily Regular { get; } = new(Folder + (Persian ? "Vazirmatn" : "Plus Jakarta Sans"));
+    // In Persian the UI font is Plus Jakarta Sans for Latin text over Vazirmatn for Persian text, one file per weight
+    // (tools/merge_fonts.py): a fallback would draw bold Persian in Regular.
+    public static FontFamily Regular { get; } = new(Folder + (Persian ? "Gheychi Fa" : "Plus Jakarta Sans"));
 
-    public static FontFamily Bold { get; } = new(Folder + (Persian ? "Vazirmatn SemiBold" : "Plus Jakarta Sans SemiBold"));
+    public static FontFamily Bold { get; } = new(Folder + (Persian ? "Gheychi Fa SemiBold" : "Plus Jakarta Sans SemiBold"));
+
+    /// <summary>The text of a message: Vazirmatn alone in Persian, so a Latin word in a Persian message keeps its look.</summary>
+    public static FontFamily Message { get; } = Persian ? new(Folder + "Vazirmatn") : Regular;
+
+    public static FontFamily MessageBold { get; } = Persian ? new(Folder + "Vazirmatn SemiBold") : Bold;
 
     /// <summary>
     /// Persian letters in the English UI come from Vazirmatn, not the phone's own font. A list of font families would

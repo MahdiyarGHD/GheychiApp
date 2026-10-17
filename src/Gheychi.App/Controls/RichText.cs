@@ -124,7 +124,7 @@ public static class RichText
             {
                 // Numbers and codes stand out in weight; a code also in colour, and a tap on it offers to copy it.
                 if (emphasis)
-                    run.FontFamily = AppFonts.Bold;
+                    run.FontFamily = AppFonts.MessageBold;
                 if (span.Kind == LinkKind.Code)
                     run.Foreground = linkBrush;
             }
