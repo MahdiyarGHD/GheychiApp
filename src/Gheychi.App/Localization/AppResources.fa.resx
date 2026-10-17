@@ -1332,6 +1332,15 @@
   <data name="Folder_MarkReadMessage" xml:space="preserve">
     <value>همه‌ی گفتگوهای «{0}» خوانده‌شده می‌شوند.</value>
   </data>
+  <data name="Picker_DateTitle" xml:space="preserve">
+    <value>یک روز انتخاب کنید</value>
+  </data>
+  <data name="Picker_TimeTitle" xml:space="preserve">
+    <value>یک ساعت انتخاب کنید</value>
+  </data>
+  <data name="Picker_Ok" xml:space="preserve">
+    <value>تأیید</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>این فرستنده را مسدود کرده‌اید و پیام‌هایش دور ریخته می‌شوند</value>
   </data>

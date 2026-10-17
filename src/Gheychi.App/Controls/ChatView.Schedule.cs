@@ -5,8 +5,6 @@ using Gheychi.App.Services;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Scheduling;
-using AndroidDatePickerDialog = global::Android.App.DatePickerDialog;
-using AndroidTimePickerDialog = global::Android.App.TimePickerDialog;
 
 namespace Gheychi.App.Controls;
 
@@ -114,7 +112,7 @@ public partial class ChatView
         }
         else
         {
-            if (await PickDateAsync(now) is not { } day || await PickTimeOfDayAsync(now) is not { } time)
+            if (await DateTimeSheets.PickDateAsync(now) is not { } day || await DateTimeSheets.PickTimeAsync(now.Hour, now.Minute, DateTimeSheets.Is24Hour) is not { } time)
                 return null;
 
             at = SendSchedule.AtMillis(day, time.Hour, time.Minute, now);
@@ -134,37 +132,4 @@ public partial class ChatView
         SchedulePreset.TomorrowMorning => "Schedule_TomorrowMorning",
         _ => "Schedule_TomorrowEvening"
     };
-
-    private static Task<DateTime?> PickDateAsync(DateTimeOffset now)
-    {
-        var result = new TaskCompletionSource<DateTime?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (Platform.CurrentActivity is not { } activity)
-            return Task.FromResult<DateTime?>(null);
-
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            // The month is zero-based in the Android picker.
-            var dialog = new AndroidDatePickerDialog(activity, (_, e) => result.TrySetResult(e.Date), now.Year, now.Month - 1, now.Day);
-            dialog.DatePicker.MinDate = now.AddMinutes(-1).ToUnixTimeMilliseconds();
-            dialog.DismissEvent += (_, _) => result.TrySetResult(null);
-            dialog.Show();
-        });
-        return result.Task;
-    }
-
-    private static Task<(int Hour, int Minute)?> PickTimeOfDayAsync(DateTimeOffset now)
-    {
-        var result = new TaskCompletionSource<(int Hour, int Minute)?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (Platform.CurrentActivity is not { } activity)
-            return Task.FromResult<(int Hour, int Minute)?>(null);
-
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            var is24Hour = global::Android.Text.Format.DateFormat.Is24HourFormat(activity);
-            var dialog = new AndroidTimePickerDialog(activity, (_, e) => result.TrySetResult((e.HourOfDay, e.Minute)), now.Hour, now.Minute, is24Hour);
-            dialog.DismissEvent += (_, _) => result.TrySetResult(null);
-            dialog.Show();
-        });
-        return result.Task;
-    }
 }
