@@ -30,7 +30,17 @@
                                 VerticalAlignment="Center"
                                 Tapped="OnSpamButtonTapped"
                                 AutomationProperties.Name="{loc:Translate Tab_Spam}">
-                            <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Panel Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                                <Ellipse x:Name="SpamBadge"
+                                         Width="9"
+                                         Height="9"
+                                         Margin="0,-3,-3,0"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Top"
+                                         Fill="#FACC15"
+                                         IsVisible="False" />
+                            </Panel>
                         </Border>
                         <Border Grid.Column="2"
                                 Width="40"

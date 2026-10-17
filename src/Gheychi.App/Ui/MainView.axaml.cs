@@ -9,6 +9,8 @@ using Gheychi.App.Gestures;
 using Gheychi.App.Localization;
 using Gheychi.App.Pages;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Platforms.Android.Receivers;
+using Gheychi.App.Services;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
 using Gheychi.Core.Updates;
@@ -33,6 +35,13 @@ public partial class MainView : UserControl
     private double _safeBottom;
     private bool _detached;
     private bool _settingsBadge;
+    private bool _spamBadge;
+    private int _transition;
+
+    private const double SlideDip = 32;
+    private const double ParallaxDip = 10;
+    private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan BackDuration = TimeSpan.FromMilliseconds(140);
 
     private HorizontalSwipeTracker? _swipe;
     private IPageSwipeClient? _swipeClient;
@@ -102,6 +111,7 @@ public partial class MainView : UserControl
         ExternalSendRequests.Requested += OnChatLaunchRequested;
         SpamTabRequests.Requested += OnSpamTabRequested;
         MainActivity.Resumed += OnAppResumed;
+        SmsDeliverReceiver.SpamReceived += OnSpamArrived;
         SubscribeUpdates();
         OnAppResumed();
 
@@ -126,6 +136,7 @@ public partial class MainView : UserControl
     private void OnAppResumed()
     {
         _ = Services.UpdateAutoCheck.RunAsync();
+        _ = UpdateSpamBadgeAsync();
         // The keyboard and the bars may have changed while the app was away without a callback reaching it.
         Dispatcher.UIThread.Post(ApplyInsets, DispatcherPriority.Background);
     }
@@ -138,6 +149,7 @@ public partial class MainView : UserControl
         ExternalSendRequests.Requested -= OnChatLaunchRequested;
         SpamTabRequests.Requested -= OnSpamTabRequested;
         MainActivity.Resumed -= OnAppResumed;
+        SmsDeliverReceiver.SpamReceived -= OnSpamArrived;
         // The pages subscribe to static events while shown; an activity that is gone must not keep answering them.
         _detached = true;
         foreach (var page in _pages)
@@ -182,18 +194,82 @@ public partial class MainView : UserControl
         var previous = _selected;
         _selected = index;
 
-        if (previous >= 0 && _pages[previous] is { } old)
-        {
-            old.IsVisible = false;
-            NotifyHidden(old);
-        }
+        // Leaving the Spam page counts as having seen what came in while it was open.
+        if (previous == SpamIndex)
+            SpamDigestPreferences.SeenAt = DateTime.Now;
 
         var page = _pages[index] ??= CreatePage(index);
+        var old = previous >= 0 ? _pages[previous] : null;
+        var forward = index != MessagesIndex;
+        // The page that slides in starts invisible, or its first frame would show it in place.
+        if (old is not null && forward)
+            page.Opacity = 0;
         page.IsVisible = true;
         NotifyShown(page);
+        if (old is not null)
+        {
+            NotifyHidden(old);
+            _ = TransitionAsync(old, page, forward);
+        }
+
+        if (index == SpamIndex)
+            SetSpamBadge(false);
+        else if (previous == SpamIndex)
+            _ = UpdateSpamBadgeAsync();
 
         if (previous < 0)
             _ = BuildOtherTabsAsync();
+    }
+
+    // Going out to Spam or Settings the new page slides in from the reading-direction end and fades in while the inbox
+    // drifts the other way; coming back the page slides out over the inbox. As on the Settings screens (the window is
+    // mirrored in Persian, so one sign does both languages). Run on the compositor.
+    private async Task TransitionAsync(Control old, Control page, bool forward)
+    {
+        var token = ++_transition;
+        try
+        {
+            if (forward)
+            {
+                await OverlayAnimator.SettleAsync();
+                page.ZIndex = 1;
+                old.ZIndex = 0;
+                OverlayAnimator.SetTranslation(page, SlideDip, 0);
+                await Task.WhenAll(
+                    OverlayAnimator.FadeAsync(page, 0, 1, SlideDuration),
+                    OverlayAnimator.SlideXAsync(page, SlideDip, 0, SlideDuration, decelerate: true),
+                    OverlayAnimator.SlideXAsync(old, 0, -ParallaxDip, SlideDuration, decelerate: true));
+            }
+            else
+            {
+                old.ZIndex = 1;
+                page.ZIndex = 0;
+                OverlayAnimator.SetTranslation(page, -ParallaxDip, 0);
+                await Task.WhenAll(
+                    OverlayAnimator.FadeAsync(old, 1, 0, BackDuration),
+                    OverlayAnimator.SlideXAsync(old, 0, SlideDip, BackDuration, decelerate: false),
+                    OverlayAnimator.SlideXAsync(page, -ParallaxDip, 0, BackDuration, decelerate: false));
+            }
+        }
+        finally
+        {
+            // A switch made meanwhile has taken over: it puts everything away when it ends.
+            if (token == _transition)
+            {
+                var shown = _selected >= 0 ? _pages[_selected] : null;
+                foreach (var each in _pages)
+                {
+                    if (each is null)
+                        continue;
+
+                    if (!ReferenceEquals(each, shown))
+                        each.IsVisible = false;
+                    OverlayAnimator.SetTranslation(each, 0, 0);
+                    each.Opacity = 1;
+                    each.ZIndex = 0;
+                }
+            }
+        }
     }
 
     private Control CreatePage(int index)
@@ -206,7 +282,10 @@ public partial class MainView : UserControl
         };
         page.IsVisible = false;
         if (page is MessagesPage messages)
+        {
             messages.SetSettingsBadge(_settingsBadge);
+            messages.SetSpamBadge(_spamBadge);
+        }
         PageHost.Children.Add(page);
         return page;
     }
@@ -397,6 +476,33 @@ public partial class MainView : UserControl
         if (services.GetService<SpamModelUpdates>() is { } model)
             model.Changed += (_, _) => _ = UpdateBadgeAsync();
         _ = UpdateBadgeAsync();
+    }
+
+    private void OnSpamArrived(SpamMessage message) => _ = UpdateSpamBadgeAsync();
+
+    private void SetSpamBadge(bool visible)
+    {
+        _spamBadge = visible;
+        (_pages[MessagesIndex] as MessagesPage)?.SetSpamBadge(visible);
+    }
+
+    // The yellow dot on the scissors: spam came in since the Spam page was last open (the same moment the daily summary
+    // takes as "seen"). Nothing to show while that page is the one on screen.
+    private async Task UpdateSpamBadgeAsync()
+    {
+        try
+        {
+            if (IPlatformApplication.Current?.Services.GetService<ISpamMessageRepository>() is not { } repository)
+                return;
+
+            var seen = SpamDigestPreferences.SeenAt;
+            var any = (await Task.Run(() => repository.GetAllAsync())).Any(m => seen is null || m.Timestamp > seen);
+            MainThread.BeginInvokeOnMainThread(() => SetSpamBadge(any && _selected != SpamIndex));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Spam badge failed: {ex}");
+        }
     }
 
     private async Task UpdateBadgeAsync()

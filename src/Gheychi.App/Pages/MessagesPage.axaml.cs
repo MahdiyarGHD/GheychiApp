@@ -1793,6 +1793,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     /// <summary>The dot on the settings button: an update is waiting.</summary>
     public void SetSettingsBadge(bool visible) => SettingsBadge.IsVisible = visible;
 
+    /// <summary>The yellow dot on the scissors: spam came in since the Spam page was last open.</summary>
+    public void SetSpamBadge(bool visible) => SpamBadge.IsVisible = visible;
+
     // ---- Back -----------------------------------------------------------------------------------
 
     /// <returns>True when the back press was used up by an open overlay, menu or selection.</returns>
