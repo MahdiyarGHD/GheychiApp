@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Services;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
@@ -111,6 +112,7 @@ public partial class ProfileView : UserControl
         BindArchive();
         BindBlocked();
         UpdateSnooze();
+        UpdateFolders();
         UpdateNotificationState();
         UpdateSpam();
         if (_spam is not null)
@@ -558,6 +560,21 @@ public partial class ProfileView : UserControl
 
     private void OnNotificationsTapped(object? sender, TappedEventArgs e) =>
         ProfileLauncher.OpenNotificationSettings(_sendAddress, _thread.Name);
+
+    private void UpdateFolders()
+    {
+        var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        var names = store is null
+            ? []
+            : store.FoldersOf(_thread.ThreadId).Select(id => store.Find(id)?.Name).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        FoldersHint.Text = names.Count > 0 ? string.Join(", ", names) : LocalizationManager.Instance["Folder_ProfileNone"];
+    }
+
+    private async void OnFoldersTapped(object? sender, TappedEventArgs e)
+    {
+        await FolderDialogs.PickFoldersAsync([_thread.ThreadId]);
+        UpdateFolders();
+    }
 
     private long SnoozedUntil()
     {
