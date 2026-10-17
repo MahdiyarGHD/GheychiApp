@@ -383,6 +383,7 @@
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
                                         CornerRadius="24"
+                                        ui:AvatarPhoto.Address="{Binding PhotoAddress}"
                                         Background="{Binding AvatarBgColor}">
                                     <Panel>
                                         <ui:Icon IsVisible="{Binding HasNoInitials}"

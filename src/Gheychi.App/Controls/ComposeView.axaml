@@ -28,6 +28,7 @@
                 <DataTemplate x:DataType="vm:ComposeRow">
                     <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
                         <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
+                                ui:AvatarPhoto.Address="{Binding PhotoAddress}"
                                 Background="{theme:AccentBrush Role=Soft}">
                             <TextBlock Text="{Binding Initials, Mode=OneTime}"
                                        FontSize="19"

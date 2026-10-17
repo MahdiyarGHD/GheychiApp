@@ -149,6 +149,8 @@
                                             CornerRadius="25"
                                             VerticalAlignment="Center"
                                             IsHitTestVisible="False"
+                                            ui:AvatarPhoto.Address="{Binding PhotoAddress}"
+                                            ui:AvatarPhoto.Hidden="{Binding IsSelected}"
                                             Background="{Binding AvatarBgColor}">
                                         <Panel>
                                             <ui:Icon IsVisible="{Binding ShowIcon}"
