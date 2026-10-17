@@ -44,6 +44,11 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public int TotalCount { get; init; }
     public bool HasDraft { get; init; }
 
+    /// <summary>What the smart folders look at; set when the inbox is built.</summary>
+    public bool IsContact { get; init; }
+    public bool IsSender { get; init; }
+    public bool HasCode { get; init; }
+
     /// <summary>The moment the conversation sorts by (its last message or draft); a row that is unpinned goes back by it.</summary>
     public DateTime Timestamp { get; init; }
 
@@ -73,6 +78,9 @@ public sealed class ThreadItem : INotifyPropertyChanged
         }
     }
 
+    /// <summary>Raised, from whichever thread, when any conversation turns read or unread: the folder tabs count them.</summary>
+    public static event Action? UnreadChanged;
+
     private bool _isUnread;
     public bool IsUnread
     {
@@ -81,6 +89,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
         {
             if (_isUnread == value) return;
             _isUnread = value;
+            UnreadChanged?.Invoke();
             OnPropertyChanged();
             OnPropertyChanged(nameof(NameColor));
             OnPropertyChanged(nameof(NameFont));

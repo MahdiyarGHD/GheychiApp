@@ -63,6 +63,7 @@ internal static class AppServices
         services.AddSingleton<IDraftStore, Services.PreferencesDraftStore>();
         services.AddSingleton<IPinStore, Services.PreferencesPinStore>();
         services.AddSingleton<IScheduledSendStore, Services.PreferencesScheduledSendStore>();
+        services.AddSingleton<Services.PreferencesFolderStore>();
         services.AddSingleton<IScheduledSendScheduler, ScheduledSendAlarm>();
         services.AddSingleton<INotificationRule, ActiveChatRule>();
         services.AddSingleton<INotificationRule, SnoozeRule>();

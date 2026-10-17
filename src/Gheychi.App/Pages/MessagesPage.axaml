@@ -33,6 +33,58 @@
                             <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </Grid>
+                    <!-- The folder tabs: nothing here until the user makes a folder -->
+                    <ScrollViewer IsVisible="{Binding FolderBar.IsVisible}"
+                                  Margin="0,0,0,12"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding FolderBar.Pills}" Margin="16,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FolderPill">
+                                    <Border Height="36"
+                                            Padding="13,0,13,0"
+                                            CornerRadius="18"
+                                            Background="{Binding Fill}"
+                                            PointerPressed="OnFolderPillPressed"
+                                            Tapped="OnFolderPillTapped"
+                                            Holding="OnFolderPillHolding">
+                                        <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                                            <ui:Icon Data="{Binding Icon}"
+                                                     Width="16"
+                                                     Height="16"
+                                                     Foreground="{Binding TextBrush}"
+                                                     VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Title}"
+                                                       ui:TextDirection.KeepSide="True"
+                                                       FontSize="13.5"
+                                                       FontFamily="{Binding Font}"
+                                                       Foreground="{Binding TextBrush}"
+                                                       VerticalAlignment="Center" />
+                                            <Border IsVisible="{Binding HasUnread}"
+                                                    MinWidth="20"
+                                                    Height="20"
+                                                    Padding="6,0"
+                                                    CornerRadius="10"
+                                                    Background="{Binding BadgeFill}"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding UnreadText}"
+                                                           FontSize="11.5"
+                                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </StackPanel>
 
                 <Grid IsVisible="{Binding IsSelectionMode}"
@@ -177,6 +229,15 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <TextBlock IsVisible="{Binding IsFolderEmpty}"
+                           Text="{loc:Translate Folder_Empty}"
+                           Margin="32,0"
+                           FontSize="14"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
                 </Panel>
                 </Border>
 
@@ -261,6 +322,15 @@
                         <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Pin}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="1"
                                    Text="{loc:Translate Messages_Unpin}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnAddToFolderTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.FolderGeneral}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_AddTo}"
                                    FontSize="13"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
                                    Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"

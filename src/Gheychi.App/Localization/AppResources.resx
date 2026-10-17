@@ -1182,6 +1182,150 @@
   <data name="Settings_ExactAlarmsOff" xml:space="preserve">
     <value>Allow alarms so messages go out on time. Tap to allow</value>
   </data>
+  <data name="Folder_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Folder_Smart_Unread" xml:space="preserve">
+    <value>Unread</value>
+  </data>
+  <data name="Folder_Smart_Contacts" xml:space="preserve">
+    <value>Contacts</value>
+  </data>
+  <data name="Folder_Smart_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Folder_Smart_Senders" xml:space="preserve">
+    <value>Senders</value>
+  </data>
+  <data name="Folder_Smart_Codes" xml:space="preserve">
+    <value>Codes</value>
+  </data>
+  <data name="Folder_Smart_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Folder_Smart_Drafts" xml:space="preserve">
+    <value>Drafts</value>
+  </data>
+  <data name="Folder_Smart_Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="Folder_SmartHint_Unread" xml:space="preserve">
+    <value>Conversations you have not read</value>
+  </data>
+  <data name="Folder_SmartHint_Contacts" xml:space="preserve">
+    <value>People in your contacts</value>
+  </data>
+  <data name="Folder_SmartHint_Unknown" xml:space="preserve">
+    <value>Numbers that are not in your contacts</value>
+  </data>
+  <data name="Folder_SmartHint_Senders" xml:space="preserve">
+    <value>Banks, operators and services that write under a name</value>
+  </data>
+  <data name="Folder_SmartHint_Codes" xml:space="preserve">
+    <value>Conversations whose last message has a code</value>
+  </data>
+  <data name="Folder_SmartHint_Failed" xml:space="preserve">
+    <value>Messages that could not be sent</value>
+  </data>
+  <data name="Folder_SmartHint_Drafts" xml:space="preserve">
+    <value>Messages you started and did not send</value>
+  </data>
+  <data name="Folder_SmartHint_Pinned" xml:space="preserve">
+    <value>Your pinned conversations</value>
+  </data>
+  <data name="Folder_Empty" xml:space="preserve">
+    <value>No conversations in this folder</value>
+  </data>
+  <data name="Folder_AddTo" xml:space="preserve">
+    <value>Add to folder</value>
+  </data>
+  <data name="Folder_New" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="Folder_NameHint" xml:space="preserve">
+    <value>Folder name</value>
+  </data>
+  <data name="Folder_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Folder_MarkRead" xml:space="preserve">
+    <value>Mark all as read</value>
+  </data>
+  <data name="Folder_Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Folder_Delete" xml:space="preserve">
+    <value>Delete folder</value>
+  </data>
+  <data name="Folder_DeleteTitle" xml:space="preserve">
+    <value>Delete this folder?</value>
+  </data>
+  <data name="Folder_DeleteMessage" xml:space="preserve">
+    <value>The conversations in it are not deleted.</value>
+  </data>
+  <data name="Settings_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Settings_FoldersHint" xml:space="preserve">
+    <value>Tabs for your inbox</value>
+  </data>
+  <data name="Folder_SectionYours" xml:space="preserve">
+    <value>Your folders</value>
+  </data>
+  <data name="Folder_SectionSmart" xml:space="preserve">
+    <value>Smart folders</value>
+  </data>
+  <data name="Folder_SectionOptions" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Folder_NoneYet" xml:space="preserve">
+    <value>No folders yet. Make one to sort your inbox.</value>
+  </data>
+  <data name="Folder_Conversations" xml:space="preserve">
+    <value>{0} conversations</value>
+  </data>
+  <data name="Folder_OptBar" xml:space="preserve">
+    <value>Show folder tabs</value>
+  </data>
+  <data name="Folder_OptBarHint" xml:space="preserve">
+    <value>Hide them without deleting the folders</value>
+  </data>
+  <data name="Folder_OptCounts" xml:space="preserve">
+    <value>Unread counts</value>
+  </data>
+  <data name="Folder_OptCountsHint" xml:space="preserve">
+    <value>Show the number on each tab</value>
+  </data>
+  <data name="Folder_OptRemember" xml:space="preserve">
+    <value>Remember the last folder</value>
+  </data>
+  <data name="Folder_OptRememberHint" xml:space="preserve">
+    <value>Open the inbox on the folder you left it on</value>
+  </data>
+  <data name="Folder_EditTitle" xml:space="preserve">
+    <value>Edit folder</value>
+  </data>
+  <data name="Folder_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Folder_Icon" xml:space="preserve">
+    <value>Icon</value>
+  </data>
+  <data name="Folder_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Folder_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Folder_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Folder_ProfileNone" xml:space="preserve">
+    <value>Not in a folder</value>
+  </data>
+  <data name="Folder_NameRequired" xml:space="preserve">
+    <value>Give the folder a name</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>You blocked this sender, so their messages are dropped</value>
   </data>

@@ -179,6 +179,8 @@ public partial class SettingsPage : UserControl
             SettingsScreenKind.Sims => new SimSettingsScreen(),
             SettingsScreenKind.Notifications => new NotificationSettingsScreen(),
             SettingsScreenKind.Sending => new SendingSettingsScreen(),
+            SettingsScreenKind.Folders => new FoldersSettingsScreen(),
+            SettingsScreenKind.FolderEdit => new FolderEditScreen(),
             SettingsScreenKind.Codes => new CodesSettingsScreen(),
             SettingsScreenKind.Appearance => new AppearanceSettingsScreen(),
             SettingsScreenKind.Privacy => new PrivacySettingsScreen(),
@@ -285,6 +287,8 @@ public partial class SettingsPage : UserControl
     private void OnNotificationsTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Notifications);
 
     private void OnSendingTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Sending);
+
+    private void OnFoldersTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Folders);
 
     private void OnCodesTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Codes);
 

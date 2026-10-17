@@ -7,9 +7,12 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gheychi.App.Controls;
 using Gheychi.App.Gestures;
+using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Services;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
+using Gheychi.Core.Folders;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
@@ -935,6 +938,71 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             return;
 
         await Vm.MarkSelectedAsUnreadAsync();
+    }
+
+    // ---- Folders --------------------------------------------------------------------------------
+
+    // Releasing a finger that held a tab also reports a tap, which would open the folder just offered a menu.
+    private bool _folderHoldFired;
+
+    private void OnFolderPillPressed(object? sender, PointerPressedEventArgs e) => _folderHoldFired = false;
+
+    private void OnFolderPillTapped(object? sender, TappedEventArgs e)
+    {
+        if (_folderHoldFired || (sender as Control)?.DataContext is not FolderPill pill)
+            return;
+
+        Vm?.SelectFolder(pill.Id);
+    }
+
+    private async void OnFolderPillHolding(object? sender, HoldingRoutedEventArgs e)
+    {
+        if (e.HoldingState != HoldingState.Started || Vm is not { } vm || (sender as Control)?.DataContext is not FolderPill pill)
+            return;
+
+        _folderHoldFired = true;
+        e.Handled = true;
+
+        var loc = LocalizationManager.Instance;
+        var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        var folder = store?.Find(pill.Id);
+        var markRead = loc["Folder_MarkRead"];
+        var rename = loc["Folder_Rename"];
+        var delete = loc["Folder_Delete"];
+
+        var options = new List<string> { markRead };
+        if (folder is { IsSmart: false })
+            options.Add(rename);
+        if (folder is not null)
+            options.Add(delete);
+
+        var choice = await Dialogs.ActionSheetAsync(pill.Title, loc["Chat_Cancel"], null, [.. options]);
+        if (choice == markRead)
+        {
+            vm.MarkFolderRead(pill.Id);
+        }
+        else if (choice == rename && folder is not null)
+        {
+            if (await FolderDialogs.AskNameAsync(rename, folder.Name) is { } name)
+                store!.Update(folder.Id, name, folder.IconKey);
+        }
+        else if (choice == delete && folder is not null &&
+                 await Dialogs.AlertAsync(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], loc["Folder_Delete"], loc["Chat_Cancel"]))
+        {
+            store!.Remove(folder.Id);
+        }
+    }
+
+    private async void OnAddToFolderTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        var ids = Vm.SelectedThreads.Select(t => t.ThreadId).ToList();
+        await FolderDialogs.PickFoldersAsync(ids);
+        Vm.ExitSelectionMode();
     }
 
     // ---- Chat -----------------------------------------------------------------------------------

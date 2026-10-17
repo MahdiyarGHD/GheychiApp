@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
+using Gheychi.App.Services;
+using Gheychi.Core.Folders;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
@@ -15,6 +17,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private readonly IDateFormattingService _dateFormatter;
     private readonly IDraftStore? _drafts;
     private readonly IPinStore? _pins;
+    private readonly PreferencesFolderStore? _folders;
+    private List<ThreadItem> _inboxAll = [];
+    private string _activeFolderId = Folder.AllId;
+    private int _barRefreshQueued;
     private bool _reordering;
     private BuiltThreads? _deferred;
     private bool _isLoading;
@@ -39,6 +45,12 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         _dateFormatter = dateFormatter ?? IPlatformApplication.Current?.Services.GetService<IDateFormattingService>() ?? new DateFormattingService();
         _drafts = IPlatformApplication.Current?.Services.GetService<IDraftStore>();
         _pins = IPlatformApplication.Current?.Services.GetService<IPinStore>();
+        _folders = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        if (AppPreferences.RememberLastFolder)
+            _activeFolderId = AppPreferences.LastFolderId is { Length: > 0 } last ? last : Folder.AllId;
+        if (_folders is not null)
+            _folders.Changed += () => MainThread.BeginInvokeOnMainThread(ApplyFolderView);
+        ThreadItem.UnreadChanged += QueueFolderBarRefresh;
 
         // Normally read while the XAML is inflated. Opened from a notification, the inbox is not what is
         // waited for: the CPU belongs to the chat until it is up, so the read waits for InitializeAsync.
@@ -65,6 +77,123 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 ChatViewModel.InvalidateThread(threadId);
         };
     }
+
+    // ---- Folders --------------------------------------------------------------------------------
+
+    /// <summary>The tabs above the inbox.</summary>
+    public FolderBar FolderBar { get; } = new();
+
+    public string ActiveFolderId => _activeFolderId;
+
+    /// <summary>A folder with nothing in it right now: the list shows a hint instead of blank space.</summary>
+    public bool IsFolderEmpty => Threads.Count == 0 && _inboxAll.Count > 0 && _activeFolderId != Folder.AllId;
+
+    public void SelectFolder(string id)
+    {
+        if (id == _activeFolderId)
+            return;
+
+        _activeFolderId = id;
+        if (AppPreferences.RememberLastFolder)
+            AppPreferences.LastFolderId = id;
+
+        if (IsSelectionMode)
+            ExitSelectionMode();
+
+        ApplyFolderView();
+    }
+
+    /// <summary>Marks every conversation of the folder as read.</summary>
+    public void MarkFolderRead(string folderId)
+    {
+        var folders = _folders?.Folders ?? [];
+        foreach (var t in FolderItems(folderId, folders).Where(t => t.IsUnread).ToList())
+        {
+            t.MarkAsRead();
+            var threadId = t.ThreadId;
+            _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(threadId));
+        }
+
+        RefreshFolderBar();
+    }
+
+    private void ShowInbox(List<ThreadItem> inbox)
+    {
+        _inboxAll = inbox;
+        ApplyFolderView();
+    }
+
+    // The visible list follows the folder and the bar follows the list. Works on what the rows are now: a row opened
+    // and read since the last read of the provider is read here too.
+    private void ApplyFolderView()
+    {
+        var folders = _folders?.Folders ?? [];
+        if (_activeFolderId != Folder.AllId && folders.All(f => f.Id != _activeFolderId))
+            _activeFolderId = Folder.AllId;
+
+        ApplyItems(Threads, folders.Count == 0 ? _inboxAll : FolderItems(_activeFolderId, folders));
+        RefreshFolderBar();
+        OnPropertyChanged(nameof(IsFolderEmpty));
+    }
+
+    private List<ThreadItem> FolderItems(string folderId, IReadOnlyList<Folder> folders)
+    {
+        var live = Threads.ToDictionary(t => t.ThreadId);
+        var pinOrder = _pins?.GetOrder() ?? [];
+        var pinned = pinOrder.ToHashSet();
+        var current = _inboxAll.Select(t => live.GetValueOrDefault(t.ThreadId, t)).ToList();
+        foreach (var t in current)
+            t.IsPinned = pinned.Contains(t.ThreadId);
+
+        var ordered = PinnedOrder.Apply(current.OrderByDescending(t => t.Timestamp).ToList(), pinOrder, t => t.ThreadId);
+        if (folderId == Folder.AllId)
+            return ordered.ToList();
+
+        var folder = folders.FirstOrDefault(f => f.Id == folderId);
+        if (folder is null)
+            return ordered.ToList();
+
+        var members = folder.IsSmart ? new HashSet<long>() : _folders!.Members(folder.Id);
+        return ordered.Where(t => FolderRules.Matches(folder, FactsOf(t), members.Contains(t.ThreadId))).ToList();
+    }
+
+    private static ThreadFacts FactsOf(ThreadItem t) =>
+        new(t.IsUnread, t.IsContact, t.IsSender, t.HasCode, t.HasFailed, t.HasDraft, t.IsPinned);
+
+    // Reading and unreading come in bursts (an inbox being built, a selection marked): one refresh at the end of them.
+    private void QueueFolderBarRefresh()
+    {
+        if (Interlocked.Exchange(ref _barRefreshQueued, 1) == 1)
+            return;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            Interlocked.Exchange(ref _barRefreshQueued, 0);
+            RefreshFolderBar();
+        });
+    }
+
+    private void RefreshFolderBar()
+    {
+        var folders = _folders?.Folders ?? [];
+        var unread = new Dictionary<string, int>();
+        if (folders.Count > 0)
+        {
+            var live = Threads.ToDictionary(t => t.ThreadId);
+            var current = _inboxAll.Select(t => live.GetValueOrDefault(t.ThreadId, t)).ToList();
+            unread[Folder.AllId] = current.Count(t => t.IsUnread);
+            foreach (var folder in folders)
+            {
+                var members = folder.IsSmart ? new HashSet<long>() : _folders!.Members(folder.Id);
+                unread[folder.Id] = current.Count(t => t.IsUnread && FolderRules.Matches(folder, FactsOf(t), members.Contains(t.ThreadId)));
+            }
+        }
+
+        FolderBar.Show(folders, _activeFolderId, unread, AppPreferences.ShowFolderCounts, AppPreferences.ShowFolderBar);
+    }
+
+    /// <summary>Redraws the tabs after the settings that shape them changed.</summary>
+    public void RefreshFolders() => ApplyFolderView();
 
     private Task<BuiltThreads> StartSnapshotLoad()
     {
@@ -443,7 +572,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var cached = await (_snapshotTask ??= StartSnapshotLoad());
         if (cached.Inbox.Count > 0 && Threads.Count == 0)
         {
-            Threads.Reset(cached.Inbox);
+            ShowInbox(cached.Inbox);
             if (ArchivedThreads.Count == 0)
                 ArchivedThreads.Reset(cached.Archived);
         }
@@ -544,7 +673,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             return;
         }
 
-        ApplyItems(Threads, built.Inbox);
+        ShowInbox(built.Inbox);
         ApplyItems(ArchivedThreads, built.Archived);
     }
 
@@ -557,6 +686,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var now = DateTime.Now;
         var culture = CultureInfo.CurrentUICulture;
         var draftPreview = Gheychi.App.Localization.LocalizationManager.Instance["Inbox_DraftPreview"];
+        var findCodes = _folders?.Has(SmartFolder.Codes) == true;
         rawThreads = DraftInbox.Merge(rawThreads, _drafts?.GetAll() ?? []);
 
         var items = new List<ThreadItem>(rawThreads.Count);
@@ -586,7 +716,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 Timestamp = t.Timestamp,
                 IsPinned = !isArchived && pinned.Contains(t.ThreadId),
                 IsUnread = t.UnreadCount > 0,
-                HasFailed = t.HasFailed
+                HasFailed = t.HasFailed,
+                IsContact = !string.IsNullOrWhiteSpace(t.ContactName),
+                IsSender = PhoneNumberNormalizer.IsAlphanumeric(t.Address),
+                HasCode = findCodes && OtpDetector.Find(t.Snippet) is not null
             });
         }
 

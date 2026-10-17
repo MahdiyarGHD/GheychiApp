@@ -16,6 +16,8 @@ public enum SettingsScreenKind
     Sims,
     Notifications,
     Sending,
+    Folders,
+    FolderEdit,
     Codes,
     Appearance,
     Privacy,

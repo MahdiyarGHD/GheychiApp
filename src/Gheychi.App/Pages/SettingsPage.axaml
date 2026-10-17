@@ -164,6 +164,20 @@
                             </Grid>
                         </Border>
                         <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnFoldersTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge" Background="{theme:AccentBrush Role=Soft}">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.FolderGeneral}"
+                                             Foreground="{theme:AccentBrush Role=Text}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Folders}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_FoldersHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
                         <Border Classes="row" Tapped="OnSendingTapped">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                 <Border Classes="badge">

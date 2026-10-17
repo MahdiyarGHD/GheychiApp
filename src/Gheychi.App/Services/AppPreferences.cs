@@ -13,6 +13,10 @@ public static class AppPreferences
     private const string TextSizeKey = "app_text_size_v1";
     private const string SendDelayKey = "send_delay_seconds_v1";
     private const string ExactAlarmAskedKey = "exact_alarm_asked_v1";
+    private const string FolderCountsKey = "folder_counts_v1";
+    private const string FolderBarKey = "folder_bar_v1";
+    private const string RememberFolderKey = "folder_remember_v1";
+    private const string LastFolderKey = "folder_last_v1";
 
     public const string LanguageEnglish = "en";
     public const string LanguagePersian = "fa";
@@ -36,6 +40,33 @@ public static class AppPreferences
     {
         get => Preferences.Default.Get(ExactAlarmAskedKey, false);
         set => Preferences.Default.Set(ExactAlarmAskedKey, value);
+    }
+
+    /// <summary>The number of unread conversations on each folder tab.</summary>
+    public static bool ShowFolderCounts
+    {
+        get => Preferences.Default.Get(FolderCountsKey, true);
+        set => Preferences.Default.Set(FolderCountsKey, value);
+    }
+
+    /// <summary>The folder tabs above the inbox. Off hides them without touching the folders.</summary>
+    public static bool ShowFolderBar
+    {
+        get => Preferences.Default.Get(FolderBarKey, true);
+        set => Preferences.Default.Set(FolderBarKey, value);
+    }
+
+    /// <summary>The inbox opens on the folder it was left on, instead of on All.</summary>
+    public static bool RememberLastFolder
+    {
+        get => Preferences.Default.Get(RememberFolderKey, false);
+        set => Preferences.Default.Set(RememberFolderKey, value);
+    }
+
+    public static string LastFolderId
+    {
+        get => Preferences.Default.Get(LastFolderKey, string.Empty);
+        set => Preferences.Default.Set(LastFolderKey, value);
     }
 
     public static bool ShowContentOnLockScreen
