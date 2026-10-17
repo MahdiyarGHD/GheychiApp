@@ -50,7 +50,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         if (AppPreferences.RememberLastFolder)
             _activeFolderId = AppPreferences.LastFolderId is { Length: > 0 } last ? last : Folder.AllId;
         if (_folders is not null)
-            _folders.Changed += () => MainThread.BeginInvokeOnMainThread(ApplyFolderView);
+            _folders.Changed += () => MainThread.BeginInvokeOnMainThread(() => ApplyFolderView());
         ThreadItem.UnreadChanged += QueueFolderBarRefresh;
 
         // Normally read while the XAML is inflated. Opened from a notification, the inbox is not what is
@@ -139,12 +139,12 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private void ShowInbox(List<ThreadItem> inbox)
     {
         _inboxAll = inbox;
-        ApplyFolderView();
+        ApplyFolderView(fresh: true);
     }
 
     // The visible list follows the folder and the bar follows the list. Works on what the rows are now: a row opened
     // and read since the last read of the provider is read here too.
-    private void ApplyFolderView()
+    private void ApplyFolderView(bool fresh = false)
     {
         var folders = _folders?.Folders ?? [];
         if (_activeFolderId != Folder.AllId && folders.All(f => f.Id != _activeFolderId))
@@ -152,17 +152,19 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         // Without folders, or with their tabs hidden, the list is what was read, in the order it was read.
         var filtered = folders.Count > 0 && AppPreferences.ShowFolderBar;
-        ApplyItems(Threads, filtered ? FolderItems(_activeFolderId, folders) : _inboxAll);
+        ApplyItems(Threads, filtered ? FolderItems(_activeFolderId, folders, fresh) : _inboxAll);
         RefreshFolderBar();
         OnPropertyChanged(nameof(IsFolderEmpty));
     }
 
-    private List<ThreadItem> FolderItems(string folderId, IReadOnlyList<Folder> folders)
+    // A list just read is the truth. Between reads (a folder opened, a setting changed) the rows on screen are, as they may
+    // have been read since; taking them after a read would put back the preview and the unread state it just replaced.
+    private List<ThreadItem> FolderItems(string folderId, IReadOnlyList<Folder> folders, bool fresh = false)
     {
         var live = Threads.ToDictionary(t => t.ThreadId);
         var pinOrder = _pins?.GetOrder() ?? [];
         var pinned = pinOrder.ToHashSet();
-        var current = _inboxAll.Select(t => live.GetValueOrDefault(t.ThreadId, t)).ToList();
+        var current = fresh ? _inboxAll.ToList() : _inboxAll.Select(t => live.GetValueOrDefault(t.ThreadId, t)).ToList();
         foreach (var t in current)
             t.IsPinned = pinned.Contains(t.ThreadId);
 
