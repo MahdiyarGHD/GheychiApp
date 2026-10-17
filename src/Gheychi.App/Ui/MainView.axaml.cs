@@ -453,7 +453,7 @@ public partial class MainView : UserControl
     {
         UserActivity.Touched();
         EndSwipeTracking();
-        if (_swipe is null || PageSwipe.Client is not { } client)
+        if (_swipe is null || PageSwipe.Client is not { } client || !client.CanSwipeFrom(e.Source as Visual))
             return;
 
         _swipeClient = client;

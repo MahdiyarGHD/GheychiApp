@@ -1326,6 +1326,12 @@
   <data name="Folder_NameRequired" xml:space="preserve">
     <value>Give the folder a name</value>
   </data>
+  <data name="Folder_MarkReadTitle" xml:space="preserve">
+    <value>Mark all as read?</value>
+  </data>
+  <data name="Folder_MarkReadMessage" xml:space="preserve">
+    <value>Every conversation in {0} will be marked as read.</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>You blocked this sender, so their messages are dropped</value>
   </data>

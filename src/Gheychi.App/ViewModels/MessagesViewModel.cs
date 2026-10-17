@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Avalonia.Threading;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
@@ -86,7 +87,18 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     public string ActiveFolderId => _activeFolderId;
 
     /// <summary>A folder with nothing in it right now: the list shows a hint instead of blank space.</summary>
-    public bool IsFolderEmpty => Threads.Count == 0 && _inboxAll.Count > 0 && _activeFolderId != Folder.AllId;
+    public bool IsFolderEmpty => Threads.Count == 0 && _inboxAll.Count > 0 && ActiveId != Folder.AllId;
+
+    /// <summary>The folder the list shows: with the tabs hidden the inbox is the whole inbox, whatever folder was open.</summary>
+    private string ActiveId => AppPreferences.ShowFolderBar ? _activeFolderId : Folder.AllId;
+
+    /// <summary>A switch has started: the page fades the list out. Followed by <see cref="FolderSwitched"/>.</summary>
+    public event Action? FolderSwitching;
+
+    /// <summary>The list holds the new folder's conversations: the page brings it back.</summary>
+    public event Action? FolderSwitched;
+
+    private static readonly TimeSpan FolderFade = TimeSpan.FromMilliseconds(90);
 
     public void SelectFolder(string id)
     {
@@ -100,7 +112,14 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         if (IsSelectionMode)
             ExitSelectionMode();
 
-        ApplyFolderView();
+        // The tab answers the tap at once; the list is swapped under a short fade, which is cheaper to look at than a jump.
+        RefreshFolderBar();
+        FolderSwitching?.Invoke();
+        DispatcherTimer.RunOnce(() =>
+        {
+            ApplyFolderView();
+            FolderSwitched?.Invoke();
+        }, FolderFade);
     }
 
     /// <summary>Marks every conversation of the folder as read.</summary>
@@ -131,7 +150,9 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         if (_activeFolderId != Folder.AllId && folders.All(f => f.Id != _activeFolderId))
             _activeFolderId = Folder.AllId;
 
-        ApplyItems(Threads, folders.Count == 0 ? _inboxAll : FolderItems(_activeFolderId, folders));
+        // Without folders, or with their tabs hidden, the list is what was read, in the order it was read.
+        var filtered = folders.Count > 0 && AppPreferences.ShowFolderBar;
+        ApplyItems(Threads, filtered ? FolderItems(_activeFolderId, folders) : _inboxAll);
         RefreshFolderBar();
         OnPropertyChanged(nameof(IsFolderEmpty));
     }

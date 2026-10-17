@@ -1326,6 +1326,12 @@
   <data name="Folder_NameRequired" xml:space="preserve">
     <value>برای پوشه نامی بگذارید</value>
   </data>
+  <data name="Folder_MarkReadTitle" xml:space="preserve">
+    <value>همه خوانده‌شده شوند؟</value>
+  </data>
+  <data name="Folder_MarkReadMessage" xml:space="preserve">
+    <value>همه‌ی گفتگوهای «{0}» خوانده‌شده می‌شوند.</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>این فرستنده را مسدود کرده‌اید و پیام‌هایش دور ریخته می‌شوند</value>
   </data>

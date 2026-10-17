@@ -34,7 +34,8 @@
                         </Border>
                     </Grid>
                     <!-- The folder tabs: nothing here until the user makes a folder -->
-                    <ScrollViewer IsVisible="{Binding FolderBar.IsVisible}"
+                    <ScrollViewer x:Name="FolderScroll"
+                                  IsVisible="{Binding FolderBar.IsVisible}"
                                   Margin="0,0,0,12"
                                   HorizontalScrollBarVisibility="Hidden"
                                   VerticalScrollBarVisibility="Disabled">
@@ -130,6 +131,11 @@
                               ItemsSource="{Binding Threads}"
                               Tapped="OnThreadsTapped"
                               Holding="OnThreadsHolding">
+                    <ItemsControl.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.09" />
+                        </Transitions>
+                    </ItemsControl.Transitions>
                     <ItemsControl.Template>
                         <ControlTemplate>
                             <ScrollViewer x:Name="ThreadsScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
@@ -352,6 +358,59 @@
                                    FontSize="13"
                                    FontFamily="{x:Static app:AppFonts.Bold}"
                                    Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- The menu of a folder tab, from a long press on it -->
+        <Panel x:Name="FolderMenuOverlay" IsVisible="False" Background="Transparent" Tapped="OnCloseFolderMenuTapped">
+            <Border Margin="16,116,16,0"
+                    Padding="4"
+                    MinWidth="220"
+                    MaxWidth="320"
+                    BorderThickness="1"
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                    CornerRadius="14"
+                    Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
+                    BoxShadow="0 6 16 0 #40000000"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Tapped="OnSelectBoxTapEater">
+                <StackPanel>
+                    <TextBlock x:Name="FolderMenuTitle"
+                               Margin="12,10,12,4"
+                               FontSize="12"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="#8A8F98"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="1" />
+                    <Grid x:Name="FolderMarkReadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnFolderMarkReadTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Check}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_MarkRead}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderRenameItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnFolderRenameTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Compose}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_Rename}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderDeleteItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnFolderDeleteTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Trash}" Width="18" Height="18" Foreground="#EF4444" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_Delete}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="#EF4444"
                                    VerticalAlignment="Center" />
                     </Grid>
                 </StackPanel>

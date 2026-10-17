@@ -94,6 +94,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         InitializeComponent();
         DataContext = viewModel;
         viewModel.PreloadTargets = VisibleThreads;
+        viewModel.FolderSwitching += () => ThreadsList.Opacity = 0;
+        viewModel.FolderSwitched += OnFolderSwitched;
         Ui.RowPressEffect.Attach(ThreadsList, ThreadsHost);
 
         // The pinned rows at the top of the list are moved by holding one and dragging it.
@@ -955,43 +957,73 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         Vm?.SelectFolder(pill.Id);
     }
 
-    private async void OnFolderPillHolding(object? sender, HoldingRoutedEventArgs e)
+    private FolderPill? _menuPill;
+
+    // A long press on a tab opens its menu under the tabs; the actions that change many rows ask first.
+    private void OnFolderPillHolding(object? sender, HoldingRoutedEventArgs e)
     {
-        if (e.HoldingState != HoldingState.Started || Vm is not { } vm || (sender as Control)?.DataContext is not FolderPill pill)
+        if (e.HoldingState != HoldingState.Started || Vm is null || (sender as Control)?.DataContext is not FolderPill pill)
             return;
 
         _folderHoldFired = true;
         e.Handled = true;
 
-        var loc = LocalizationManager.Instance;
-        var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
-        var folder = store?.Find(pill.Id);
-        var markRead = loc["Folder_MarkRead"];
-        var rename = loc["Folder_Rename"];
-        var delete = loc["Folder_Delete"];
-
-        var options = new List<string> { markRead };
-        if (folder is { IsSmart: false })
-            options.Add(rename);
-        if (folder is not null)
-            options.Add(delete);
-
-        var choice = await Dialogs.ActionSheetAsync(pill.Title, loc["Chat_Cancel"], null, [.. options]);
-        if (choice == markRead)
-        {
-            vm.MarkFolderRead(pill.Id);
-        }
-        else if (choice == rename && folder is not null)
-        {
-            if (await FolderDialogs.AskNameAsync(rename, folder.Name) is { } name)
-                store!.Update(folder.Id, name, folder.IconKey);
-        }
-        else if (choice == delete && folder is not null &&
-                 await Dialogs.AlertAsync(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], loc["Folder_Delete"], loc["Chat_Cancel"]))
-        {
-            store!.Remove(folder.Id);
-        }
+        var folder = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>()?.Find(pill.Id);
+        _menuPill = pill;
+        FolderMenuTitle.Text = pill.Title;
+        FolderRenameItem.IsVisible = folder is { IsSmart: false };
+        FolderDeleteItem.IsVisible = folder is not null;
+        FolderMenuOverlay.IsVisible = true;
     }
+
+    private void OnCloseFolderMenuTapped(object? sender, TappedEventArgs e) => FolderMenuOverlay.IsVisible = false;
+
+    private async void OnFolderMarkReadTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        FolderMenuOverlay.IsVisible = false;
+        if (Vm is not { } vm || _menuPill is not { } pill)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        if (await Dialogs.AlertAsync(loc["Folder_MarkReadTitle"], string.Format(loc["Folder_MarkReadMessage"], pill.Title), loc["Folder_MarkRead"], loc["Chat_Cancel"]))
+            vm.MarkFolderRead(pill.Id);
+    }
+
+    private async void OnFolderRenameTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        FolderMenuOverlay.IsVisible = false;
+        var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        if (_menuPill is not { } pill || store?.Find(pill.Id) is not { IsSmart: false } folder)
+            return;
+
+        if (await FolderDialogs.AskNameAsync(LocalizationManager.Instance["Folder_Rename"], folder.Name) is { } name)
+            store.Update(folder.Id, name, folder.IconKey);
+    }
+
+    private async void OnFolderDeleteTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        FolderMenuOverlay.IsVisible = false;
+        var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        if (_menuPill is not { } pill || store?.Find(pill.Id) is not { } folder)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        if (await Dialogs.AlertAsync(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], loc["Folder_Delete"], loc["Chat_Cancel"]))
+            store.Remove(folder.Id);
+    }
+
+    private void OnFolderSwitched()
+    {
+        _threadsScroll?.ScrollToHome();
+        ThreadsList.Opacity = 1;
+    }
+
+    // The tabs scroll sideways on their own: a drag that starts on them must not open the archive.
+    public bool CanSwipeFrom(Visual? source) =>
+        source is null || !FolderScroll.IsVisible || (!ReferenceEquals(source, FolderScroll) && !FolderScroll.IsVisualAncestorOf(source));
 
     private async void OnAddToFolderTapped(object? sender, TappedEventArgs e)
     {
@@ -1616,7 +1648,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         get
         {
-            if (_animating || _reorder.IsBusy || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true
+            if (_animating || _reorder.IsBusy || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || FolderMenuOverlay.IsVisible || Vm?.IsSelectionMode == true
                 || IsDefaultAppGateShown)
                 return 0;
 

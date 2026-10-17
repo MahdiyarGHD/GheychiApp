@@ -6,6 +6,9 @@ public interface IPageSwipeClient
     /// <summary>-1 accepts leftward swipes, +1 rightward, 0 none right now.</summary>
     int AllowedSwipeSign { get; }
 
+    /// <summary>False when a touch that starts on <paramref name="source"/> must not turn into a page swipe: a row that scrolls sideways on its own.</summary>
+    bool CanSwipeFrom(Avalonia.Visual? source) => true;
+
     void OnSwipeStarted();
 
     /// <summary>Signed horizontal travel of the finger in dp since the swipe was recognised.</summary>
