@@ -1155,6 +1155,9 @@
   <data name="Accent_Amber" xml:space="preserve">
     <value>کهربایی</value>
   </data>
+  <data name="Accent_System" xml:space="preserve">
+    <value>سیستم (Material You)</value>
+  </data>
   <data name="Accent_Graphite" xml:space="preserve">
     <value>گرافیتی</value>
   </data>
