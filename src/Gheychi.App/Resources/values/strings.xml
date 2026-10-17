@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The launcher label follows the phone's language, not the language chosen inside the app; values-fa has the Persian one. -->
+    <string name="app_name">Gheychi</string>
+</resources>

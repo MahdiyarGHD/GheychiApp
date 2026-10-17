@@ -13,7 +13,7 @@ using Gheychi.App.Platforms.Android.Notifications;
 namespace Gheychi.App;
 
 [Activity(
-    Label = "Gheychi",
+    Label = "@string/app_name",
     Theme = "@style/Gheychi.Splash",
     MainLauncher = true,
     // One instance for the whole app: another app's intent (a contact's message button, the share sheet) used to start
