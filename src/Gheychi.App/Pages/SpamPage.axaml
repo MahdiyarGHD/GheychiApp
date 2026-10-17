@@ -24,7 +24,8 @@
                 <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
             </Border>
             <TextBlock Grid.Column="1"
-                       Text="{loc:Translate Tab_Spam}"
+                       Text="Gheychi"
+                       ui:TextDirection.KeepSide="True"
                        Margin="6,0,0,0"
                        FontSize="22"
                        FontFamily="{x:Static app:AppFonts.Bold}"

@@ -38,10 +38,11 @@ public partial class MainView : UserControl
     private bool _spamBadge;
     private int _transition;
 
-    private const double SlideDip = 32;
-    private const double ParallaxDip = 10;
-    private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(180);
-    private static readonly TimeSpan BackDuration = TimeSpan.FromMilliseconds(140);
+    // The page that opens is opaque and covers the inbox from the reading-direction end, while the inbox drifts a quarter
+    // of the way under it.
+    private const double ParallaxShare = 0.25;
+    private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(240);
+    private static readonly TimeSpan BackDuration = TimeSpan.FromMilliseconds(200);
 
     private HorizontalSwipeTracker? _swipe;
     private IPageSwipeClient? _swipeClient;
@@ -221,34 +222,34 @@ public partial class MainView : UserControl
             _ = BuildOtherTabsAsync();
     }
 
-    // Going out to Spam or Settings the new page slides in from the reading-direction end and fades in while the inbox
-    // drifts the other way; coming back the page slides out over the inbox. As on the Settings screens (the window is
-    // mirrored in Persian, so one sign does both languages). Run on the compositor.
+    // Going out to Spam or Settings the new page slides over the inbox; coming back it slides off again. The window is
+    // mirrored in Persian, so one sign does both languages. Run on the compositor.
     private async Task TransitionAsync(Control old, Control page, bool forward)
     {
         var token = ++_transition;
         try
         {
+            var width = Math.Max(PageHost.Bounds.Width, 200);
+            var parallax = width * ParallaxShare;
             if (forward)
             {
                 await OverlayAnimator.SettleAsync();
                 page.ZIndex = 1;
                 old.ZIndex = 0;
-                OverlayAnimator.SetTranslation(page, SlideDip, 0);
+                OverlayAnimator.SetTranslation(page, width, 0);
+                page.Opacity = 1;
                 await Task.WhenAll(
-                    OverlayAnimator.FadeAsync(page, 0, 1, SlideDuration),
-                    OverlayAnimator.SlideXAsync(page, SlideDip, 0, SlideDuration, decelerate: true),
-                    OverlayAnimator.SlideXAsync(old, 0, -ParallaxDip, SlideDuration, decelerate: true));
+                    OverlayAnimator.SlideXAsync(page, width, 0, SlideDuration, decelerate: true),
+                    OverlayAnimator.SlideXAsync(old, 0, -parallax, SlideDuration, decelerate: true));
             }
             else
             {
                 old.ZIndex = 1;
                 page.ZIndex = 0;
-                OverlayAnimator.SetTranslation(page, -ParallaxDip, 0);
+                OverlayAnimator.SetTranslation(page, -parallax, 0);
                 await Task.WhenAll(
-                    OverlayAnimator.FadeAsync(old, 1, 0, BackDuration),
-                    OverlayAnimator.SlideXAsync(old, 0, SlideDip, BackDuration, decelerate: false),
-                    OverlayAnimator.SlideXAsync(page, -ParallaxDip, 0, BackDuration, decelerate: false));
+                    OverlayAnimator.SlideXAsync(old, 0, width, BackDuration, decelerate: false),
+                    OverlayAnimator.SlideXAsync(page, -parallax, 0, BackDuration, decelerate: false));
             }
         }
         finally
@@ -281,6 +282,9 @@ public partial class MainView : UserControl
             _ => new MessagesPage()
         };
         page.IsVisible = false;
+        // Opaque, so a page sliding over another hides it instead of showing through.
+        if (page is UserControl surface)
+            surface.Background = Palette.Pick("#F1F3F4", "#121212");
         if (page is MessagesPage messages)
         {
             messages.SetSettingsBadge(_settingsBadge);
