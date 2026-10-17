@@ -17,7 +17,7 @@ public static class SendSchedule
     public static readonly TimeSpan MinimumLead = TimeSpan.FromMinutes(1);
 
     /// <summary>The send delays offered in Settings, in seconds; 0 sends at once.</summary>
-    public static IReadOnlyList<int> DelayOptions { get; } = [0, 3, 5, 10, 15, 30];
+    public static IReadOnlyList<int> DelayOptions { get; } = [0, 3, 5, 7, 10, 15, 30];
 
     public static int NormalizeDelay(int seconds) => DelayOptions.Contains(seconds) ? seconds : 0;
 

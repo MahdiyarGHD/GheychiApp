@@ -61,7 +61,8 @@ public class SendScheduleTests
     [InlineData(0, 0)]
     [InlineData(5, 5)]
     [InlineData(30, 30)]
-    [InlineData(7, 0)]
+    [InlineData(7, 7)]
+    [InlineData(8, 0)]
     [InlineData(-3, 0)]
     public void Only_the_offered_delays_are_kept(int stored, int expected)
     {
