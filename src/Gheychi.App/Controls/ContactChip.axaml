@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             x:Class="Gheychi.App.Controls.ContactChip">
+
+    <!-- The contact a number in a message belongs to, with the avatar the inbox shows for them. Whoever shows it handles the tap. -->
+    <Border Padding="10,8" CornerRadius="9" Background="Transparent">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <Border Width="28" Height="28" CornerRadius="14" VerticalAlignment="Center"
+                    Background="{theme:AccentBrush Role=Soft}">
+                <Panel>
+                    <ui:Icon x:Name="ContactIcon"
+                             Width="16" Height="16"
+                             Foreground="{theme:AccentBrush Role=Text}"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                    <TextBlock x:Name="ContactInitials"
+                               FontSize="12"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="{theme:AccentBrush Role=Text}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Panel>
+            </Border>
+            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                <TextBlock x:Name="ContactName"
+                           FontSize="14"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                           TextTrimming="CharacterEllipsis"
+                           MaxLines="1"
+                           MaxWidth="200"
+                           HorizontalAlignment="Left" />
+                <TextBlock Text="{loc:Translate Chat_OpenConversation}"
+                           FontSize="12"
+                           Foreground="#8A8F98" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

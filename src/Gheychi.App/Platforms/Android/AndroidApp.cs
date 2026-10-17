@@ -1,6 +1,5 @@
 using Android.App;
 using Android.Runtime;
-using AndroidX.AppCompat.App;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.Media;
@@ -40,13 +39,8 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
     {
         CultureService.ApplyCulture();
         ThemeState.Resolve();
-        // The system's dialogs (delete confirms, pickers) follow the app's theme choice, not the phone's.
-        AppCompatDelegate.DefaultNightMode = Services.AppPreferences.Theme switch
-        {
-            AppTheme.Light => AppCompatDelegate.ModeNightNo,
-            AppTheme.Dark => AppCompatDelegate.ModeNightYes,
-            _ => AppCompatDelegate.ModeNightFollowSystem
-        };
+        // The system's dialogs (delete confirms, pickers) and the launch window follow the app's theme choice, not the phone's.
+        ThemeState.ApplyToSystem(Services.AppPreferences.Theme);
         SQLitePCL.Batteries_V2.Init();
         IPlatformApplication.Current = new PlatformApplication(AppServices.Build());
 
@@ -54,5 +48,6 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
         // The alarm is gone after a force stop, and an app update can leave it unset.
         _ = Task.Run(() => SpamDigestNotifier.Schedule(Platform.AppContext));
+        _ = Task.Run(() => Gheychi.App.Platforms.Android.Services.ScheduledSendAlarm.RescheduleAll(Platform.AppContext));
     }
 }

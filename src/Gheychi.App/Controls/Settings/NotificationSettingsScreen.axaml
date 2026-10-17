@@ -27,6 +27,21 @@
                             </Grid>
                         </Border>
                         <Border Classes="divider" />
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_DeliveryReports}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_DeliveryReportsHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ToggleButton x:Name="DeliverySwitch" Grid.Column="2" Classes="setting"
+                                              IsCheckedChanged="OnDeliveryToggled" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
                         <Border Classes="row" Tapped="OnSystemSettingsTapped">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                 <Border Classes="badge">

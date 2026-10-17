@@ -1,0 +1,81 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:app="clr-namespace:Gheychi.App"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.TrashScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Trash}" />
+
+        <StackPanel Grid.Row="1" Margin="26,0,26,12" Spacing="8">
+            <TextBlock x:Name="Note" Classes="note" />
+            <TextBlock x:Name="EmptyAll" Text="{loc:Translate Trash_EmptyAll}" IsVisible="False"
+                       FontFamily="{x:Static app:AppFonts.Bold}"
+                       Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}"
+                       Tapped="OnEmptyAllTapped" />
+        </StackPanel>
+
+        <Border Grid.Row="2"
+                CornerRadius="28,28,0,0"
+                ClipToBounds="True"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+            <ItemsControl x:Name="TrashList" Margin="0,8,0,0">
+                <!-- The scroll viewer is part of the list's own template: only then do the rows virtualize. -->
+                <ItemsControl.Template>
+                    <ControlTemplate>
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TrashRow">
+                        <Grid MinHeight="76" Margin="16,6,10,6" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                            <Border Width="44" Height="44" CornerRadius="22" VerticalAlignment="Center"
+                                    Background="{theme:AccentBrush Role=Soft}">
+                                <Panel>
+                                    <ui:Icon IsVisible="{Binding HasNoInitials}" Data="{StaticResource Icon.Person}"
+                                             Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Foreground="{theme:AccentBrush Role=Text}" />
+                                    <TextBlock Text="{Binding Initials}" FontSize="19"
+                                               FontFamily="{x:Static app:AppFonts.Bold}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{theme:AccentBrush Role=Text}" />
+                                </Panel>
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}" Classes="rowTitle" />
+                                <TextBlock Text="{Binding Preview}" Classes="rowSubtitle" MaxLines="1" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Meta}" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <Border Grid.Column="2" Height="36" CornerRadius="18" Padding="14,0" Background="{theme:AccentBrush Role=Soft}"
+                                    VerticalAlignment="Center" Tapped="OnRestoreTapped">
+                                <TextBlock Text="{loc:Translate Trash_Restore}" VerticalAlignment="Center"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{theme:AccentBrush Role=Text}" />
+                            </Border>
+                            <Border Grid.Column="3" Width="36" Height="36" CornerRadius="18" Background="Transparent"
+                                    VerticalAlignment="Center" Tapped="OnDeleteForeverTapped"
+                                    AutomationProperties.Name="{loc:Translate Trash_DeleteForever}">
+                                <ui:Icon Data="{StaticResource Icon.Trash}" Width="18" Height="18"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                                         Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <TextBlock x:Name="EmptyNote" Grid.Row="2" Text="{loc:Translate Trash_Empty}" Margin="24,48,24,0"
+                   Classes="note" TextAlignment="Center" VerticalAlignment="Top" IsVisible="False" />
+    </Grid>
+</settings:SettingsScreen>

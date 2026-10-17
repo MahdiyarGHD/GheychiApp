@@ -12,9 +12,9 @@
         <Grid x:Name="InboxLayer" RowDefinitions="Auto,*">
 
             <!-- Header: the normal one (as the Spam tab's) or the one shown while threads are selected -->
-            <Panel Grid.Row="0">
-                <StackPanel IsVisible="{Binding IsNotSelectionMode}">
-                    <Grid Margin="22,10,10,12" ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Row="0">
+                <Panel Height="62">
+                    <Grid IsVisible="{Binding IsNotSelectionMode}" Margin="22,10,10,12" ColumnDefinitions="*,Auto,Auto,Auto">
                         <TextBlock Grid.Column="0"
                                    Text="Gheychi"
                                    ui:TextDirection.KeepSide="True"
@@ -23,6 +23,46 @@
                                    Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                                    VerticalAlignment="Center" />
                         <Border Grid.Column="1"
+                                Width="40"
+                                Height="40"
+                                CornerRadius="20"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                Tapped="OnSpamButtonTapped"
+                                AutomationProperties.Name="{loc:Translate Tab_Spam}">
+                            <Panel Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                                <Ellipse x:Name="SpamBadge"
+                                         Width="9"
+                                         Height="9"
+                                         Margin="0,-3,-3,0"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Top"
+                                         Fill="#FACC15"
+                                         IsVisible="False" />
+                            </Panel>
+                        </Border>
+                        <Border Grid.Column="2"
+                                Width="40"
+                                Height="40"
+                                CornerRadius="20"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                Tapped="OnSettingsButtonTapped"
+                                AutomationProperties.Name="{loc:Translate Tab_Settings}">
+                            <Panel Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <ui:Icon Data="{StaticResource Icon.TabSettings}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                                <Ellipse x:Name="SettingsBadge"
+                                         Width="9"
+                                         Height="9"
+                                         Margin="0,-3,-3,0"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Top"
+                                         Fill="{StaticResource DangerBrush}"
+                                         IsVisible="False" />
+                            </Panel>
+                        </Border>
+                        <Border Grid.Column="3"
                                 x:Name="SearchButton"
                                 Width="40"
                                 Height="40"
@@ -33,11 +73,8 @@
                             <ui:Icon Data="{StaticResource Icon.Search}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </Grid>
-                </StackPanel>
-
                 <Grid IsVisible="{Binding IsSelectionMode}"
-                      Margin="16,8"
-                      Height="52"
+                      Margin="16,0"
                       ColumnDefinitions="Auto,*,Auto,Auto,Auto"
                       ColumnSpacing="6"
                       VerticalAlignment="Center">
@@ -66,7 +103,59 @@
                         <ui:Icon Data="{StaticResource Icon.MoreVert}" Width="21" Height="21" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                 </Grid>
-            </Panel>
+                </Panel>
+                    <!-- The folder tabs: nothing here until the user makes a folder -->
+                    <ui:DragScroll x:Name="FolderScroll"
+                                   IsVisible="{Binding FolderBar.IsVisible}"
+                                   Margin="0,0,0,12">
+                        <ItemsControl ItemsSource="{Binding FolderBar.Pills}" Margin="16,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:FolderPill">
+                                    <Border Height="36"
+                                            Padding="13,0,13,0"
+                                            CornerRadius="18"
+                                            Background="{Binding Fill}"
+                                            PointerPressed="OnFolderPillPressed"
+                                            Tapped="OnFolderPillTapped"
+                                            Holding="OnFolderPillHolding">
+                                        <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                                            <ui:Icon Data="{Binding Icon}"
+                                                     Width="16"
+                                                     Height="16"
+                                                     Foreground="{Binding TextBrush}"
+                                                     VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Title}"
+                                                       ui:TextDirection.KeepSide="True"
+                                                       FontSize="13.5"
+                                                       FontFamily="{Binding Font}"
+                                                       Foreground="{Binding TextBrush}"
+                                                       VerticalAlignment="Center" />
+                                            <Border IsVisible="{Binding HasUnread}"
+                                                    MinWidth="20"
+                                                    Height="20"
+                                                    Padding="6,0"
+                                                    CornerRadius="10"
+                                                    Background="{Binding BadgeFill}"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding UnreadText}"
+                                                           FontSize="11.5"
+                                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ui:DragScroll>
+            </StackPanel>
 
             <Panel Grid.Row="1">
                 <Border CornerRadius="28,28,0,0"
@@ -78,6 +167,11 @@
                               ItemsSource="{Binding Threads}"
                               Tapped="OnThreadsTapped"
                               Holding="OnThreadsHolding">
+                    <ItemsControl.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.09" />
+                        </Transitions>
+                    </ItemsControl.Transitions>
                     <ItemsControl.Template>
                         <ControlTemplate>
                             <ScrollViewer x:Name="ThreadsScroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
@@ -153,23 +247,39 @@
                                                FontFamily="{Binding PreviewFont}"
                                                Foreground="{Binding TimeColor}"
                                                HorizontalAlignment="Right" />
-                                    <Border IsVisible="{Binding IsUnread}"
-                                            Padding="8,2"
-                                            CornerRadius="11"
-                                            Background="{StaticResource PrimaryBrush}"
-                                            HorizontalAlignment="Right">
-                                        <TextBlock Text="{Binding CountText}"
-                                                   FontSize="11.5"
-                                                   FontFamily="{x:Static app:AppFonts.Bold}"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center" />
-                                    </Border>
+                                    <StackPanel IsVisible="{Binding ShowBadgeRow}" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                        <ui:Icon IsVisible="{Binding IsPinned}"
+                                                 Data="{StaticResource Icon.Pin}"
+                                                 Width="15"
+                                                 Height="15"
+                                                 Foreground="{Binding TimeColor}"
+                                                 VerticalAlignment="Center" />
+                                        <Border IsVisible="{Binding IsUnread}"
+                                                Padding="8,2"
+                                                CornerRadius="11"
+                                                Background="{StaticResource PrimaryBrush}">
+                                            <TextBlock Text="{Binding CountText}"
+                                                       FontSize="11.5"
+                                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+                                    </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <TextBlock IsVisible="{Binding IsFolderEmpty}"
+                           Text="{loc:Translate Folder_Empty}"
+                           Margin="32,0"
+                           FontSize="14"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
                 </Panel>
                 </Border>
 
@@ -230,7 +340,8 @@
         <Panel x:Name="SelectBoxOverlay" IsVisible="False" Background="Transparent" Tapped="OnCloseSelectBoxTapped">
             <Border Margin="0,56,16,0"
                     Padding="4"
-                    Width="200"
+                    MinWidth="200"
+                    MaxWidth="300"
                     BorderThickness="1"
                     BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
                     CornerRadius="12"
@@ -239,15 +350,106 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Tapped="OnSelectBoxTapEater">
-                <Grid Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnMarkAsUnreadTapped">
-                    <ui:Icon Grid.Column="0" Data="{StaticResource Icon.TabMessages}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1"
-                               Text="{loc:Translate Messages_MarkAsUnread}"
-                               FontSize="13"
+                <StackPanel>
+                    <Grid x:Name="PinItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnPinTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Pin}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_Pin}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="UnpinItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnUnpinTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Pin}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_Unpin}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnAddToFolderTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.FolderGeneral}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_AddTo}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="MarkReadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnMarkAsReadTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Check}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_MarkAsRead}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="MarkUnreadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnMarkAsUnreadTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.TabMessages}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_MarkAsUnread}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- The menu of a folder tab, from a long press on it -->
+        <Panel x:Name="FolderMenuOverlay" IsVisible="False" Background="Transparent" Tapped="OnCloseFolderMenuTapped">
+            <Border Margin="16,116,16,0"
+                    Padding="4"
+                    MinWidth="220"
+                    MaxWidth="320"
+                    BorderThickness="1"
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                    CornerRadius="14"
+                    Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
+                    BoxShadow="0 6 16 0 #40000000"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Tapped="OnSelectBoxTapEater">
+                <StackPanel>
+                    <TextBlock x:Name="FolderMenuTitle"
+                               Margin="12,10,12,4"
+                               FontSize="12"
                                FontFamily="{x:Static app:AppFonts.Bold}"
-                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
-                               VerticalAlignment="Center" />
-                </Grid>
+                               Foreground="#8A8F98"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="1" />
+                    <Grid x:Name="FolderMarkReadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnFolderMarkReadTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Check}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_MarkRead}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderRenameItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnFolderRenameTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Compose}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_Rename}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderDeleteItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent" Tapped="OnFolderDeleteTapped">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Trash}" Width="18" Height="18" Foreground="#EF4444" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_Delete}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="#EF4444"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
             </Border>
         </Panel>
 

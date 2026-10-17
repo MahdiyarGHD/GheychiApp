@@ -25,9 +25,17 @@ public sealed class SmsDeliveredReceiver : BroadcastReceiver
 
         try
         {
-            // A report that the carrier is still trying, or gave up, leaves the message at "sent".
-            if (ReachedPhone(intent))
-                AndroidSmsService.MarkDelivered(context, rowId);
+            switch (ReadOutcome(intent))
+            {
+                case DeliveryOutcome.Delivered:
+                    if (SmsDeliveryTally.Delivered(rowId, intent.GetIntExtra(SmsSendTracker.ExtraParts, 1)))
+                        AndroidSmsService.MarkDelivered(context, rowId);
+                    break;
+                case DeliveryOutcome.Failed:
+                    SmsDeliveryTally.Forget(rowId);
+                    AndroidSmsService.MarkDeliveryFailed(context, rowId);
+                    break;
+            }
         }
         catch (Exception ex)
         {
@@ -35,18 +43,17 @@ public sealed class SmsDeliveredReceiver : BroadcastReceiver
         }
     }
 
-    // TP-Status of the status report: below 32 the message reached the phone, 32-63 the carrier is still
-    // trying, 64 and above it gave up.
-    private static bool ReachedPhone(Intent intent)
+    // A report that the carrier is still trying, or that carries nothing readable, changes nothing: the final one follows.
+    private static DeliveryOutcome ReadOutcome(Intent intent)
     {
         var pdu = intent.GetByteArrayExtra("pdu");
         if (pdu is null || pdu.Length == 0)
-            return false;
+            return DeliveryOutcome.Pending;
 
         var format = intent.GetStringExtra("format");
 #pragma warning disable CA1422
         var report = format is null ? TelephonySmsMessage.CreateFromPdu(pdu) : TelephonySmsMessage.CreateFromPdu(pdu, format);
 #pragma warning restore CA1422
-        return report is not null && report.Status >= 0 && report.Status < SmsStatusHelper.StatusPending;
+        return report is null ? DeliveryOutcome.Pending : SmsStatusHelper.ClassifyReport(report.Status);
     }
 }

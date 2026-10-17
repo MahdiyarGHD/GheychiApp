@@ -6,7 +6,21 @@ public enum MessageInfoStatus
     Sent,
     Delivered,
     Failed,
-    Sending
+    Sending,
+    Unconfirmed
+}
+
+/// <summary>What a carrier's delivery report says about the message.</summary>
+public enum DeliveryOutcome
+{
+    /// <summary>The message reached the phone.</summary>
+    Delivered,
+
+    /// <summary>The carrier is still trying, or the report says nothing usable: a final report may follow.</summary>
+    Pending,
+
+    /// <summary>The carrier gave up.</summary>
+    Failed
 }
 
 public static class SmsStatusHelper
@@ -26,8 +40,19 @@ public static class SmsStatusHelper
     public static bool IsOutgoingType(int type) =>
         type is TypeSent or TypeOutbox or TypeFailed or TypeQueued;
 
+    /// <summary>How long an outgoing message may wait for the radio's answer before its outcome counts as unknown.</summary>
+    public const long UnconfirmedAfterMs = 10 * 60 * 1000;
+
     public static bool HasFailed(int type, int status) =>
         type == TypeFailed || status == StatusFailed;
+
+    /// <summary>
+    /// Still in the outbox long after it was handed to the radio: the result broadcast never came (the phone restarted
+    /// mid-send, the radio dropped it). It may or may not have gone out, so it is neither sent nor failed, and sending it
+    /// again can deliver it twice.
+    /// </summary>
+    public static bool IsUnconfirmed(int type, long dateMs, long nowMs) =>
+        type == TypeOutbox && nowMs - dateMs > UnconfirmedAfterMs;
 
     /// <summary>The carrier accepted the message; it may or may not have reached the phone yet.</summary>
     public static bool IsSent(int type, int status) =>
@@ -41,10 +66,21 @@ public static class SmsStatusHelper
         !HasFailed(type, status) &&
         (status == StatusComplete || (type == TypeSent && status == StatusNone));
 
-    public static MessageInfoStatus GetInfoStatus(bool isOutgoing, bool hasFailed, bool isDelivered, bool isSending) =>
+    /// <summary>
+    /// Reads the TP-Status of a status report (3GPP TS 23.040): below 32 the message reached the phone, 32-63 the carrier
+    /// is still trying, 64 and above it gave up (permanently, or after it stopped trying).
+    /// </summary>
+    public static DeliveryOutcome ClassifyReport(int tpStatus) =>
+        tpStatus < 0 ? DeliveryOutcome.Pending
+        : tpStatus < StatusPending ? DeliveryOutcome.Delivered
+        : tpStatus < StatusFailed ? DeliveryOutcome.Pending
+        : DeliveryOutcome.Failed;
+
+    public static MessageInfoStatus GetInfoStatus(bool isOutgoing, bool hasFailed, bool isDelivered, bool isSending, bool isUnconfirmed = false) =>
         !isOutgoing ? MessageInfoStatus.Received
         : hasFailed ? MessageInfoStatus.Failed
         : isDelivered ? MessageInfoStatus.Delivered
+        : isUnconfirmed ? MessageInfoStatus.Unconfirmed
         : isSending ? MessageInfoStatus.Sending
         : MessageInfoStatus.Sent;
 }

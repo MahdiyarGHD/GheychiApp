@@ -7,9 +7,12 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gheychi.App.Controls;
 using Gheychi.App.Gestures;
+using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Services;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
+using Gheychi.Core.Folders;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
@@ -37,6 +40,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private bool _timerRunning;
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
+    private bool _holdFired;
     private bool _overlaysWarmedUp;
     private bool _earlyPreloadStarted;
     private bool _inboxShown;
@@ -44,6 +48,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private bool _archiveOpen;
     private bool _swipeDragging;
     private ScrollViewer? _threadsScroll;
+    private readonly RowReorder _reorder;
+    private ThreadItem? _toggleOnRelease;
+    private bool _selectedByHold;
 
     private ChatView? _chatOverlay;
     private SearchView? _searchOverlay;
@@ -87,7 +94,26 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         InitializeComponent();
         DataContext = viewModel;
         viewModel.PreloadTargets = VisibleThreads;
+        viewModel.FolderSwitching += () => ThreadsList.Opacity = 0;
+        viewModel.FolderSwitched += OnFolderSwitched;
         Ui.RowPressEffect.Attach(ThreadsList, ThreadsHost);
+
+        // The pinned rows at the top of the list are moved by holding one and dragging it.
+        _reorder = new RowReorder(
+            ThreadsList, RowHeight, () => Vm?.PinnedCount ?? 0,
+            () => Vm?.BeginReorder(), (from, to) => Vm?.MovePinned(from, to), () => Vm?.EndReorder());
+        ThreadsList.AddHandler(PointerMovedEvent, (_, e) => _reorder.OnMoved(e), RoutingStrategies.Tunnel, handledEventsToo: true);
+        ThreadsList.AddHandler(PointerReleasedEvent, OnThreadsReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        ThreadsList.AddHandler(PointerCaptureLostEvent, (_, e) => _reorder.OnCaptureLost(e), RoutingStrategies.Tunnel, handledEventsToo: true);
+
+        // Releasing a finger that held a row can also report a tap; the next press starts a new gesture.
+        ThreadsList.AddHandler(PointerPressedEvent, (_, e) =>
+        {
+            _holdFired = false;
+            _toggleOnRelease = null;
+            _selectedByHold = false;
+            _reorder.OnPressed(e);
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
 
         ThreadsList.TemplateApplied += (_, e) =>
         {
@@ -120,6 +146,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         chat.ProfileRequested += OnChatProfileRequested;
         chat.SectionRequested += OnChatSectionRequested;
         chat.ArchiveRequested += archive => OnProfileArchiveRequested(chat, archive);
+        chat.ConversationRequested += OnChatConversationRequested;
         chat.IsArchivedLookup = IsArchived;
         Overlays.Children.Add(chat);
         return chat;
@@ -264,6 +291,10 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     public void OnHidden()
     {
         _inboxShown = false;
+        _reorder.Cancel();
+        // A selection or an open menu does not wait for the user to come back to the tab.
+        SelectBoxOverlay.IsVisible = false;
+        Vm?.ExitSelectionMode();
         MainActivity.Resumed -= OnAppResumed;
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
         ExternalSendRequests.Requested -= OnExternalSendRequested;
@@ -439,7 +470,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsTapped(object? sender, TappedEventArgs e)
     {
-        if (_animating || !IsChatClosed || ThreadFrom(e) is not { } thread)
+        if (_holdFired || _animating || _reorder.IsBusy || !IsChatClosed || ThreadFrom(e) is not { } thread)
             return;
 
         if (Vm?.IsSelectionMode == true)
@@ -450,13 +481,50 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsHolding(object? sender, HoldingRoutedEventArgs e)
     {
-        if (e.HoldingState != HoldingState.Started || _animating || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
+        if (e.HoldingState != HoldingState.Started || _animating || _reorder.IsBusy || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
             return;
 
+        // Avalonia cancels a started hold once the finger drifts 4 px, then reports the release, still inside the
+        // touch tap area, as a tap: that toggled the row just selected back off and left selection mode.
+        _holdFired = true;
+
+        // A pinned row can be dragged from here: whether the hold selects it waits for the finger to say.
+        if (thread.IsPinned && Vm.Threads.IndexOf(thread) is var index and >= 0)
+            _reorder.Arm(index);
+
         if (!Vm.IsSelectionMode)
+        {
+            _selectedByHold = thread.IsPinned;
             Vm.EnterSelectionMode(thread);
+        }
+        else if (thread.IsPinned)
+        {
+            _toggleOnRelease = thread;
+        }
         else
+        {
             ToggleSelectionSafely(thread);
+        }
+    }
+
+    private void OnThreadsReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        var dragged = _reorder.OnReleased();
+        var toggle = _toggleOnRelease;
+        _toggleOnRelease = null;
+
+        if (dragged)
+        {
+            // The selection was only the hold that lifted the row.
+            if (_selectedByHold)
+                Vm?.ExitSelectionMode();
+        }
+        else if (toggle is not null)
+        {
+            ToggleSelectionSafely(toggle);
+        }
+
+        _selectedByHold = false;
     }
 
     private void ToggleSelectionSafely(ThreadItem thread)
@@ -646,7 +714,16 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             return;
         }
 
-        var thread = FindThread(threadId) ?? CreateNewThreadItem(threadId, new ComposeRecipient(address, null, null));
+        // A contact's "message" button hands over only the number. With no conversation yet the inbox has no name
+        // for it, so it is looked up; PhoneLookup matches however the number is written in the address book.
+        var thread = FindThread(threadId);
+        if (thread is null)
+        {
+            var context = Platform.AppContext;
+            var name = await Task.Run(() => ConversationReader.ReadContactName(context, address));
+            thread = CreateNewThreadItem(threadId, new ComposeRecipient(address, name, null));
+        }
+
         await OpenThreadWithTextAsync(thread, text);
     }
 
@@ -811,12 +888,49 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         await Vm.ArchiveSelectedThreadsAsync();
     }
 
-    private void OnThreeDotsTapped(object? sender, TappedEventArgs e) =>
+    private void OnThreeDotsTapped(object? sender, TappedEventArgs e)
+    {
+        PinItem.IsVisible = Vm?.AnySelectedNotPinned ?? false;
+        UnpinItem.IsVisible = Vm?.AnySelectedPinned ?? false;
+        // Only what would change something: "mark as read" for a chat that is read already does nothing.
+        MarkReadItem.IsVisible = Vm?.AnySelectedUnread ?? false;
+        MarkUnreadItem.IsVisible = Vm?.AnySelectedRead ?? false;
         SelectBoxOverlay.IsVisible = !SelectBoxOverlay.IsVisible;
+    }
 
     private void OnCloseSelectBoxTapped(object? sender, TappedEventArgs e) => SelectBoxOverlay.IsVisible = false;
 
     private void OnSelectBoxTapEater(object? sender, TappedEventArgs e) => e.Handled = true;
+
+    private async void OnPinTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.PinSelectedAsync();
+    }
+
+    private async void OnUnpinTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.UnpinSelectedAsync();
+    }
+
+    private async void OnMarkAsReadTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.MarkSelectedAsReadAsync();
+    }
 
     private async void OnMarkAsUnreadTapped(object? sender, TappedEventArgs e)
     {
@@ -826,6 +940,102 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             return;
 
         await Vm.MarkSelectedAsUnreadAsync();
+    }
+
+    // ---- Folders --------------------------------------------------------------------------------
+
+    // Releasing a finger that held a tab also reports a tap, which would open the folder just offered a menu.
+    private bool _folderHoldFired;
+
+    private void OnFolderPillPressed(object? sender, PointerPressedEventArgs e) => _folderHoldFired = false;
+
+    private void OnFolderPillTapped(object? sender, TappedEventArgs e)
+    {
+        if (_folderHoldFired || (sender as Control)?.DataContext is not FolderPill pill)
+            return;
+
+        FolderScroll.Reveal((Control)sender!);
+        Vm?.SelectFolder(pill.Id);
+    }
+
+    private FolderPill? _menuPill;
+
+    // A long press on a tab opens its menu under the tabs; the actions that change many rows ask first.
+    private void OnFolderPillHolding(object? sender, HoldingRoutedEventArgs e)
+    {
+        if (e.HoldingState != HoldingState.Started || Vm is null || (sender as Control)?.DataContext is not FolderPill pill)
+            return;
+
+        _folderHoldFired = true;
+        e.Handled = true;
+
+        var folder = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>()?.Find(pill.Id);
+        _menuPill = pill;
+        FolderMenuTitle.Text = pill.Title;
+        FolderRenameItem.IsVisible = folder is { IsSmart: false };
+        FolderDeleteItem.IsVisible = folder is not null;
+        FolderMenuOverlay.IsVisible = true;
+    }
+
+    private void OnCloseFolderMenuTapped(object? sender, TappedEventArgs e) => FolderMenuOverlay.IsVisible = false;
+
+    private async void OnFolderMarkReadTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        FolderMenuOverlay.IsVisible = false;
+        if (Vm is not { } vm || _menuPill is not { } pill)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        if (await Dialogs.AlertAsync(loc["Folder_MarkReadTitle"], string.Format(loc["Folder_MarkReadMessage"], pill.Title), loc["Folder_MarkRead"], loc["Chat_Cancel"]))
+            vm.MarkFolderRead(pill.Id);
+    }
+
+    private async void OnFolderRenameTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        FolderMenuOverlay.IsVisible = false;
+        var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        if (_menuPill is not { } pill || store?.Find(pill.Id) is not { IsSmart: false } folder)
+            return;
+
+        if (await FolderDialogs.AskNameAsync(LocalizationManager.Instance["Folder_Rename"], folder.Name) is { } name)
+            store.Update(folder.Id, name, folder.IconKey);
+    }
+
+    private async void OnFolderDeleteTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        FolderMenuOverlay.IsVisible = false;
+        var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        if (_menuPill is not { } pill || store?.Find(pill.Id) is not { } folder)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        if (await Dialogs.AlertAsync(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], loc["Folder_Delete"], loc["Chat_Cancel"], danger: true))
+            store.Remove(folder.Id);
+    }
+
+    private void OnFolderSwitched()
+    {
+        _threadsScroll?.ScrollToHome();
+        ThreadsList.Opacity = 1;
+    }
+
+    // The tabs scroll sideways on their own: a drag that starts on them must not open the archive.
+    public bool CanSwipeFrom(Visual? source) =>
+        source is null || !FolderScroll.IsVisible || (!ReferenceEquals(source, FolderScroll) && !FolderScroll.IsVisualAncestorOf(source));
+
+    private async void OnAddToFolderTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        SelectBoxOverlay.IsVisible = false;
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        var ids = Vm.SelectedThreads.Select(t => t.ThreadId).ToList();
+        await FolderDialogs.PickFoldersAsync(ids);
+        Vm.ExitSelectionMode();
     }
 
     // ---- Chat -----------------------------------------------------------------------------------
@@ -973,6 +1183,26 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Open profile failed: {ex}");
+        }
+    }
+
+    // A contact under a number selected in the chat: their conversation takes the place of this one.
+    private async void OnChatConversationRequested(string number)
+    {
+        try
+        {
+            if (_animating || IsChatClosed)
+                return;
+
+            if (ChatOverlay.Vm?.Thread is { } open && PhoneNumberNormalizer.ToContactKey(number) == PhoneNumberNormalizer.ToLookupKey(open.Phone))
+                return;
+
+            await CloseChatAsync();
+            await OpenConversationAsync(number, null);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Opening a selected contact's conversation failed: {ex}");
         }
     }
 
@@ -1419,7 +1649,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         get
         {
-            if (_animating || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || Vm?.IsSelectionMode == true
+            if (_animating || _reorder.IsBusy || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || FolderMenuOverlay.IsVisible || Vm?.IsSelectionMode == true
                 || IsDefaultAppGateShown)
                 return 0;
 
@@ -1556,17 +1786,15 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         await SettleArchiveAsync(false, 1, 0);
     }
 
-    /// <summary>The Messages tab was tapped while shown: the inbox goes to its top; with something open over it, that closes.</summary>
-    public void OnTabReselected()
-    {
-        if (_animating)
-            return;
+    private void OnSpamButtonTapped(object? sender, TappedEventArgs e) => Ui.MainView.Current?.ShowSpam();
 
-        if (IsChatClosed && IsSearchClosed && IsComposeClosed && IsProfileClosed && !_archiveOpen)
-            Ui.ScrollAnimator.ToTop(_threadsScroll);
-        else
-            HandleBack();
-    }
+    private void OnSettingsButtonTapped(object? sender, TappedEventArgs e) => Ui.MainView.Current?.ShowSettings();
+
+    /// <summary>The dot on the settings button: an update is waiting.</summary>
+    public void SetSettingsBadge(bool visible) => SettingsBadge.IsVisible = visible;
+
+    /// <summary>The yellow dot on the scissors: spam came in since the Spam page was last open.</summary>
+    public void SetSpamBadge(bool visible) => SpamBadge.IsVisible = visible;
 
     // ---- Back -----------------------------------------------------------------------------------
 

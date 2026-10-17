@@ -49,7 +49,8 @@
                                         CornerRadius="16"
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
-                            <TextBlock Text="{Binding Body}"
+                            <TextBlock Classes="body" Text="{Binding Body}"
+                                       FontFamily="{x:Static app:AppFonts.Message}"
                                        FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
@@ -131,7 +132,7 @@
                                         CornerRadius="16"
                                         Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
-                            <TextBlock FontSize="{StaticResource ChatBodySize}"
+                            <TextBlock Classes="body" FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
                                        c:RichText.LinkBrush="{StaticResource AccentTextBrush}"
@@ -154,6 +155,34 @@
                                        VerticalAlignment="Center" />
                         </Border>
                     </Panel>
+
+                    <!-- A code that just arrived: one tap copies it. Only on new messages (see ChatViewModel). -->
+                    <Border Tag="copycode"
+                            IsVisible="{Binding ShowCopyCode}"
+                            Padding="12,7"
+                            CornerRadius="16"
+                            Background="{theme:AccentBrush Role=Soft}"
+                            HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="6" IsHitTestVisible="False">
+                            <ui:Icon IsVisible="{Binding ShowCopyIcon}"
+                                     Data="{StaticResource Icon.Copy}"
+                                     Width="14"
+                                     Height="14"
+                                     Foreground="{theme:AccentBrush Role=Text}"
+                                     VerticalAlignment="Center" />
+                            <ui:Icon IsVisible="{Binding CodeCopied}"
+                                     Data="{StaticResource Icon.Check}"
+                                     Width="14"
+                                     Height="14"
+                                     Foreground="{theme:AccentBrush Role=Text}"
+                                     VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding CopyCodeText}"
+                                       FontSize="12.5"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:AccentBrush Role=Text}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
 
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Time}"
@@ -214,7 +243,8 @@
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
-                                <TextBlock Text="{Binding Body}"
+                                <TextBlock Classes="body" Text="{Binding Body}"
+                                           FontFamily="{x:Static app:AppFonts.Message}"
                                            FontSize="{StaticResource ChatBodySize}"
                                            TextWrapping="Wrap"
                                            Foreground="White" />
@@ -272,14 +302,14 @@
                                 Spacing="5"
                                 HorizontalAlignment="Right"
                                 Background="Transparent"
-                                IsVisible="{Binding HasFailed}">
+                                IsVisible="{Binding HasRetry}">
                         <ui:Icon Data="{StaticResource Icon.Failed}"
                                  Width="14" Height="14"
-                                 Foreground="{StaticResource DangerBrush}"
+                                 Foreground="{Binding RetryBrush}"
                                  VerticalAlignment="Center" />
-                        <TextBlock Text="{loc:Translate Chat_NotDelivered}"
+                        <TextBlock Text="{Binding RetryText}"
                                    FontSize="12"
-                                   Foreground="{StaticResource DangerBrush}"
+                                   Foreground="{Binding RetryBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </StackPanel>
@@ -320,7 +350,7 @@
                                         Background="{StaticResource PrimaryBrush}"
                                         HorizontalAlignment="Right">
                             <StackPanel Spacing="2">
-                                <TextBlock FontSize="{StaticResource ChatBodySize}"
+                                <TextBlock Classes="body" FontSize="{StaticResource ChatBodySize}"
                                            TextWrapping="Wrap"
                                            Foreground="White"
                                            c:RichText.LinkBrush="{theme:AccentBrush Role=OnSolidBright}"
@@ -379,14 +409,14 @@
                                 Spacing="5"
                                 HorizontalAlignment="Right"
                                 Background="Transparent"
-                                IsVisible="{Binding HasFailed}">
+                                IsVisible="{Binding HasRetry}">
                         <ui:Icon Data="{StaticResource Icon.Failed}"
                                  Width="14" Height="14"
-                                 Foreground="{StaticResource DangerBrush}"
+                                 Foreground="{Binding RetryBrush}"
                                  VerticalAlignment="Center" />
-                        <TextBlock Text="{loc:Translate Chat_NotDelivered}"
+                        <TextBlock Text="{Binding RetryText}"
                                    FontSize="12"
-                                   Foreground="{StaticResource DangerBrush}"
+                                   Foreground="{Binding RetryBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </StackPanel>
@@ -715,6 +745,26 @@
                     </c:ChatList.ItemsPanel>
                 </c:ChatList>
 
+                <!--
+                    Part of a message selected (double tap): a read-only box laid over the bubble's text, with the same
+                    letters in the same places. It draws only the selection and its handles; the text seen under them
+                    is still the bubble's own, links and numbers included. Placed in code (ChatView.Selection.cs).
+                    No SelectionForegroundBrush: the text is transparent already, and a selection foreground splits the
+                    text into runs, which makes the handles' hit test throw on a Latin word in right-to-left text.
+                -->
+                <Canvas x:Name="SelectionLayer" ClipToBounds="True" Focusable="True">
+                    <TextBox x:Name="SelectionBox"
+                             Classes="plain"
+                             IsVisible="False"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalContentAlignment="Top"
+                             Foreground="Transparent"
+                             CaretBrush="Transparent"
+                             SelectionForegroundBrush="{x:Null}" />
+                </Canvas>
+
                 <Border Margin="0,8,0,0"
                         Padding="12,4"
                         CornerRadius="11"
@@ -777,9 +827,63 @@
             </Grid>
 
             <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode); for a blocked sender, the way to unblock -->
-            <Grid Grid.Row="2"
-                  IsVisible="{Binding IsInputBarVisible}"
-                  Margin="10,8,10,12">
+            <StackPanel Grid.Row="2"
+                        IsVisible="{Binding IsInputBarVisible}"
+                        Margin="10,8,10,12"
+                        Spacing="6">
+                <!-- A message held by the send delay: it goes out when the count ends, and Undo takes it back -->
+                <Border IsVisible="{Binding Pending.HasDelayed}"
+                        Padding="16,8,8,8"
+                        CornerRadius="18"
+                        Background="{theme:AccentBrush Role=Soft}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Pending.DelayText}"
+                                       FontSize="13"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:AccentBrush Role=Text}" />
+                            <TextBlock Text="{Binding Pending.DelayPreview}"
+                                       FontSize="12"
+                                       Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="1" />
+                        </StackPanel>
+                        <Border Grid.Column="1"
+                                Padding="14,8"
+                                CornerRadius="14"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                Tapped="OnUndoSendTapped">
+                            <TextBlock Text="{loc:Translate Chat_Undo}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:AccentBrush Role=Text}" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <!-- Messages scheduled for later: a tap lists them -->
+                <Border IsVisible="{Binding Pending.HasScheduled}"
+                        Padding="16,10"
+                        CornerRadius="18"
+                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                        Tapped="OnScheduledBarTapped">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <ui:Icon Data="{StaticResource Icon.Snooze}" Width="18" Height="18"
+                                 Foreground="{theme:AccentBrush Role=Text}"
+                                 VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Pending.ScheduledText}"
+                                   FontSize="13"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1"
+                                   VerticalAlignment="Center" />
+                        <ui:Icon Grid.Column="2" Data="{StaticResource Icon.ChevronRight}" Width="16" Height="16"
+                                 Foreground="#8A8F98"
+                                 VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+                <Grid>
                 <Border x:Name="BlockedBar"
                         IsVisible="False"
                         Padding="16,9"
@@ -797,6 +901,16 @@
                                    Foreground="#8A8F98"
                                    TextAlignment="Center" />
                     </StackPanel>
+                </Border>
+                <Border x:Name="NoReplyBar"
+                        IsVisible="False"
+                        Padding="16,12"
+                        CornerRadius="18"
+                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}">
+                    <TextBlock Text="{loc:Translate Chat_NoReply}"
+                               FontSize="13"
+                               Foreground="#8A8F98"
+                               TextAlignment="Center" />
                 </Border>
                 <Grid x:Name="Composer" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
                     <Border Grid.Column="0"
@@ -847,6 +961,8 @@
                             Background="{StaticResource PrimaryBrush}"
                             VerticalAlignment="Center"
                             AutomationProperties.Name="{loc:Translate Chat_Send}"
+                            PointerPressed="OnSendPressed"
+                            Holding="OnSendHolding"
                             Tapped="OnSend">
                         <ui:Icon Data="{StaticResource Icon.Send}"
                                  Margin="0,3,0,0"
@@ -856,7 +972,8 @@
                                  Foreground="White" />
                     </Border>
                 </Grid>
-            </Grid>
+                </Grid>
+            </StackPanel>
         </Grid>
 
         <!-- Header menu (three dots): a tap outside it closes it -->
@@ -988,6 +1105,7 @@
                         <StackPanel Spacing="3">
                             <!-- A long message shows its first lines only: the copy must stay inside its box and above the menu -->
                             <TextBlock x:Name="ElevatedBubbleBody"
+                                       FontFamily="{x:Static app:AppFonts.Message}"
                                        FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
                                        TextTrimming="CharacterEllipsis"

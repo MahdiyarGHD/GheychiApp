@@ -63,9 +63,6 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>Send</value>
   </data>
-  <data name="Chat_SimTitle" xml:space="preserve">
-    <value>Send via</value>
-  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -127,13 +124,13 @@
     <value>Delete message?</value>
   </data>
   <data name="Chat_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>This message will be permanently deleted from your phone.</value>
+    <value>This message will be moved to the Trash, where it is kept for 30 days.</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>Delete {0} messages?</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>These messages will be permanently deleted from your phone.</value>
+    <value>These messages will be moved to the Trash, where they are kept for 30 days.</value>
   </data>
   <data name="Chat_DeleteConfirmButton" xml:space="preserve">
     <value>Delete</value>
@@ -258,6 +255,12 @@
   <data name="Messages_MarkAsUnread" xml:space="preserve">
     <value>Mark as unread</value>
   </data>
+  <data name="Messages_Pin" xml:space="preserve">
+    <value>Pin</value>
+  </data>
+  <data name="Messages_Unpin" xml:space="preserve">
+    <value>Unpin</value>
+  </data>
   <data name="Messages_MarkAsRead" xml:space="preserve">
     <value>Mark as read</value>
   </data>
@@ -265,13 +268,13 @@
     <value>Delete conversation?</value>
   </data>
   <data name="Messages_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>This conversation will be permanently deleted from your phone.</value>
+    <value>This conversation will be moved to the Trash, where it is kept for 30 days.</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>Delete {0} conversations?</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>These conversations will be permanently deleted from your phone.</value>
+    <value>These conversations will be moved to the Trash, where they are kept for 30 days.</value>
   </data>
   <data name="Search_MessagesNumbers" xml:space="preserve">
     <value>Search messages, numbers...</value>
@@ -634,7 +637,28 @@
     <value>{0} this week</value>
   </data>
   <data name="Settings_SectionProtection" xml:space="preserve">
-    <value>Protection &amp; messaging</value>
+    <value>Protection</value>
+  </data>
+  <data name="Settings_SectionMessaging" xml:space="preserve">
+    <value>Messaging</value>
+  </data>
+  <data name="Settings_Codes" xml:space="preserve">
+    <value>Verification codes</value>
+  </data>
+  <data name="Settings_CodesHint" xml:space="preserve">
+    <value>Copy buttons and auto-copy</value>
+  </data>
+  <data name="Settings_CodesCardTitle" xml:space="preserve">
+    <value>Codes made easy</value>
+  </data>
+  <data name="Settings_CodesCardText" xml:space="preserve">
+    <value>A code in a new message is shown in bold, with a Copy code button under it. The notification has the same button.</value>
+  </data>
+  <data name="Settings_SectionAutoCopy" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicNote" xml:space="preserve">
+    <value>Only for a bank's dynamic password. Any other code is copied only when you tap Copy code.</value>
   </data>
   <data name="Settings_SectionPersonal" xml:space="preserve">
     <value>Personalization</value>
@@ -1062,6 +1086,261 @@
   <data name="Chat_Unblock" xml:space="preserve">
     <value>Unblock sender</value>
   </data>
+  <data name="Chat_NoReply" xml:space="preserve">
+    <value>This sender doesn't accept replies</value>
+  </data>
+  <data name="Chat_SendingIn" xml:space="preserve">
+    <value>Sending in {0}s</value>
+  </data>
+  <data name="Chat_Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Chat_ScheduledBar" xml:space="preserve">
+    <value>{0} scheduled · next {1}</value>
+  </data>
+  <data name="Chat_ScheduleTitle" xml:space="preserve">
+    <value>Send later</value>
+  </data>
+  <data name="Schedule_OneHour" xml:space="preserve">
+    <value>In an hour</value>
+  </data>
+  <data name="Schedule_ThisEvening" xml:space="preserve">
+    <value>This evening</value>
+  </data>
+  <data name="Schedule_TomorrowMorning" xml:space="preserve">
+    <value>Tomorrow morning</value>
+  </data>
+  <data name="Schedule_TomorrowEvening" xml:space="preserve">
+    <value>Tomorrow evening</value>
+  </data>
+  <data name="Schedule_Custom" xml:space="preserve">
+    <value>Pick date and time…</value>
+  </data>
+  <data name="Chat_Scheduled" xml:space="preserve">
+    <value>Scheduled for {0}</value>
+  </data>
+  <data name="Chat_ScheduledInexact" xml:space="preserve">
+    <value>Scheduled for {0}; it may go out a few minutes late</value>
+  </data>
+  <data name="Chat_ScheduleEmpty" xml:space="preserve">
+    <value>Type a message first</value>
+  </data>
+  <data name="Chat_ScheduleTooSoon" xml:space="preserve">
+    <value>Pick a time at least a minute ahead</value>
+  </data>
+  <data name="Chat_ScheduledTitle" xml:space="preserve">
+    <value>Scheduled messages</value>
+  </data>
+  <data name="Chat_ScheduledSendNow" xml:space="preserve">
+    <value>Send now</value>
+  </data>
+  <data name="Chat_ScheduledChangeTime" xml:space="preserve">
+    <value>Change time</value>
+  </data>
+  <data name="Chat_ScheduledDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Chat_ExactAlarmTitle" xml:space="preserve">
+    <value>Send at the exact minute?</value>
+  </data>
+  <data name="Chat_ExactAlarmMessage" xml:space="preserve">
+    <value>Android may delay scheduled messages by a few minutes unless you allow Alarms &amp; reminders for this app.</value>
+  </data>
+  <data name="Chat_ExactAlarmOpen" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="Chat_ExactAlarmLater" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="Settings_Sending" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="Settings_SendingHint" xml:space="preserve">
+    <value>Send delay, scheduled messages</value>
+  </data>
+  <data name="Settings_SendDelay" xml:space="preserve">
+    <value>Send delay</value>
+  </data>
+  <data name="Settings_SendDelayHint" xml:space="preserve">
+    <value>Hold a message for a few seconds so you can undo it</value>
+  </data>
+  <data name="Settings_SendDelayOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_SendDelayValue" xml:space="preserve">
+    <value>{0} s</value>
+  </data>
+  <data name="Settings_ScheduleHint" xml:space="preserve">
+    <value>Long-press the send button to schedule a message</value>
+  </data>
+  <data name="Settings_ExactAlarms" xml:space="preserve">
+    <value>Exact timing</value>
+  </data>
+  <data name="Settings_ExactAlarmsOn" xml:space="preserve">
+    <value>Scheduled messages go out at the minute you chose</value>
+  </data>
+  <data name="Settings_ExactAlarmsOff" xml:space="preserve">
+    <value>Allow alarms so messages go out on time. Tap to allow</value>
+  </data>
+  <data name="Folder_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Folder_Smart_Unread" xml:space="preserve">
+    <value>Unread</value>
+  </data>
+  <data name="Folder_Smart_Contacts" xml:space="preserve">
+    <value>Contacts</value>
+  </data>
+  <data name="Folder_Smart_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Folder_Smart_Senders" xml:space="preserve">
+    <value>Senders</value>
+  </data>
+  <data name="Folder_Smart_Codes" xml:space="preserve">
+    <value>Codes</value>
+  </data>
+  <data name="Folder_Smart_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Folder_Smart_Drafts" xml:space="preserve">
+    <value>Drafts</value>
+  </data>
+  <data name="Folder_Smart_Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="Folder_SmartHint_Unread" xml:space="preserve">
+    <value>Conversations you have not read</value>
+  </data>
+  <data name="Folder_SmartHint_Contacts" xml:space="preserve">
+    <value>People in your contacts</value>
+  </data>
+  <data name="Folder_SmartHint_Unknown" xml:space="preserve">
+    <value>Numbers that are not in your contacts</value>
+  </data>
+  <data name="Folder_SmartHint_Senders" xml:space="preserve">
+    <value>Banks, operators and services that write under a name</value>
+  </data>
+  <data name="Folder_SmartHint_Codes" xml:space="preserve">
+    <value>Conversations whose last message has a code</value>
+  </data>
+  <data name="Folder_SmartHint_Failed" xml:space="preserve">
+    <value>Messages that could not be sent</value>
+  </data>
+  <data name="Folder_SmartHint_Drafts" xml:space="preserve">
+    <value>Messages you started and did not send</value>
+  </data>
+  <data name="Folder_SmartHint_Pinned" xml:space="preserve">
+    <value>Your pinned conversations</value>
+  </data>
+  <data name="Folder_Empty" xml:space="preserve">
+    <value>No conversations in this folder</value>
+  </data>
+  <data name="Folder_AddTo" xml:space="preserve">
+    <value>Add to folder</value>
+  </data>
+  <data name="Folder_New" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="Folder_NameHint" xml:space="preserve">
+    <value>Folder name</value>
+  </data>
+  <data name="Folder_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Folder_MarkRead" xml:space="preserve">
+    <value>Mark all as read</value>
+  </data>
+  <data name="Folder_Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Folder_Delete" xml:space="preserve">
+    <value>Delete folder</value>
+  </data>
+  <data name="Folder_DeleteTitle" xml:space="preserve">
+    <value>Delete this folder?</value>
+  </data>
+  <data name="Folder_DeleteMessage" xml:space="preserve">
+    <value>The conversations in it are not deleted.</value>
+  </data>
+  <data name="Settings_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Settings_FoldersHint" xml:space="preserve">
+    <value>Tabs for your inbox</value>
+  </data>
+  <data name="Folder_SectionYours" xml:space="preserve">
+    <value>Your folders</value>
+  </data>
+  <data name="Folder_SectionSmart" xml:space="preserve">
+    <value>Smart folders</value>
+  </data>
+  <data name="Folder_SectionOptions" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Folder_NoneYet" xml:space="preserve">
+    <value>No folders yet. Make one to sort your inbox.</value>
+  </data>
+  <data name="Folder_Conversations" xml:space="preserve">
+    <value>{0} conversations</value>
+  </data>
+  <data name="Folder_OptBar" xml:space="preserve">
+    <value>Show folder tabs</value>
+  </data>
+  <data name="Folder_OptBarHint" xml:space="preserve">
+    <value>Hide them without deleting the folders</value>
+  </data>
+  <data name="Folder_OptCounts" xml:space="preserve">
+    <value>Unread counts</value>
+  </data>
+  <data name="Folder_OptCountsHint" xml:space="preserve">
+    <value>Show the number on each tab</value>
+  </data>
+  <data name="Folder_OptRemember" xml:space="preserve">
+    <value>Remember the last folder</value>
+  </data>
+  <data name="Folder_OptRememberHint" xml:space="preserve">
+    <value>Open the inbox on the folder you left it on</value>
+  </data>
+  <data name="Folder_EditTitle" xml:space="preserve">
+    <value>Edit folder</value>
+  </data>
+  <data name="Folder_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Folder_Icon" xml:space="preserve">
+    <value>Icon</value>
+  </data>
+  <data name="Folder_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Folder_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Folder_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Folder_ProfileNone" xml:space="preserve">
+    <value>Not in a folder</value>
+  </data>
+  <data name="Folder_NameRequired" xml:space="preserve">
+    <value>Give the folder a name</value>
+  </data>
+  <data name="Folder_MarkReadTitle" xml:space="preserve">
+    <value>Mark all as read?</value>
+  </data>
+  <data name="Folder_MarkReadMessage" xml:space="preserve">
+    <value>Every conversation in {0} will be marked as read.</value>
+  </data>
+  <data name="Picker_DateTitle" xml:space="preserve">
+    <value>Pick a day</value>
+  </data>
+  <data name="Picker_TimeTitle" xml:space="preserve">
+    <value>Pick a time</value>
+  </data>
+  <data name="Picker_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>You blocked this sender, so their messages are dropped</value>
   </data>
@@ -1128,6 +1407,9 @@
   <data name="Accent_Amber" xml:space="preserve">
     <value>Amber</value>
   </data>
+  <data name="Accent_System" xml:space="preserve">
+    <value>System (Material You)</value>
+  </data>
   <data name="Accent_Graphite" xml:space="preserve">
     <value>Graphite</value>
   </data>
@@ -1152,6 +1434,33 @@
   <data name="Chat_LinkOpenFailed" xml:space="preserve">
     <value>No app can open this link.</value>
   </data>
+  <data name="Chat_CopyCode" xml:space="preserve">
+    <value>Copy code</value>
+  </data>
+  <data name="Chat_CopyDynamicPassword" xml:space="preserve">
+    <value>Copy password</value>
+  </data>
+  <data name="Chat_CodeCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Notification_CopyCode" xml:space="preserve">
+    <value>Copy code</value>
+  </data>
+  <data name="Notification_CopyDynamicPassword" xml:space="preserve">
+    <value>Copy password</value>
+  </data>
+  <data name="Notification_CodeCopied" xml:space="preserve">
+    <value>Code copied</value>
+  </data>
+  <data name="Notification_CodeLabel" xml:space="preserve">
+    <value>Verification code</value>
+  </data>
+  <data name="Settings_AutoCopyDynamic" xml:space="preserve">
+    <value>Copy dynamic passwords</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicHint" xml:space="preserve">
+    <value>Copies a bank's dynamic password the moment its message arrives.</value>
+  </data>
   <data name="Chat_Copy" xml:space="preserve">
     <value>Copy</value>
   </data>
@@ -1169,5 +1478,107 @@
   </data>
   <data name="Share_Empty" xml:space="preserve">
     <value>No conversations yet. Type a number above to start one.</value>
+  </data>
+  <data name="Chat_Unconfirmed" xml:space="preserve">
+    <value>Not confirmed · Send again</value>
+  </data>
+  <data name="Chat_InfoUnconfirmed" xml:space="preserve">
+    <value>Not confirmed</value>
+  </data>
+  <data name="Chat_ResendTitle" xml:space="preserve">
+    <value>Send again?</value>
+  </data>
+  <data name="Chat_ResendUnconfirmedMessage" xml:space="preserve">
+    <value>The phone never confirmed whether this message went out. It may already have been delivered, and sending it again could deliver it twice.</value>
+  </data>
+  <data name="Chat_ResendButton" xml:space="preserve">
+    <value>Send again</value>
+  </data>
+  <data name="Chat_StillSendingTitle" xml:space="preserve">
+    <value>Still sending</value>
+  </data>
+  <data name="Chat_StillSendingMessage" xml:space="preserve">
+    <value>The same message is still being sent. Sending it again could deliver it twice.</value>
+  </data>
+  <data name="Chat_SendAnyway" xml:space="preserve">
+    <value>Send anyway</value>
+  </data>
+  <data name="Chat_OpenConversation" xml:space="preserve">
+    <value>Open conversation</value>
+  </data>
+  <data name="Settings_DeliveryReports" xml:space="preserve">
+    <value>Delivery reports</value>
+  </data>
+  <data name="Settings_DeliveryReportsHint" xml:space="preserve">
+    <value>Notify when a message you sent is delivered, or the carrier gives up on it</value>
+  </data>
+  <data name="Notification_ChannelDelivery" xml:space="preserve">
+    <value>Delivery reports</value>
+  </data>
+  <data name="Notification_ChannelDeliveryDescription" xml:space="preserve">
+    <value>Whether the messages you sent reached the phone</value>
+  </data>
+  <data name="Notification_DeliveredTo" xml:space="preserve">
+    <value>Delivered to {0}</value>
+  </data>
+  <data name="Notification_NotDeliveredTo" xml:space="preserve">
+    <value>Not delivered to {0}</value>
+  </data>
+  <data name="Notification_DeliveredHidden" xml:space="preserve">
+    <value>Message delivered</value>
+  </data>
+  <data name="Notification_NotDeliveredHidden" xml:space="preserve">
+    <value>Message not delivered</value>
+  </data>
+  <data name="Inbox_DraftPreview" xml:space="preserve">
+    <value>Draft: {0}</value>
+  </data>
+  <data name="Settings_Trash" xml:space="preserve">
+    <value>Trash</value>
+  </data>
+  <data name="Settings_TrashHint" xml:space="preserve">
+    <value>Restore deleted messages</value>
+  </data>
+  <data name="Trash_Note" xml:space="preserve">
+    <value>Deleted messages stay here for {0} days, then are erased for good.</value>
+  </data>
+  <data name="Trash_Empty" xml:space="preserve">
+    <value>The trash is empty.</value>
+  </data>
+  <data name="Trash_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="Trash_DeleteForever" xml:space="preserve">
+    <value>Delete for good</value>
+  </data>
+  <data name="Trash_EmptyAll" xml:space="preserve">
+    <value>Empty trash</value>
+  </data>
+  <data name="Trash_EmptyAllTitle" xml:space="preserve">
+    <value>Empty the trash?</value>
+  </data>
+  <data name="Trash_EmptyAllMessage" xml:space="preserve">
+    <value>Everything in it will be erased for good.</value>
+  </data>
+  <data name="Trash_EmptyAllButton" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="Trash_DeleteForeverTitle" xml:space="preserve">
+    <value>Delete for good?</value>
+  </data>
+  <data name="Trash_DeleteForeverMessage" xml:space="preserve">
+    <value>This cannot be undone.</value>
+  </data>
+  <data name="Trash_MessageCount" xml:space="preserve">
+    <value>{0} messages</value>
+  </data>
+  <data name="Trash_DaysLeft" xml:space="preserve">
+    <value>{0} days left</value>
+  </data>
+  <data name="Trash_Restored" xml:space="preserve">
+    <value>Restored</value>
+  </data>
+  <data name="Trash_RestoreFailed" xml:space="preserve">
+    <value>Could not restore. Is Gheychi the default SMS app?</value>
   </data>
 </root>

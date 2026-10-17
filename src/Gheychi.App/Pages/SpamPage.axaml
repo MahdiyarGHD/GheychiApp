@@ -12,15 +12,18 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*">
 
         <!-- App header -->
-        <Grid x:Name="AppHeader" Grid.Row="0" Margin="22,10,10,12" ColumnDefinitions="*,Auto,Auto">
-            <TextBlock Grid.Column="0"
-                       Text="Gheychi"
-                       ui:TextDirection.KeepSide="True"
-                       FontSize="22"
-                       FontFamily="{x:Static app:AppFonts.Bold}"
-                       Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
-                       VerticalAlignment="Center" />
-            <Border Grid.Column="1"
+        <Grid x:Name="AppHeader" Grid.Row="0" Margin="10,10,10,12" ColumnDefinitions="Auto,*,Auto,Auto">
+            <Border Grid.Column="0"
+                    Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    Background="Transparent"
+                    VerticalAlignment="Center"
+                    Tapped="OnBackToInboxTapped"
+                    AutomationProperties.Name="{loc:Translate Tab_Messages}">
+                <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+            </Border>
+            <Border Grid.Column="2"
                     Width="40"
                     Height="40"
                     CornerRadius="20"
@@ -30,7 +33,7 @@
                     AutomationProperties.Name="{loc:Translate Tab_Settings}">
                 <ui:Icon Data="{StaticResource Icon.TabSettings}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
             </Border>
-            <Border Grid.Column="2"
+            <Border Grid.Column="3"
                     Width="40"
                     Height="40"
                     CornerRadius="20"

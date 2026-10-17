@@ -320,6 +320,22 @@
                             </Border>
                             <Border Classes="divider" />
 
+                            <Border Classes="row" Tapped="OnFoldersTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Grid.Column="0" Classes="rowBadge">
+                                        <ui:Icon Data="{StaticResource Icon.FolderGeneral}" Width="20" Height="20"
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Classes="rowTitle" Text="{loc:Translate Settings_Folders}" />
+                                        <TextBlock x:Name="FoldersHint" Classes="rowSubtitle" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="2" Data="{StaticResource Icon.ChevronRight}" Width="20" Height="20"
+                                             Foreground="#8A8F98" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" />
+
                             <Border Classes="row" Tapped="OnSnoozeTapped">
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                     <Border Grid.Column="0" Classes="rowBadge">

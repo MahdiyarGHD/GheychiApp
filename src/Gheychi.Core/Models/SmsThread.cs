@@ -9,5 +9,6 @@ public sealed record SmsThread(
     int TotalCount,
     int UnreadCount,
     bool HasFailed,
-    int SubId
+    int SubId,
+    bool HasDraft = false
 );

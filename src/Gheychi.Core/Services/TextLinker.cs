@@ -5,22 +5,32 @@ namespace Gheychi.Core.Services;
 public enum LinkKind
 {
     Url,
-    Phone
+    Phone,
+    /// <summary>A USSD code ("*815*3453#"): a tap opens the dialer with it filled in.</summary>
+    Ussd,
+    /// <summary>A one-time code ("Your code is 482913"): a tap offers to copy it.</summary>
+    Code,
+    /// <summary>Any other number worth the eye (an amount, a balance, a count): shown bold, nothing to tap.</summary>
+    Number
 }
 
-/// <summary>A link or a phone number inside a message: where it is in the text, and what it is.</summary>
+/// <summary>A link, a phone number, a USSD code or a one-time code inside a message: where it is in the text, and what it is.</summary>
 public readonly record struct LinkSpan(int Start, int Length, LinkKind Kind)
 {
     public int End => Start + Length;
 }
 
-/// <summary>Finds the links and the phone numbers in a message, so they can be shown highlighted and be tapped.</summary>
+/// <summary>Finds the links, phone numbers, USSD codes and one-time codes in a message, so they can be shown highlighted and be tapped.</summary>
 public static partial class TextLinker
 {
     private const int MinPhoneDigits = 8;
     private const int MinPlainPhoneDigits = 10;
     private const int MaxPhoneDigits = 15;
     private const int MaxDigitsInOneGroup = 5;
+    private const int MaxUssdLength = 32;
+    private const int MinCodeDigits = 4;
+    private const int MinNumberDigits = 3;
+    private const int MaxNumbers = 40;
 
     private const string TrailingPunctuation = ".,;:!?'\"»›«‹…،؛؟";
 
@@ -33,8 +43,13 @@ public static partial class TextLinker
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex BareUrlRegex();
 
-    [GeneratedRegex(@"^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$|^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}$")]
-    private static partial Regex DateRegex();
+    // "*100#", "*815*3453#", "*#06#": stars, digits and hashes, set apart from the words around it, ending in a hash.
+    [GeneratedRegex(@"(?<![\w*#])(?=[*#]*\d)[*#][\d*#]{1,31}#(?!\w)", RegexOptions.CultureInvariant)]
+    private static partial Regex UssdRegex();
+
+    // An amount or a count as written: digits, in groups of thousands or with decimals. Not part of a word, a date, a time or a range.
+    [GeneratedRegex(@"(?<![\w.,٬٫/:+*#\-])(?:\d{4,6}(?:[ \-]?[*•]+)+[ \-]?\d{4}|\d{4}(?:[ \-]\d{4}){3}(?![\w.,٬٫]\d)|\d+(?:[,٬٫.]\d+)*)(?![A-Za-z0-9_])", RegexOptions.CultureInvariant)]
+    private static partial Regex NumberRegex();
 
     /// <returns>The links in order of appearance, or null when there are none (nearly every message).</returns>
     public static LinkSpan[]? Find(string? text)
@@ -56,7 +71,10 @@ public static partial class TextLinker
             }
         }
 
-        FindPhones(ref found, text);
+        FindUssd(ref found, text);
+        FindPhones(ref found, DateMask.Apply(text));
+        FindCodes(ref found, text);
+        FindNumbers(ref found, text);
 
         if (found is null)
             return null;
@@ -65,25 +83,52 @@ public static partial class TextLinker
         return found.ToArray();
     }
 
-    /// <summary>What a tap on the link opens: a web address with its scheme, or a number as digits (with a leading "+" if it had one).</summary>
+    /// <summary>
+    /// The one-time code of a message, the way the message's links were found: a number that is part of a link or a phone
+    /// number is never the code. Null when it has none.
+    /// </summary>
+    public static OtpCode? FindOtp(string? text, LinkSpan[]? links = null)
+    {
+        if (string.IsNullOrEmpty(text))
+            return null;
+
+        links ??= Find(text);
+        if (links is null || !Array.Exists(links, static span => span.Kind == LinkKind.Code))
+            return null;
+
+        return OtpDetector.Find(text, (start, length) =>
+        {
+            foreach (var span in links)
+            {
+                if (span.Kind is not (LinkKind.Code or LinkKind.Number) && start < span.End && span.Start < start + length)
+                    return true;
+            }
+
+            return false;
+        });
+    }
+
+    /// <summary>
+    /// What a tap on the link opens: a web address with its scheme, a number or code as Latin digits (with a leading
+    /// "+" if it had one), or a USSD code with its stars and hashes.
+    /// </summary>
     public static string Target(string text, LinkSpan span)
     {
         var shown = text.Substring(span.Start, span.Length);
         if (span.Kind == LinkKind.Url)
             return shown.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? shown : "https://" + shown;
 
-        var digits = new char[shown.Length + 1];
+        var target = new char[shown.Length];
         var length = 0;
-        if (shown.StartsWith('+'))
-            digits[length++] = '+';
-
         foreach (var c in shown)
         {
             if (char.IsDigit(c))
-                digits[length++] = (char)('0' + (int)char.GetNumericValue(c));
+                target[length++] = (char)('0' + (int)char.GetNumericValue(c));
+            else if (c == '*' || c == '#' || (c == '+' && length == 0))
+                target[length++] = c;
         }
 
-        return new string(digits, 0, length);
+        return new string(target, 0, length);
     }
 
     private static bool MayContainLink(string text)
@@ -91,10 +136,10 @@ public static partial class TextLinker
         var digits = 0;
         foreach (var c in text)
         {
-            if (c == '.' || c == '/')
+            if (c == '.' || c == '/' || c == '#')
                 return true;
 
-            if (char.IsDigit(c) && ++digits >= MinPhoneDigits)
+            if (char.IsDigit(c) && ++digits >= MinNumberDigits)
                 return true;
         }
 
@@ -209,6 +254,54 @@ public static partial class TextLinker
         return end;
     }
 
+    private static void FindUssd(ref List<LinkSpan>? found, string text)
+    {
+        if (!text.Contains('#'))
+            return;
+
+        foreach (Match match in UssdRegex().Matches(text))
+        {
+            if (match.Length <= MaxUssdLength && !Overlaps(found, match.Index, match.Length))
+                (found ??= []).Add(new LinkSpan(match.Index, match.Length, LinkKind.Ussd));
+        }
+    }
+
+    private static void FindCodes(ref List<LinkSpan>? found, string text)
+    {
+        // The detector gets the spans taken already, so that a code is never read out of a phone number or a link.
+        var taken = found;
+        foreach (var code in OtpDetector.FindAll(text, (start, length) => Overlaps(taken, start, length)))
+            (found ??= []).Add(new LinkSpan(code.Start, code.Length, LinkKind.Code));
+    }
+
+    private static void FindNumbers(ref List<LinkSpan>? found, string text)
+    {
+        // The dates are blanked first: "1405/07/29" is a date, not a number to stress.
+        var masked = DateMask.Apply(text);
+        var added = 0;
+        foreach (Match match in NumberRegex().Matches(masked))
+        {
+            if (CountDigits(match.ValueSpan) < MinNumberDigits || Overlaps(found, match.Index, match.Length))
+                continue;
+
+            (found ??= []).Add(new LinkSpan(match.Index, match.Length, LinkKind.Number));
+            if (++added == MaxNumbers)
+                return;
+        }
+    }
+
+    private static int CountDigits(ReadOnlySpan<char> text)
+    {
+        var digits = 0;
+        foreach (var c in text)
+        {
+            if (char.IsDigit(c))
+                digits++;
+        }
+
+        return digits;
+    }
+
     private static bool IsSeparator(char c) => c is ' ' or '-' or '.' or '(' or ')' or ' ';
 
     private static bool IsPhone(string text, int start, int end, int digits)
@@ -217,9 +310,6 @@ public static partial class TextLinker
             return false;
 
         var plus = text[start] == '+';
-        if (!(plus ? digits >= MinPhoneDigits : digits >= MinPlainPhoneDigits) || digits > MaxPhoneDigits)
-            return false;
-
-        return !DateRegex().IsMatch(text.AsSpan(start, end - start));
+        return (plus ? digits >= MinPhoneDigits : digits >= MinPlainPhoneDigits) && digits <= MaxPhoneDigits;
     }
 }

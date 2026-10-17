@@ -18,6 +18,8 @@ public interface ISmsService
     Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> MarkThreadAsUnreadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> DeleteThreadsAsync(IReadOnlyList<long> threadIds, CancellationToken cancellationToken = default);
+    /// <summary>Puts messages from the trash back into the SMS store as they were. Returns how many came back.</summary>
+    Task<int> RestoreMessagesAsync(IReadOnlyList<TrashedMessage> messages);
     Task<bool> DeleteMessagesAsync(IReadOnlyList<long> messageIds, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SimCardInfo>> GetActiveSimsAsync();
     Task<IReadOnlyDictionary<int, int>> GetSimSlotMapAsync();
@@ -25,6 +27,8 @@ public interface ISmsService
     Task<bool> IsDualSimAsync();
     /// <summary>Every phone number in the address book, sorted by name. Empty without contacts permission.</summary>
     Task<IReadOnlyList<ContactEntry>> GetContactsAsync(CancellationToken cancellationToken = default);
+    /// <summary>The address-book name of a number picked out of a message, matched the way the inbox names its senders; null when it is no contact's (see <see cref="PhoneNumberNormalizer.ToContactKey"/>).</summary>
+    Task<string?> FindContactNameAsync(string number);
     /// <summary>Id of the conversation with <paramref name="address"/>, created when there is none yet; 0 on failure.</summary>
     Task<long> GetOrCreateThreadIdAsync(string address);
     Task<IReadOnlyList<SearchResultChat>> SearchChatsAsync(SearchQuery query, CancellationToken cancellationToken = default);

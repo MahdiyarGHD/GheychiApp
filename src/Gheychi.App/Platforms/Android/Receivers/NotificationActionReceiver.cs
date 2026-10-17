@@ -18,6 +18,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
 {
     public const string ActionMarkRead = "com.evergreen.gheychiapp.NOTIFICATION_MARK_READ";
     public const string ActionReply = "com.evergreen.gheychiapp.NOTIFICATION_REPLY";
+    public const string ActionCopyCode = "com.evergreen.gheychiapp.NOTIFICATION_COPY_CODE";
 
     /// <summary>How long a reply waits for the radio before the notification is dismissed anyway; the send itself carries on.</summary>
     private static readonly TimeSpan ReplyWait = TimeSpan.FromSeconds(4);
@@ -38,6 +39,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
         var address = intent.GetStringExtra(NotificationIds.ExtraAddress) ?? string.Empty;
         var subId = intent.GetIntExtra(NotificationIds.ExtraSubId, -1);
         var replyText = action == ActionReply ? ReadReplyText(intent) : null;
+        var code = action == ActionCopyCode ? intent.GetStringExtra(NotificationIds.ExtraCode) : null;
 
         var pending = GoAsync();
         Task.Run(async () =>
@@ -48,6 +50,8 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
                     MarkRead(context, threadId);
                 else if (action == ActionReply)
                     await ReplyAsync(context, threadId, address, subId, replyText);
+                else if (action == ActionCopyCode)
+                    CopyCode(context, threadId, code);
             }
             catch (Exception ex)
             {
@@ -58,6 +62,16 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
                 pending?.Finish();
             }
         });
+    }
+
+    // The code is on the clipboard, and with it taken the message is read: its notification goes.
+    private static void CopyCode(Context context, long threadId, string? code)
+    {
+        if (string.IsNullOrEmpty(code))
+            return;
+
+        OtpClipboard.CopyWithFeedback(context, code, sensitive: false);
+        MarkRead(context, threadId);
     }
 
     private static string? ReadReplyText(Intent intent)
@@ -74,7 +88,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
 
     private static async Task ReplyAsync(Context context, long threadId, string address, int subId, string? text)
     {
-        if (text is null || address.Length == 0)
+        if (text is null || !ThreadProfileActions.CanReply(address))
         {
             MessageNotifier.Refresh(context, threadId, address, subId);
             return;
@@ -105,7 +119,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
         MainThread.BeginInvokeOnMainThread(() => RaiseThreadsChanged(threadId));
     }
 
-    private static void RaiseThreadsChanged(long threadId)
+    internal static void RaiseThreadsChanged(long threadId)
     {
         try
         {

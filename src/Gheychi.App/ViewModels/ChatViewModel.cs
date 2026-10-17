@@ -8,6 +8,7 @@ using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Models;
 using Gheychi.Core.Notifications;
+using Gheychi.Core.Scheduling;
 using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
@@ -43,6 +44,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     private readonly IDateFormattingService _dateFormatter;
     private readonly IMessageMetadataRepository _metadataRepo;
     private readonly IThreadSettings? _threadSettings;
+    private readonly IDraftStore? _drafts;
     private string _draft = string.Empty;
     private int _simSlot = 1;
     private string _stickyDate = string.Empty;
@@ -58,8 +60,13 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _metadataRepo = metadataRepo ?? IPlatformApplication.Current?.Services.GetService<IMessageMetadataRepository>() ?? new Gheychi.Infrastructure.Data.MessageMetadataRepository();
 
         _threadSettings = IPlatformApplication.Current?.Services.GetService<IThreadSettings>();
+        _drafts = IPlatformApplication.Current?.Services.GetService<IDraftStore>();
 
         _thread = thread ?? ThreadItem.Empty;
+        if (_thread.ThreadId > 0)
+            _draft = _drafts?.Get(_thread.ThreadId)?.Text ?? string.Empty;
+        Pending = new PendingSends(_dateFormatter) { Send = SendHeld };
+        Pending.Bind(_thread.ThreadId);
         Items = [];
         Messages = [];
 
@@ -82,13 +89,29 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public ThreadItem Thread
     {
         get => _thread;
-        set => SetField(ref _thread, value);
+        set
+        {
+            var previous = _thread.ThreadId;
+            // What was typed belongs to the conversation being left; the box then shows the new one's own draft.
+            if (value.ThreadId != previous)
+                FlushDraft();
+
+            if (SetField(ref _thread, value) && value.ThreadId != previous)
+            {
+                RestoreDraft();
+                Pending.Bind(value.ThreadId);
+            }
+        }
     }
 
     public FastObservableCollection<object> Items { get; }
     public FastObservableCollection<ChatMessage> Messages { get; }
 
     public ChatSearchState Search { get; }
+
+    /// <summary>The messages of this conversation held by the send delay or scheduled for later.</summary>
+    public PendingSends Pending { get; }
+
 
     // Outlines the matching bubbles. A setter that finds the same mark does nothing, so this is cheap to repeat.
     private void RefreshSearchMarks()
@@ -100,8 +123,69 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public string Draft
     {
         get => _draft;
-        set => SetField(ref _draft, value);
+        set
+        {
+            if (SetField(ref _draft, value) && !_restoringDraft)
+                ScheduleDraftSave();
+        }
     }
+
+    // ---- Drafts ---------------------------------------------------------------------------------
+
+    private static readonly TimeSpan DraftSaveDelay = TimeSpan.FromMilliseconds(500);
+    private static ChatViewModel? _active;
+    private CancellationTokenSource? _draftSave;
+    private bool _restoringDraft;
+
+    private void RestoreDraft()
+    {
+        _restoringDraft = true;
+        try
+        {
+            Draft = Thread.ThreadId > 0 ? _drafts?.Get(Thread.ThreadId)?.Text ?? string.Empty : string.Empty;
+        }
+        finally
+        {
+            _restoringDraft = false;
+        }
+    }
+
+    // Saved a moment after the last key, not on each one.
+    private void ScheduleDraftSave()
+    {
+        if (_drafts is null || Thread.ThreadId <= 0)
+            return;
+
+        _draftSave?.Cancel();
+        _draftSave?.Dispose();
+        var save = _draftSave = new CancellationTokenSource();
+        _ = Task.Delay(DraftSaveDelay, save.Token).ContinueWith(
+            t =>
+            {
+                if (!t.IsCanceled)
+                    MainThread.BeginInvokeOnMainThread(FlushDraft);
+            },
+            TaskScheduler.Default);
+    }
+
+    /// <summary>Saves what is typed now, without waiting: the chat is closing, or the app is leaving the screen.</summary>
+    public void FlushDraft()
+    {
+        _draftSave?.Cancel();
+        _draftSave?.Dispose();
+        _draftSave = null;
+
+        if (_drafts is null || Thread.ThreadId <= 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_draft))
+            _drafts.Remove(Thread.ThreadId);
+        else
+            _drafts.Save(new MessageDraft(Thread.ThreadId, SendAddress, Thread.Name, Thread.SubId, _draft, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
+    }
+
+    /// <summary>The open chat's draft, saved now. The app may be killed while it is in the background.</summary>
+    public static void FlushActiveDraft() => _active?.FlushDraft();
 
     public string StickyDate
     {
@@ -362,16 +446,25 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             var slot = ResolveSlot(msg.SubId, slotMap);
             var carrier = ResolveCarrier(msg.SubId, slot, carrierMap);
 
+            // A code is only offered while it is fresh, on a message that came in.
+            var links = TextLinker.Find(msg.Body);
+            var code = !msg.IsOutgoing && links is not null && now - msg.Timestamp <= OtpDetector.FreshFor
+                ? TextLinker.FindOtp(msg.Body, links)
+                : null;
+
             var chatMsg = new ChatMessage
             {
                 Id = msg.Id,
                 Timestamp = msg.Timestamp,
                 Body = msg.Body,
-                Links = TextLinker.Find(msg.Body),
+                Links = links,
+                CopyableCode = code?.Code,
+                IsDynamicPassword = code?.Kind == OtpKind.DynamicPassword,
                 IsOutgoing = msg.IsOutgoing,
                 IsSent = msg.IsSent,
                 IsDelivered = msg.IsDelivered,
                 HasFailed = msg.HasFailed,
+                IsUnconfirmed = msg.IsUnconfirmed,
                 Time = timeStr,
                 IsUnread = !msg.IsRead,
                 IsStarred = msg.IsStarred,
@@ -807,14 +900,77 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SimBadgeColor));
     }
 
+    /// <summary>False for a sender name: nothing can answer it, so the box is replaced by a notice.</summary>
+    public bool CanReply => ThreadProfileActions.CanReply(Thread.Phone);
+
     public async void Send()
     {
-        if (string.IsNullOrWhiteSpace(Draft))
+        if (!CanReply || string.IsNullOrWhiteSpace(Draft))
             return;
 
         var text = Draft.Trim();
         Draft = string.Empty;
+        FlushDraft();
 
+        var subId = ResolveSubId(0);
+        // Held for the send delay, the message goes out when it ends; Undo brings it back as a draft until then.
+        if (Pending.Hold(Thread.ThreadId, SendAddress, text, subId, Gheychi.App.Services.AppPreferences.SendDelaySeconds))
+            return;
+
+        await SendNowAsync(text, subId);
+    }
+
+    /// <summary>Takes the held messages back into the box, ahead of what has been typed since.</summary>
+    public void UndoHeld()
+    {
+        var text = Pending.Undo();
+        if (text.Length > 0)
+            Draft = string.IsNullOrEmpty(Draft) ? text : text + "\n" + Draft;
+    }
+
+    /// <summary>Schedules what is in the box for <paramref name="atMillis"/>; false when there is nothing to send or nowhere to keep it.</summary>
+    public bool ScheduleDraft(long atMillis)
+    {
+        if (!CanReply || string.IsNullOrWhiteSpace(Draft))
+            return false;
+
+        if (!Pending.Schedule(Thread.ThreadId, SendAddress, Draft.Trim(), ResolveSubId(0), atMillis))
+            return false;
+
+        Draft = string.Empty;
+        FlushDraft();
+        return true;
+    }
+
+    // A message the delay or the schedule let go. In its own conversation it is shown and sent like a typed one; if the
+    // chat moved to another conversation meanwhile, it is only sent.
+    private void SendHeld(ScheduledMessage message)
+    {
+        if (message.ThreadId != Thread.ThreadId)
+        {
+            _ = SendElsewhereAsync(message);
+            return;
+        }
+
+        _ = SendNowAsync(message.Text, message.SubId);
+        MessagesAppended?.Invoke();
+    }
+
+    private async Task SendElsewhereAsync(ScheduledMessage message)
+    {
+        try
+        {
+            await _smsService.SendSmsAsync(message.Address, message.Text, message.SubId);
+            NotificationActionReceiver.RaiseThreadsChanged(message.ThreadId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Sending a held message failed: {ex}");
+        }
+    }
+
+    private async Task SendNowAsync(string text, int subId)
+    {
         var timeStr = _dateFormatter.FormatMessageTime(DateTime.Now, CultureInfo.CurrentUICulture);
 
         var outgoingMsg = new ChatMessage
@@ -824,6 +980,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             IsOutgoing = true,
             IsDelivered = false,
             Time = timeStr,
+            // Kept so a retry goes out on the SIM this was sent with, not on whichever one is selected by then.
+            SubId = subId,
             SimSlot = _simSlot,
             IsDualSim = _isDualSim ?? false,
             Timestamp = DateTime.Now
@@ -833,12 +991,26 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         EvictCache(Thread.ThreadId);
 
-        await DeliverAsync(outgoingMsg, text, ResolveSubId(0), storeFirst: true);
+        await DeliverAsync(outgoingMsg, text, subId, storeFirst: true);
+    }
+
+    /// <summary>
+    /// True when the same text is still on its way, or its outcome is unknown: sending it again because it seems stuck
+    /// is how a message reaches the recipient twice.
+    /// </summary>
+    public bool IsUnsettled(string text)
+    {
+        text = text.Trim();
+        return Messages.Any(m => (m.IsSending || m.IsUnconfirmed) && m.Body == text);
     }
 
     public async void Retry(ChatMessage message)
     {
+        if (!CanReply)
+            return;
+
         message.HasFailed = false;
+        message.IsUnconfirmed = false;
         message.IsSent = false;
         message.IsDelivered = false;
 
@@ -888,7 +1060,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
     }
 
-    private void OnOutgoingUpdated(long rowId, bool ok)
+    private void OnOutgoingUpdated(long rowId, long threadId, bool ok)
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -899,6 +1071,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
                 message.IsSent = ok;
                 message.HasFailed = !ok;
+                message.IsUnconfirmed = false;
                 break;
             }
         });
@@ -919,6 +1092,22 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         });
     }
 
+    private void OnDeliveryFailed(long rowId, long threadId)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var message in Messages)
+            {
+                if (message.Id != rowId)
+                    continue;
+
+                message.IsDelivered = false;
+                message.HasFailed = true;
+                break;
+            }
+        });
+    }
+
     // ---- Live updates while the chat is open --------------------------------------------------
 
     private bool _live;
@@ -934,9 +1123,11 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             return;
 
         _live = true;
+        _active = this;
         SmsDeliverReceiver.SmsReceived += OnIncomingSms;
         SmsSendTracker.OutgoingUpdated += OnOutgoingUpdated;
         SmsSendTracker.Delivered += OnDelivered;
+        SmsSendTracker.DeliveryFailed += OnDeliveryFailed;
     }
 
     public void StopLiveUpdates()
@@ -944,10 +1135,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         if (!_live)
             return;
 
+        FlushDraft();
+        if (ReferenceEquals(_active, this))
+            _active = null;
         _live = false;
         SmsDeliverReceiver.SmsReceived -= OnIncomingSms;
         SmsSendTracker.OutgoingUpdated -= OnOutgoingUpdated;
         SmsSendTracker.Delivered -= OnDelivered;
+        SmsSendTracker.DeliveryFailed -= OnDeliveryFailed;
     }
 
     private void OnIncomingSms(long threadId)
@@ -1010,6 +1205,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         var sendInFlight = Messages.Any(m => m.Id == 0 && m.IsOutgoing);
 
         var appended = 0;
+        var seen = ChatPresence.IsAppVisible;
         ChatMessage? lastIncoming = null;
 
         foreach (var fetched in data.Messages)
@@ -1024,8 +1220,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             if (sendInFlight && fetched.IsOutgoing)
                 continue;
 
-            // The chat is open and on screen: what arrives is read.
-            fetched.IsUnread = false;
+            // Read when the chat is on screen. With the app in the background (another app opened over it) the message
+            // stays unread, or its notification would be dismissed before it was ever seen.
+            fetched.IsUnread = !seen && fetched.IsUnread;
             AppendMessage(fetched);
             appended++;
             if (!fetched.IsOutgoing)
@@ -1045,7 +1242,21 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         ShiftLoadedCount(appended);
         EvictCache(threadId);
         MessagesAppended?.Invoke();
-        _ = _smsService.MarkThreadAsReadAsync(threadId);
+        if (seen)
+            _ = _smsService.MarkThreadAsReadAsync(threadId);
+    }
+
+    /// <summary>The app is back on screen: what arrived while it was away is seen now.</summary>
+    public static void MarkActiveThreadSeen() => _active?.MarkThreadSeen();
+
+    private void MarkThreadSeen()
+    {
+        if (Thread.ThreadId <= 0)
+            return;
+
+        foreach (var message in Messages)
+            message.IsUnread = false;
+        _ = _smsService.MarkThreadAsReadAsync(Thread.ThreadId);
     }
 
     // Adds a message at the bottom, under a new day header when it is the first message of its day.

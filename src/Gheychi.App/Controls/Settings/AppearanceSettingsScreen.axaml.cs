@@ -144,6 +144,7 @@ public partial class AppearanceSettingsScreen : SettingsScreen
                 return;
 
             AppPreferences.Theme = choice.Theme;
+            ThemeState.ApplyToSystem(choice.Theme);
             AppStatus.Restart();
         }
         catch (Exception ex)

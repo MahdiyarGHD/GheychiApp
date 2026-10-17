@@ -2,6 +2,15 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
+            <solid android:color="@color/launch_background" />
+        </shape>
+    </item>
+    <!-- The logo on its green disc, like the launcher icon the Android 12+ splash shows: it reads on either background. -->
+    <item
+        android:width="144dp"
+        android:height="144dp"
+        android:gravity="center">
+        <shape android:shape="oval">
             <solid android:color="@color/appicon_background" />
         </shape>
     </item>

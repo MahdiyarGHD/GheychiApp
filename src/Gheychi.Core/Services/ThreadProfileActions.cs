@@ -8,12 +8,16 @@ public sealed record ThreadProfileActions(bool Call, bool Text, bool Details, bo
 {
     public static ThreadProfileActions For(string? address) => new(
         Call: CanCall(address),
-        Text: true,
+        Text: CanReply(address),
         Details: true,
         Search: true);
 
     /// <summary>Only a real phone number can be dialled; sender names and operator shortcodes cannot.</summary>
     public static bool CanCall(string? address) => ContactListBuilder.IsPersonalNumber(address);
+
+    /// <summary>Sender names (IRANCELL, MCI-NET) have no return route, so a reply to one goes nowhere; short codes can answer.</summary>
+    public static bool CanReply(string? address) =>
+        !string.IsNullOrWhiteSpace(address) && !PhoneNumberNormalizer.IsAlphanumeric(address);
 
     public int VisibleCount => (Call ? 1 : 0) + (Text ? 1 : 0) + (Details ? 1 : 0) + (Search ? 1 : 0);
 }

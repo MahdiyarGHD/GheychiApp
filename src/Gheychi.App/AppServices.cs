@@ -1,6 +1,7 @@
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Notifications;
+using Gheychi.Core.Scheduling;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
 using Gheychi.Core.Updates;
@@ -26,6 +27,7 @@ internal static class AppServices
         services.AddSingleton<ITrustedSenders, Services.PreferencesTrustedSenders>();
         services.AddSingleton<IBlockedSenders, Services.PreferencesBlockedSenders>();
         services.AddSingleton<ISpamMessageRepository>(_ => new SpamMessageRepository(databasePath));
+        services.AddSingleton<ITrashRepository>(_ => new TrashRepository(databasePath));
         services.AddSingleton<ISpamStatsRepository>(_ => new SpamStatRepository(databasePath));
         services.AddSingleton(_ => new SpamModelStore(
             Path.Combine(FileSystem.AppDataDirectory, "spam-model"),
@@ -58,6 +60,11 @@ internal static class AppServices
         services.AddSingleton<ActiveChatState>();
         services.AddSingleton<IActiveChatState>(sp => sp.GetRequiredService<ActiveChatState>());
         services.AddSingleton<IThreadSettings, Services.PreferencesThreadSettings>();
+        services.AddSingleton<IDraftStore, Services.PreferencesDraftStore>();
+        services.AddSingleton<IPinStore, Services.PreferencesPinStore>();
+        services.AddSingleton<IScheduledSendStore, Services.PreferencesScheduledSendStore>();
+        services.AddSingleton<Services.PreferencesFolderStore>();
+        services.AddSingleton<IScheduledSendScheduler, ScheduledSendAlarm>();
         services.AddSingleton<INotificationRule, ActiveChatRule>();
         services.AddSingleton<INotificationRule, SnoozeRule>();
         services.AddSingleton<NotificationPolicy>();

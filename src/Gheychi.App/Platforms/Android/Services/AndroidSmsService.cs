@@ -130,9 +130,12 @@ public sealed class AndroidSmsService : ISmsService
             {
                 try
                 {
+                    // Every column (null projection): "unread_count" and "last_sim_id" exist only in some vendors'
+                    // threads table. Naming them failed the whole query on AOSP-based phones, and the fallback below
+                    // left out every conversation without a recent message.
                     using var cursor = context.ContentResolver?.Query(
                         convUri,
-                        ["_id", "date", "message_count", "unread_count", "recipient_ids", "snippet", "last_sim_id", "error"],
+                        null,
                         null,
                         null,
                         "date DESC");
@@ -147,6 +150,9 @@ public sealed class AndroidSmsService : ISmsService
                         var snippetCol = cursor.GetColumnIndex("snippet");
                         var simCol = cursor.GetColumnIndex("last_sim_id");
                         var errorCol = cursor.GetColumnIndex("error");
+                        var stats = unreadCol < 0 || simCol < 0
+                            ? ReadThreadStats(context, cancellationToken)
+                            : null;
 
                         var list = new List<SmsThread>(cursor.Count);
                         while (cursor.MoveToNext())
@@ -158,11 +164,14 @@ public sealed class AndroidSmsService : ISmsService
 
                             var dateMs = dateCol >= 0 ? cursor.GetLong(dateCol) : 0;
                             var msgCount = countCol >= 0 ? cursor.GetInt(countCol) : 0;
-                            var unreadCount = unreadCol >= 0 ? cursor.GetInt(unreadCol) : 0;
                             var recipRaw = recipCol >= 0 ? cursor.GetString(recipCol) : null;
                             var snippet = snippetCol >= 0 ? cursor.GetString(snippetCol) ?? string.Empty : string.Empty;
-                            var subId = simCol >= 0 && !cursor.IsNull(simCol) ? cursor.GetInt(simCol) : 1;
                             var hasFailed = errorCol >= 0 && cursor.GetInt(errorCol) != 0;
+                            var threadStats = stats is not null && stats.TryGetValue(threadId, out var s) ? s : default;
+                            var unreadCount = unreadCol >= 0 ? cursor.GetInt(unreadCol) : threadStats.Unread;
+                            var subId = simCol >= 0
+                                ? (cursor.IsNull(simCol) ? 1 : cursor.GetInt(simCol))
+                                : threadStats.SubId ?? 1;
 
                             // A thread opened for a new conversation has no messages until the first send.
                             if (countCol >= 0 && msgCount <= 0)
@@ -206,13 +215,75 @@ public sealed class AndroidSmsService : ISmsService
                 {
                     throw;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Reading the conversations failed, building them from the messages: {ex}");
                 }
             }
 
             return GetThreadsLegacy(context, contactMap, cancellationToken);
         }, cancellationToken);
+
+    /// <summary>
+    /// Per conversation, the unread incoming SMS and the SIM of the newest message: what the threads table of an AOSP
+    /// provider lacks. One pass over four small columns of the SMS table.
+    /// </summary>
+    private static Dictionary<long, (int Unread, int? SubId)> ReadThreadStats(Context context, CancellationToken cancellationToken)
+    {
+        var stats = new Dictionary<long, (int Unread, int? SubId)>();
+        var smsUri = Telephony.Sms.ContentUri;
+        if (smsUri == null)
+            return stats;
+
+        try
+        {
+            using var cursor = context.ContentResolver?.Query(
+                smsUri,
+                [Telephony.Sms.InterfaceConsts.ThreadId, Telephony.Sms.InterfaceConsts.Read, Telephony.Sms.InterfaceConsts.Type, "sub_id"],
+                null,
+                null,
+                "date DESC");
+            if (cursor == null)
+                return stats;
+
+            var threadCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.ThreadId);
+            var readCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Read);
+            var typeCol = cursor.GetColumnIndex(Telephony.Sms.InterfaceConsts.Type);
+            var subIdCol = cursor.GetColumnIndex("sub_id");
+
+            while (cursor.MoveToNext())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var threadId = threadCol >= 0 ? cursor.GetLong(threadCol) : 0;
+                if (threadId <= 0)
+                    continue;
+
+                var unread = readCol >= 0 && cursor.GetInt(readCol) == 0
+                    && typeCol >= 0 && cursor.GetInt(typeCol) == (int)SmsMessageType.Inbox;
+                if (stats.TryGetValue(threadId, out var known))
+                {
+                    if (unread)
+                        stats[threadId] = known with { Unread = known.Unread + 1 };
+                }
+                else
+                {
+                    var subId = subIdCol >= 0 && !cursor.IsNull(subIdCol) ? cursor.GetInt(subIdCol) : (int?)null;
+                    stats[threadId] = (unread ? 1 : 0, subId);
+                }
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading unread counts failed: {ex}");
+        }
+
+        return stats;
+    }
 
     private static IReadOnlyList<SmsThread> GetThreadsLegacy(Context context, Dictionary<string, string> contactMap, CancellationToken cancellationToken)
     {
@@ -228,7 +299,7 @@ public sealed class AndroidSmsService : ISmsService
                 SmsProjection,
                 null,
                 null,
-                "date DESC LIMIT 500");
+                "date DESC");
 
             if (cursor == null)
                 return Array.Empty<SmsThread>();
@@ -283,8 +354,13 @@ public sealed class AndroidSmsService : ISmsService
                 }
             }
         }
-        catch (Exception)
+        catch (System.OperationCanceledException)
         {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Building the conversations from the messages failed: {ex}");
             return Array.Empty<SmsThread>();
         }
 
@@ -895,6 +971,10 @@ public sealed class AndroidSmsService : ISmsService
         return threadIds;
     }
 
+    // Messages with the same timestamp (a multipart burst, a restored backup) have no defined order by date alone,
+    // so separate LIMIT/OFFSET pages could repeat some of them and skip others. The id makes the order total.
+    private const string NewestFirst = "date DESC, _id DESC";
+
     private static void ForEachMessage(
         Context context,
         string? selection,
@@ -907,7 +987,7 @@ public sealed class AndroidSmsService : ISmsService
         if (smsUri == null)
             return;
 
-        using var cursor = context.ContentResolver?.Query(smsUri, SmsProjection, selection, selectionArgs, "date DESC");
+        using var cursor = context.ContentResolver?.Query(smsUri, SmsProjection, selection, selectionArgs, NewestFirst);
         if (cursor == null)
             return;
 
@@ -953,8 +1033,8 @@ public sealed class AndroidSmsService : ISmsService
                 return Array.Empty<SmsMessage>();
 
             var sortOrder = limit.HasValue
-                ? $"date DESC LIMIT {limit.Value} OFFSET {offset}"
-                : "date ASC";
+                ? $"{NewestFirst} LIMIT {limit.Value} OFFSET {offset}"
+                : "date ASC, _id ASC";
 
             try
             {
@@ -995,14 +1075,12 @@ public sealed class AndroidSmsService : ISmsService
 
                     var isOutgoing = SmsStatusHelper.IsOutgoingType(type);
 
-                    // An Outbox row nobody reported on for this long was lost with its process (the
-                    // result broadcast never arrived); show it as failed so it can be retried
-                    // instead of spinning forever.
-                    var staleOutbox = type == SmsStatusHelper.TypeOutbox &&
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - dateMs > StaleOutboxMs;
-                    var hasFailed = staleOutbox || SmsStatusHelper.HasFailed(type, status);
-                    var isDelivered = !staleOutbox && SmsStatusHelper.IsDelivered(type, status);
-                    var isSent = !staleOutbox && SmsStatusHelper.IsSent(type, status);
+                    // No answer from the radio for this long: shown as unconfirmed instead of spinning forever,
+                    // and not as failed, since it may well have gone out.
+                    var unconfirmed = SmsStatusHelper.IsUnconfirmed(type, dateMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+                    var hasFailed = SmsStatusHelper.HasFailed(type, status);
+                    var isDelivered = SmsStatusHelper.IsDelivered(type, status);
+                    var isSent = SmsStatusHelper.IsSent(type, status);
                     var isRead = read != 0 || isOutgoing;
 
                     messages.Add(new SmsMessage(
@@ -1016,7 +1094,8 @@ public sealed class AndroidSmsService : ISmsService
                         hasFailed,
                         subId,
                         isRead,
-                        IsSent: isSent));
+                        IsSent: isSent,
+                        IsUnconfirmed: unconfirmed));
                 }
 
                 if (_metadataRepo != null && messages.Count > 0)
@@ -1174,7 +1253,6 @@ public sealed class AndroidSmsService : ISmsService
     // How long a caller waits for the radio before showing the message as still sending. The
     // send itself is not cancelled: it can still go out, and the stored row follows the real result.
     private static readonly TimeSpan SendWaitLimit = TimeSpan.FromSeconds(60);
-    private const long StaleOutboxMs = 10 * 60 * 1000;
 
     public Task<long> QueueOutgoingAsync(string address, string text, int subId, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
@@ -1243,7 +1321,24 @@ public sealed class AndroidSmsService : ISmsService
         }
 
         InvalidateSearchCaches();
-        SmsSendTracker.RaiseOutgoingUpdated(rowId, ok);
+        SmsSendTracker.RaiseOutgoingUpdated(rowId, ThreadIdOf(context, rowId), ok);
+    }
+
+    private static long ThreadIdOf(Context context, long rowId)
+    {
+        try
+        {
+            if (Telephony.Sms.ContentUri is not { } smsUri)
+                return 0;
+
+            using var cursor = context.ContentResolver?.Query(
+                ContentUris.WithAppendedId(smsUri, rowId), [Telephony.Sms.InterfaceConsts.ThreadId], null, null, null);
+            return cursor is not null && cursor.MoveToFirst() ? cursor.GetLong(0) : 0;
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
     }
 
     public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId)
@@ -1261,9 +1356,15 @@ public sealed class AndroidSmsService : ISmsService
     }
 
     /// <summary>A delivery report confirmed the message reached the phone.</summary>
-    internal static void MarkDelivered(Context context, long rowId)
+    internal static void MarkDelivered(Context context, long rowId) =>
+        ApplyReport(context, rowId, SmsStatusHelper.StatusComplete, delivered: true);
+
+    /// <summary>A delivery report said the carrier gave up: the message never reached the phone.</summary>
+    internal static void MarkDeliveryFailed(Context context, long rowId) =>
+        ApplyReport(context, rowId, SmsStatusHelper.StatusFailed, delivered: false);
+
+    private static void ApplyReport(Context context, long rowId, int status, bool delivered)
     {
-        long threadId = 0;
         try
         {
             var smsUri = Telephony.Sms.ContentUri;
@@ -1271,24 +1372,32 @@ public sealed class AndroidSmsService : ISmsService
                 return;
 
             var values = new ContentValues();
-            values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusComplete);
+            values.Put(Telephony.Sms.InterfaceConsts.Status, status);
+            // Only a sent message not already settled the same way: a report that arrives twice (the carrier repeats
+            // them) must neither notify twice nor undo a delivery.
+            var column = Telephony.Sms.InterfaceConsts.Status;
+            var unsettled = delivered
+                ? $"({column} IS NULL OR {column} <> {SmsStatusHelper.StatusComplete})"
+                : $"({column} IS NULL OR {column} NOT IN ({SmsStatusHelper.StatusComplete}, {SmsStatusHelper.StatusFailed}))";
             var updated = context.ContentResolver?.Update(smsUri, values,
-                $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Sent}",
+                $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Sent} AND {unsettled}",
                 [rowId.ToString()]) ?? 0;
             if (updated == 0)
                 return;
-
-            var rowUri = ContentUris.WithAppendedId(smsUri, rowId);
-            using var cursor = context.ContentResolver?.Query(rowUri, [Telephony.Sms.InterfaceConsts.ThreadId], null, null, null);
-            if (cursor is not null && cursor.MoveToFirst())
-                threadId = cursor.GetLong(0);
         }
         catch (Exception)
         {
             return;
         }
 
-        SmsSendTracker.RaiseDelivered(rowId, threadId);
+        InvalidateSearchCaches();
+        var threadId = ThreadIdOf(context, rowId);
+        if (delivered)
+            SmsSendTracker.RaiseDelivered(rowId, threadId);
+        else
+            SmsSendTracker.RaiseDeliveryFailed(rowId, threadId);
+
+        DeliveryNotifier.Show(context, rowId, delivered);
     }
 
     private static void SetOutgoingPending(Context context, long rowId)
@@ -1302,7 +1411,7 @@ public sealed class AndroidSmsService : ISmsService
             var values = new ContentValues();
             values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Outbox);
             values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusPending);
-            // Resent now; also keeps the stale-Outbox check from flagging the retry straight away.
+            // Resent now; also keeps the retry from counting as unconfirmed straight away.
             values.Put(Telephony.Sms.InterfaceConsts.Date, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             context.ContentResolver?.Update(smsUri, values, $"{Telephony.Sms.InterfaceConsts.Id} = ?", [rowId.ToString()]);
         }
@@ -1481,6 +1590,7 @@ public sealed class AndroidSmsService : ISmsService
             {
                 var idStrings = threadIds.Select(id => id.ToString()).ToArray();
                 var placeholders = string.Join(",", threadIds.Select(_ => "?"));
+                await KeepInTrashAsync(context, $"{Telephony.Sms.InterfaceConsts.ThreadId} IN ({placeholders})", idStrings);
                 var deleted = context.ContentResolver?.Delete(
                     smsUri,
                     $"{Telephony.Sms.InterfaceConsts.ThreadId} IN ({placeholders})",
@@ -1503,6 +1613,112 @@ public sealed class AndroidSmsService : ISmsService
             }
         }, cancellationToken);
 
+    /// <summary>
+    /// Copies the rows about to be deleted into the trash. A failure to keep them does not stop the delete: the user asked
+    /// for it, and the messages are on their way out either way.
+    /// </summary>
+    private static async Task KeepInTrashAsync(Context context, string where, string[] args)
+    {
+        try
+        {
+            var trash = IPlatformApplication.Current?.Services.GetService<ITrashRepository>();
+            var smsUri = Telephony.Sms.ContentUri;
+            if (trash is null || smsUri is null)
+                return;
+
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var kept = new List<TrashedMessage>();
+            using (var cursor = context.ContentResolver?.Query(
+                smsUri,
+                [Telephony.Sms.InterfaceConsts.Address, Telephony.Sms.InterfaceConsts.Body, Telephony.Sms.InterfaceConsts.Date, Telephony.Sms.InterfaceConsts.Type, "sub_id"],
+                where,
+                args,
+                null))
+            {
+                while (cursor is not null && cursor.MoveToNext())
+                {
+                    var type = cursor.GetInt(3);
+                    if (type == SmsStatusHelper.TypeDraft)
+                        continue;
+
+                    kept.Add(new TrashedMessage(0, cursor.GetString(0) ?? string.Empty, cursor.GetString(1) ?? string.Empty,
+                        cursor.GetLong(2), type, cursor.IsNull(4) ? -1 : cursor.GetInt(4), now));
+                }
+            }
+
+            await trash.AddAsync(kept);
+            await trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Keeping the messages in the trash failed: {ex}");
+        }
+    }
+
+    // The provider recomputes the conversation for every row it takes. Restored in small batches, with a breath between,
+    // it stays free for the chat that is being opened meanwhile.
+    private const int RestoreBatchSize = 50;
+
+    public Task<int> RestoreMessagesAsync(IReadOnlyList<TrashedMessage> messages) =>
+        Task.Run(async () =>
+        {
+            var context = Platform.AppContext;
+            var smsUri = Telephony.Sms.ContentUri;
+            if (smsUri is null || messages.Count == 0)
+                return 0;
+
+            var rows = new List<ContentValues>(messages.Count);
+            foreach (var message in messages)
+            {
+                var type = TrashPolicy.RestoredType(message.Type);
+                var values = new ContentValues();
+                values.Put(Telephony.Sms.InterfaceConsts.Address, message.Address);
+                values.Put(Telephony.Sms.InterfaceConsts.Body, message.Body);
+                values.Put(Telephony.Sms.InterfaceConsts.Date, message.DateMs);
+                values.Put(Telephony.Sms.InterfaceConsts.Read, 1);
+                values.Put(Telephony.Sms.InterfaceConsts.Type, type);
+                if (type == SmsStatusHelper.TypeFailed)
+                    values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusFailed);
+                if (message.SubId > 0)
+                    values.Put("sub_id", message.SubId);
+                rows.Add(values);
+            }
+
+            var restored = 0;
+            try
+            {
+                foreach (var batch in rows.Chunk(RestoreBatchSize))
+                {
+                    restored += context.ContentResolver?.BulkInsert(smsUri, batch) ?? 0;
+                    if (restored < rows.Count)
+                        await Task.Delay(20);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Restoring messages failed: {ex}");
+            }
+
+            if (restored > 0)
+            {
+                InvalidateSearchCaches();
+                var threads = messages
+                    .Select(m => m.Address)
+                    .Distinct()
+                    .Select(address => Telephony.Threads.GetOrCreateThreadId(context, address))
+                    .Where(id => id > 0)
+                    .ToList();
+                // The inbox and an open chat read the store again.
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    foreach (var threadId in threads)
+                        Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.RaiseSmsReceived(threadId);
+                });
+            }
+
+            return restored;
+        });
+
     public Task<bool> DeleteMessagesAsync(IReadOnlyList<long> messageIds, CancellationToken cancellationToken = default) =>
         Task.Run(async () =>
         {
@@ -1518,6 +1734,7 @@ public sealed class AndroidSmsService : ISmsService
             {
                 var idStrings = messageIds.Select(id => id.ToString()).ToArray();
                 var placeholders = string.Join(",", messageIds.Select(_ => "?"));
+                await KeepInTrashAsync(context, $"{Telephony.Sms.InterfaceConsts.Id} IN ({placeholders})", idStrings);
                 var deleted = context.ContentResolver?.Delete(
                     smsUri,
                     $"{Telephony.Sms.InterfaceConsts.Id} IN ({placeholders})",
@@ -1809,6 +2026,10 @@ public sealed class AndroidSmsService : ISmsService
 
         return entries;
     }
+
+    public Task<string?> FindContactNameAsync(string number) =>
+        Task.Run(() => PhoneNumberNormalizer.ToContactKey(number) is { } key &&
+                       LoadContacts(Platform.AppContext).TryGetValue(key, out var name) ? name : null);
 
     public Task<long> GetOrCreateThreadIdAsync(string address) =>
         Task.Run(() =>

@@ -1,9 +1,12 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Avalonia.Threading;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
+using Gheychi.App.Services;
+using Gheychi.Core.Folders;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 
@@ -13,6 +16,14 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 {
     private readonly ISmsService _smsService;
     private readonly IDateFormattingService _dateFormatter;
+    private readonly IDraftStore? _drafts;
+    private readonly IPinStore? _pins;
+    private readonly PreferencesFolderStore? _folders;
+    private List<ThreadItem> _inboxAll = [];
+    private string _activeFolderId = Folder.AllId;
+    private int _barRefreshQueued;
+    private bool _reordering;
+    private BuiltThreads? _deferred;
     private bool _isLoading;
     private bool _hasPermission = true;
     private static readonly TimeSpan ReturnRefreshDelay = TimeSpan.FromMilliseconds(400);
@@ -33,6 +44,14 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     {
         _smsService = smsService ?? IPlatformApplication.Current?.Services.GetService<ISmsService>() ?? throw new InvalidOperationException("ISmsService not resolved");
         _dateFormatter = dateFormatter ?? IPlatformApplication.Current?.Services.GetService<IDateFormattingService>() ?? new DateFormattingService();
+        _drafts = IPlatformApplication.Current?.Services.GetService<IDraftStore>();
+        _pins = IPlatformApplication.Current?.Services.GetService<IPinStore>();
+        _folders = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        if (AppPreferences.RememberLastFolder)
+            _activeFolderId = AppPreferences.LastFolderId is { Length: > 0 } last ? last : Folder.AllId;
+        if (_folders is not null)
+            _folders.Changed += () => MainThread.BeginInvokeOnMainThread(() => ApplyFolderView());
+        ThreadItem.UnreadChanged += QueueFolderBarRefresh;
 
         // Normally read while the XAML is inflated. Opened from a notification, the inbox is not what is
         // waited for: the CPU belongs to the chat until it is up, so the read waits for InitializeAsync.
@@ -41,13 +60,163 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
         NotificationActionReceiver.ThreadsChanged += OnSmsReceived;
-        // A delivery report usually arrives after the chat was closed; its cached page would still show one tick.
+        // A send result or delivery report often arrives after the chat was closed; its cached page would still show
+        // the spinner or one tick.
+        SmsSendTracker.OutgoingUpdated += (_, threadId, _) =>
+        {
+            if (threadId > 0)
+                ChatViewModel.InvalidateThread(threadId);
+        };
         SmsSendTracker.Delivered += (_, threadId) =>
         {
             if (threadId > 0)
                 ChatViewModel.InvalidateThread(threadId);
         };
+        SmsSendTracker.DeliveryFailed += (_, threadId) =>
+        {
+            if (threadId > 0)
+                ChatViewModel.InvalidateThread(threadId);
+        };
     }
+
+    // ---- Folders --------------------------------------------------------------------------------
+
+    /// <summary>The tabs above the inbox.</summary>
+    public FolderBar FolderBar { get; } = new();
+
+    public string ActiveFolderId => _activeFolderId;
+
+    /// <summary>A folder with nothing in it right now: the list shows a hint instead of blank space.</summary>
+    public bool IsFolderEmpty => Threads.Count == 0 && _inboxAll.Count > 0 && ActiveId != Folder.AllId;
+
+    /// <summary>The folder the list shows: with the tabs hidden the inbox is the whole inbox, whatever folder was open.</summary>
+    private string ActiveId => AppPreferences.ShowFolderBar ? _activeFolderId : Folder.AllId;
+
+    /// <summary>A switch has started: the page fades the list out. Followed by <see cref="FolderSwitched"/>.</summary>
+    public event Action? FolderSwitching;
+
+    /// <summary>The list holds the new folder's conversations: the page brings it back.</summary>
+    public event Action? FolderSwitched;
+
+    private static readonly TimeSpan FolderFade = TimeSpan.FromMilliseconds(90);
+
+    public void SelectFolder(string id)
+    {
+        if (id == _activeFolderId)
+            return;
+
+        _activeFolderId = id;
+        if (AppPreferences.RememberLastFolder)
+            AppPreferences.LastFolderId = id;
+
+        if (IsSelectionMode)
+            ExitSelectionMode();
+
+        // The tab answers the tap at once; the list is swapped under a short fade, which is cheaper to look at than a jump.
+        RefreshFolderBar();
+        FolderSwitching?.Invoke();
+        DispatcherTimer.RunOnce(() =>
+        {
+            ApplyFolderView();
+            FolderSwitched?.Invoke();
+        }, FolderFade);
+    }
+
+    /// <summary>Marks every conversation of the folder as read.</summary>
+    public void MarkFolderRead(string folderId)
+    {
+        var folders = _folders?.Folders ?? [];
+        foreach (var t in FolderItems(folderId, folders).Where(t => t.IsUnread).ToList())
+        {
+            t.MarkAsRead();
+            var threadId = t.ThreadId;
+            _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(threadId));
+        }
+
+        RefreshFolderBar();
+    }
+
+    private void ShowInbox(List<ThreadItem> inbox)
+    {
+        _inboxAll = inbox;
+        ApplyFolderView(fresh: true);
+    }
+
+    // The visible list follows the folder and the bar follows the list. Works on what the rows are now: a row opened
+    // and read since the last read of the provider is read here too.
+    private void ApplyFolderView(bool fresh = false)
+    {
+        var folders = _folders?.Folders ?? [];
+        if (_activeFolderId != Folder.AllId && folders.All(f => f.Id != _activeFolderId))
+            _activeFolderId = Folder.AllId;
+
+        // Without folders, or with their tabs hidden, the list is what was read, in the order it was read.
+        var filtered = folders.Count > 0 && AppPreferences.ShowFolderBar;
+        ApplyItems(Threads, filtered ? FolderItems(_activeFolderId, folders, fresh) : _inboxAll);
+        RefreshFolderBar();
+        OnPropertyChanged(nameof(IsFolderEmpty));
+    }
+
+    // A list just read is the truth. Between reads (a folder opened, a setting changed) the rows on screen are, as they may
+    // have been read since; taking them after a read would put back the preview and the unread state it just replaced.
+    private List<ThreadItem> FolderItems(string folderId, IReadOnlyList<Folder> folders, bool fresh = false)
+    {
+        var live = Threads.ToDictionary(t => t.ThreadId);
+        var pinOrder = _pins?.GetOrder() ?? [];
+        var pinned = pinOrder.ToHashSet();
+        var current = fresh ? _inboxAll.ToList() : _inboxAll.Select(t => live.GetValueOrDefault(t.ThreadId, t)).ToList();
+        foreach (var t in current)
+            t.IsPinned = pinned.Contains(t.ThreadId);
+
+        var ordered = PinnedOrder.Apply(current.OrderByDescending(t => t.Timestamp).ToList(), pinOrder, t => t.ThreadId);
+        if (folderId == Folder.AllId)
+            return ordered.ToList();
+
+        var folder = folders.FirstOrDefault(f => f.Id == folderId);
+        if (folder is null)
+            return ordered.ToList();
+
+        var members = folder.IsSmart ? new HashSet<long>() : _folders!.Members(folder.Id);
+        return ordered.Where(t => FolderRules.Matches(folder, FactsOf(t), members.Contains(t.ThreadId))).ToList();
+    }
+
+    private static ThreadFacts FactsOf(ThreadItem t) =>
+        new(t.IsUnread, t.IsContact, t.IsSender, t.HasCode, t.HasFailed, t.HasDraft, t.IsPinned);
+
+    // Reading and unreading come in bursts (an inbox being built, a selection marked): one refresh at the end of them.
+    private void QueueFolderBarRefresh()
+    {
+        if (Interlocked.Exchange(ref _barRefreshQueued, 1) == 1)
+            return;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            Interlocked.Exchange(ref _barRefreshQueued, 0);
+            RefreshFolderBar();
+        });
+    }
+
+    private void RefreshFolderBar()
+    {
+        var folders = _folders?.Folders ?? [];
+        var unread = new Dictionary<string, int>();
+        if (folders.Count > 0)
+        {
+            var live = Threads.ToDictionary(t => t.ThreadId);
+            var current = _inboxAll.Select(t => live.GetValueOrDefault(t.ThreadId, t)).ToList();
+            unread[Folder.AllId] = current.Count(t => t.IsUnread);
+            foreach (var folder in folders)
+            {
+                var members = folder.IsSmart ? new HashSet<long>() : _folders!.Members(folder.Id);
+                unread[folder.Id] = current.Count(t => t.IsUnread && FolderRules.Matches(folder, FactsOf(t), members.Contains(t.ThreadId)));
+            }
+        }
+
+        FolderBar.Show(folders, _activeFolderId, unread, AppPreferences.ShowFolderCounts, AppPreferences.ShowFolderBar);
+    }
+
+    /// <summary>Redraws the tabs after the settings that shape them changed.</summary>
+    public void RefreshFolders() => ApplyFolderView();
 
     private Task<BuiltThreads> StartSnapshotLoad()
     {
@@ -59,7 +228,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
     public FastObservableCollection<ThreadItem> ArchivedThreads { get; } = [];
 
-    private readonly record struct BuiltThreads(List<ThreadItem> Inbox, List<ThreadItem> Archived);
+    private readonly record struct BuiltThreads(List<ThreadItem> Inbox, List<ThreadItem> Archived, int PinVersion);
 
     private bool _isSelectionMode;
     public bool IsSelectionMode
@@ -79,7 +248,16 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     public int SelectedCount => Threads.Count(t => t.IsSelected);
     public string SelectedCountText => SelectedCount.ToString();
     public IReadOnlyList<ThreadItem> SelectedThreads => Threads.Where(t => t.IsSelected).ToList();
-    public bool AllSelectedAreUnread => SelectedThreads.Count > 0 && SelectedThreads.All(t => t.IsUnread);
+    public bool AnySelectedUnread => SelectedThreads.Any(t => t.IsUnread);
+
+    public bool AnySelectedRead => SelectedThreads.Any(t => !t.IsUnread);
+
+    public bool AnySelectedPinned => SelectedThreads.Any(t => t.IsPinned);
+
+    public bool AnySelectedNotPinned => SelectedThreads.Any(t => !t.IsPinned);
+
+    /// <summary>How many rows are pinned: they are always the first ones of the list.</summary>
+    public int PinnedCount => Threads.TakeWhile(t => t.IsPinned).Count();
 
     public void EnterSelectionMode(ThreadItem initial)
     {
@@ -113,7 +291,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedCount));
         OnPropertyChanged(nameof(SelectedCountText));
         OnPropertyChanged(nameof(SelectedThreads));
-        OnPropertyChanged(nameof(AllSelectedAreUnread));
+        OnPropertyChanged(nameof(AnySelectedUnread));
+        OnPropertyChanged(nameof(AnySelectedRead));
+        OnPropertyChanged(nameof(AnySelectedPinned));
+        OnPropertyChanged(nameof(AnySelectedNotPinned));
     }
 
     public Task<bool> UnarchiveThreadsAsync(IReadOnlyList<ThreadItem> threads)
@@ -145,6 +326,11 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         var threadIds = selected.Select(t => t.ThreadId).ToList();
         var success = await _smsService.DeleteThreadsAsync(threadIds);
+        if (success)
+        {
+            _drafts?.Remove(threadIds);
+            _pins?.Unpin(threadIds);
+        }
 
         // A failed delete (not the default SMS app, provider error) must not look like it worked:
         // the threads would vanish here and come back on the next reload.
@@ -172,6 +358,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var archivedIds = GetArchivedThreadIds();
         archivedIds.Add(thread.ThreadId);
         SaveArchivedThreadIds(archivedIds);
+        // An archived conversation is not pinned any more.
+        _pins?.Unpin([thread.ThreadId]);
 
         // The row moves to the archive straight away; the reload rebuilds both lists.
         MainThread.BeginInvokeOnMainThread(() =>
@@ -179,6 +367,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             var row = Threads.FirstOrDefault(t => t.ThreadId == thread.ThreadId);
             if (row is not null)
             {
+                row.IsPinned = false;
                 Threads.Remove(row);
                 ArchivedThreads.Add(row);
             }
@@ -201,6 +390,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             archivedIds.Add(t.ThreadId);
         }
         SaveArchivedThreadIds(archivedIds);
+        _pins?.Unpin(selected.Select(t => t.ThreadId).ToList());
 
         // The moved rows are shown in the archive straight away; the reload below rebuilds both lists.
         MainThread.BeginInvokeOnMainThread(() =>
@@ -209,6 +399,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
             {
                 Threads.Remove(t);
                 t.IsSelected = false;
+                t.IsPinned = false;
             }
             ExitSelectionMode();
             ArchivedThreads.AddRange(selected);
@@ -218,29 +409,116 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         return Task.FromResult(true);
     }
 
-    public async Task MarkSelectedAsUnreadAsync()
+    public Task PinSelectedAsync()
+    {
+        if (_pins is null)
+            return Task.CompletedTask;
+
+        // In the order they are listed, so pinning several keeps them as they were.
+        var ids = Threads.Where(t => t.IsSelected && !t.IsPinned).Select(t => t.ThreadId).ToList();
+        if (ids.Count > 0)
+        {
+            _pins.PinToTop(ids);
+            ApplyPinOrder();
+        }
+
+        ExitSelectionMode();
+        return Task.CompletedTask;
+    }
+
+    public Task UnpinSelectedAsync()
+    {
+        if (_pins is null)
+            return Task.CompletedTask;
+
+        var ids = Threads.Where(t => t.IsSelected && t.IsPinned).Select(t => t.ThreadId).ToList();
+        if (ids.Count > 0)
+        {
+            _pins.Unpin(ids);
+            ApplyPinOrder();
+        }
+
+        ExitSelectionMode();
+        return Task.CompletedTask;
+    }
+
+    // Brings the list in line with the pins without reading anything: the pinned rows go to the top in their order, the
+    // others back to where their date puts them. Only the rows that are out of place move.
+    private void ApplyPinOrder()
+    {
+        var order = _pins?.GetOrder() ?? [];
+        var pinned = order.ToHashSet();
+        foreach (var t in Threads)
+            t.IsPinned = pinned.Contains(t.ThreadId);
+
+        var byDate = Threads.OrderByDescending(t => t.Timestamp).ToList();
+        var wanted = PinnedOrder.Apply(byDate, order, t => t.ThreadId);
+        for (var index = 0; index < wanted.Count; index++)
+        {
+            if (ReferenceEquals(Threads[index], wanted[index]))
+                continue;
+
+            Threads.Move(Threads.IndexOf(wanted[index]), index);
+        }
+    }
+
+    /// <summary>Held while a pinned row is being dragged: what is read from the provider meanwhile waits for the drop.</summary>
+    public void BeginReorder() => _reordering = true;
+
+    public void EndReorder()
+    {
+        _reordering = false;
+        if (_deferred is { } waiting)
+        {
+            _deferred = null;
+            ShowBuilt(waiting);
+        }
+    }
+
+    /// <summary>A pinned row dropped into another slot among the pinned rows.</summary>
+    public void MovePinned(int from, int to)
+    {
+        if (_pins is null || from == to || from < 0 || to < 0 || from >= Threads.Count || to >= Threads.Count)
+            return;
+
+        if (!Threads[from].IsPinned || !Threads[to].IsPinned)
+            return;
+
+        Threads.Move(from, to);
+        _pins.SetOrder(Threads.TakeWhile(t => t.IsPinned).Select(t => t.ThreadId).ToList());
+    }
+
+    public Task MarkSelectedAsReadAsync() => MarkSelectedAsync(unread: false);
+
+    public Task MarkSelectedAsUnreadAsync() => MarkSelectedAsync(unread: true);
+
+    private Task MarkSelectedAsync(bool unread)
     {
         var selected = SelectedThreads;
         if (selected.Count == 0)
-            return;
-
-        var makeUnread = !AllSelectedAreUnread;
+            return Task.CompletedTask;
 
         foreach (var t in selected)
         {
-            if (makeUnread)
+            // Already in the wanted state: nothing to write, and no notification to dismiss.
+            if (t.IsUnread == unread)
+                continue;
+
+            var threadId = t.ThreadId;
+            if (unread)
             {
                 t.MarkAsUnread();
-                _ = Task.Run(() => _smsService.MarkThreadAsUnreadAsync(t.ThreadId));
+                _ = Task.Run(() => _smsService.MarkThreadAsUnreadAsync(threadId));
             }
             else
             {
                 t.MarkAsRead();
-                _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(t.ThreadId));
+                _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(threadId));
             }
         }
 
         ExitSelectionMode();
+        return Task.CompletedTask;
     }
 
     private static HashSet<long> GetArchivedThreadIds()
@@ -317,7 +595,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var cached = await (_snapshotTask ??= StartSnapshotLoad());
         if (cached.Inbox.Count > 0 && Threads.Count == 0)
         {
-            Threads.Reset(cached.Inbox);
+            ShowInbox(cached.Inbox);
             if (ArchivedThreads.Count == 0)
                 ArchivedThreads.Reset(cached.Archived);
         }
@@ -336,6 +614,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
 
         _initialized = true;
+        if (IPlatformApplication.Current?.Services.GetService<ITrashRepository>() is { } trash)
+            _ = Task.Run(() => trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now)));
 
         // Paint the last known inbox right away; the real query below refreshes it.
         await EnsureCachedInboxAsync();
@@ -374,11 +654,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
             var items = await Task.Run(() => BuildItems(rawThreads));
 
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                ApplyItems(Threads, items.Inbox);
-                ApplyItems(ArchivedThreads, items.Archived);
-            });
+            MainThread.BeginInvokeOnMainThread(() => ShowBuilt(items));
 
             if (HasPermission)
                 _ = Task.Run(() => ThreadSnapshotStore.Save(SnapshotPath, rawThreads));
@@ -405,11 +681,36 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
     }
 
+    // On the UI thread. A list built before the pins changed would undo the change on screen.
+    private void ShowBuilt(BuiltThreads built)
+    {
+        if (_reordering)
+        {
+            _deferred = built;
+            return;
+        }
+
+        if ((_pins?.Version ?? 0) != built.PinVersion)
+        {
+            _ = LoadThreadsAsync();
+            return;
+        }
+
+        ShowInbox(built.Inbox);
+        ApplyItems(ArchivedThreads, built.Archived);
+    }
+
     private BuiltThreads BuildItems(IReadOnlyList<SmsThread> rawThreads)
     {
+        var pinVersion = _pins?.Version ?? 0;
+        var pinOrder = _pins?.GetOrder() ?? [];
+        var pinned = pinOrder.ToHashSet();
         var archivedIds = GetArchivedThreadIds();
         var now = DateTime.Now;
         var culture = CultureInfo.CurrentUICulture;
+        var draftPreview = Gheychi.App.Localization.LocalizationManager.Instance["Inbox_DraftPreview"];
+        var findCodes = _folders?.Has(SmartFolder.Codes) == true;
+        rawThreads = DraftInbox.Merge(rawThreads, _drafts?.GetAll() ?? []);
 
         var items = new List<ThreadItem>(rawThreads.Count);
         var archived = new List<ThreadItem>();
@@ -421,7 +722,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                     ? t.Address
                     : PhoneNumberNormalizer.FormatDisplay(t.Address);
 
-            (archivedIds.Contains(t.ThreadId) ? archived : items).Add(new ThreadItem
+            var isArchived = archivedIds.Contains(t.ThreadId);
+            (isArchived ? archived : items).Add(new ThreadItem
             {
                 ThreadId = t.ThreadId,
                 SubId = t.SubId,
@@ -432,13 +734,20 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 Count = t.UnreadCount,
                 TotalCount = t.TotalCount,
                 Time = _dateFormatter.FormatThreadTime(t.Timestamp, now, culture),
-                Preview = t.Snippet,
+                Preview = t.HasDraft ? string.Format(draftPreview, t.Snippet) : t.Snippet,
+                HasDraft = t.HasDraft,
+                Timestamp = t.Timestamp,
+                IsPinned = !isArchived && pinned.Contains(t.ThreadId),
                 IsUnread = t.UnreadCount > 0,
-                HasFailed = t.HasFailed
+                HasFailed = t.HasFailed,
+                IsContact = !string.IsNullOrWhiteSpace(t.ContactName),
+                IsSender = PhoneNumberNormalizer.IsAlphanumeric(t.Address),
+                HasCode = findCodes && OtpDetector.Find(t.Snippet) is not null
             });
         }
 
-        return new BuiltThreads(items, archived);
+        var ordered = PinnedOrder.Apply(items, pinOrder, t => t.ThreadId);
+        return new BuiltThreads(ordered as List<ThreadItem> ?? ordered.ToList(), archived, pinVersion);
     }
 
     // A full Reset drops the scroll position and rebinds every visible row, so refreshes

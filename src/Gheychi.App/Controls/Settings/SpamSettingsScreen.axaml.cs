@@ -44,6 +44,12 @@ public partial class SpamSettingsScreen : SettingsScreen
         PresetRelaxedHint.Text = SpamItem.FormatPercent(95);
         PresetBalancedHint.Text = SpamItem.FormatPercent(85);
         PresetStrictHint.Text = SpamItem.FormatPercent(70);
+
+        // The Settings tab lays screens out ahead of time without OnShown. A slider still at its default 0 is
+        // coerced up to Minimum when its template applies, and that change saved a 50% threshold on every launch.
+        _binding = true;
+        SensitivitySlider.Value = ThresholdPercent;
+        _binding = false;
     }
 
     private int ThresholdPercent =>
@@ -152,21 +158,17 @@ public partial class SpamSettingsScreen : SettingsScreen
         RescheduleDigest();
     }
 
-    private void OnDigestTimeTapped(object? sender, TappedEventArgs e)
+    private async void OnDigestTimeTapped(object? sender, TappedEventArgs e)
     {
-        if (Platform.CurrentActivity is not { } activity)
-            return;
-
         try
         {
             var minute = SpamDigestPreferences.MinuteOfDay;
-            var is24Hour = SettingsUi.IsPersian || global::Android.Text.Format.DateFormat.Is24HourFormat(activity);
-            new global::Android.App.TimePickerDialog(activity, (_, picked) =>
-            {
-                SpamDigestPreferences.MinuteOfDay = picked.HourOfDay * 60 + picked.Minute;
-                ShowDigestState();
-                RescheduleDigest();
-            }, minute / 60, minute % 60, is24Hour).Show();
+            if (await DateTimeSheets.PickTimeAsync(minute / 60, minute % 60, DateTimeSheets.Is24Hour) is not { } picked)
+                return;
+
+            SpamDigestPreferences.MinuteOfDay = picked.Hour * 60 + picked.Minute;
+            ShowDigestState();
+            RescheduleDigest();
         }
         catch (Exception ex)
         {

@@ -63,9 +63,6 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>ارسال</value>
   </data>
-  <data name="Chat_SimTitle" xml:space="preserve">
-    <value>ارسال با</value>
-  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>انصراف</value>
   </data>
@@ -127,13 +124,13 @@
     <value>حذف پیام؟</value>
   </data>
   <data name="Chat_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>این پیام برای همیشه از گوشی شما حذف خواهد شد.</value>
+    <value>این پیام به سطل زباله منتقل می‌شود و ۳۰ روز نگهداری می‌شود.</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>حذف {0} پیام؟</value>
   </data>
   <data name="Chat_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>این پیام‌ها برای همیشه از گوشی شما حذف خواهند شد.</value>
+    <value>این پیام‌ها به سطل زباله منتقل می‌شوند و ۳۰ روز نگهداری می‌شوند.</value>
   </data>
   <data name="Chat_DeleteConfirmButton" xml:space="preserve">
     <value>حذف</value>
@@ -258,6 +255,12 @@
   <data name="Messages_MarkAsUnread" xml:space="preserve">
     <value>علامت‌گذاری به‌عنوان خوانده‌نشده</value>
   </data>
+  <data name="Messages_Pin" xml:space="preserve">
+    <value>سنجاق کردن</value>
+  </data>
+  <data name="Messages_Unpin" xml:space="preserve">
+    <value>برداشتن سنجاق</value>
+  </data>
   <data name="Messages_MarkAsRead" xml:space="preserve">
     <value>علامت‌گذاری به‌عنوان خوانده‌شده</value>
   </data>
@@ -265,13 +268,13 @@
     <value>حذف گفتگو؟</value>
   </data>
   <data name="Messages_DeleteSingleConfirmMessage" xml:space="preserve">
-    <value>این گفتگو به‌طور دائم از گوشی شما حذف خواهد شد.</value>
+    <value>این گفتگو به سطل زباله منتقل می‌شود و ۳۰ روز نگهداری می‌شود.</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmTitle" xml:space="preserve">
     <value>حذف {0} گفتگو؟</value>
   </data>
   <data name="Messages_DeleteMultipleConfirmMessage" xml:space="preserve">
-    <value>این گفتگوها به‌طور دائم از گوشی شما حذف خواهند شد.</value>
+    <value>این گفتگوها به سطل زباله منتقل می‌شوند و ۳۰ روز نگهداری می‌شوند.</value>
   </data>
   <data name="Search_MessagesNumbers" xml:space="preserve">
     <value>جستجوی پیام‌ها، شماره‌ها...</value>
@@ -634,7 +637,28 @@
     <value>{0} در این هفته</value>
   </data>
   <data name="Settings_SectionProtection" xml:space="preserve">
-    <value>محافظت و پیام‌رسانی</value>
+    <value>محافظت</value>
+  </data>
+  <data name="Settings_SectionMessaging" xml:space="preserve">
+    <value>پیام‌رسانی</value>
+  </data>
+  <data name="Settings_Codes" xml:space="preserve">
+    <value>کدهای تأیید</value>
+  </data>
+  <data name="Settings_CodesHint" xml:space="preserve">
+    <value>دکمه‌ی کپی و کپی خودکار</value>
+  </data>
+  <data name="Settings_CodesCardTitle" xml:space="preserve">
+    <value>کدها یک‌لمسی</value>
+  </data>
+  <data name="Settings_CodesCardText" xml:space="preserve">
+    <value>کد پیامک‌های تازه پررنگ می‌شود و دکمه‌ی «کپی کد» زیرش می‌آید. همین دکمه در اعلان هم هست.</value>
+  </data>
+  <data name="Settings_SectionAutoCopy" xml:space="preserve">
+    <value>خودکار</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicNote" xml:space="preserve">
+    <value>فقط برای رمز پویای بانک‌ها. کدهای دیگر فقط با زدن «کپی کد» کپی می‌شوند.</value>
   </data>
   <data name="Settings_SectionPersonal" xml:space="preserve">
     <value>شخصی‌سازی</value>
@@ -1062,6 +1086,261 @@
   <data name="Chat_Unblock" xml:space="preserve">
     <value>رفع مسدودی فرستنده</value>
   </data>
+  <data name="Chat_NoReply" xml:space="preserve">
+    <value>این فرستنده پاسخ نمی‌پذیرد</value>
+  </data>
+  <data name="Chat_SendingIn" xml:space="preserve">
+    <value>ارسال تا {0} ثانیه دیگر</value>
+  </data>
+  <data name="Chat_Undo" xml:space="preserve">
+    <value>بازگردانی</value>
+  </data>
+  <data name="Chat_ScheduledBar" xml:space="preserve">
+    <value>{0} پیام زمان‌بندی‌شده · بعدی {1}</value>
+  </data>
+  <data name="Chat_ScheduleTitle" xml:space="preserve">
+    <value>ارسال در زمان دیگر</value>
+  </data>
+  <data name="Schedule_OneHour" xml:space="preserve">
+    <value>یک ساعت دیگر</value>
+  </data>
+  <data name="Schedule_ThisEvening" xml:space="preserve">
+    <value>امروز عصر</value>
+  </data>
+  <data name="Schedule_TomorrowMorning" xml:space="preserve">
+    <value>فردا صبح</value>
+  </data>
+  <data name="Schedule_TomorrowEvening" xml:space="preserve">
+    <value>فردا عصر</value>
+  </data>
+  <data name="Schedule_Custom" xml:space="preserve">
+    <value>انتخاب تاریخ و ساعت…</value>
+  </data>
+  <data name="Chat_Scheduled" xml:space="preserve">
+    <value>برای {0} زمان‌بندی شد</value>
+  </data>
+  <data name="Chat_ScheduledInexact" xml:space="preserve">
+    <value>برای {0} زمان‌بندی شد؛ ممکن است چند دقیقه دیرتر ارسال شود</value>
+  </data>
+  <data name="Chat_ScheduleEmpty" xml:space="preserve">
+    <value>ابتدا پیام را بنویسید</value>
+  </data>
+  <data name="Chat_ScheduleTooSoon" xml:space="preserve">
+    <value>زمانی دست‌کم یک دقیقه جلوتر انتخاب کنید</value>
+  </data>
+  <data name="Chat_ScheduledTitle" xml:space="preserve">
+    <value>پیام‌های زمان‌بندی‌شده</value>
+  </data>
+  <data name="Chat_ScheduledSendNow" xml:space="preserve">
+    <value>ارسال اکنون</value>
+  </data>
+  <data name="Chat_ScheduledChangeTime" xml:space="preserve">
+    <value>تغییر زمان</value>
+  </data>
+  <data name="Chat_ScheduledDelete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Chat_ExactAlarmTitle" xml:space="preserve">
+    <value>ارسال دقیقاً سر ساعت؟</value>
+  </data>
+  <data name="Chat_ExactAlarmMessage" xml:space="preserve">
+    <value>اندروید ممکن است پیام‌های زمان‌بندی‌شده را چند دقیقه دیر ارسال کند، مگر اینکه اجازهٔ «هشدارها و یادآورها» را برای برنامه بدهید.</value>
+  </data>
+  <data name="Chat_ExactAlarmOpen" xml:space="preserve">
+    <value>باز کردن تنظیمات</value>
+  </data>
+  <data name="Chat_ExactAlarmLater" xml:space="preserve">
+    <value>حالا نه</value>
+  </data>
+  <data name="Settings_Sending" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Settings_SendingHint" xml:space="preserve">
+    <value>تأخیر ارسال، پیام‌های زمان‌بندی‌شده</value>
+  </data>
+  <data name="Settings_SendDelay" xml:space="preserve">
+    <value>تأخیر ارسال</value>
+  </data>
+  <data name="Settings_SendDelayHint" xml:space="preserve">
+    <value>پیام را چند ثانیه نگه می‌دارد تا بتوانید لغوش کنید</value>
+  </data>
+  <data name="Settings_SendDelayOff" xml:space="preserve">
+    <value>خاموش</value>
+  </data>
+  <data name="Settings_SendDelayValue" xml:space="preserve">
+    <value>{0} ثانیه</value>
+  </data>
+  <data name="Settings_ScheduleHint" xml:space="preserve">
+    <value>برای زمان‌بندی پیام، دکمهٔ ارسال را نگه دارید</value>
+  </data>
+  <data name="Settings_ExactAlarms" xml:space="preserve">
+    <value>زمان‌بندی دقیق</value>
+  </data>
+  <data name="Settings_ExactAlarmsOn" xml:space="preserve">
+    <value>پیام‌های زمان‌بندی‌شده سر دقیقهٔ انتخابی ارسال می‌شوند</value>
+  </data>
+  <data name="Settings_ExactAlarmsOff" xml:space="preserve">
+    <value>برای ارسال سر وقت، اجازهٔ هشدارها را بدهید. برای اجازه بزنید</value>
+  </data>
+  <data name="Folder_All" xml:space="preserve">
+    <value>همه</value>
+  </data>
+  <data name="Folder_Smart_Unread" xml:space="preserve">
+    <value>خوانده‌نشده</value>
+  </data>
+  <data name="Folder_Smart_Contacts" xml:space="preserve">
+    <value>مخاطبین</value>
+  </data>
+  <data name="Folder_Smart_Unknown" xml:space="preserve">
+    <value>ناشناس</value>
+  </data>
+  <data name="Folder_Smart_Senders" xml:space="preserve">
+    <value>سرویس‌ها</value>
+  </data>
+  <data name="Folder_Smart_Codes" xml:space="preserve">
+    <value>کدها</value>
+  </data>
+  <data name="Folder_Smart_Failed" xml:space="preserve">
+    <value>ناموفق</value>
+  </data>
+  <data name="Folder_Smart_Drafts" xml:space="preserve">
+    <value>پیش‌نویس‌ها</value>
+  </data>
+  <data name="Folder_Smart_Pinned" xml:space="preserve">
+    <value>سنجاق‌شده</value>
+  </data>
+  <data name="Folder_SmartHint_Unread" xml:space="preserve">
+    <value>گفتگوهای نخوانده</value>
+  </data>
+  <data name="Folder_SmartHint_Contacts" xml:space="preserve">
+    <value>افراد موجود در مخاطبین</value>
+  </data>
+  <data name="Folder_SmartHint_Unknown" xml:space="preserve">
+    <value>شماره‌هایی که در مخاطبین نیستند</value>
+  </data>
+  <data name="Folder_SmartHint_Senders" xml:space="preserve">
+    <value>بانک‌ها، اپراتورها و سرویس‌هایی که با نام پیام می‌فرستند</value>
+  </data>
+  <data name="Folder_SmartHint_Codes" xml:space="preserve">
+    <value>گفتگوهایی که آخرین پیامشان کد دارد</value>
+  </data>
+  <data name="Folder_SmartHint_Failed" xml:space="preserve">
+    <value>پیام‌هایی که ارسال نشدند</value>
+  </data>
+  <data name="Folder_SmartHint_Drafts" xml:space="preserve">
+    <value>پیام‌هایی که شروع کرده‌اید و ارسال نشده‌اند</value>
+  </data>
+  <data name="Folder_SmartHint_Pinned" xml:space="preserve">
+    <value>گفتگوهای سنجاق‌شدهٔ شما</value>
+  </data>
+  <data name="Folder_Empty" xml:space="preserve">
+    <value>گفتگویی در این پوشه نیست</value>
+  </data>
+  <data name="Folder_AddTo" xml:space="preserve">
+    <value>افزودن به پوشه</value>
+  </data>
+  <data name="Folder_New" xml:space="preserve">
+    <value>پوشهٔ جدید</value>
+  </data>
+  <data name="Folder_NameHint" xml:space="preserve">
+    <value>نام پوشه</value>
+  </data>
+  <data name="Folder_Save" xml:space="preserve">
+    <value>ذخیره</value>
+  </data>
+  <data name="Folder_MarkRead" xml:space="preserve">
+    <value>همه را خوانده‌شده کن</value>
+  </data>
+  <data name="Folder_Rename" xml:space="preserve">
+    <value>تغییر نام</value>
+  </data>
+  <data name="Folder_Delete" xml:space="preserve">
+    <value>حذف پوشه</value>
+  </data>
+  <data name="Folder_DeleteTitle" xml:space="preserve">
+    <value>این پوشه حذف شود؟</value>
+  </data>
+  <data name="Folder_DeleteMessage" xml:space="preserve">
+    <value>گفتگوهای داخل آن حذف نمی‌شوند.</value>
+  </data>
+  <data name="Settings_Folders" xml:space="preserve">
+    <value>پوشه‌ها</value>
+  </data>
+  <data name="Settings_FoldersHint" xml:space="preserve">
+    <value>زبانه‌هایی برای صندوق ورودی</value>
+  </data>
+  <data name="Folder_SectionYours" xml:space="preserve">
+    <value>پوشه‌های شما</value>
+  </data>
+  <data name="Folder_SectionSmart" xml:space="preserve">
+    <value>پوشه‌های هوشمند</value>
+  </data>
+  <data name="Folder_SectionOptions" xml:space="preserve">
+    <value>گزینه‌ها</value>
+  </data>
+  <data name="Folder_NoneYet" xml:space="preserve">
+    <value>هنوز پوشه‌ای ندارید. برای دسته‌بندی صندوق ورودی یکی بسازید.</value>
+  </data>
+  <data name="Folder_Conversations" xml:space="preserve">
+    <value>{0} گفتگو</value>
+  </data>
+  <data name="Folder_OptBar" xml:space="preserve">
+    <value>نمایش زبانه‌های پوشه</value>
+  </data>
+  <data name="Folder_OptBarHint" xml:space="preserve">
+    <value>بدون حذف پوشه‌ها پنهان می‌شوند</value>
+  </data>
+  <data name="Folder_OptCounts" xml:space="preserve">
+    <value>تعداد خوانده‌نشده</value>
+  </data>
+  <data name="Folder_OptCountsHint" xml:space="preserve">
+    <value>نمایش عدد روی هر زبانه</value>
+  </data>
+  <data name="Folder_OptRemember" xml:space="preserve">
+    <value>به‌خاطر سپردن آخرین پوشه</value>
+  </data>
+  <data name="Folder_OptRememberHint" xml:space="preserve">
+    <value>صندوق ورودی روی آخرین پوشه باز می‌شود</value>
+  </data>
+  <data name="Folder_EditTitle" xml:space="preserve">
+    <value>ویرایش پوشه</value>
+  </data>
+  <data name="Folder_Name" xml:space="preserve">
+    <value>نام</value>
+  </data>
+  <data name="Folder_Icon" xml:space="preserve">
+    <value>آیکون</value>
+  </data>
+  <data name="Folder_Edit" xml:space="preserve">
+    <value>ویرایش</value>
+  </data>
+  <data name="Folder_MoveUp" xml:space="preserve">
+    <value>انتقال به بالا</value>
+  </data>
+  <data name="Folder_MoveDown" xml:space="preserve">
+    <value>انتقال به پایین</value>
+  </data>
+  <data name="Folder_ProfileNone" xml:space="preserve">
+    <value>در هیچ پوشه‌ای نیست</value>
+  </data>
+  <data name="Folder_NameRequired" xml:space="preserve">
+    <value>برای پوشه نامی بگذارید</value>
+  </data>
+  <data name="Folder_MarkReadTitle" xml:space="preserve">
+    <value>همه خوانده‌شده شوند؟</value>
+  </data>
+  <data name="Folder_MarkReadMessage" xml:space="preserve">
+    <value>همه‌ی گفتگوهای «{0}» خوانده‌شده می‌شوند.</value>
+  </data>
+  <data name="Picker_DateTitle" xml:space="preserve">
+    <value>یک روز انتخاب کنید</value>
+  </data>
+  <data name="Picker_TimeTitle" xml:space="preserve">
+    <value>یک ساعت انتخاب کنید</value>
+  </data>
+  <data name="Picker_Ok" xml:space="preserve">
+    <value>تأیید</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>این فرستنده را مسدود کرده‌اید و پیام‌هایش دور ریخته می‌شوند</value>
   </data>
@@ -1128,6 +1407,9 @@
   <data name="Accent_Amber" xml:space="preserve">
     <value>کهربایی</value>
   </data>
+  <data name="Accent_System" xml:space="preserve">
+    <value>سیستم (Material You)</value>
+  </data>
   <data name="Accent_Graphite" xml:space="preserve">
     <value>گرافیتی</value>
   </data>
@@ -1152,6 +1434,33 @@
   <data name="Chat_LinkOpenFailed" xml:space="preserve">
     <value>برنامه‌ای برای باز کردن این پیوند وجود ندارد.</value>
   </data>
+  <data name="Chat_CopyCode" xml:space="preserve">
+    <value>کپی کد</value>
+  </data>
+  <data name="Chat_CopyDynamicPassword" xml:space="preserve">
+    <value>کپی رمز</value>
+  </data>
+  <data name="Chat_CodeCopied" xml:space="preserve">
+    <value>کپی شد</value>
+  </data>
+  <data name="Notification_CopyCode" xml:space="preserve">
+    <value>کپی کد</value>
+  </data>
+  <data name="Notification_CopyDynamicPassword" xml:space="preserve">
+    <value>کپی رمز</value>
+  </data>
+  <data name="Notification_CodeCopied" xml:space="preserve">
+    <value>کد کپی شد</value>
+  </data>
+  <data name="Notification_CodeLabel" xml:space="preserve">
+    <value>کد تأیید</value>
+  </data>
+  <data name="Settings_AutoCopyDynamic" xml:space="preserve">
+    <value>کپی خودکار رمز پویا</value>
+  </data>
+  <data name="Settings_AutoCopyDynamicHint" xml:space="preserve">
+    <value>رمز پویای بانک‌ها به‌محض رسیدن پیامک، کپی می‌شود.</value>
+  </data>
   <data name="Chat_Copy" xml:space="preserve">
     <value>کپی</value>
   </data>
@@ -1169,5 +1478,107 @@
   </data>
   <data name="Share_Empty" xml:space="preserve">
     <value>هنوز گفتگویی نیست. برای شروع یک شماره بنویسید.</value>
+  </data>
+  <data name="Chat_Unconfirmed" xml:space="preserve">
+    <value>تأیید نشد · ارسال دوباره</value>
+  </data>
+  <data name="Chat_InfoUnconfirmed" xml:space="preserve">
+    <value>تأیید نشد</value>
+  </data>
+  <data name="Chat_ResendTitle" xml:space="preserve">
+    <value>دوباره ارسال شود؟</value>
+  </data>
+  <data name="Chat_ResendUnconfirmedMessage" xml:space="preserve">
+    <value>گوشی تأیید نکرد که این پیام ارسال شده یا نه. ممکن است رسیده باشد و ارسال دوباره باعث شود دو بار برسد.</value>
+  </data>
+  <data name="Chat_ResendButton" xml:space="preserve">
+    <value>ارسال دوباره</value>
+  </data>
+  <data name="Chat_StillSendingTitle" xml:space="preserve">
+    <value>هنوز در حال ارسال</value>
+  </data>
+  <data name="Chat_StillSendingMessage" xml:space="preserve">
+    <value>همین پیام هنوز در حال ارسال است. ارسال دوباره ممکن است باعث شود دو بار برسد.</value>
+  </data>
+  <data name="Chat_SendAnyway" xml:space="preserve">
+    <value>باز هم ارسال شود</value>
+  </data>
+  <data name="Chat_OpenConversation" xml:space="preserve">
+    <value>باز کردن گفتگو</value>
+  </data>
+  <data name="Settings_DeliveryReports" xml:space="preserve">
+    <value>گزارش تحویل</value>
+  </data>
+  <data name="Settings_DeliveryReportsHint" xml:space="preserve">
+    <value>وقتی پیامی که فرستاده‌اید تحویل داده شد یا اپراتور از رساندن آن منصرف شد، اعلان نمایش داده می‌شود</value>
+  </data>
+  <data name="Notification_ChannelDelivery" xml:space="preserve">
+    <value>گزارش تحویل</value>
+  </data>
+  <data name="Notification_ChannelDeliveryDescription" xml:space="preserve">
+    <value>اینکه پیام‌های ارسالی شما به گوشی مقصد رسیده‌اند یا نه</value>
+  </data>
+  <data name="Notification_DeliveredTo" xml:space="preserve">
+    <value>به {0} تحویل داده شد</value>
+  </data>
+  <data name="Notification_NotDeliveredTo" xml:space="preserve">
+    <value>به {0} تحویل داده نشد</value>
+  </data>
+  <data name="Notification_DeliveredHidden" xml:space="preserve">
+    <value>پیام تحویل داده شد</value>
+  </data>
+  <data name="Notification_NotDeliveredHidden" xml:space="preserve">
+    <value>پیام تحویل داده نشد</value>
+  </data>
+  <data name="Inbox_DraftPreview" xml:space="preserve">
+    <value>پیش‌نویس: {0}</value>
+  </data>
+  <data name="Settings_Trash" xml:space="preserve">
+    <value>سطل زباله</value>
+  </data>
+  <data name="Settings_TrashHint" xml:space="preserve">
+    <value>بازگردانی پیام‌های حذف‌شده</value>
+  </data>
+  <data name="Trash_Note" xml:space="preserve">
+    <value>پیام‌های حذف‌شده {0} روز اینجا می‌مانند و سپس برای همیشه پاک می‌شوند.</value>
+  </data>
+  <data name="Trash_Empty" xml:space="preserve">
+    <value>سطل زباله خالی است.</value>
+  </data>
+  <data name="Trash_Restore" xml:space="preserve">
+    <value>بازگردانی</value>
+  </data>
+  <data name="Trash_DeleteForever" xml:space="preserve">
+    <value>حذف برای همیشه</value>
+  </data>
+  <data name="Trash_EmptyAll" xml:space="preserve">
+    <value>خالی کردن سطل زباله</value>
+  </data>
+  <data name="Trash_EmptyAllTitle" xml:space="preserve">
+    <value>سطل زباله خالی شود؟</value>
+  </data>
+  <data name="Trash_EmptyAllMessage" xml:space="preserve">
+    <value>همه چیز برای همیشه پاک می‌شود.</value>
+  </data>
+  <data name="Trash_EmptyAllButton" xml:space="preserve">
+    <value>خالی کن</value>
+  </data>
+  <data name="Trash_DeleteForeverTitle" xml:space="preserve">
+    <value>برای همیشه حذف شود؟</value>
+  </data>
+  <data name="Trash_DeleteForeverMessage" xml:space="preserve">
+    <value>این کار قابل بازگشت نیست.</value>
+  </data>
+  <data name="Trash_MessageCount" xml:space="preserve">
+    <value>{0} پیام</value>
+  </data>
+  <data name="Trash_DaysLeft" xml:space="preserve">
+    <value>{0} روز مانده</value>
+  </data>
+  <data name="Trash_Restored" xml:space="preserve">
+    <value>بازگردانی شد</value>
+  </data>
+  <data name="Trash_RestoreFailed" xml:space="preserve">
+    <value>بازگردانی ممکن نشد. آیا قیچی برنامه پیامک پیش‌فرض است؟</value>
   </data>
 </root>

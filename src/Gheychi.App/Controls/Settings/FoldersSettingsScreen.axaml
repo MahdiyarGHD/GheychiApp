@@ -1,0 +1,63 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.FoldersSettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Folders}" />
+
+        <ScrollViewer x:Name="Scroll" Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="{settings:UpperTranslate Folder_SectionYours}" Classes="sectionTitle" Margin="26,4,16,8" />
+                <Border Classes="card">
+                    <StackPanel x:Name="FolderList" />
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Folder_SectionSmart}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel x:Name="SmartList" />
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Folder_SectionOptions}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Folder_OptBar}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Folder_OptBarHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ToggleButton x:Name="BarSwitch" Grid.Column="1" Classes="setting"
+                                              IsCheckedChanged="OnBarToggled" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Folder_OptCounts}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Folder_OptCountsHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ToggleButton x:Name="CountsSwitch" Grid.Column="1" Classes="setting"
+                                              IsCheckedChanged="OnCountsToggled" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Folder_OptRemember}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Folder_OptRememberHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ToggleButton x:Name="RememberSwitch" Grid.Column="1" Classes="setting"
+                                              IsCheckedChanged="OnRememberToggled" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

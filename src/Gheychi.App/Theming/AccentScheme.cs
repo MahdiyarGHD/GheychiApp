@@ -44,7 +44,7 @@ public enum AccentRole
 /// </summary>
 public sealed class AccentScheme
 {
-    public static IReadOnlyList<AccentScheme> All { get; } =
+    private static readonly AccentScheme[] Presets =
     [
         new("green", "Accent_Green",
             solid: "#2E7D5B", ink: "#1B5E43", glow: "#6FD3A8",
@@ -98,10 +98,89 @@ public sealed class AccentScheme
             deep: "#24262A", onSolid: "#DCDFE2", onSolidBright: "#ECEDEF"),
     ];
 
-    public static AccentScheme Default => All[0];
+    /// <summary>The presets, then the phone's own colour (Material You) where it has one.</summary>
+    public static IReadOnlyList<AccentScheme> All { get; } = FromSystem() is { } system ? [.. Presets, system] : Presets;
+
+    public static AccentScheme Default => Presets[0];
+
+    public const string SystemId = "system";
 
     public static AccentScheme Find(string? id) =>
         All.FirstOrDefault(s => string.Equals(s.Id, id, StringComparison.OrdinalIgnoreCase)) ?? Default;
+
+    /// <summary>
+    /// Material You: the tones of the wallpaper's primary colour, which Android 12 and later publish as
+    /// system_accent1_*. Each role takes the tone Material uses for it; Solid and the two text tones are stepped
+    /// until they hold the same contrast the presets are tuned to, whatever the wallpaper's colour.
+    /// </summary>
+    private static AccentScheme? FromSystem()
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(31))
+            return null;
+
+        try
+        {
+            var context = Platform.AppContext;
+            var tones = new Dictionary<int, int>();
+            foreach (var tone in new[] { 50, 100, 200, 300, 400, 500, 600, 700, 800, 900 })
+            {
+                var id = context.Resources!.GetIdentifier($"system_accent1_{tone}", "color", "android");
+                if (id == 0)
+                    return null;
+
+                tones[tone] = (int)(context.GetColor(id) & 0xFFFFFF);
+            }
+
+            string Hex(int tone) => "#" + tones[tone].ToString("X6");
+            var solid = Pick(tones, 600, 1, 4.5, 0xFFFFFF);
+            var ink = Pick(tones, 700, 1, 4.5, 0xFFFFFF);
+            var glow = Pick(tones, 200, -1, 4.5, 0x1E1F22);
+            return new AccentScheme(SystemId, "Accent_System",
+                solid: Hex(solid), ink: Hex(ink), glow: Hex(glow),
+                softLight: Hex(100), softDark: Hex(800), strongLight: Hex(200), strongDark: Hex(700),
+                washLight: Hex(50), washDark: Hex(900), midLight: Hex(300), midDark: Hex(500),
+                deep: Hex(900), onSolid: Hex(100), onSolidBright: Hex(50));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading the system accent failed: {ex}");
+            return null;
+        }
+    }
+
+    // The first tone from the start one that reaches the contrast: step +1 goes darker (a tone that carries white), -1 lighter
+    // (a tone that sits on a dark surface).
+    private static int Pick(Dictionary<int, int> tones, int start, int step, double minimum, int against)
+    {
+        var steps = new[] { 50, 100, 200, 300, 400, 500, 600, 700, 800, 900 };
+        var index = Array.IndexOf(steps, start);
+        for (var i = index; i >= 0 && i < steps.Length; i += step)
+        {
+            if (Contrast(tones[steps[i]], against) >= minimum)
+                return steps[i];
+        }
+
+        return steps[step > 0 ? steps.Length - 1 : 0];
+    }
+
+    private static double Contrast(int a, int b)
+    {
+        var (hi, lo) = (Luminance(a), Luminance(b));
+        if (hi < lo)
+            (hi, lo) = (lo, hi);
+        return (hi + 0.05) / (lo + 0.05);
+    }
+
+    private static double Luminance(int rgb)
+    {
+        static double Channel(int c)
+        {
+            var v = c / 255.0;
+            return v <= 0.03928 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
+        }
+
+        return 0.2126 * Channel(rgb >> 16 & 0xFF) + 0.7152 * Channel(rgb >> 8 & 0xFF) + 0.0722 * Channel(rgb & 0xFF);
+    }
 
     private readonly string _solid, _ink, _glow, _deep, _onSolid, _onSolidBright;
     private readonly string _softLight, _softDark, _strongLight, _strongDark, _washLight, _washDark, _midLight, _midDark;

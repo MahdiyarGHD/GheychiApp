@@ -134,21 +134,13 @@ public partial class SettingsPage : UserControl
     public void OnHidden()
     {
         MainActivity.Resumed -= OnAppResumed;
+
+        // Back on the tab it starts from its top, not from the screen it was left on.
+        CloseAll();
+        PageScroll.Offset = default;
     }
 
-    /// <summary>The Settings tab was tapped while shown: every open screen closes, otherwise the page goes to its top.</summary>
-    public void OnTabReselected()
-    {
-        if (_open.Count > 0)
-        {
-            CloseAll();
-            RefreshRoot();
-        }
-        else
-        {
-            ScrollAnimator.ToTop(PageScroll);
-        }
-    }
+    private void OnBackToInboxTapped(object? sender, TappedEventArgs e) => Ui.MainView.Current?.SelectMessagesTab();
 
     /// <summary>True when it closed an open screen.</summary>
     public bool HandleBack()
@@ -171,8 +163,13 @@ public partial class SettingsPage : UserControl
             SettingsScreenKind.Spam => new SpamSettingsScreen(),
             SettingsScreenKind.Trusted => new TrustedSendersScreen(),
             SettingsScreenKind.Blocked => new BlockedSendersScreen(),
+            SettingsScreenKind.Trash => new TrashScreen(),
             SettingsScreenKind.Sims => new SimSettingsScreen(),
             SettingsScreenKind.Notifications => new NotificationSettingsScreen(),
+            SettingsScreenKind.Sending => new SendingSettingsScreen(),
+            SettingsScreenKind.Folders => new FoldersSettingsScreen(),
+            SettingsScreenKind.FolderEdit => new FolderEditScreen(),
+            SettingsScreenKind.Codes => new CodesSettingsScreen(),
             SettingsScreenKind.Appearance => new AppearanceSettingsScreen(),
             SettingsScreenKind.Privacy => new PrivacySettingsScreen(),
             SettingsScreenKind.About => new AboutSettingsScreen(),
@@ -271,9 +268,17 @@ public partial class SettingsPage : UserControl
 
     private void OnBlockedTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Blocked);
 
+    private void OnTrashTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Trash);
+
     private void OnSimsTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Sims);
 
     private void OnNotificationsTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Notifications);
+
+    private void OnSendingTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Sending);
+
+    private void OnFoldersTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Folders);
+
+    private void OnCodesTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Codes);
 
     private void OnAppearanceTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Appearance);
 
@@ -325,6 +330,7 @@ public partial class SettingsPage : UserControl
             SetChip(DefaultChip, DefaultLabel, _sms?.IsDefaultSmsApp() ?? true, "Settings_Default", "Settings_NotDefault");
             SetChip(NotificationsChip, NotificationsLabel, AppStatus.NotificationsEnabled(), "Settings_NotificationsOn", "Settings_NotificationsOff");
             SetChip(ContactsChip, ContactsLabel, await AppStatus.ContactsAllowedAsync(), "Settings_ContactsOn", "Settings_ContactsOff");
+            LayOutChips();
         }
         catch (Exception ex)
         {
@@ -332,10 +338,27 @@ public partial class SettingsPage : UserControl
         }
     }
 
+    // A chip only stays while it still asks for something.
     private static void SetChip(Border chip, TextBlock label, bool ok, string okKey, string warnKey)
     {
+        chip.IsVisible = !ok;
         chip.Classes.Set("warn", !ok);
         label.Text = LocalizationManager.Instance[ok ? okKey : warnKey];
+    }
+
+    // The chips left share the whole row; the notifications one, the longest label, gets a little more when not alone.
+    private void LayOutChips()
+    {
+        Border[] shown = [.. new[] { DefaultChip, NotificationsChip, ContactsChip }.Where(chip => chip.IsVisible)];
+        StatusChips.ColumnDefinitions.Clear();
+        for (var i = 0; i < shown.Length; i++)
+        {
+            var weight = shown.Length > 1 && shown[i] == NotificationsChip ? 1.25 : 1;
+            StatusChips.ColumnDefinitions.Add(new ColumnDefinition(weight, GridUnitType.Star));
+            Grid.SetColumn(shown[i], i);
+        }
+
+        StatusChips.IsVisible = shown.Length > 0;
     }
 
     private void OnDefaultChipTapped(object? sender, TappedEventArgs e)
@@ -417,7 +440,9 @@ public partial class SettingsPage : UserControl
     {
         var loc = LocalizationManager.Instance;
         var version = SettingsUi.Digits(AppInfo.Current.VersionString);
-        AboutHint.Text = string.Format(loc[_appUpdates?.GetAvailable() is null ? "Settings_AboutHint" : "Settings_AboutUpdateHint"], version);
+        var update = _appUpdates?.GetAvailable() is not null;
+        AboutHint.Text = string.Format(loc[update ? "Settings_AboutUpdateHint" : "Settings_AboutHint"], version);
+        AppUpdateDot.IsVisible = update;
     }
 
     private async Task ShowModelVersionAsync()

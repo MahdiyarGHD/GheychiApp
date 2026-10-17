@@ -13,7 +13,18 @@
     <!-- The screen behind each row is built when first opened and added over the overview -->
     <Grid x:Name="Root">
         <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Hidden">
-            <StackPanel Margin="0,16,0,24">
+            <StackPanel Margin="0,6,0,24">
+                <Grid Margin="10,0,16,10" ColumnDefinitions="Auto,*">
+                    <Border Width="40"
+                            Height="40"
+                            CornerRadius="20"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            Tapped="OnBackToInboxTapped"
+                            AutomationProperties.Name="{loc:Translate Tab_Messages}">
+                        <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                    </Border>
+                </Grid>
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="14">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
@@ -35,12 +46,14 @@
                                                    FontFamily="{x:Static local:AppFonts.Bold}"
                                                    Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}" />
                                     </Border>
+                                    <Border x:Name="AppUpdateDot" Classes="updateDot" VerticalAlignment="Center" IsVisible="False" />
                                 </StackPanel>
                                 <TextBlock Text="{loc:Translate Settings_Tagline}" Classes="note" FontSize="13" />
                             </StackPanel>
                         </Grid>
 
-                        <Grid ColumnDefinitions="*,1.25*,*" ColumnSpacing="6">
+                        <!-- Only what still needs the user's attention; the columns follow the chips shown (see UpdateStatus). -->
+                        <Grid x:Name="StatusChips" ColumnDefinitions="*,1.25*,*" ColumnSpacing="6" IsVisible="False">
                             <Border x:Name="DefaultChip" Grid.Column="0" Classes="chip" Tapped="OnDefaultChipTapped">
                                 <StackPanel Spacing="2">
                                     <StackPanel Orientation="Horizontal" Spacing="5">
@@ -73,19 +86,20 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Border Grid.Column="0" Classes="tile" Tapped="OnModelTileTapped">
                                 <StackPanel Spacing="8">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
-                                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
-                                            <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
-                                                     Foreground="{theme:AccentBrush Role=Text}"
-                                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                        <Border x:Name="ModelUpdateDot" Grid.Column="1" Width="9" Height="9" CornerRadius="5"
-                                                Background="#2E9B63" VerticalAlignment="Top" IsVisible="False" />
-                                    </Grid>
+                                    <Border Width="32" Height="32" CornerRadius="16" HorizontalAlignment="Left"
+                                            Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+                                        <ui:Icon Data="{StaticResource Icon.Shield}" Width="16" Height="16"
+                                                 Foreground="{theme:AccentBrush Role=Text}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
                                     <StackPanel Spacing="1">
                                         <TextBlock Text="{loc:Translate Settings_TileModel}" Classes="tileCaption" />
-                                        <TextBlock x:Name="TileModelValue" Classes="tileValue" />
+                                        <!-- Left-aligned, so the dot sits right after the version instead of at the tile's edge. -->
+                                        <DockPanel HorizontalAlignment="Left">
+                                            <Border x:Name="ModelUpdateDot" DockPanel.Dock="Right" Classes="updateDot" Margin="6,0,0,0"
+                                                    VerticalAlignment="Center" IsVisible="False" />
+                                            <TextBlock x:Name="TileModelValue" Classes="tileValue" />
+                                        </DockPanel>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -141,6 +155,81 @@
                                 <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
                             </Grid>
                         </Border>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionMessaging}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="row" Tapped="OnNotificationsTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Notifications}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_NotificationsHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnFoldersTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge" Background="{theme:AccentBrush Role=Soft}">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.FolderGeneral}"
+                                             Foreground="{theme:AccentBrush Role=Text}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Folders}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_FoldersHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnSendingTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Send}"
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Sending}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_SendingHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnCodesTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Copy}"
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Codes}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_CodesHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" />
+                        <Border Classes="row" Tapped="OnTrashTapped">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="badge">
+                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Trash}"
+                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_Trash}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_TrashHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
                         <StackPanel x:Name="SimsRow" IsVisible="False">
                             <Border Classes="divider" />
                             <Border Classes="row" Tapped="OnSimsTapped">
@@ -157,20 +246,6 @@
                                 </Grid>
                             </Border>
                         </StackPanel>
-                        <Border Classes="divider" />
-                        <Border Classes="row" Tapped="OnNotificationsTapped">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                                <Border Classes="badge">
-                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Notifications}"
-                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
-                                </Border>
-                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{loc:Translate Settings_Notifications}" Classes="rowTitle" />
-                                    <TextBlock Text="{loc:Translate Settings_NotificationsHint}" Classes="rowSubtitle" />
-                                </StackPanel>
-                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
-                            </Grid>
-                        </Border>
                     </StackPanel>
                 </Border>
 

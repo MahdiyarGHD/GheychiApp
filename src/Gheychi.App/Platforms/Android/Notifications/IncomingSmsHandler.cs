@@ -1,5 +1,6 @@
 using Android.Content;
 using Android.Provider;
+using Gheychi.App.Services;
 using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
@@ -10,6 +11,11 @@ namespace Gheychi.App.Platforms.Android.Notifications;
 internal static class IncomingSmsHandler
 {
     private static readonly TimeSpan SpamCheckBudget = TimeSpan.FromSeconds(4);
+
+    // The system hands the message to every other app (the keyboard's and Google's code suggestions, the SMS Retriever
+    // and User Consent APIs of other apps) only after the default SMS app has finished with it. A message that carries
+    // a code is not held up for the spam model, which may still be loading.
+    private static readonly TimeSpan CodeSpamCheckBudget = TimeSpan.FromMilliseconds(800);
 
     /// <param name="sentMillis">When the sender's carrier says it was sent (the PDU timestamp).</param>
     public static async Task HandleAsync(Context context, string address, string body, long sentMillis, int subId,
@@ -22,12 +28,18 @@ internal static class IncomingSmsHandler
         if (IPlatformApplication.Current?.Services.GetService<IBlockedSenders>()?.IsBlocked(address) == true)
             return;
 
-        var spam = await QuarantineIfSpamAsync(context, address, body, timestampMillis, subId);
+        var code = TextLinker.FindOtp(body);
+        var spam = await QuarantineIfSpamAsync(
+            context, address, body, timestampMillis, subId, code is { IsConfident: true } ? CodeSpamCheckBudget : SpamCheckBudget);
         if (spam is not null)
         {
             MainThread.BeginInvokeOnMainThread(() => raiseSpamReceived(spam));
             return;
         }
+
+        // Before anything slower: the code is wanted the moment the phone lights up.
+        if (code is { Kind: OtpKind.DynamicPassword, IsConfident: true } dynamicPassword && AppPreferences.AutoCopyDynamicPassword)
+            OtpClipboard.CopyWithFeedback(context, dynamicPassword.Code, sensitive: true);
 
         var threadId = Store(context, address, body, timestampMillis, subId, sentMillis: sentMillis);
 
@@ -54,7 +66,7 @@ internal static class IncomingSmsHandler
     /// Spam goes only to the app's own database, never to the system SMS store, so it cannot show up in the inbox,
     /// a conversation, search or a notification. Null when the message is not spam or could not be quarantined.
     /// </summary>
-    private static async Task<SpamMessage?> QuarantineIfSpamAsync(Context context, string address, string body, long timestampMillis, int subId)
+    private static async Task<SpamMessage?> QuarantineIfSpamAsync(Context context, string address, string body, long timestampMillis, int subId, TimeSpan budget)
     {
         try
         {
@@ -70,7 +82,7 @@ internal static class IncomingSmsHandler
             // Android kills the process when the receiver overruns its time, and an SMS not stored by then is lost.
             // When the model is still loading (first message after a cold start) the message goes to the inbox
             // instead; the load carries on, so the next message is checked.
-            if (await Task.WhenAny(detection, Task.Delay(SpamCheckBudget)) != detection)
+            if (await Task.WhenAny(detection, Task.Delay(budget)) != detection)
             {
                 System.Diagnostics.Debug.WriteLine("Spam check overran its budget; the message goes to the inbox.");
                 return null;

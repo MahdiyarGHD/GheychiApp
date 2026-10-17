@@ -18,6 +18,7 @@ public partial class NotificationSettingsScreen : SettingsScreen
     {
         _binding = true;
         LockScreenSwitch.IsChecked = AppPreferences.ShowContentOnLockScreen;
+        DeliverySwitch.IsChecked = AppPreferences.DeliveryNotifications;
         _binding = false;
     }
 
@@ -25,6 +26,12 @@ public partial class NotificationSettingsScreen : SettingsScreen
     {
         if (!_binding)
             AppPreferences.ShowContentOnLockScreen = LockScreenSwitch.IsChecked == true;
+    }
+
+    private void OnDeliveryToggled(object? sender, RoutedEventArgs e)
+    {
+        if (!_binding)
+            AppPreferences.DeliveryNotifications = DeliverySwitch.IsChecked == true;
     }
 
     private void OnSystemSettingsTapped(object? sender, TappedEventArgs e)

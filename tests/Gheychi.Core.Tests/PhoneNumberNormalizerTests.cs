@@ -39,10 +39,57 @@ public class PhoneNumberNormalizerTests
         Assert.Equal(expected, PhoneNumberNormalizer.ToSendAddress(input));
     }
 
+    // Address books in Persian often store numbers in Persian or Arabic-Indic digits; SMS addresses use ASCII.
+    [Theory]
+    [InlineData("۰۹۱۲۰۰۰۰۰۰۱", "9120000001")]
+    [InlineData("+۹۸ ۹۱۲ ۰۰۰ ۰۰۰۱", "9120000001")]
+    [InlineData("٠٩١٢٠٠٠٠٠٠١", "9120000001")]
+    public void ToLookupKey_FoldsPersianAndArabicDigits(string input, string expected)
+    {
+        Assert.False(PhoneNumberNormalizer.IsAlphanumeric(input));
+        Assert.Equal(expected, PhoneNumberNormalizer.ToLookupKey(input));
+    }
+
+    [Fact]
+    public void PersianDigitNumber_MatchesAsciiAddress()
+    {
+        Assert.Equal(PhoneNumberNormalizer.ToLookupKey("+989120000001"), PhoneNumberNormalizer.ToLookupKey("۰۹۱۲-۰۰۰-۰۰۰۱"));
+        Assert.Equal("+98 912 000 0001", PhoneNumberNormalizer.FormatDisplay("۰۹۱۲۰۰۰۰۰۰۱"));
+        Assert.Equal("09120000001", PhoneNumberNormalizer.ToSendAddress("۰۹۱۲ ۰۰۰ ۰۰۰۱"));
+    }
+
+    [Theory]
+    [InlineData("بانک ملت")]
+    [InlineData("بانک۱")]
+    [InlineData("IRANCELL")]
+    public void Senders_WithLetters_StayAlphanumeric(string input)
+    {
+        Assert.True(PhoneNumberNormalizer.IsAlphanumeric(input));
+    }
+
     [Fact]
     public void ToSendAddress_UndoesFormatDisplay()
     {
         var display = PhoneNumberNormalizer.FormatDisplay("09120000001");
         Assert.Equal("+989120000001", PhoneNumberNormalizer.ToSendAddress(display));
     }
+
+    [Theory]
+    [InlineData("+98 912 123 4567", "9121234567")]
+    [InlineData("09121234567", "9121234567")]
+    [InlineData("۰۹۱۲۱۲۳۴۵۶۷", "9121234567")]
+    [InlineData("(021) 8877-6655", "2188776655")]
+    [InlineData(" +44 7911 123456 ", "7911123456")]
+    public void ToContactKey_PhoneShapedNumber_MatchesTheInboxKey(string selected, string expected) =>
+        Assert.Equal(expected, PhoneNumberNormalizer.ToContactKey(selected));
+
+    [Theory]
+    [InlineData("123456")]
+    [InlineData("6037 9911 1111 1111")]
+    [InlineData("12,500,000")]
+    [InlineData("call 09121234567")]
+    [InlineData("0912-123-4567 ok")]
+    [InlineData("")]
+    public void ToContactKey_CodesAmountsAndText_AreNoContact(string selected) =>
+        Assert.Null(PhoneNumberNormalizer.ToContactKey(selected));
 }

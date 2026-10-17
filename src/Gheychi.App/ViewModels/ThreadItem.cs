@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Media;
 using Gheychi.App.Theming;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
 
@@ -32,10 +33,37 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public required string Initials { get; init; }
     public string? IconFile { get; init; }
     public required string Time { get; init; }
-    public required string Preview { get; init; }
+    private readonly string _preview = string.Empty;
+    public required string Preview
+    {
+        get => _preview;
+        init => _preview = MessagePreview.SingleLine(value);
+    }
     public string Phone { get; init; } = string.Empty;
     public bool HasFailed { get; init; }
     public int TotalCount { get; init; }
+    public bool HasDraft { get; init; }
+
+    /// <summary>What the smart folders look at; set when the inbox is built.</summary>
+    public bool IsContact { get; init; }
+    public bool IsSender { get; init; }
+    public bool HasCode { get; init; }
+
+    /// <summary>The moment the conversation sorts by (its last message or draft); a row that is unpinned goes back by it.</summary>
+    public DateTime Timestamp { get; init; }
+
+    private bool _isPinned;
+    public bool IsPinned
+    {
+        get => _isPinned;
+        set
+        {
+            if (_isPinned == value) return;
+            _isPinned = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ShowBadgeRow));
+        }
+    }
 
     private int _count;
     public int Count
@@ -50,6 +78,9 @@ public sealed class ThreadItem : INotifyPropertyChanged
         }
     }
 
+    /// <summary>Raised, from whichever thread, when any conversation turns read or unread: the folder tabs count them.</summary>
+    public static event Action? UnreadChanged;
+
     private bool _isUnread;
     public bool IsUnread
     {
@@ -58,12 +89,14 @@ public sealed class ThreadItem : INotifyPropertyChanged
         {
             if (_isUnread == value) return;
             _isUnread = value;
+            UnreadChanged?.Invoke();
             OnPropertyChanged();
             OnPropertyChanged(nameof(NameColor));
             OnPropertyChanged(nameof(NameFont));
             OnPropertyChanged(nameof(PreviewColor));
             OnPropertyChanged(nameof(PreviewFont));
             OnPropertyChanged(nameof(TimeColor));
+            OnPropertyChanged(nameof(ShowBadgeRow));
         }
     }
 
@@ -90,6 +123,8 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public bool ShowIcon => HasIcon && !_isSelected;
     public bool ShowInitials => HasNoIcon && !_isSelected;
     public IBrush RowBackgroundColor => _isSelected ? SelectedRowBrush : Palette.Transparent;
+    /// <summary>The line under the time: the unread count, the pin, or both.</summary>
+    public bool ShowBadgeRow => _isUnread || _isPinned;
     public string CountText => Count > 0 ? Count.ToString() : string.Empty;
     public Thickness PreviewMargin => HasFailed ? FailedPreviewMargin : default;
     public bool HasIcon => !string.IsNullOrEmpty(IconFile);
@@ -118,6 +153,8 @@ public sealed class ThreadItem : INotifyPropertyChanged
         Preview == other.Preview &&
         Phone == other.Phone &&
         HasFailed == other.HasFailed &&
+        HasDraft == other.HasDraft &&
+        IsPinned == other.IsPinned &&
         TotalCount == other.TotalCount &&
         Count == other.Count &&
         IsUnread == other.IsUnread;

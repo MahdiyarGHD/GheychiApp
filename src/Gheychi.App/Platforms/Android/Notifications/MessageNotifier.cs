@@ -54,8 +54,9 @@ internal static class MessageNotifier
                 cancelled = true;
             }
 
-            // A group of one is just that notification; a lone summary would leave an empty header behind.
-            if (cancelled && active.Count < MinConversationsForSummary)
+            // Android removes a group's children along with its summary, so the summary may only go once none are left:
+            // a group of one is shown as that notification alone.
+            if (cancelled && active.Count == 0)
                 manager.Cancel(NotificationIds.SummaryId);
         }
         catch (Exception ex)
@@ -121,7 +122,11 @@ internal static class MessageNotifier
         builder.SetOnlyAlertOnce(onlyAlertOnce);
         builder.SetSilent(silent);
         builder.SetContentIntent(OpenIntent(context, threadId, address, name, subId));
-        builder.AddAction(BuildReplyAction(context, threadId, address, subId));
+        // A code that is still fresh is one tap from the clipboard, before the other actions.
+        if (FreshCode(last) is { } code)
+            builder.AddAction(BuildCopyCodeAction(context, threadId, address, subId, code));
+        if (ThreadProfileActions.CanReply(address))
+            builder.AddAction(BuildReplyAction(context, threadId, address, subId));
         builder.AddAction(BuildMarkReadAction(context, threadId, address, subId));
         if (!Gheychi.App.Services.AppPreferences.ShowContentOnLockScreen)
         {
@@ -188,7 +193,7 @@ internal static class MessageNotifier
             context, NotificationIds.SummaryId, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
     }
 
-    private static PendingIntent? OpenIntent(Context context, long threadId, string address, string name, int subId)
+    internal static PendingIntent? OpenIntent(Context context, long threadId, string address, string name, int subId)
     {
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
@@ -201,6 +206,28 @@ internal static class MessageNotifier
             NotificationIds.RequestCode(threadId, NotificationIds.PendingSlot.Open),
             intent,
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+    }
+
+    private static OtpCode? FreshCode(UnreadMessage message)
+    {
+        var age = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - message.TimestampMillis;
+        return age <= OtpDetector.FreshFor.TotalMilliseconds ? TextLinker.FindOtp(message.Body) : null;
+    }
+
+    private static NotificationCompat.Action BuildCopyCodeAction(Context context, long threadId, string address, int subId, OtpCode code)
+    {
+        var intent = ActionIntent(context, NotificationActionReceiver.ActionCopyCode, threadId, address, subId);
+        intent.PutExtra(NotificationIds.ExtraCode, code.Code);
+        var pending = PendingIntent.GetBroadcast(
+            context,
+            NotificationIds.RequestCode(threadId, NotificationIds.PendingSlot.CopyCode),
+            intent,
+            PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+
+        var label = LocalizationManager.Instance[code.Kind == OtpKind.DynamicPassword ? "Notification_CopyDynamicPassword" : "Notification_CopyCode"];
+        var action = new NotificationCompat.Action.Builder(0, label, pending);
+        action.SetShowsUserInterface(false);
+        return action.Build()!;
     }
 
     private static NotificationCompat.Action BuildMarkReadAction(Context context, long threadId, string address, int subId)

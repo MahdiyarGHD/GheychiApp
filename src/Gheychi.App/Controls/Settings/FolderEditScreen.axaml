@@ -1,0 +1,59 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:app="clr-namespace:Gheychi.App"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.FolderEditScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader x:Name="Header" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="{settings:UpperTranslate Folder_Name}" Classes="sectionTitle" Margin="26,4,16,8" />
+                <Border Classes="card">
+                    <Border Padding="16,4">
+                        <TextBox x:Name="NameBox"
+                                 Classes="plain"
+                                 PlaceholderText="{loc:Translate Folder_NameHint}"
+                                 PlaceholderForeground="#8A8F98"
+                                 Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                 FontSize="16"
+                                 MaxLength="24"
+                                 Padding="0,12" />
+                    </Border>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Folder_Icon}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <WrapPanel x:Name="IconGrid" Margin="12" HorizontalAlignment="Center" />
+                </Border>
+
+                <Border Margin="16,20,16,0"
+                        Padding="0,14"
+                        CornerRadius="24"
+                        Background="{theme:AccentBrush Role=Solid}"
+                        Tapped="OnSaveTapped">
+                    <TextBlock Text="{loc:Translate Folder_Save}"
+                               FontSize="15"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="White"
+                               HorizontalAlignment="Center" />
+                </Border>
+                <Border x:Name="DeleteButton"
+                        Margin="16,10,16,0"
+                        Padding="0,14"
+                        CornerRadius="24"
+                        Background="Transparent"
+                        Tapped="OnDeleteTapped">
+                    <TextBlock Text="{loc:Translate Folder_Delete}"
+                               FontSize="15"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="#EF4444"
+                               HorizontalAlignment="Center" />
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

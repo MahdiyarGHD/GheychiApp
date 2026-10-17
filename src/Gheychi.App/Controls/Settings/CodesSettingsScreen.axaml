@@ -1,0 +1,47 @@
+<settings:SettingsScreen xmlns="https://github.com/avaloniaui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                         xmlns:loc="clr-namespace:Gheychi.App.Localization"
+                         xmlns:theme="clr-namespace:Gheychi.App.Theming"
+                         xmlns:ui="clr-namespace:Gheychi.App.Ui"
+                         xmlns:settings="clr-namespace:Gheychi.App.Controls.Settings"
+                         x:Class="Gheychi.App.Controls.Settings.CodesSettingsScreen">
+    <Grid Classes="screen" RowDefinitions="Auto,*">
+        <settings:SettingsHeader Title="{loc:Translate Settings_Codes}" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+            <StackPanel Margin="0,4,0,24">
+                <Border Classes="card" Padding="16" Background="{theme:AccentBrush Role=Wash}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Border Classes="badge" Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#1E1F22}">
+                            <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Copy}"
+                                     Foreground="{theme:AccentBrush Role=Text}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Text="{loc:Translate Settings_CodesCardTitle}" Classes="rowTitle" />
+                            <TextBlock Text="{loc:Translate Settings_CodesCardText}" Classes="note" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionAutoCopy}" Classes="sectionTitle" />
+                <Border Classes="card">
+                    <Border Classes="row">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Classes="badge">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Copy}"
+                                         Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{loc:Translate Settings_AutoCopyDynamic}" Classes="rowTitle" />
+                                <TextBlock Text="{loc:Translate Settings_AutoCopyDynamicHint}" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <ToggleButton x:Name="AutoCopySwitch" Grid.Column="2" Classes="setting"
+                                          IsCheckedChanged="OnAutoCopyToggled" />
+                        </Grid>
+                    </Border>
+                </Border>
+                <TextBlock Text="{loc:Translate Settings_AutoCopyDynamicNote}" Classes="note" Margin="26,8,26,0" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</settings:SettingsScreen>

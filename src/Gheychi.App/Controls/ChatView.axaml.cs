@@ -12,6 +12,7 @@ using Avalonia.Rendering.Composition.Animations;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gheychi.App.Localization;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
@@ -26,6 +27,7 @@ public partial class ChatView : UserControl
 {
     private const int OlderTriggerAhead = 40;
 
+    private static readonly TimeSpan CodeCopiedShown = TimeSpan.FromMilliseconds(2200);
     private static readonly TimeSpan ButtonFade = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan OverlayOpen = TimeSpan.FromMilliseconds(180);
     private static readonly TimeSpan OverlayClose = TimeSpan.FromMilliseconds(150);
@@ -61,6 +63,8 @@ public partial class ChatView : UserControl
     public ChatView()
     {
         InitializeComponent();
+        // Room for two lines more than the box had at the default text size, whatever the size is.
+        MessageEntry.MaxHeight += 2 * Gheychi.App.Theming.TextScale.Body * 1.4;
 
         var initialVm = new ChatViewModel();
         initialVm.SafeDispatcher = SafePrependItems;
@@ -81,6 +85,7 @@ public partial class ChatView : UserControl
         MessagesList.AddHandler(PointerPressedEvent, OnMessagePressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         MessagesList.AddHandler(TappedEvent, OnMessageTapped);
         MessagesList.AddHandler(HoldingEvent, OnMessageHolding);
+        InitTextSelection();
 
         // The soft keyboard resizes the page: the box being focused means the newest message has to stay in view.
         MessageEntry.GotFocus += (_, _) => ScrollToEnd();
@@ -114,6 +119,7 @@ public partial class ChatView : UserControl
             DetachLiveUpdates();
             _liveVm = Vm;
             _liveVm.MessagesAppended += OnMessagesAppended;
+            _liveVm.Pending.Attach();
         }
 
         _liveVm.StartLiveUpdates();
@@ -125,6 +131,7 @@ public partial class ChatView : UserControl
             return;
 
         _liveVm.MessagesAppended -= OnMessagesAppended;
+        _liveVm.Pending.Detach();
         _liveVm.StopLiveUpdates();
         _liveVm = null;
     }
@@ -139,6 +146,7 @@ public partial class ChatView : UserControl
 
     private PreparedChatData? PrepareForTransitionCore(ThreadItem thread)
     {
+        CloseTextSelection();
         _followTail = true;
         _initialLayoutSettled = false;
         _initialPending = false;
@@ -221,8 +229,10 @@ public partial class ChatView : UserControl
     private void RefreshBlocked()
     {
         var blocked = _blocked is not null && Vm?.Thread.Phone is { Length: > 0 } phone && _blocked.IsBlocked(phone);
+        var noReply = !blocked && Vm is { CanReply: false };
         BlockedBar.IsVisible = blocked;
-        Composer.IsVisible = !blocked;
+        NoReplyBar.IsVisible = noReply;
+        Composer.IsVisible = !blocked && !noReply;
     }
 
     // The whole pill is the input, not only the line of text in it.
@@ -405,7 +415,12 @@ public partial class ChatView : UserControl
     private void OnMessagesScrolled(object? sender, ScrollChangedEventArgs e)
     {
         if (e.OffsetDelta.Y != 0)
+        {
             _lastOffsetChangeTick = Environment.TickCount64;
+            // The bar would stay where the text was; the selection moves along (a hold on it brings the bar back).
+            if (IsTextSelected)
+                TextMenu.Close(SelectionBox);
+        }
 
         if (Vm is not { } vm || vm.Items.Count == 0)
             return;
@@ -565,24 +580,39 @@ public partial class ChatView : UserControl
     // A finger that lands on a list that is still moving stops it: that touch is not a tap or a hold on the row under it.
     private void OnMessagePressed(object? sender, PointerPressedEventArgs e)
     {
+        NotePress(e);
         _holdFired = false;
         _stoppedFling = Environment.TickCount64 - _lastOffsetChangeTick < 80;
     }
 
     private void OnMessageTapped(object? sender, TappedEventArgs e)
     {
+        // A tap beside a selection only ends it.
+        if (IsTextSelected)
+        {
+            CloseTextSelection();
+            return;
+        }
+
         if (_holdFired || _stoppedFling || Vm is not { } vm || (e.Source as StyledElement)?.DataContext is not ChatMessage message)
             return;
 
         switch (PartOf(e.Source as Visual))
         {
             case "failed":
-                vm.Retry(message);
+                Retry(vm, message);
                 break;
 
             case "reaction":
                 if (message.HasReactionFailed)
                     RetryReaction(vm, message);
+                break;
+
+            case "copycode":
+                if (vm.IsSelectionMode)
+                    vm.ToggleMessageSelection(message);
+                else
+                    CopyCode(message);
                 break;
 
             case "bubble":
@@ -591,7 +621,10 @@ public partial class ChatView : UserControl
                 else if (message.HasLink && LinkAt(e, message) is { } link)
                     ShowLinkMenu(message, link.Span, link.Anchor);
                 else if (!message.IsOutgoing)
+                {
                     vm.ToggleSimTag(message);
+                    NoteSimToggled(message);
+                }
                 break;
 
             default:
@@ -605,6 +638,8 @@ public partial class ChatView : UserControl
     {
         if (e.HoldingState != HoldingState.Started || _stoppedFling || Vm is not { IsSelectionMode: false })
             return;
+
+        CloseTextSelection();
 
         for (var visual = e.Source as Visual; visual is not null && !ReferenceEquals(visual, MessagesList); visual = visual.GetVisualParent())
         {
@@ -672,10 +707,40 @@ public partial class ChatView : UserControl
         return null;
     }
 
+    // The pill under a new message: the code is on the clipboard, and the pill says so for a moment.
+    private async void CopyCode(ChatMessage message)
+    {
+        if (message.CopyableCode is not { } code || message.CodeCopied)
+            return;
+
+        TriggerHaptic();
+        if (!OtpClipboard.Copy(Platform.AppContext, code, sensitive: false))
+            return;
+
+        message.CodeCopied = true;
+        await Task.Delay(CodeCopiedShown);
+        message.CodeCopied = false;
+    }
+
     private void ShowLinkMenu(ChatMessage message, LinkSpan span, Rect anchor)
     {
         TriggerHaptic();
-        LinkPopup.Show(anchor, span.Kind, message.Body.Substring(span.Start, span.Length), TextLinker.Target(message.Body, span));
+        var shown = message.Body.Substring(span.Start, span.Length);
+        var target = TextLinker.Target(message.Body, span);
+        LinkPopup.Show(anchor, span.Kind, shown, target);
+        if (span.Kind == LinkKind.Phone)
+            _ = ShowLinkContactAsync(shown, target);
+    }
+
+    // A message whose outcome is unknown may already have arrived: sending it again needs a yes.
+    private async void Retry(ChatViewModel vm, ChatMessage message)
+    {
+        var loc = LocalizationManager.Instance;
+        if (message.IsUnconfirmed && !await Dialogs.AlertAsync(
+                loc["Chat_ResendTitle"], loc["Chat_ResendUnconfirmedMessage"], loc["Chat_ResendButton"], loc["Chat_Cancel"]))
+            return;
+
+        vm.Retry(message);
     }
 
     private async void RetryReaction(ChatViewModel vm, ChatMessage message)
@@ -692,47 +757,34 @@ public partial class ChatView : UserControl
             await BackRequested.Invoke();
     }
 
-    private void OnSend(object? sender, TappedEventArgs e)
+    private async void OnSend(object? sender, TappedEventArgs e)
     {
-        if (Vm is null)
+        if (Vm is not { } vm || _sendHoldFired)
             return;
 
-        var count = Vm.Items.Count;
-        Vm.Send();
-        if (Vm.Items.Count > count)
+        // The same text again while the first one is still on its way: most likely sent again because it looked stuck.
+        var loc = LocalizationManager.Instance;
+        if (vm.IsUnsettled(vm.Draft) && (!await Dialogs.AlertAsync(
+                loc["Chat_StillSendingTitle"], loc["Chat_StillSendingMessage"], loc["Chat_SendAnyway"], loc["Chat_Cancel"]) ||
+            !ReferenceEquals(vm, Vm)))
+            return;
+
+        var count = vm.Items.Count;
+        vm.Send();
+        if (vm.Items.Count > count)
+        {
+            ReleaseInputFocus();
             ScrollToEnd();
+        }
     }
 
-    private async void OnSimTap(object? sender, TappedEventArgs e)
+    private void OnSimTap(object? sender, TappedEventArgs e)
     {
-        if (Vm is null)
+        if (Vm is not { ActiveSims.Count: > 1 } vm)
             return;
 
-        var loc = LocalizationManager.Instance;
-        var sims = Vm.ActiveSims;
-        if (sims.Count <= 1)
-            return;
-
-        var options = new string[sims.Count];
-        for (var i = 0; i < sims.Count; i++)
-        {
-            var sim = sims[i];
-            options[i] = $"{sim.SlotIndex}. {sim.DisplayName}";
-        }
-
-        var choice = await Dialogs.ActionSheetAsync(loc["Chat_SimTitle"], loc["Chat_Cancel"], null, options);
-
-        if (string.IsNullOrWhiteSpace(choice) || choice == loc["Chat_Cancel"])
-            return;
-
-        for (var i = 0; i < sims.Count; i++)
-        {
-            if (choice.StartsWith($"{sims[i].SlotIndex}.", StringComparison.Ordinal))
-            {
-                Vm.SelectSim(sims[i].SlotIndex, sims[i].SubId);
-                break;
-            }
-        }
+        vm.ToggleSim();
+        TriggerHaptic();
     }
 
     // A tap inside a popup belongs to the popup: it must not reach the scrim or the page behind it.
@@ -933,12 +985,13 @@ public partial class ChatView : UserControl
         var loc = LocalizationManager.Instance;
         InfoTypeLabel.Text = msg.IsOutgoing ? loc["Chat_InfoSent"] : loc["Chat_InfoReceived"];
         InfoTimeLabel.Text = msg.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
-        InfoStatusLabel.Text = SmsStatusHelper.GetInfoStatus(msg.IsOutgoing, msg.HasFailed, msg.IsDelivered, msg.IsSending) switch
+        InfoStatusLabel.Text = SmsStatusHelper.GetInfoStatus(msg.IsOutgoing, msg.HasFailed, msg.IsDelivered, msg.IsSending, msg.IsUnconfirmed) switch
         {
             MessageInfoStatus.Received => loc["Chat_InfoReceived"],
             MessageInfoStatus.Delivered => loc["Chat_InfoDelivered"],
             MessageInfoStatus.Failed => loc["Chat_InfoFailed"],
             MessageInfoStatus.Sending => loc["Chat_InfoSending"],
+            MessageInfoStatus.Unconfirmed => loc["Chat_InfoUnconfirmed"],
             _ => loc["Chat_InfoSent"],
         };
         InfoSimLabel.Text = !string.IsNullOrWhiteSpace(msg.CarrierName)
@@ -1047,6 +1100,12 @@ public partial class ChatView : UserControl
 
     public bool HandleBack()
     {
+        if (IsTextSelected)
+        {
+            CloseTextSelection();
+            return true;
+        }
+
         if (LinkPopup.IsOpen)
         {
             LinkPopup.Hide();

@@ -9,6 +9,8 @@ using Gheychi.App.Gestures;
 using Gheychi.App.Localization;
 using Gheychi.App.Pages;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Platforms.Android.Receivers;
+using Gheychi.App.Services;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
 using Gheychi.Core.Updates;
@@ -17,9 +19,9 @@ using Gheychi.App.Theming;
 namespace Gheychi.App.Ui;
 
 /// <summary>
-/// The whole window: the three tabs, a layer above them for the full-screen overlays (chat, search, compose...) and the
-/// soft keyboard and system bars. Overlays cover the tab bar by sitting above it, so opening one never relayouts the page
-/// beneath, and the pages stay built across tab switches.
+/// The whole window: the inbox, the Spam page and the Settings page (the last two are opened from the inbox's header), a
+/// layer above them for the full-screen overlays (chat, search, compose...) and the soft keyboard and system bars. The
+/// pages stay built across switches, and opening an overlay never relayouts the page beneath.
 /// </summary>
 public partial class MainView : UserControl
 {
@@ -27,14 +29,20 @@ public partial class MainView : UserControl
     private const int SpamIndex = 1;
     private const int SettingsIndex = 2;
 
-    private static readonly IBrush TabActive = Palette.Accent(AccentRole.Text);
-    private static readonly IBrush TabInactive = Palette.Pick("#595C61", "#9AA0AB");
-
     private readonly Control?[] _pages = new Control?[3];
     private int _selected = -1;
     private TopLevel? _topLevel;
     private double _safeBottom;
     private bool _detached;
+    private bool _settingsBadge;
+    private bool _spamBadge;
+    private int _transition;
+
+    // The page that opens is opaque and covers the inbox from the reading-direction end, while the inbox drifts a quarter
+    // of the way under it.
+    private const double ParallaxShare = 0.25;
+    private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(240);
+    private static readonly TimeSpan BackDuration = TimeSpan.FromMilliseconds(200);
 
     private HorizontalSwipeTracker? _swipe;
     private IPageSwipeClient? _swipeClient;
@@ -78,6 +86,10 @@ public partial class MainView : UserControl
         _swipe = new HorizontalSwipeTracker(slop);
 
         _topLevel.BackRequested += OnBackRequested;
+        // Until Avalonia's surface exists its scaling is a placeholder 1, and the bars' insets (pixels) were taken as
+        // that many DIPs: a launch could keep a band of several times the bar height above and below the app.
+        // The insets are read again once the real scaling is known, which happens before the first frame.
+        _topLevel.ScalingChanged += OnScalingChanged;
         if (_topLevel.InsetsManager is { } insets)
         {
             // Edge to edge from Android 11: the window is then never resized for the keyboard, which redrew the whole
@@ -95,15 +107,12 @@ public partial class MainView : UserControl
         if (ContentView is { } content)
             content.LayoutChange += OnContentLayoutChanged;
         ApplyInsets();
-        // After the app restarts itself the first insets are read before the window has settled, and nothing reports
-        // the final ones (only the keyboard opening did, which is why a search fixed it).
-        DispatcherTimer.RunOnce(ApplyInsets, TimeSpan.FromMilliseconds(250));
-        DispatcherTimer.RunOnce(ApplyInsets, TimeSpan.FromMilliseconds(1000));
 
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
         ExternalSendRequests.Requested += OnChatLaunchRequested;
         SpamTabRequests.Requested += OnSpamTabRequested;
         MainActivity.Resumed += OnAppResumed;
+        SmsDeliverReceiver.SpamReceived += OnSpamArrived;
         SubscribeUpdates();
         OnAppResumed();
 
@@ -115,18 +124,23 @@ public partial class MainView : UserControl
         }
     }
 
-    // The splash theme paints the bars dark green; the navigation bar sits under the tab bar, so it takes the tab bar's
-    // colour (MainView.axaml) and the status bar the page's.
+    // The splash theme paints the bars in the phone's light or dark page colour; both take the page's.
     private static void ColorSystemBars()
     {
         if (Platform.CurrentActivity?.Window is not { } window)
             return;
 
         window.SetStatusBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#121212" : "#F1F3F4"));
-        window.SetNavigationBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#1A1B1E" : "#EFF0F1"));
+        window.SetNavigationBarColor(global::Android.Graphics.Color.ParseColor(ThemeState.IsDark ? "#121212" : "#F1F3F4"));
     }
 
-    private static void OnAppResumed() => _ = Services.UpdateAutoCheck.RunAsync();
+    private void OnAppResumed()
+    {
+        _ = Services.UpdateAutoCheck.RunAsync();
+        _ = UpdateSpamBadgeAsync();
+        // The keyboard and the bars may have changed while the app was away without a callback reaching it.
+        Dispatcher.UIThread.Post(ApplyInsets, DispatcherPriority.Background);
+    }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
@@ -136,6 +150,7 @@ public partial class MainView : UserControl
         ExternalSendRequests.Requested -= OnChatLaunchRequested;
         SpamTabRequests.Requested -= OnSpamTabRequested;
         MainActivity.Resumed -= OnAppResumed;
+        SmsDeliverReceiver.SpamReceived -= OnSpamArrived;
         // The pages subscribe to static events while shown; an activity that is gone must not keep answering them.
         _detached = true;
         foreach (var page in _pages)
@@ -149,6 +164,7 @@ public partial class MainView : UserControl
         if (_topLevel is not null)
         {
             _topLevel.BackRequested -= OnBackRequested;
+            _topLevel.ScalingChanged -= OnScalingChanged;
             if (_topLevel.InsetsManager is { } insets)
                 insets.SafeAreaChanged -= OnInsetsChanged;
             if (_topLevel.InputPane is { } pane)
@@ -157,40 +173,11 @@ public partial class MainView : UserControl
         }
     }
 
-    public void SetTabBarVisible(bool visible) => TabBar.IsVisible = visible;
-
     public void SelectMessagesTab() => Select(MessagesIndex);
 
-    // ---- Tabs ----------------------------------------------------------------------------------
+    public void ShowSpam() => Select(SpamIndex);
 
-    private void OnTabTapped(object? sender, TappedEventArgs e)
-    {
-        var index = sender == MessagesTab ? MessagesIndex : sender == SpamTab ? SpamIndex : sender == SettingsTab ? SettingsIndex : -1;
-        if (index < 0)
-            return;
-
-        if (index == _selected)
-            Reselect(index);
-        else
-            Select(index);
-    }
-
-    // The tab that is already shown: back to its start (what the back button would do, in one tap), or to its top.
-    private void Reselect(int index)
-    {
-        switch (_pages[index])
-        {
-            case MessagesPage messages:
-                messages.OnTabReselected();
-                break;
-            case SpamPage spam:
-                spam.OnTabReselected();
-                break;
-            case SettingsPage settings:
-                settings.OnTabReselected();
-                break;
-        }
-    }
+    public void ShowSettings() => Select(SettingsIndex);
 
     private void OnChatLaunchRequested() => MainThread.BeginInvokeOnMainThread(() => Select(MessagesIndex));
 
@@ -208,22 +195,82 @@ public partial class MainView : UserControl
         var previous = _selected;
         _selected = index;
 
-        if (previous >= 0 && _pages[previous] is { } old)
-        {
-            old.IsVisible = false;
-            NotifyHidden(old);
-        }
+        // Leaving the Spam page counts as having seen what came in while it was open.
+        if (previous == SpamIndex)
+            SpamDigestPreferences.SeenAt = DateTime.Now;
 
         var page = _pages[index] ??= CreatePage(index);
+        var old = previous >= 0 ? _pages[previous] : null;
+        var forward = index != MessagesIndex;
+        // The page that slides in starts invisible, or its first frame would show it in place.
+        if (old is not null && forward)
+            page.Opacity = 0;
         page.IsVisible = true;
         NotifyShown(page);
+        if (old is not null)
+        {
+            NotifyHidden(old);
+            _ = TransitionAsync(old, page, forward);
+        }
 
-        Style(MessagesPill, MessagesIcon, MessagesLabel, index == MessagesIndex);
-        Style(SpamPill, SpamIcon, SpamLabel, index == SpamIndex);
-        Style(SettingsPill, SettingsIcon, SettingsLabel, index == SettingsIndex);
+        if (index == SpamIndex)
+            SetSpamBadge(false);
+        else if (previous == SpamIndex)
+            _ = UpdateSpamBadgeAsync();
 
         if (previous < 0)
             _ = BuildOtherTabsAsync();
+    }
+
+    // Going out to Spam or Settings the new page slides over the inbox; coming back it slides off again. The window is
+    // mirrored in Persian, so one sign does both languages. Run on the compositor.
+    private async Task TransitionAsync(Control old, Control page, bool forward)
+    {
+        var token = ++_transition;
+        try
+        {
+            var width = Math.Max(PageHost.Bounds.Width, 200);
+            var parallax = width * ParallaxShare;
+            if (forward)
+            {
+                await OverlayAnimator.SettleAsync();
+                page.ZIndex = 1;
+                old.ZIndex = 0;
+                OverlayAnimator.SetTranslation(page, width, 0);
+                page.Opacity = 1;
+                await Task.WhenAll(
+                    OverlayAnimator.SlideXAsync(page, width, 0, SlideDuration, decelerate: true),
+                    OverlayAnimator.SlideXAsync(old, 0, -parallax, SlideDuration, decelerate: true));
+            }
+            else
+            {
+                old.ZIndex = 1;
+                page.ZIndex = 0;
+                OverlayAnimator.SetTranslation(page, -parallax, 0);
+                await Task.WhenAll(
+                    OverlayAnimator.SlideXAsync(old, 0, width, BackDuration, decelerate: false),
+                    OverlayAnimator.SlideXAsync(page, -parallax, 0, BackDuration, decelerate: false));
+            }
+        }
+        finally
+        {
+            // A switch made meanwhile has taken over: it puts everything away when it ends.
+            if (token == _transition)
+            {
+                var shown = _selected >= 0 ? _pages[_selected] : null;
+                foreach (var each in _pages)
+                {
+                    if (each is null)
+                        continue;
+
+                    if (!ReferenceEquals(each, shown))
+                        each.IsVisible = false;
+                    OverlayAnimator.SetTranslation(each, 0, 0);
+                    each.Opacity = 1;
+                    each.ZIndex = 0;
+                }
+            }
+        }
     }
 
     private Control CreatePage(int index)
@@ -235,6 +282,14 @@ public partial class MainView : UserControl
             _ => new MessagesPage()
         };
         page.IsVisible = false;
+        // Opaque, so a page sliding over another hides it instead of showing through.
+        if (page is UserControl surface)
+            surface.Background = Palette.Pick("#F1F3F4", "#121212");
+        if (page is MessagesPage messages)
+        {
+            messages.SetSettingsBadge(_settingsBadge);
+            messages.SetSpamBadge(_spamBadge);
+        }
         PageHost.Children.Add(page);
         return page;
     }
@@ -273,15 +328,6 @@ public partial class MainView : UserControl
         }
     }
 
-    private static void Style(Border pill, Icon icon, TextBlock label, bool selected)
-    {
-        pill.IsVisible = selected;
-        var brush = selected ? TabActive : TabInactive;
-        icon.Foreground = brush;
-        label.Foreground = brush;
-        label.FontFamily = selected ? AppFonts.Bold : AppFonts.Regular;
-    }
-
     private static void NotifyShown(Control page)
     {
         switch (page)
@@ -318,6 +364,12 @@ public partial class MainView : UserControl
 
     private void OnBackRequested(object? sender, RoutedEventArgs e)
     {
+        if (Sheet.HandleBack())
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (_selected < 0)
             return;
 
@@ -328,6 +380,14 @@ public partial class MainView : UserControl
             SettingsPage settings => settings.HandleBack(),
             _ => false
         };
+
+        // Back from the Spam or Settings page goes to the inbox, not out of the app.
+        if (!handled && _selected != MessagesIndex)
+        {
+            Select(MessagesIndex);
+            handled = true;
+        }
+
         if (handled)
             e.Handled = true;
     }
@@ -335,6 +395,8 @@ public partial class MainView : UserControl
     // ---- Keyboard and system bars --------------------------------------------------------------
 
     private void OnInsetsChanged(object? sender, EventArgs e) => ApplyInsets();
+
+    private void OnScalingChanged(object? sender, EventArgs e) => ApplyInsets();
 
     private global::Android.Views.View? ContentView =>
         Platform.CurrentActivity?.FindViewById(global::Android.Resource.Id.Content);
@@ -352,6 +414,19 @@ public partial class MainView : UserControl
             at[1] / scale,
             (window.Width - at[0] - content.Width) / scale,
             (window.Height - at[1] - content.Height) / scale);
+    }
+
+    // Coming back to the app with the keyboard up, the pane can briefly report a rectangle that is not the keyboard (the
+    // whole window, or one that starts at the top). Taken as the keyboard's room it left the page no height at all, with
+    // only the tab bar showing at the top. The room is measured to the window's bottom edge, as the keyboard's rectangle
+    // may stop short of it (the navigation bar); a keyboard never takes most of the window.
+    private static double KeyboardHeight(Rect occluded, double windowHeight)
+    {
+        if (windowHeight <= 0 || occluded.Height <= 0)
+            return 0;
+
+        var height = windowHeight - occluded.Top;
+        return height > 0 && height <= windowHeight * 0.6 ? height : 0;
     }
 
     private void OnContentLayoutChanged(object? sender, global::Android.Views.View.LayoutChangeEventArgs e) => ApplyInsets();
@@ -377,12 +452,12 @@ public partial class MainView : UserControl
         var keyboard = 0.0;
         // Where the window is not edge to edge (before Android 11) the system shrinks it for the keyboard itself.
         if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true && _topLevel.InputPane is { State: InputPaneState.Open } pane)
-            keyboard = Math.Max(0, _topLevel.Bounds.Height - pane.OccludedRect.Top);
+            keyboard = KeyboardHeight(pane.OccludedRect, _topLevel.Bounds.Height);
 
         // The keyboard covers the navigation bar, so while it is up it alone sets the bottom edge.
         _safeBottom = keyboard > 0 ? 0 : safe.Bottom;
         Root.Padding = new Thickness(safe.Left, safe.Top, safe.Right, keyboard);
-        TabBar.Padding = new Thickness(0, 0, 0, _safeBottom);
+        PageHost.Margin = new Thickness(0, 0, 0, _safeBottom);
         OverlayHost.Margin = new Thickness(0, 0, 0, _safeBottom);
     }
 
@@ -407,6 +482,33 @@ public partial class MainView : UserControl
         _ = UpdateBadgeAsync();
     }
 
+    private void OnSpamArrived(SpamMessage message) => _ = UpdateSpamBadgeAsync();
+
+    private void SetSpamBadge(bool visible)
+    {
+        _spamBadge = visible;
+        (_pages[MessagesIndex] as MessagesPage)?.SetSpamBadge(visible);
+    }
+
+    // The yellow dot on the scissors: spam came in since the Spam page was last open (the same moment the daily summary
+    // takes as "seen"). Nothing to show while that page is the one on screen.
+    private async Task UpdateSpamBadgeAsync()
+    {
+        try
+        {
+            if (IPlatformApplication.Current?.Services.GetService<ISpamMessageRepository>() is not { } repository)
+                return;
+
+            var seen = SpamDigestPreferences.SeenAt;
+            var any = (await Task.Run(() => repository.GetAllAsync())).Any(m => seen is null || m.Timestamp > seen);
+            MainThread.BeginInvokeOnMainThread(() => SetSpamBadge(any && _selected != SpamIndex));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Spam badge failed: {ex}");
+        }
+    }
+
     private async Task UpdateBadgeAsync()
     {
         try
@@ -416,11 +518,15 @@ public partial class MainView : UserControl
             var model = !app && services?.GetService<SpamModelUpdates>() is { } models
                 && await Task.Run(() => models.GetAvailableAsync()) is not null;
 
-            MainThread.BeginInvokeOnMainThread(() => SettingsBadge.IsVisible = app || model);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _settingsBadge = app || model;
+                (_pages[MessagesIndex] as MessagesPage)?.SetSettingsBadge(_settingsBadge);
+            });
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Settings tab badge failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Settings badge failed: {ex}");
         }
     }
 
@@ -432,7 +538,7 @@ public partial class MainView : UserControl
     {
         UserActivity.Touched();
         EndSwipeTracking();
-        if (_swipe is null || PageSwipe.Client is not { } client)
+        if (Sheet.IsOpen || _swipe is null || PageSwipe.Client is not { } client || !client.CanSwipeFrom(e.Source as Visual))
             return;
 
         _swipeClient = client;

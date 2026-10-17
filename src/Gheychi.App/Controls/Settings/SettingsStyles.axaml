@@ -250,6 +250,14 @@
         <Setter Property="Foreground" Value="{theme:AccentBrush Role=Wash}" />
     </Style>
 
+    <!-- An update is waiting: beside the app version and the spam model version on the overview. -->
+    <Style Selector="Border.updateDot">
+        <Setter Property="Width" Value="9" />
+        <Setter Property="Height" Value="9" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Background" Value="#2E9B63" />
+    </Style>
+
     <!-- Status chips on the overview: OK, or with the "warn" class when something needs attention. -->
     <Style Selector="TextBlock.chipTitle">
         <Setter Property="FontSize" Value="11" />

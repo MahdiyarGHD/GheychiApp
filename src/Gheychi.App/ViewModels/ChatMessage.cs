@@ -21,6 +21,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
     private static readonly IBrush TimeBrush = Palette.Brush("#8A8F98");
     private static readonly IBrush PrimaryBrush = Palette.Accent(AccentRole.Solid);
     private static readonly IBrush DangerBrush = Palette.Brush("#D64545");
+    private static readonly IBrush UnconfirmedBrush = Palette.Pick("#B45309", "#FCD34D");
     private static readonly IBrush UncheckedStroke = Palette.Pick("#9AA0AB", "#5C6370");
 
     // Soft tint + dark text per SIM slot (light theme) or deep tint + light text (dark theme):
@@ -60,7 +61,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
 
     public required string Body { get; init; }
 
-    /// <summary>The links and phone numbers in <see cref="Body"/>; null for the many messages that have none.</summary>
+    /// <summary>The links, phone numbers, USSD codes and one-time codes in <see cref="Body"/>; null for the many messages that have none.</summary>
     public LinkSpan[]? Links { get; init; }
 
     /// <summary>The first web address in the message, as it is written.</summary>
@@ -77,6 +78,33 @@ public sealed class ChatMessage : INotifyPropertyChanged
             return string.Empty;
         }
     }
+
+    /// <summary>The code the pill under a new message copies; null when the message has none, or it is not new.</summary>
+    public string? CopyableCode { get; init; }
+
+    public bool IsDynamicPassword { get; init; }
+
+    public bool ShowCopyCode => CopyableCode is not null;
+
+    private bool _codeCopied;
+    public bool CodeCopied
+    {
+        get => _codeCopied;
+        set
+        {
+            if (SetField(ref _codeCopied, value))
+            {
+                OnPropertyChanged(nameof(CopyCodeText));
+                OnPropertyChanged(nameof(ShowCopyIcon));
+            }
+        }
+    }
+
+    public bool ShowCopyIcon => !_codeCopied;
+
+    public string CopyCodeText => Localization.LocalizationManager.Instance[
+        _codeCopied ? "Chat_CodeCopied" : IsDynamicPassword ? "Chat_CopyDynamicPassword" : "Chat_CopyCode"];
+
     public bool IsOutgoing { get; init; }
     public bool IsNotOutgoing => !IsOutgoing;
     public required string Time { get; init; }
@@ -303,11 +331,19 @@ public sealed class ChatMessage : INotifyPropertyChanged
         {
             if (SetField(ref _hasFailed, value))
             {
-                OnPropertyChanged(nameof(IsSending));
                 OnPropertyChanged(nameof(HasTick));
                 OnPropertyChanged(nameof(HasDoubleTick));
+                NotifyRetryChanged();
             }
         }
+    }
+
+    private void NotifyRetryChanged()
+    {
+        OnPropertyChanged(nameof(IsSending));
+        OnPropertyChanged(nameof(HasRetry));
+        OnPropertyChanged(nameof(RetryText));
+        OnPropertyChanged(nameof(RetryBrush));
     }
 
     private bool _isSent;
@@ -326,7 +362,26 @@ public sealed class ChatMessage : INotifyPropertyChanged
         }
     }
 
-    public bool IsSending => IsOutgoing && !IsSent && !IsDelivered && !HasFailed;
+    private bool _isUnconfirmed;
+    /// <summary>The radio never reported on it: it may or may not have gone out (see <see cref="SmsStatusHelper.IsUnconfirmed"/>).</summary>
+    public bool IsUnconfirmed
+    {
+        get => _isUnconfirmed;
+        set
+        {
+            if (SetField(ref _isUnconfirmed, value))
+                NotifyRetryChanged();
+        }
+    }
+
+    public bool IsSending => IsOutgoing && !IsSent && !IsDelivered && !HasFailed && !IsUnconfirmed;
+
+    /// <summary>The row under the bubble that offers to send it again: after a failure, or when the outcome is unknown.</summary>
+    public bool HasRetry => IsOutgoing && (HasFailed || IsUnconfirmed);
+
+    public string RetryText => Localization.LocalizationManager.Instance[HasFailed ? "Chat_NotDelivered" : "Chat_Unconfirmed"];
+
+    public IBrush RetryBrush => HasFailed ? DangerBrush : UnconfirmedBrush;
 
     // One tick once the carrier has it, two once it reached the phone; sending shows a spinner and failure the retry row.
     public bool HasTick => IsOutgoing && !HasFailed && (IsSent || IsDelivered);

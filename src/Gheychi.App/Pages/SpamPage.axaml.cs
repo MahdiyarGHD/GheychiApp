@@ -46,13 +46,14 @@ public partial class SpamPage : UserControl
     {
         if (SearchBar.IsVisible)
             ClearFocus();
-    }
 
-    /// <summary>The Spam tab was tapped while shown: a menu or the search closes, otherwise the list goes to its top.</summary>
-    public void OnTabReselected()
-    {
-        if (!HandleBack())
-            Ui.ScrollAnimator.ToTop(_scroll);
+        // Back on the tab it starts from its top: menus and the search closed, the list at its first row.
+        for (var layers = 0; layers < 4 && HandleBack(); layers++)
+        {
+        }
+
+        if (_scroll is not null)
+            _scroll.Offset = default;
     }
 
     /// <summary>True when it consumed the back press.</summary>
@@ -93,6 +94,8 @@ public partial class SpamPage : UserControl
         if (SearchEntry.IsFocused)
             Focus();
     }
+
+    private void OnBackToInboxTapped(object? sender, TappedEventArgs e) => Ui.MainView.Current?.SelectMessagesTab();
 
     private void OnSettingsTapped(object? sender, TappedEventArgs e) => OpenSpamSettingsRequested?.Invoke();
 
