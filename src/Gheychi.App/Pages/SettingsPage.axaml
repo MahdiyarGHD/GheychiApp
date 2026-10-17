@@ -13,24 +13,26 @@
     <!-- The screen behind each row is built when first opened and added over the overview -->
     <Grid x:Name="Root">
         <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Hidden">
-            <StackPanel Margin="0,16,0,24">
+            <StackPanel Margin="0,6,0,24">
+                <Grid Margin="10,0,16,10" ColumnDefinitions="Auto,*">
+                    <Border Width="40"
+                            Height="40"
+                            CornerRadius="20"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            Tapped="OnBackToInboxTapped"
+                            AutomationProperties.Name="{loc:Translate Tab_Messages}">
+                        <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+                    </Border>
+                </Grid>
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="14">
-                        <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
-                            <Border Width="40"
-                                    Height="40"
-                                    CornerRadius="20"
-                                    Background="Transparent"
-                                    VerticalAlignment="Center"
-                                    Tapped="OnBackToInboxTapped"
-                                    AutomationProperties.Name="{loc:Translate Tab_Messages}">
-                                <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
-                            </Border>
-                            <Border Grid.Column="1" Width="56" Height="56" CornerRadius="18" Background="{theme:AccentBrush Role=Deep}" VerticalAlignment="Top">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <Border Width="56" Height="56" CornerRadius="18" Background="{theme:AccentBrush Role=Deep}" VerticalAlignment="Top">
                                 <ui:Icon Data="{StaticResource Icon.TabSpam}" Width="28" Height="28" Foreground="{theme:AccentBrush Role=Glow}"
                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="Gheychi"
                                                FontSize="20"

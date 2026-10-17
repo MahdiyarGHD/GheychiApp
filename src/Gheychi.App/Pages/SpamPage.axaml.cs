@@ -101,6 +101,7 @@ public partial class SpamPage : UserControl
 
     private void OnSearchTapped(object? sender, TappedEventArgs e)
     {
+        AppHeader.IsVisible = false;
         SearchBar.IsVisible = true;
         Dispatcher.UIThread.Post(() => SearchEntry.Focus(), DispatcherPriority.Loaded);
     }
@@ -113,6 +114,7 @@ public partial class SpamPage : UserControl
         if (Vm is not null)
             Vm.SearchText = string.Empty;
         SearchBar.IsVisible = false;
+        AppHeader.IsVisible = true;
     }
 
     private void OnListTapped(object? sender, TappedEventArgs e)
