@@ -209,6 +209,7 @@ public partial class ProfileView : UserControl
         AvatarIcon.IsVisible = _thread.HasIcon;
         AvatarInitials.Text = _thread.Initials;
         AvatarInitials.IsVisible = _thread.HasNoIcon;
+        AvatarPhoto.SetAddress(AvatarCircle, _thread.PhotoAddress);
     }
 
     // Each button is shown only when the conversation can do it, and the ones left share the row.

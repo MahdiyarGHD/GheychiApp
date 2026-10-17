@@ -33,6 +33,8 @@ public sealed class ComposeRow
     /// <summary>Contact name for contact rows, null for a typed number.</summary>
     public string? ContactName { get; init; }
 
+    public string? PhotoAddress => ContactName is null ? null : Address;
+
     public bool HasSubtitle => Subtitle.Length > 0;
     public bool HasInitials => Initials.Length > 0;
     public bool HasNoInitials => Initials.Length == 0;

@@ -40,6 +40,10 @@ public sealed class ThreadItem : INotifyPropertyChanged
         init => _preview = MessagePreview.SingleLine(value);
     }
     public string Phone { get; init; } = string.Empty;
+
+    /// <summary>The number to look the contact's picture up by; none for a sender name, which is nobody's contact.</summary>
+    public string? PhotoAddress =>
+        Phone.Length == 0 || Gheychi.Core.Services.PhoneNumberNormalizer.IsAlphanumeric(Phone) ? null : Phone;
     public bool HasFailed { get; init; }
     public int TotalCount { get; init; }
     public bool HasDraft { get; init; }

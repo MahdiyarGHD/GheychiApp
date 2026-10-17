@@ -493,6 +493,7 @@
                             Width="40" Height="40"
                             CornerRadius="20"
                             Background="{theme:AccentBrush Role=Soft}"
+                            ui:AvatarPhoto.Address="{Binding Thread.PhotoAddress}"
                             Tapped="OnHeaderTapped">
                         <Panel>
                             <ui:Icon IsVisible="{Binding Thread.HasIcon}"

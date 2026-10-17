@@ -122,7 +122,9 @@
                 <StackPanel Margin="0,0,0,32">
 
                     <!-- Identity -->
-                    <Border Width="116" Height="116"
+                    <Border x:Name="AvatarCircle"
+                            ui:AvatarPhoto.Large="True"
+                            Width="116" Height="116"
                             Margin="0,6,0,8"
                             CornerRadius="58"
                             HorizontalAlignment="Center"
