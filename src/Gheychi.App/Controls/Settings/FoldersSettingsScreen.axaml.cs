@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Gheychi.App.Localization;
 using Gheychi.App.Services;
 using Gheychi.App.Theming;
@@ -32,10 +33,20 @@ public partial class FoldersSettingsScreen : SettingsScreen
         CountsSwitch.IsChecked = AppPreferences.ShowFolderCounts;
         RememberSwitch.IsChecked = AppPreferences.RememberLastFolder;
         _binding = false;
-        Rebuild();
+        RebuildFolders();
+        BuildSmart();
     }
 
-    private void Rebuild()
+    // A change to the list must not move the page: the rows are swapped in place and the scroll position is put back.
+    private void RebuildFolders()
+    {
+        var offset = Scroll.Offset;
+        BuildFolderRows();
+        Scroll.Offset = offset;
+        Dispatcher.UIThread.Post(() => Scroll.Offset = offset, DispatcherPriority.Loaded);
+    }
+
+    private void BuildFolderRows()
     {
         if (Store is not { } store)
             return;
@@ -66,7 +77,14 @@ public partial class FoldersSettingsScreen : SettingsScreen
         var add = Row("folder_add", loc["Folder_New"], string.Empty, null, accent: true);
         add.Tapped += (_, _) => OpenEditor(null);
         FolderList.Children.Add(add);
+    }
 
+    private void BuildSmart()
+    {
+        if (Store is not { } store)
+            return;
+
+        var loc = LocalizationManager.Instance;
         SmartList.Children.Clear();
         foreach (var smart in Enum.GetValues<SmartFolder>())
         {
@@ -86,7 +104,7 @@ public partial class FoldersSettingsScreen : SettingsScreen
                     store.AddSmart(kind);
                 else
                     store.Remove(folder.Id);
-                Rebuild();
+                RebuildFolders();
             };
             SmartList.Children.Add(Row(FolderPill.IconFile(folder), FolderPill.Describe(folder), loc["Folder_SmartHint_" + smart], toggle));
         }
@@ -124,7 +142,7 @@ public partial class FoldersSettingsScreen : SettingsScreen
             else if (choice == delete && await Confirm(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], delete))
                 store.Remove(id);
 
-            Rebuild();
+            RebuildFolders();
         }
         catch (Exception ex)
         {
