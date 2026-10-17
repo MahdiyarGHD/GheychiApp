@@ -33,17 +33,49 @@ public partial class FoldersSettingsScreen : SettingsScreen
         CountsSwitch.IsChecked = AppPreferences.ShowFolderCounts;
         RememberSwitch.IsChecked = AppPreferences.RememberLastFolder;
         _binding = false;
-        RebuildFolders();
+        BuildFolderRows();
         BuildSmart();
     }
 
-    // A change to the list must not move the page: the rows are swapped in place and the scroll position is put back.
-    private void RebuildFolders()
+    private Vector? _pinned;
+
+    /// <summary>
+    /// Rebuilds the lists without moving the page. The new rows are laid out at once and the offset is put back, and held
+    /// there while the layout settles, so it is neither clamped nor reset by the rows being swapped. When the list above the
+    /// row that was touched grew or shrank, the page follows it, so that row stays under the finger.
+    /// </summary>
+    private void Refresh(bool smartToo, bool follow = false)
     {
         var offset = Scroll.Offset;
+        var before = FolderList.Bounds.Height;
+
+        _pinned = offset;
+        Scroll.ScrollChanged += HoldPinned;
         BuildFolderRows();
-        Scroll.Offset = offset;
-        Dispatcher.UIThread.Post(() => Scroll.Offset = offset, DispatcherPriority.Loaded);
+        if (smartToo)
+        {
+            _binding = true;
+            BuildSmart();
+            _binding = false;
+        }
+
+        Scroll.UpdateLayout();
+        var target = follow ? offset + new Vector(0, FolderList.Bounds.Height - before) : offset;
+        _pinned = target;
+        Scroll.Offset = target;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            Scroll.Offset = target;
+            Scroll.ScrollChanged -= HoldPinned;
+            _pinned = null;
+        }, DispatcherPriority.Background);
+    }
+
+    private void HoldPinned(object? sender, ScrollChangedEventArgs e)
+    {
+        if (_pinned is { } pinned && Scroll.Offset != pinned)
+            Scroll.Offset = pinned;
     }
 
     private void BuildFolderRows()
@@ -104,7 +136,7 @@ public partial class FoldersSettingsScreen : SettingsScreen
                     store.AddSmart(kind);
                 else
                     store.Remove(folder.Id);
-                RebuildFolders();
+                Refresh(smartToo: false, follow: true);
             };
             SmartList.Children.Add(Row(FolderPill.IconFile(folder), FolderPill.Describe(folder), loc["Folder_SmartHint_" + smart], toggle));
         }
@@ -142,7 +174,7 @@ public partial class FoldersSettingsScreen : SettingsScreen
             else if (choice == delete && await Confirm(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], delete))
                 store.Remove(id);
 
-            RebuildFolders();
+            Refresh(smartToo: true);
         }
         catch (Exception ex)
         {

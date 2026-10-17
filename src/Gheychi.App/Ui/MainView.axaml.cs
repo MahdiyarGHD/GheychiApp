@@ -324,6 +324,12 @@ public partial class MainView : UserControl
 
     private void OnBackRequested(object? sender, RoutedEventArgs e)
     {
+        if (Sheet.HandleBack())
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (_selected < 0)
             return;
 
@@ -453,7 +459,7 @@ public partial class MainView : UserControl
     {
         UserActivity.Touched();
         EndSwipeTracking();
-        if (_swipe is null || PageSwipe.Client is not { } client || !client.CanSwipeFrom(e.Source as Visual))
+        if (Sheet.IsOpen || _swipe is null || PageSwipe.Client is not { } client || !client.CanSwipeFrom(e.Source as Visual))
             return;
 
         _swipeClient = client;

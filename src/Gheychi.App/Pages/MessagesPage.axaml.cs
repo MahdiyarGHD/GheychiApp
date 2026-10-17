@@ -954,6 +954,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         if (_folderHoldFired || (sender as Control)?.DataContext is not FolderPill pill)
             return;
 
+        FolderScroll.Reveal((Control)sender!);
         Vm?.SelectFolder(pill.Id);
     }
 
@@ -1011,7 +1012,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             return;
 
         var loc = LocalizationManager.Instance;
-        if (await Dialogs.AlertAsync(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], loc["Folder_Delete"], loc["Chat_Cancel"]))
+        if (await Dialogs.AlertAsync(loc["Folder_DeleteTitle"], loc["Folder_DeleteMessage"], loc["Folder_Delete"], loc["Chat_Cancel"], danger: true))
             store.Remove(folder.Id);
     }
 

@@ -34,11 +34,9 @@
                         </Border>
                     </Grid>
                     <!-- The folder tabs: nothing here until the user makes a folder -->
-                    <ScrollViewer x:Name="FolderScroll"
-                                  IsVisible="{Binding FolderBar.IsVisible}"
-                                  Margin="0,0,0,12"
-                                  HorizontalScrollBarVisibility="Hidden"
-                                  VerticalScrollBarVisibility="Disabled">
+                    <ui:DragScroll x:Name="FolderScroll"
+                                   IsVisible="{Binding FolderBar.IsVisible}"
+                                   Margin="0,0,0,12">
                         <ItemsControl ItemsSource="{Binding FolderBar.Pills}" Margin="16,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -85,7 +83,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </ScrollViewer>
+                    </ui:DragScroll>
                 </StackPanel>
 
                 <Grid IsVisible="{Binding IsSelectionMode}"
