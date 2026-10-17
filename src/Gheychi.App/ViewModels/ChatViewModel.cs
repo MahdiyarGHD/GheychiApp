@@ -952,8 +952,22 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             return;
         }
 
-        _ = SendNowAsync(message.Text, message.SubId);
+        _ = SendHeldHereAsync(message);
         MessagesAppended?.Invoke();
+    }
+
+    // The chat may have been left while the message was held, and the inbox was read then, before this row existed:
+    // it is told once the message is stored.
+    private async Task SendHeldHereAsync(ScheduledMessage message)
+    {
+        try
+        {
+            await SendNowAsync(message.Text, message.SubId);
+        }
+        finally
+        {
+            MainThread.BeginInvokeOnMainThread(() => NotificationActionReceiver.RaiseThreadsChanged(message.ThreadId));
+        }
     }
 
     private async Task SendElsewhereAsync(ScheduledMessage message)
