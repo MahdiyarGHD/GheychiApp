@@ -225,8 +225,10 @@ public partial class ChatView : UserControl
     private void RefreshBlocked()
     {
         var blocked = _blocked is not null && Vm?.Thread.Phone is { Length: > 0 } phone && _blocked.IsBlocked(phone);
+        var noReply = !blocked && Vm is { CanReply: false };
         BlockedBar.IsVisible = blocked;
-        Composer.IsVisible = !blocked;
+        NoReplyBar.IsVisible = noReply;
+        Composer.IsVisible = !blocked && !noReply;
     }
 
     // The whole pill is the input, not only the line of text in it.

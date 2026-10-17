@@ -890,9 +890,12 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SimBadgeColor));
     }
 
+    /// <summary>False for a sender name: nothing can answer it, so the box is replaced by a notice.</summary>
+    public bool CanReply => ThreadProfileActions.CanReply(Thread.Phone);
+
     public async void Send()
     {
-        if (string.IsNullOrWhiteSpace(Draft))
+        if (!CanReply || string.IsNullOrWhiteSpace(Draft))
             return;
 
         var text = Draft.Trim();
@@ -935,6 +938,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public async void Retry(ChatMessage message)
     {
+        if (!CanReply)
+            return;
+
         message.HasFailed = false;
         message.IsUnconfirmed = false;
         message.IsSent = false;

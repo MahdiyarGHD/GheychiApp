@@ -125,7 +125,8 @@ internal static class MessageNotifier
         // A code that is still fresh is one tap from the clipboard, before the other actions.
         if (FreshCode(last) is { } code)
             builder.AddAction(BuildCopyCodeAction(context, threadId, address, subId, code));
-        builder.AddAction(BuildReplyAction(context, threadId, address, subId));
+        if (ThreadProfileActions.CanReply(address))
+            builder.AddAction(BuildReplyAction(context, threadId, address, subId));
         builder.AddAction(BuildMarkReadAction(context, threadId, address, subId));
         if (!Gheychi.App.Services.AppPreferences.ShowContentOnLockScreen)
         {

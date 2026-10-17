@@ -88,7 +88,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
 
     private static async Task ReplyAsync(Context context, long threadId, string address, int subId, string? text)
     {
-        if (text is null || address.Length == 0)
+        if (text is null || !ThreadProfileActions.CanReply(address))
         {
             MessageNotifier.Refresh(context, threadId, address, subId);
             return;

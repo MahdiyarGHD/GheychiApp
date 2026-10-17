@@ -846,6 +846,16 @@
                                    TextAlignment="Center" />
                     </StackPanel>
                 </Border>
+                <Border x:Name="NoReplyBar"
+                        IsVisible="False"
+                        Padding="16,12"
+                        CornerRadius="18"
+                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}">
+                    <TextBlock Text="{loc:Translate Chat_NoReply}"
+                               FontSize="13"
+                               Foreground="#8A8F98"
+                               TextAlignment="Center" />
+                </Border>
                 <Grid x:Name="Composer" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
                     <Border Grid.Column="0"
                             Padding="12,0"

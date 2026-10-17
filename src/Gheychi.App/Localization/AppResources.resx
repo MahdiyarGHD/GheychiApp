@@ -1086,6 +1086,9 @@
   <data name="Chat_Unblock" xml:space="preserve">
     <value>Unblock sender</value>
   </data>
+  <data name="Chat_NoReply" xml:space="preserve">
+    <value>This sender doesn't accept replies</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>You blocked this sender, so their messages are dropped</value>
   </data>

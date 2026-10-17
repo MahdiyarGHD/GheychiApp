@@ -26,7 +26,7 @@ public class ThreadProfileTests
     [Theory]
     [InlineData("+15550192834", true, true, true, true)]
     [InlineData("09120000001", true, true, true, true)]
-    [InlineData("Bank Mellat", false, true, true, true)]
+    [InlineData("Bank Mellat", false, false, true, true)]
     [InlineData("3000", false, true, true, true)]
     public void Each_button_has_its_own_rule(string address, bool call, bool text, bool details, bool search)
     {
@@ -39,7 +39,23 @@ public class ThreadProfileTests
     public void Visible_count_counts_only_shown_buttons()
     {
         Assert.Equal(4, ThreadProfileActions.For("+15550192834").VisibleCount);
-        Assert.Equal(3, ThreadProfileActions.For("Bank Mellat").VisibleCount);
+        Assert.Equal(2, ThreadProfileActions.For("Bank Mellat").VisibleCount);
+    }
+
+    [Theory]
+    [InlineData("IRANCELL", false)]
+    [InlineData("MCI-NET", false)]
+    [InlineData("KHAMENEI.IR", false)]
+    [InlineData("بانک", false)]
+    [InlineData("+989120000001", true)]
+    [InlineData("09120000001", true)]
+    [InlineData("۰۹۱۲۰۰۰۰۰۰۱", true)]
+    [InlineData("8080", true)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void Only_sender_names_cannot_be_replied_to(string? address, bool canReply)
+    {
+        Assert.Equal(canReply, ThreadProfileActions.CanReply(address));
     }
 
     [Fact]
