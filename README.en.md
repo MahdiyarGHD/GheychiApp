@@ -50,10 +50,13 @@ Gheychi ("scissors" in Persian) is a full SMS app for Android that recognises th
 - Fast search with filters for unread, starred, known, unknown, links and places, plus voice search.
 - A profile for each conversation with its shared links, notification and SIM settings.
 - Snooze a conversation (1 hour, 8 hours, until tomorrow morning, 1 week, or until turned back on).
+- Pin conversations to the top of the inbox and reorder them by dragging.
+- One-time codes are detected in messages, with a "Copy code" button in the chat and on the notification. A bank's dynamic password can be copied automatically (off by default).
+- Deleted messages go to a Trash, where they can be restored.
+- An optional notification when a sent message is delivered or fails.
 - Reply straight from the notification, and hide message content on the lock screen.
 - **Folders** as tabs above the inbox, with an unread count on each (99+ beyond that). Make your own with a name and an icon, or add smart ones: Unread, Contacts, Unknown, Senders, Codes, Failed, Drafts and Pinned.
 - **Schedule a message** for a date and time (long-press the send button), and an optional **send delay** with Undo so a slip can be stopped before it goes out.
-- Sender names such as IRANCELL or MCI-NET can not receive replies, so the app does not offer a reply box for them.
 
 ### Design
 - A fully **Persian right-to-left** interface, and English.
