@@ -827,9 +827,63 @@
             </Grid>
 
             <!-- Row 2: Bottom SMS Input Bar (Hidden in selection mode); for a blocked sender, the way to unblock -->
-            <Grid Grid.Row="2"
-                  IsVisible="{Binding IsInputBarVisible}"
-                  Margin="10,8,10,12">
+            <StackPanel Grid.Row="2"
+                        IsVisible="{Binding IsInputBarVisible}"
+                        Margin="10,8,10,12"
+                        Spacing="6">
+                <!-- A message held by the send delay: it goes out when the count ends, and Undo takes it back -->
+                <Border IsVisible="{Binding Pending.HasDelayed}"
+                        Padding="16,8,8,8"
+                        CornerRadius="18"
+                        Background="{theme:AccentBrush Role=Soft}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Pending.DelayText}"
+                                       FontSize="13"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:AccentBrush Role=Text}" />
+                            <TextBlock Text="{Binding Pending.DelayPreview}"
+                                       FontSize="12"
+                                       Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="1" />
+                        </StackPanel>
+                        <Border Grid.Column="1"
+                                Padding="14,8"
+                                CornerRadius="14"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                Tapped="OnUndoSendTapped">
+                            <TextBlock Text="{loc:Translate Chat_Undo}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:AccentBrush Role=Text}" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <!-- Messages scheduled for later: a tap lists them -->
+                <Border IsVisible="{Binding Pending.HasScheduled}"
+                        Padding="16,10"
+                        CornerRadius="18"
+                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                        Tapped="OnScheduledBarTapped">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <ui:Icon Data="{StaticResource Icon.Snooze}" Width="18" Height="18"
+                                 Foreground="{theme:AccentBrush Role=Text}"
+                                 VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Pending.ScheduledText}"
+                                   FontSize="13"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1"
+                                   VerticalAlignment="Center" />
+                        <ui:Icon Grid.Column="2" Data="{StaticResource Icon.ChevronRight}" Width="16" Height="16"
+                                 Foreground="#8A8F98"
+                                 VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+                <Grid>
                 <Border x:Name="BlockedBar"
                         IsVisible="False"
                         Padding="16,9"
@@ -907,6 +961,8 @@
                             Background="{StaticResource PrimaryBrush}"
                             VerticalAlignment="Center"
                             AutomationProperties.Name="{loc:Translate Chat_Send}"
+                            PointerPressed="OnSendPressed"
+                            Holding="OnSendHolding"
                             Tapped="OnSend">
                         <ui:Icon Data="{StaticResource Icon.Send}"
                                  Margin="0,3,0,0"
@@ -916,7 +972,8 @@
                                  Foreground="White" />
                     </Border>
                 </Grid>
-            </Grid>
+                </Grid>
+            </StackPanel>
         </Grid>
 
         <!-- Header menu (three dots): a tap outside it closes it -->

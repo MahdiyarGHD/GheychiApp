@@ -11,6 +11,8 @@ public static class AppPreferences
     private const string LanguageKey = "app_language_v1";
     private const string AccentKey = "app_accent_v1";
     private const string TextSizeKey = "app_text_size_v1";
+    private const string SendDelayKey = "send_delay_seconds_v1";
+    private const string ExactAlarmAskedKey = "exact_alarm_asked_v1";
 
     public const string LanguageEnglish = "en";
     public const string LanguagePersian = "fa";
@@ -20,6 +22,20 @@ public static class AppPreferences
     {
         get => Preferences.Default.Get(DefaultSubIdKey, 0);
         set => Preferences.Default.Set(DefaultSubIdKey, value);
+    }
+
+    /// <summary>Seconds a typed message is held before it is sent, so it can still be undone; 0 sends at once.</summary>
+    public static int SendDelaySeconds
+    {
+        get => Gheychi.Core.Scheduling.SendSchedule.NormalizeDelay(Preferences.Default.Get(SendDelayKey, 0));
+        set => Preferences.Default.Set(SendDelayKey, Gheychi.Core.Scheduling.SendSchedule.NormalizeDelay(value));
+    }
+
+    /// <summary>Whether the user has been asked to allow exact alarms; the question is not repeated.</summary>
+    public static bool ExactAlarmAsked
+    {
+        get => Preferences.Default.Get(ExactAlarmAskedKey, false);
+        set => Preferences.Default.Set(ExactAlarmAskedKey, value);
     }
 
     public static bool ShowContentOnLockScreen

@@ -1,6 +1,7 @@
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Notifications;
+using Gheychi.Core.Scheduling;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
 using Gheychi.Core.Updates;
@@ -61,6 +62,8 @@ internal static class AppServices
         services.AddSingleton<IThreadSettings, Services.PreferencesThreadSettings>();
         services.AddSingleton<IDraftStore, Services.PreferencesDraftStore>();
         services.AddSingleton<IPinStore, Services.PreferencesPinStore>();
+        services.AddSingleton<IScheduledSendStore, Services.PreferencesScheduledSendStore>();
+        services.AddSingleton<IScheduledSendScheduler, ScheduledSendAlarm>();
         services.AddSingleton<INotificationRule, ActiveChatRule>();
         services.AddSingleton<INotificationRule, SnoozeRule>();
         services.AddSingleton<NotificationPolicy>();

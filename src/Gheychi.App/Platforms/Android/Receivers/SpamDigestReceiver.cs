@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Platforms.Android.Services;
 
 namespace Gheychi.App.Platforms.Android.Receivers;
 
@@ -40,7 +41,11 @@ public class SpamDigestRescheduleReceiver : BroadcastReceiver
 {
     public override void OnReceive(Context? context, Intent? intent)
     {
-        if (context is not null)
-            SpamDigestNotifier.Schedule(context.ApplicationContext ?? context);
+        if (context is null)
+            return;
+
+        SpamDigestNotifier.Schedule(context.ApplicationContext ?? context);
+        // Scheduled messages share this trigger: their alarms are lost the same way.
+        ScheduledSendAlarm.RescheduleAll(context.ApplicationContext ?? context);
     }
 }

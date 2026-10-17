@@ -48,5 +48,6 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
         // The alarm is gone after a force stop, and an app update can leave it unset.
         _ = Task.Run(() => SpamDigestNotifier.Schedule(Platform.AppContext));
+        _ = Task.Run(() => Gheychi.App.Platforms.Android.Services.ScheduledSendAlarm.RescheduleAll(Platform.AppContext));
     }
 }

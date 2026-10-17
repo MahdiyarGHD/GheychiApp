@@ -1089,6 +1089,99 @@
   <data name="Chat_NoReply" xml:space="preserve">
     <value>This sender doesn't accept replies</value>
   </data>
+  <data name="Chat_SendingIn" xml:space="preserve">
+    <value>Sending in {0}s</value>
+  </data>
+  <data name="Chat_Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Chat_ScheduledBar" xml:space="preserve">
+    <value>{0} scheduled · next {1}</value>
+  </data>
+  <data name="Chat_ScheduleTitle" xml:space="preserve">
+    <value>Send later</value>
+  </data>
+  <data name="Schedule_OneHour" xml:space="preserve">
+    <value>In an hour</value>
+  </data>
+  <data name="Schedule_ThisEvening" xml:space="preserve">
+    <value>This evening</value>
+  </data>
+  <data name="Schedule_TomorrowMorning" xml:space="preserve">
+    <value>Tomorrow morning</value>
+  </data>
+  <data name="Schedule_TomorrowEvening" xml:space="preserve">
+    <value>Tomorrow evening</value>
+  </data>
+  <data name="Schedule_Custom" xml:space="preserve">
+    <value>Pick date and time…</value>
+  </data>
+  <data name="Chat_Scheduled" xml:space="preserve">
+    <value>Scheduled for {0}</value>
+  </data>
+  <data name="Chat_ScheduledInexact" xml:space="preserve">
+    <value>Scheduled for {0}; it may go out a few minutes late</value>
+  </data>
+  <data name="Chat_ScheduleEmpty" xml:space="preserve">
+    <value>Type a message first</value>
+  </data>
+  <data name="Chat_ScheduleTooSoon" xml:space="preserve">
+    <value>Pick a time at least a minute ahead</value>
+  </data>
+  <data name="Chat_ScheduledTitle" xml:space="preserve">
+    <value>Scheduled messages</value>
+  </data>
+  <data name="Chat_ScheduledSendNow" xml:space="preserve">
+    <value>Send now</value>
+  </data>
+  <data name="Chat_ScheduledChangeTime" xml:space="preserve">
+    <value>Change time</value>
+  </data>
+  <data name="Chat_ScheduledDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Chat_ExactAlarmTitle" xml:space="preserve">
+    <value>Send at the exact minute?</value>
+  </data>
+  <data name="Chat_ExactAlarmMessage" xml:space="preserve">
+    <value>Android may delay scheduled messages by a few minutes unless you allow Alarms &amp; reminders for this app.</value>
+  </data>
+  <data name="Chat_ExactAlarmOpen" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="Chat_ExactAlarmLater" xml:space="preserve">
+    <value>Not now</value>
+  </data>
+  <data name="Settings_Sending" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="Settings_SendingHint" xml:space="preserve">
+    <value>Send delay, scheduled messages</value>
+  </data>
+  <data name="Settings_SendDelay" xml:space="preserve">
+    <value>Send delay</value>
+  </data>
+  <data name="Settings_SendDelayHint" xml:space="preserve">
+    <value>Hold a message for a few seconds so you can undo it</value>
+  </data>
+  <data name="Settings_SendDelayOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Settings_SendDelayValue" xml:space="preserve">
+    <value>{0} s</value>
+  </data>
+  <data name="Settings_ScheduleHint" xml:space="preserve">
+    <value>Long-press the send button to schedule a message</value>
+  </data>
+  <data name="Settings_ExactAlarms" xml:space="preserve">
+    <value>Exact timing</value>
+  </data>
+  <data name="Settings_ExactAlarmsOn" xml:space="preserve">
+    <value>Scheduled messages go out at the minute you chose</value>
+  </data>
+  <data name="Settings_ExactAlarmsOff" xml:space="preserve">
+    <value>Allow alarms so messages go out on time. Tap to allow</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>You blocked this sender, so their messages are dropped</value>
   </data>

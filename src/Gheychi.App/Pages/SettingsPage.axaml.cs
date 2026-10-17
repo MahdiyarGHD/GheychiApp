@@ -178,6 +178,7 @@ public partial class SettingsPage : UserControl
             SettingsScreenKind.Trash => new TrashScreen(),
             SettingsScreenKind.Sims => new SimSettingsScreen(),
             SettingsScreenKind.Notifications => new NotificationSettingsScreen(),
+            SettingsScreenKind.Sending => new SendingSettingsScreen(),
             SettingsScreenKind.Codes => new CodesSettingsScreen(),
             SettingsScreenKind.Appearance => new AppearanceSettingsScreen(),
             SettingsScreenKind.Privacy => new PrivacySettingsScreen(),
@@ -282,6 +283,8 @@ public partial class SettingsPage : UserControl
     private void OnSimsTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Sims);
 
     private void OnNotificationsTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Notifications);
+
+    private void OnSendingTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Sending);
 
     private void OnCodesTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Codes);
 

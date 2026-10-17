@@ -1089,6 +1089,99 @@
   <data name="Chat_NoReply" xml:space="preserve">
     <value>این فرستنده پاسخ نمی‌پذیرد</value>
   </data>
+  <data name="Chat_SendingIn" xml:space="preserve">
+    <value>ارسال تا {0} ثانیه دیگر</value>
+  </data>
+  <data name="Chat_Undo" xml:space="preserve">
+    <value>بازگردانی</value>
+  </data>
+  <data name="Chat_ScheduledBar" xml:space="preserve">
+    <value>{0} پیام زمان‌بندی‌شده · بعدی {1}</value>
+  </data>
+  <data name="Chat_ScheduleTitle" xml:space="preserve">
+    <value>ارسال در زمان دیگر</value>
+  </data>
+  <data name="Schedule_OneHour" xml:space="preserve">
+    <value>یک ساعت دیگر</value>
+  </data>
+  <data name="Schedule_ThisEvening" xml:space="preserve">
+    <value>امروز عصر</value>
+  </data>
+  <data name="Schedule_TomorrowMorning" xml:space="preserve">
+    <value>فردا صبح</value>
+  </data>
+  <data name="Schedule_TomorrowEvening" xml:space="preserve">
+    <value>فردا عصر</value>
+  </data>
+  <data name="Schedule_Custom" xml:space="preserve">
+    <value>انتخاب تاریخ و ساعت…</value>
+  </data>
+  <data name="Chat_Scheduled" xml:space="preserve">
+    <value>برای {0} زمان‌بندی شد</value>
+  </data>
+  <data name="Chat_ScheduledInexact" xml:space="preserve">
+    <value>برای {0} زمان‌بندی شد؛ ممکن است چند دقیقه دیرتر ارسال شود</value>
+  </data>
+  <data name="Chat_ScheduleEmpty" xml:space="preserve">
+    <value>ابتدا پیام را بنویسید</value>
+  </data>
+  <data name="Chat_ScheduleTooSoon" xml:space="preserve">
+    <value>زمانی دست‌کم یک دقیقه جلوتر انتخاب کنید</value>
+  </data>
+  <data name="Chat_ScheduledTitle" xml:space="preserve">
+    <value>پیام‌های زمان‌بندی‌شده</value>
+  </data>
+  <data name="Chat_ScheduledSendNow" xml:space="preserve">
+    <value>ارسال اکنون</value>
+  </data>
+  <data name="Chat_ScheduledChangeTime" xml:space="preserve">
+    <value>تغییر زمان</value>
+  </data>
+  <data name="Chat_ScheduledDelete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Chat_ExactAlarmTitle" xml:space="preserve">
+    <value>ارسال دقیقاً سر ساعت؟</value>
+  </data>
+  <data name="Chat_ExactAlarmMessage" xml:space="preserve">
+    <value>اندروید ممکن است پیام‌های زمان‌بندی‌شده را چند دقیقه دیر ارسال کند، مگر اینکه اجازهٔ «هشدارها و یادآورها» را برای برنامه بدهید.</value>
+  </data>
+  <data name="Chat_ExactAlarmOpen" xml:space="preserve">
+    <value>باز کردن تنظیمات</value>
+  </data>
+  <data name="Chat_ExactAlarmLater" xml:space="preserve">
+    <value>حالا نه</value>
+  </data>
+  <data name="Settings_Sending" xml:space="preserve">
+    <value>ارسال</value>
+  </data>
+  <data name="Settings_SendingHint" xml:space="preserve">
+    <value>تأخیر ارسال، پیام‌های زمان‌بندی‌شده</value>
+  </data>
+  <data name="Settings_SendDelay" xml:space="preserve">
+    <value>تأخیر ارسال</value>
+  </data>
+  <data name="Settings_SendDelayHint" xml:space="preserve">
+    <value>پیام را چند ثانیه نگه می‌دارد تا بتوانید لغوش کنید</value>
+  </data>
+  <data name="Settings_SendDelayOff" xml:space="preserve">
+    <value>خاموش</value>
+  </data>
+  <data name="Settings_SendDelayValue" xml:space="preserve">
+    <value>{0} ثانیه</value>
+  </data>
+  <data name="Settings_ScheduleHint" xml:space="preserve">
+    <value>برای زمان‌بندی پیام، دکمهٔ ارسال را نگه دارید</value>
+  </data>
+  <data name="Settings_ExactAlarms" xml:space="preserve">
+    <value>زمان‌بندی دقیق</value>
+  </data>
+  <data name="Settings_ExactAlarmsOn" xml:space="preserve">
+    <value>پیام‌های زمان‌بندی‌شده سر دقیقهٔ انتخابی ارسال می‌شوند</value>
+  </data>
+  <data name="Settings_ExactAlarmsOff" xml:space="preserve">
+    <value>برای ارسال سر وقت، اجازهٔ هشدارها را بدهید. برای اجازه بزنید</value>
+  </data>
   <data name="Chat_BlockedHint" xml:space="preserve">
     <value>این فرستنده را مسدود کرده‌اید و پیام‌هایش دور ریخته می‌شوند</value>
   </data>

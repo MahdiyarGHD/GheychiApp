@@ -117,6 +117,7 @@ public partial class ChatView : UserControl
             DetachLiveUpdates();
             _liveVm = Vm;
             _liveVm.MessagesAppended += OnMessagesAppended;
+            _liveVm.Pending.Attach();
         }
 
         _liveVm.StartLiveUpdates();
@@ -128,6 +129,7 @@ public partial class ChatView : UserControl
             return;
 
         _liveVm.MessagesAppended -= OnMessagesAppended;
+        _liveVm.Pending.Detach();
         _liveVm.StopLiveUpdates();
         _liveVm = null;
     }
@@ -755,7 +757,7 @@ public partial class ChatView : UserControl
 
     private async void OnSend(object? sender, TappedEventArgs e)
     {
-        if (Vm is not { } vm)
+        if (Vm is not { } vm || _sendHoldFired)
             return;
 
         // The same text again while the first one is still on its way: most likely sent again because it looked stuck.

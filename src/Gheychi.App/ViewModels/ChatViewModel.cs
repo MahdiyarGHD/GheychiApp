@@ -8,6 +8,7 @@ using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Models;
 using Gheychi.Core.Notifications;
+using Gheychi.Core.Scheduling;
 using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
@@ -64,6 +65,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _thread = thread ?? ThreadItem.Empty;
         if (_thread.ThreadId > 0)
             _draft = _drafts?.Get(_thread.ThreadId)?.Text ?? string.Empty;
+        Pending = new PendingSends(_dateFormatter) { Send = SendHeld };
+        Pending.Bind(_thread.ThreadId);
         Items = [];
         Messages = [];
 
@@ -94,7 +97,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 FlushDraft();
 
             if (SetField(ref _thread, value) && value.ThreadId != previous)
+            {
                 RestoreDraft();
+                Pending.Bind(value.ThreadId);
+            }
         }
     }
 
@@ -102,6 +108,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public FastObservableCollection<ChatMessage> Messages { get; }
 
     public ChatSearchState Search { get; }
+
+    /// <summary>The messages of this conversation held by the send delay or scheduled for later.</summary>
+    public PendingSends Pending { get; }
+
 
     // Outlines the matching bubbles. A setter that finds the same mark does nothing, so this is cheap to repeat.
     private void RefreshSearchMarks()
@@ -902,8 +912,66 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         Draft = string.Empty;
         FlushDraft();
 
-        var timeStr = _dateFormatter.FormatMessageTime(DateTime.Now, CultureInfo.CurrentUICulture);
         var subId = ResolveSubId(0);
+        // Held for the send delay, the message goes out when it ends; Undo brings it back as a draft until then.
+        if (Pending.Hold(Thread.ThreadId, SendAddress, text, subId, Gheychi.App.Services.AppPreferences.SendDelaySeconds))
+            return;
+
+        await SendNowAsync(text, subId);
+    }
+
+    /// <summary>Takes the held messages back into the box, ahead of what has been typed since.</summary>
+    public void UndoHeld()
+    {
+        var text = Pending.Undo();
+        if (text.Length > 0)
+            Draft = string.IsNullOrEmpty(Draft) ? text : text + "\n" + Draft;
+    }
+
+    /// <summary>Schedules what is in the box for <paramref name="atMillis"/>; false when there is nothing to send or nowhere to keep it.</summary>
+    public bool ScheduleDraft(long atMillis)
+    {
+        if (!CanReply || string.IsNullOrWhiteSpace(Draft))
+            return false;
+
+        if (!Pending.Schedule(Thread.ThreadId, SendAddress, Draft.Trim(), ResolveSubId(0), atMillis))
+            return false;
+
+        Draft = string.Empty;
+        FlushDraft();
+        return true;
+    }
+
+    // A message the delay or the schedule let go. In its own conversation it is shown and sent like a typed one; if the
+    // chat moved to another conversation meanwhile, it is only sent.
+    private void SendHeld(ScheduledMessage message)
+    {
+        if (message.ThreadId != Thread.ThreadId)
+        {
+            _ = SendElsewhereAsync(message);
+            return;
+        }
+
+        _ = SendNowAsync(message.Text, message.SubId);
+        MessagesAppended?.Invoke();
+    }
+
+    private async Task SendElsewhereAsync(ScheduledMessage message)
+    {
+        try
+        {
+            await _smsService.SendSmsAsync(message.Address, message.Text, message.SubId);
+            NotificationActionReceiver.RaiseThreadsChanged(message.ThreadId);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Sending a held message failed: {ex}");
+        }
+    }
+
+    private async Task SendNowAsync(string text, int subId)
+    {
+        var timeStr = _dateFormatter.FormatMessageTime(DateTime.Now, CultureInfo.CurrentUICulture);
 
         var outgoingMsg = new ChatMessage
         {

@@ -119,7 +119,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
         MainThread.BeginInvokeOnMainThread(() => RaiseThreadsChanged(threadId));
     }
 
-    private static void RaiseThreadsChanged(long threadId)
+    internal static void RaiseThreadsChanged(long threadId)
     {
         try
         {
