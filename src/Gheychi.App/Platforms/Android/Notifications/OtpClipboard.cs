@@ -1,5 +1,4 @@
 using Android.Content;
-using Android.OS;
 using Android.Widget;
 using Gheychi.App.Localization;
 
@@ -11,26 +10,16 @@ namespace Gheychi.App.Platforms.Android.Notifications;
 /// </summary>
 internal static class OtpClipboard
 {
-    // ClipDescription.EXTRA_IS_SENSITIVE: the system keeps the text out of its "copied" preview (Android 13 and later).
-    private const string SensitiveExtra = "android.content.extra.IS_SENSITIVE";
-
-    /// <param name="sensitive">Hides the code from the system's preview of the clipboard: for a copy the user did not ask for.</param>
-    public static bool Copy(Context context, string code, bool sensitive)
+    // Not marked sensitive (ClipDescription.EXTRA_IS_SENSITIVE): on a Xiaomi phone the dynamic password copied on
+    // arrival, marked so, never reached the clipboard, while the same code copied unmarked from the notification did.
+    public static bool Copy(Context context, string code)
     {
         try
         {
             if (context.GetSystemService(Context.ClipboardService) is not ClipboardManager manager)
                 return false;
 
-            var clip = ClipData.NewPlainText(LocalizationManager.Instance["Notification_CodeLabel"], code);
-            if (sensitive && OperatingSystem.IsAndroidVersionAtLeast(33) && clip?.Description is { } description)
-            {
-                var extras = new PersistableBundle();
-                extras.PutBoolean(SensitiveExtra, true);
-                description.Extras = extras;
-            }
-
-            manager.PrimaryClip = clip;
+            manager.PrimaryClip = ClipData.NewPlainText(LocalizationManager.Instance["Notification_CodeLabel"], code);
             return true;
         }
         catch (Exception ex)
@@ -41,9 +30,9 @@ internal static class OtpClipboard
     }
 
     /// <summary>Copies the code and says so: from Android 13 on the system does that itself.</summary>
-    public static bool CopyWithFeedback(Context context, string code, bool sensitive)
+    public static bool CopyWithFeedback(Context context, string code)
     {
-        if (!Copy(context, code, sensitive))
+        if (!Copy(context, code))
             return false;
 
         if (!OperatingSystem.IsAndroidVersionAtLeast(33))

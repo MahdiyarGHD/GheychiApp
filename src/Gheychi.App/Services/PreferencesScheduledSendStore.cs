@@ -19,7 +19,7 @@ public sealed class PreferencesScheduledSendStore : IScheduledSendStore
         try
         {
             var raw = Preferences.Default.Get(Key, string.Empty);
-            if (!string.IsNullOrEmpty(raw) && JsonSerializer.Deserialize<List<ScheduledMessage>>(raw) is { } saved)
+            if (!string.IsNullOrEmpty(raw) && JsonSerializer.Deserialize(raw, AppJsonContext.Default.ListScheduledMessage) is { } saved)
                 _messages.AddRange(saved.Where(m => !string.IsNullOrWhiteSpace(m.Text) && !string.IsNullOrEmpty(m.Id)));
         }
         catch (Exception ex)
@@ -75,7 +75,7 @@ public sealed class PreferencesScheduledSendStore : IScheduledSendStore
     {
         try
         {
-            Preferences.Default.Set(Key, JsonSerializer.Serialize(_messages));
+            Preferences.Default.Set(Key, JsonSerializer.Serialize(_messages, AppJsonContext.Default.ListScheduledMessage));
         }
         catch (Exception ex)
         {

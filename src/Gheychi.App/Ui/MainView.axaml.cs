@@ -113,8 +113,13 @@ public partial class MainView : UserControl
         SpamTabRequests.Requested += OnSpamTabRequested;
         MainActivity.Resumed += OnAppResumed;
         SmsDeliverReceiver.SpamReceived += OnSpamArrived;
-        SubscribeUpdates();
-        OnAppResumed();
+        // After the first frame: the badges build the update services (their HTTP clients) and read the database, and
+        // nothing of that is on screen yet.
+        _topLevel.RequestAnimationFrame(_ => Dispatcher.UIThread.Post(() =>
+        {
+            SubscribeUpdates();
+            OnAppResumed();
+        }, DispatcherPriority.Background));
 
         if (_detached)
         {

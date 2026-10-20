@@ -39,7 +39,7 @@ internal static class IncomingSmsHandler
 
         // Before anything slower: the code is wanted the moment the phone lights up.
         if (code is { Kind: OtpKind.DynamicPassword, IsConfident: true } dynamicPassword && AppPreferences.AutoCopyDynamicPassword)
-            OtpClipboard.CopyWithFeedback(context, dynamicPassword.Code, sensitive: true);
+            OtpClipboard.CopyWithFeedback(context, dynamicPassword.Code);
 
         var threadId = Store(context, address, body, timestampMillis, subId, sentMillis: sentMillis);
 

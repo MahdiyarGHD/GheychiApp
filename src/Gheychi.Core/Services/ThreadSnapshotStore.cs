@@ -19,7 +19,7 @@ public static class ThreadSnapshotStore
                 return [];
 
             using var stream = File.OpenRead(path);
-            return JsonSerializer.Deserialize<List<SmsThread>>(stream) ?? [];
+            return JsonSerializer.Deserialize(stream, CoreJsonContext.Default.ListSmsThread) ?? [];
         }
         catch
         {
@@ -34,7 +34,7 @@ public static class ThreadSnapshotStore
             var temp = path + ".tmp";
             using (var stream = File.Create(temp))
             {
-                JsonSerializer.Serialize(stream, threads.Take(MaxThreads).ToList());
+                JsonSerializer.Serialize(stream, threads.Take(MaxThreads).ToList(), CoreJsonContext.Default.ListSmsThread);
             }
             File.Move(temp, path, overwrite: true);
         }

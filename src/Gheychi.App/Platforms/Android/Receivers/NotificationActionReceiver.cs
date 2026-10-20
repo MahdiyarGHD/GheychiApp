@@ -70,7 +70,7 @@ public sealed class NotificationActionReceiver : BroadcastReceiver
         if (string.IsNullOrEmpty(code))
             return;
 
-        OtpClipboard.CopyWithFeedback(context, code, sensitive: false);
+        OtpClipboard.CopyWithFeedback(context, code);
         MarkRead(context, threadId);
     }
 

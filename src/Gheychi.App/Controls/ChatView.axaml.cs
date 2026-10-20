@@ -714,7 +714,7 @@ public partial class ChatView : UserControl
             return;
 
         TriggerHaptic();
-        if (!OtpClipboard.Copy(Platform.AppContext, code, sensitive: false))
+        if (!OtpClipboard.Copy(Platform.AppContext, code))
             return;
 
         message.CodeCopied = true;

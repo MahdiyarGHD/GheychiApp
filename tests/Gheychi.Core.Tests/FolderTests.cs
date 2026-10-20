@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Gheychi.Core.Folders;
 using Xunit;
 
@@ -9,6 +10,27 @@ public class FolderTests
         bool unread = false, bool contact = false, bool sender = false, bool code = false,
         bool failed = false, bool draft = false, bool pinned = false) =>
         new(unread, contact, sender, code, failed, draft, pinned);
+
+    // Folders saved by an older version (reflection serializer) must still load, and are saved back the same.
+    [Fact]
+    public void Folders_saved_by_the_reflection_serializer_load_and_save_unchanged()
+    {
+        var old = JsonSerializer.Serialize(new
+        {
+            Folders = new[]
+            {
+                new Folder("f1", "Work", "work"),
+                new Folder("smart-unread", string.Empty, FolderRules.DefaultIcon, SmartFolder.Unread)
+            },
+            Members = new Dictionary<string, List<long>> { ["f1"] = [3, 7] }
+        });
+
+        var book = FolderBook.Load(old);
+
+        Assert.Equal(2, book.Folders.Count);
+        Assert.Equal(SmartFolder.Unread, book.Folders[1].Smart);
+        Assert.Equal(old, book.Serialize());
+    }
 
     [Fact]
     public void A_new_book_has_no_folders()
