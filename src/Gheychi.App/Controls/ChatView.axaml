@@ -1217,7 +1217,7 @@
                                Foreground="#8A8F98"
                                TextAlignment="Center"
                                VerticalAlignment="Center"
-                               RenderTransform="translate(0px, -29px)"
+                               RenderTransform="translate(0px, -38px)"
                                IsHitTestVisible="False"
                                IsVisible="False" />
                 </Grid>
