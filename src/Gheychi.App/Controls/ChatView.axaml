@@ -1205,6 +1205,21 @@
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Border>
+                    <!--
+                        Characters left in the current part / parts (see UpdateCounter). Drawn over the free space above
+                        the send button, so showing it never moves the composer.
+                    -->
+                    <TextBlock x:Name="SegmentCounter"
+                               Grid.Column="2"
+                               Margin="6,0,0,0"
+                               Width="54"
+                               FontSize="10.5"
+                               Foreground="#8A8F98"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               RenderTransform="translate(0px, -29px)"
+                               IsHitTestVisible="False"
+                               IsVisible="False" />
                 </Grid>
                 </Grid>
                 <!-- Where the emoji panel goes, directly under the box: it replaces the keyboard -->

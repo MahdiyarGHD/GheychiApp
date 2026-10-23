@@ -33,6 +33,7 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         var theme = AppPreferences.Theme;
         SettingsUi.Select(_themes.Select(t => t.Segment), _themes.FirstOrDefault(t => t.Theme == theme).Segment);
         ShowAccent(AccentScheme.Find(AppPreferences.Accent));
+        ShowAppIcon(AppIconSwitcher.Current());
         SettingsUi.Select(_textSizes, _textSizes[Math.Clamp(AppPreferences.TextSize, 0, _textSizes.Length - 1)]);
         var language = AppPreferences.Language;
         SettingsUi.Select(_languages.Select(l => l.Segment), _languages.FirstOrDefault(l => l.Language == language).Segment);
@@ -107,6 +108,28 @@ public partial class AppearanceSettingsScreen : SettingsScreen
             var on = scheme == selected;
             ring.BorderBrush = on ? (IBrush)ring.Tag! : Palette.Transparent;
             check.IsVisible = on;
+        }
+    }
+
+    private void ShowAppIcon(string icon) =>
+        SettingsUi.Select([IconGheychi, IconStock], icon == AppPreferences.IconStock ? IconStock : IconGheychi);
+
+    // Unlike the other choices here, no restart: the launcher alias is switched while the app keeps running.
+    private void OnIconTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            var icon = sender == IconStock ? AppPreferences.IconStock : AppPreferences.IconGheychi;
+            if (icon == AppIconSwitcher.Current())
+                return;
+
+            AppIconSwitcher.Apply(icon);
+            ShowAppIcon(icon);
+            Toast.Show(LocalizationManager.Instance["Settings_IconChanged"]);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Changing the app icon failed: {ex}");
         }
     }
 

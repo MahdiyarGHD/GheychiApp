@@ -13,9 +13,12 @@ using Gheychi.App.Platforms.Android.Notifications;
 namespace Gheychi.App;
 
 [Activity(
+    // A fixed name, because the launcher aliases in AndroidManifest.xml point at it. The launcher entry itself is the
+    // alias, so MainLauncher is off: otherwise both icons would show.
+    Name = "com.evergreen.gheychiapp.MainActivity",
+    Exported = true,
     Label = "@string/app_name",
     Theme = "@style/Gheychi.Splash",
-    MainLauncher = true,
     // One instance for the whole app: another app's intent (a contact's message button, the share sheet) used to start
     // a second one in its own task, and both then answered the request through the same static events.
     LaunchMode = LaunchMode.SingleTask,

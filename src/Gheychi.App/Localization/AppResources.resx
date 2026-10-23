@@ -1179,6 +1179,12 @@
   <data name="Settings_SendDelayHint" xml:space="preserve">
     <value>Hold a message for a few seconds so you can undo it</value>
   </data>
+  <data name="Settings_CharCounter" xml:space="preserve">
+    <value>Character counter</value>
+  </data>
+  <data name="Settings_CharCounterHint" xml:space="preserve">
+    <value>Shows the characters left in the current part and the number of parts above the send button</value>
+  </data>
   <data name="Settings_SendDelayOff" xml:space="preserve">
     <value>Off</value>
   </data>
@@ -1394,6 +1400,18 @@
   </data>
   <data name="Settings_RestartAccentMessage" xml:space="preserve">
     <value>The new accent colour is applied after the app restarts.</value>
+  </data>
+  <data name="Settings_SectionAppIcon" xml:space="preserve">
+    <value>App icon</value>
+  </data>
+  <data name="Settings_IconGheychi" xml:space="preserve">
+    <value>Gheychi</value>
+  </data>
+  <data name="Settings_IconStock" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="Settings_IconChanged" xml:space="preserve">
+    <value>The home screen may take a moment to update. Some launchers move or remove the shortcut on the home screen.</value>
   </data>
   <data name="Accent_Green" xml:space="preserve">
     <value>Green</value>

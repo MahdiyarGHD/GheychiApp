@@ -51,6 +51,23 @@
 
                 <Border Classes="card" Margin="16,12,16,0">
                     <Border Classes="row">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Classes="badge">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Chat}"
+                                         Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{loc:Translate Settings_CharCounter}" Classes="rowTitle" />
+                                <TextBlock Text="{loc:Translate Settings_CharCounterHint}" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <ToggleButton x:Name="CharCounterSwitch" Grid.Column="2" Classes="setting"
+                                          IsCheckedChanged="OnCharCounterToggled" />
+                        </Grid>
+                    </Border>
+                </Border>
+
+                <Border Classes="card" Margin="16,12,16,0">
+                    <Border Classes="row">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                             <Border Classes="badge" Background="{theme:AccentBrush Role=Soft}">
                                 <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Info}"

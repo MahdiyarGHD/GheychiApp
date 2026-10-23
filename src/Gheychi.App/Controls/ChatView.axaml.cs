@@ -38,6 +38,9 @@ public partial class ChatView : UserControl
     private ChatViewModel? _liveVm;
     private bool _initialLayoutSettled;
     private bool _buttonVisible;
+    private bool _counterOn;
+    private int _counterParts = -1;
+    private int _counterRemaining;
     private bool _loadingOlder;
     private bool _stickPending;
     private bool _stickyPending;
@@ -97,8 +100,11 @@ public partial class ChatView : UserControl
         MessageEntry.GotFocus += (_, _) => ScrollToEnd();
         MessageEntry.PropertyChanged += (_, e) =>
         {
-            if (e.Property == TextBox.TextProperty)
-                UpdateSendButton();
+            if (e.Property != TextBox.TextProperty)
+                return;
+
+            UpdateSendButton();
+            UpdateCounter();
         };
     }
 
@@ -157,6 +163,7 @@ public partial class ChatView : UserControl
 
     private PreparedChatData? PrepareForTransitionCore(ThreadItem thread)
     {
+        LoadCounterSetting();
         CloseTextSelection();
         _followTail = true;
         _initialLayoutSettled = false;
@@ -228,6 +235,7 @@ public partial class ChatView : UserControl
 
     public void Bind(ChatViewModel vm)
     {
+        LoadCounterSetting();
         _initialLayoutSettled = false;
         _lastFirstVisibleIndex = -1;
         vm.SafeDispatcher = SafePrependItems;
@@ -263,6 +271,34 @@ public partial class ChatView : UserControl
         SendButton.UpdateLayout();
         _ = OverlayAnimator.FadeAsync(SendButton, 0, 1, ButtonFade);
         _ = ScaleAsync(SendButton, 0.6, 1.0, ButtonFade, 0.5);
+    }
+
+    // The setting is read when a chat opens, not on every key.
+    private void LoadCounterSetting()
+    {
+        _counterOn = Gheychi.App.Services.AppPreferences.ShowCharCounter;
+        UpdateCounter();
+    }
+
+    // "52 / 2": characters left in the current part, then the number of parts. Hidden while the send button is.
+    private void UpdateCounter()
+    {
+        var text = MessageEntry.Text;
+        if (!_counterOn || string.IsNullOrWhiteSpace(text))
+        {
+            SegmentCounter.IsVisible = false;
+            _counterParts = -1;
+            return;
+        }
+
+        var segments = SmsSegmentCounter.Count(text);
+        if (segments.Parts == _counterParts && segments.Remaining == _counterRemaining)
+            return;
+
+        _counterParts = segments.Parts;
+        _counterRemaining = segments.Remaining;
+        SegmentCounter.Text = $"{segments.Remaining} / {segments.Parts}";
+        SegmentCounter.IsVisible = true;
     }
 
     private void OnUnblockTapped(object? sender, TappedEventArgs e)

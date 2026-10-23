@@ -1179,6 +1179,12 @@
   <data name="Settings_SendDelayHint" xml:space="preserve">
     <value>پیام را چند ثانیه نگه می‌دارد تا بتوانید لغوش کنید</value>
   </data>
+  <data name="Settings_CharCounter" xml:space="preserve">
+    <value>شمارنده نویسه</value>
+  </data>
+  <data name="Settings_CharCounterHint" xml:space="preserve">
+    <value>نویسه‌های باقی‌مانده در بخش فعلی و تعداد بخش‌های پیام را بالای دکمه ارسال نشان می‌دهد</value>
+  </data>
   <data name="Settings_SendDelayOff" xml:space="preserve">
     <value>خاموش</value>
   </data>
@@ -1394,6 +1400,18 @@
   </data>
   <data name="Settings_RestartAccentMessage" xml:space="preserve">
     <value>رنگ تأکید جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
+  </data>
+  <data name="Settings_SectionAppIcon" xml:space="preserve">
+    <value>نماد برنامه</value>
+  </data>
+  <data name="Settings_IconGheychi" xml:space="preserve">
+    <value>قیچی</value>
+  </data>
+  <data name="Settings_IconStock" xml:space="preserve">
+    <value>پیام‌ها</value>
+  </data>
+  <data name="Settings_IconChanged" xml:space="preserve">
+    <value>ممکن است کمی طول بکشد تا صفحه اصلی به‌روز شود. برخی لانچرها میان‌بر صفحه اصلی را جابه‌جا یا حذف می‌کنند.</value>
   </data>
   <data name="Accent_Green" xml:space="preserve">
     <value>سبز</value>

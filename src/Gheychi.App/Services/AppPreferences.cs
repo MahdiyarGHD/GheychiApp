@@ -10,9 +10,11 @@ public static class AppPreferences
     private const string ThemeKey = "app_theme_v1";
     private const string LanguageKey = "app_language_v1";
     private const string AccentKey = "app_accent_v1";
+    private const string AppIconKey = "app_icon_v1";
     private const string SystemThemeKey = "system_theme_applied_v1";
     private const string TextSizeKey = "app_text_size_v1";
     private const string SendDelayKey = "send_delay_seconds_v1";
+    private const string CharCounterKey = "char_counter_v1";
     private const string ExactAlarmAskedKey = "exact_alarm_asked_v1";
     private const string FolderCountsKey = "folder_counts_v1";
     private const string FolderBarKey = "folder_bar_v1";
@@ -23,6 +25,19 @@ public static class AppPreferences
 
     public const string LanguageEnglish = "en";
     public const string LanguagePersian = "fa";
+
+    public const string IconGheychi = "gheychi";
+    public const string IconStock = "stock";
+
+    /// <summary>
+    /// The launcher icon picked in Appearance, <see cref="IconGheychi"/> or <see cref="IconStock"/>. A record of the
+    /// choice only: what the phone shows is the enabled launcher alias, which Appearance reads from the system.
+    /// </summary>
+    public static string AppIcon
+    {
+        get => Preferences.Default.Get(AppIconKey, IconGheychi);
+        set => Preferences.Default.Set(AppIconKey, value);
+    }
 
     /// <summary>The emoji picked lately, newest first, separated by spaces (<see cref="Gheychi.Core.Emoji.EmojiRecents"/>).</summary>
     public static string RecentEmoji
@@ -43,6 +58,13 @@ public static class AppPreferences
     {
         get => Gheychi.Core.Scheduling.SendSchedule.NormalizeDelay(Preferences.Default.Get(SendDelayKey, 0));
         set => Preferences.Default.Set(SendDelayKey, Gheychi.Core.Scheduling.SendSchedule.NormalizeDelay(value));
+    }
+
+    /// <summary>The characters left in the current part and the number of parts, above the send button. Off until asked for.</summary>
+    public static bool ShowCharCounter
+    {
+        get => Preferences.Default.Get(CharCounterKey, false);
+        set => Preferences.Default.Set(CharCounterKey, value);
     }
 
     /// <summary>Whether the user has been asked to allow exact alarms; the question is not repeated.</summary>

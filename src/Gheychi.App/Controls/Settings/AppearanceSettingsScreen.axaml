@@ -28,6 +28,29 @@
                     <UniformGrid x:Name="AccentGrid" Columns="5" />
                 </Border>
 
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionAppIcon}" Classes="sectionTitle" />
+                <Border Classes="card" Padding="10">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Border x:Name="IconGheychi" Grid.Column="0" Classes="segment" Tapped="OnIconTapped">
+                            <StackPanel Spacing="8">
+                                <Border Width="56" Height="56" CornerRadius="16" ClipToBounds="True" Background="#325942">
+                                    <Image Source="avares://Gheychi.App/UiAssets/AppIcon/gheychi.png" Width="78" Height="78" />
+                                </Border>
+                                <TextBlock Text="{loc:Translate Settings_IconGheychi}" Classes="segmentTitle" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="IconStock" Grid.Column="1" Classes="segment" Tapped="OnIconTapped">
+                            <StackPanel Spacing="8">
+                                <Border Width="56" Height="56" CornerRadius="16" Background="#3C6E9E">
+                                    <Path Width="24" Height="24" Stretch="Uniform" Fill="White"
+                                          Data="M20,2H4C2.9,2 2,2.9 2,4v18l4,-4h14c1.1,0 2,-0.9 2,-2V4C22,2.9 21.1,2 20,2zM6,9h12v2H6V9zM14,14H6v-2h8V14zM18,8H6V6h12V8z" />
+                                </Border>
+                                <TextBlock Text="{loc:Translate Settings_IconStock}" Classes="segmentTitle" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
                 <TextBlock Text="{settings:UpperTranslate Settings_SectionTextSize}" Classes="sectionTitle" />
                 <Border Classes="card" Padding="10">
                     <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">

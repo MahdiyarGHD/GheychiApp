@@ -1,6 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="@string/app_name" />
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="@string/app_name">
+		<!-- The two launcher icons (Appearance). Exactly one is enabled; MainActivity itself is no launcher entry.
+		     Names are absolute because MainActivity's is fixed with Name in its [Activity]. The Gheychi alias keeps the
+		     name MainActivity had as the launcher before, so an update keeps the home-screen icon and its shortcuts. -->
+		<activity-alias android:name="crc6426d4b22b25096775.MainActivity" android:targetActivity="com.evergreen.gheychiapp.MainActivity" android:enabled="true" android:exported="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:label="@string/app_name">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity-alias>
+		<activity-alias android:name="com.evergreen.gheychiapp.LauncherStock" android:targetActivity="com.evergreen.gheychiapp.MainActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/appicon_stock" android:roundIcon="@mipmap/appicon_stock_round" android:label="@string/app_name">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity-alias>
+	</application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.READ_SMS" />
