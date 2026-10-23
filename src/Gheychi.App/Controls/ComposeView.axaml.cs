@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Gheychi.App.Localization;
+using Gheychi.App.Platforms.Android;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
