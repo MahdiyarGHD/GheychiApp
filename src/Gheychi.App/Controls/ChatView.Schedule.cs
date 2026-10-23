@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Input;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Services;
@@ -57,6 +58,18 @@ public partial class ChatView
     }
 
     private void OnUndoSendTapped(object? sender, TappedEventArgs e) => Vm?.UndoHeld();
+
+    private void OnSendHeldNowTapped(object? sender, TappedEventArgs e) => Vm?.Pending.SendHeldNow();
+
+    // The expanded text may use up to 40% of the screen and scrolls beyond that.
+    private void OnDelayPreviewTapped(object? sender, TappedEventArgs e)
+    {
+        if (Vm is not { } vm)
+            return;
+
+        DelayFullScroll.MaxHeight = Math.Max(120, (TopLevel.GetTopLevel(this)?.Bounds.Height ?? 800) * 0.4);
+        vm.Pending.ToggleDelayExpanded();
+    }
 
     private async void OnScheduledBarTapped(object? sender, TappedEventArgs e)
     {

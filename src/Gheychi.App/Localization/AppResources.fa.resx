@@ -177,6 +177,12 @@
   <data name="Chat_InfoStatus" xml:space="preserve">
     <value>وضعیت</value>
   </data>
+  <data name="Chat_InfoReason" xml:space="preserve">
+    <value>دلیل</value>
+  </data>
+  <data name="Chat_SendNow" xml:space="preserve">
+    <value>ارسال فوری</value>
+  </data>
   <data name="Chat_Copied" xml:space="preserve">
     <value>در حافظه کپی شد</value>
   </data>
@@ -1130,6 +1136,9 @@
   </data>
   <data name="Chat_ScheduleEmpty" xml:space="preserve">
     <value>ابتدا پیام را بنویسید</value>
+  </data>
+  <data name="Chat_DeleteFailed" xml:space="preserve">
+    <value>حذف نشد. مطمئن شوید این برنامه پیام‌رسان پیش‌فرض است</value>
   </data>
   <data name="Chat_ScheduleTooSoon" xml:space="preserve">
     <value>زمانی دست‌کم یک دقیقه جلوتر انتخاب کنید</value>

@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Android.Telephony;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.Platforms.Android.Services;
 
@@ -16,6 +17,10 @@ internal static class SmsSendTracker
     public const string ExtraToken = "com.evergreen.gheychiapp.SMS_TOKEN";
     public const string ExtraRowId = "com.evergreen.gheychiapp.SMS_ROW_ID";
     public const string ExtraParts = "com.evergreen.gheychiapp.SMS_PARTS";
+    public const string ExtraPart = "com.evergreen.gheychiapp.SMS_PART";
+
+    /// <summary>Tag of the log lines that say why a part failed: <c>adb logcat -s Gheychi.Sms</c>.</summary>
+    public const string LogTag = "Gheychi.Sms";
 
     /// <summary>Raised when the carrier accepted or rejected a stored outgoing message (rowId, threadId, success).</summary>
     public static event Action<long, long, bool>? OutgoingUpdated;
@@ -30,9 +35,7 @@ internal static class SmsSendTracker
 
     private sealed class PendingSend
     {
-        public int Expected;
-        public int Received;
-        public bool AllOk = true;
+        public required SmsPartTally Tally;
         public readonly TaskCompletionSource<bool> Tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
@@ -75,7 +78,7 @@ internal static class SmsSendTracker
         }
     }
 
-    private static PendingIntent? CreateDeliveryIntent(Context context, long rowId, int parts)
+    private static PendingIntent? CreateDeliveryIntent(Context context, long rowId, int part, int parts)
     {
         if (rowId <= 0)
             return null;
@@ -85,6 +88,7 @@ internal static class SmsSendTracker
             var intent = new Intent(ActionSmsDelivered);
             intent.SetPackage(context.PackageName);
             intent.PutExtra(ExtraRowId, rowId);
+            intent.PutExtra(ExtraPart, part);
             intent.PutExtra(ExtraParts, parts);
             var requestCode = Interlocked.Increment(ref _requestCodeSeed);
             // Mutable: the platform adds the status report ("pdu", "format") to this intent.
@@ -100,7 +104,7 @@ internal static class SmsSendTracker
         }
     }
 
-    public static PendingIntent? CreateSentIntent(Context context, string token, long rowId)
+    public static PendingIntent? CreateSentIntent(Context context, string token, long rowId, int part, int parts)
     {
         try
         {
@@ -108,15 +112,19 @@ internal static class SmsSendTracker
             intent.SetPackage(context.PackageName);
             intent.PutExtra(ExtraToken, token);
             intent.PutExtra(ExtraRowId, rowId);
+            intent.PutExtra(ExtraPart, part);
+            intent.PutExtra(ExtraParts, parts);
             var requestCode = Interlocked.Increment(ref _requestCodeSeed);
+            // Mutable: the platform adds the radio's own cause ("errorCode") to this intent, which says why a part failed.
             return PendingIntent.GetBroadcast(
                 context,
                 requestCode,
                 intent,
-                PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+                PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Mutable);
         }
-        catch
+        catch (Exception ex)
         {
+            global::Android.Util.Log.Warn(LogTag, $"Could not create the sent intent: {ex}");
             return null;
         }
     }
@@ -126,7 +134,7 @@ internal static class SmsSendTracker
         SmsManager smsManager, string address, string text, IList<string>? parts, Context context, long rowId)
     {
         var multipart = parts != null && parts.Count > 1;
-        var token = Register(multipart ? parts!.Count : 1);
+        var token = Register(multipart ? parts!.Count : 1, out var pendingSend);
 
         try
         {
@@ -135,50 +143,53 @@ internal static class SmsSendTracker
                 var sentIntents = new List<PendingIntent>(parts!.Count);
                 // Every part asks for its own report: the message is delivered only when all of them are.
                 var deliveryIntents = new List<PendingIntent?>(parts.Count);
-                foreach (var _ in parts)
+                for (var i = 0; i < parts.Count; i++)
                 {
-                    var sentIntent = CreateSentIntent(context, token, rowId);
+                    var sentIntent = CreateSentIntent(context, token, rowId, i, parts.Count);
                     if (sentIntent == null)
                     {
                         Abandon(token);
                         return Task.FromResult(false);
                     }
                     sentIntents.Add(sentIntent);
-                    deliveryIntents.Add(CreateDeliveryIntent(context, rowId, parts.Count));
+                    deliveryIntents.Add(CreateDeliveryIntent(context, rowId, i, parts.Count));
                 }
 
                 smsManager.SendMultipartTextMessage(address, null, parts, sentIntents, rowId > 0 && deliveryIntents.All(i => i is not null) ? deliveryIntents! : null);
             }
             else
             {
-                var sentIntent = CreateSentIntent(context, token, rowId);
+                var sentIntent = CreateSentIntent(context, token, rowId, 0, 1);
                 if (sentIntent == null)
                 {
                     Abandon(token);
                     return Task.FromResult(false);
                 }
 
-                smsManager.SendTextMessage(address, null, text, sentIntent, CreateDeliveryIntent(context, rowId, 1));
+                smsManager.SendTextMessage(address, null, text, sentIntent, CreateDeliveryIntent(context, rowId, 0, 1));
             }
         }
-        catch
+        catch (Exception ex)
         {
+            // The platform refused the send outright (bad number, no permission): no broadcast will follow, so this is the only trace.
+            global::Android.Util.Log.Warn(LogTag, $"Send threw for row {rowId}: {ex}");
+            SmsFailureStore.Record(context, rowId, 0, $"Send threw: {ex.GetType().Name}: {ex.Message}");
             Abandon(token);
             return Task.FromResult(false);
         }
 
-        lock (PendingLock)
-        {
-            return Pending.TryGetValue(token, out var send) ? send.Tcs.Task : Task.FromResult(false);
-        }
+        // Held from before the send: the radio can answer for every part before this point is reached, and
+        // looking the token up again would then find nothing and report a message that went out as failed.
+        return pendingSend.Tcs.Task;
     }
 
-    private static string Register(int parts)
+    private static string Register(int parts, out PendingSend send)
     {
         var token = Guid.NewGuid().ToString("N");
+        send = new PendingSend { Tally = new SmsPartTally(parts) };
         lock (PendingLock)
         {
-            Pending[token] = new PendingSend { Expected = Math.Max(1, parts) };
+            Pending[token] = send;
         }
         return token;
     }
@@ -191,12 +202,10 @@ internal static class SmsSendTracker
             if (!Pending.TryGetValue(token, out var send))
                 return false;
 
-            send.Received++;
-            send.AllOk &= ok;
-            if (send.Received >= send.Expected)
+            if (send.Tally.Record(ok))
             {
                 Pending.Remove(token);
-                send.Tcs.TrySetResult(send.AllOk);
+                send.Tcs.TrySetResult(send.Tally.AllOk);
             }
 
             return true;

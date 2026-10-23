@@ -1017,25 +1017,49 @@
                         Padding="16,8,8,8"
                         CornerRadius="18"
                         Background="{theme:AccentBrush Role=Soft}">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <StackPanel VerticalAlignment="Center">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+                        <!-- A tap on the text opens the whole message, to proofread it before it goes -->
+                        <StackPanel VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    Tapped="OnDelayPreviewTapped">
                             <TextBlock Text="{Binding Pending.DelayText}"
                                        FontSize="13"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
                                        Foreground="{theme:AccentBrush Role=Text}" />
                             <TextBlock Text="{Binding Pending.DelayPreview}"
+                                       IsVisible="{Binding !Pending.DelayExpanded}"
                                        FontSize="12"
                                        Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
                                        TextTrimming="CharacterEllipsis"
                                        MaxLines="1" />
+                            <ScrollViewer x:Name="DelayFullScroll"
+                                          IsVisible="{Binding Pending.DelayExpanded}"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <TextBlock Text="{Binding Pending.DelayFull}"
+                                           FontSize="14"
+                                           TextWrapping="Wrap"
+                                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            </ScrollViewer>
                         </StackPanel>
                         <Border Grid.Column="1"
-                                Padding="14,8"
+                                Padding="12,8"
                                 CornerRadius="14"
                                 Background="Transparent"
                                 VerticalAlignment="Center"
                                 Tapped="OnUndoSendTapped">
                             <TextBlock Text="{loc:Translate Chat_Undo}"
+                                       FontSize="14"
+                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                       Foreground="{theme:AccentBrush Role=Text}" />
+                        </Border>
+                        <Border Grid.Column="2"
+                                Padding="12,8"
+                                CornerRadius="14"
+                                Background="Transparent"
+                                VerticalAlignment="Center"
+                                Tapped="OnSendHeldNowTapped">
+                            <TextBlock Text="{loc:Translate Chat_SendNow}"
                                        FontSize="14"
                                        FontFamily="{x:Static app:AppFonts.Bold}"
                                        Foreground="{theme:AccentBrush Role=Text}" />
@@ -1527,6 +1551,10 @@
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <TextBlock Text="{loc:Translate Chat_InfoStatus}" FontSize="13" Foreground="#8A8F98" />
                             <TextBlock x:Name="InfoStatusLabel" Grid.Column="1" FontSize="13" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" TextAlignment="End" />
+                        </Grid>
+                        <Grid x:Name="InfoReasonRow" IsVisible="False" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <TextBlock Text="{loc:Translate Chat_InfoReason}" FontSize="13" Foreground="#8A8F98" />
+                            <TextBlock x:Name="InfoReasonLabel" Grid.Column="1" FontSize="13" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" TextAlignment="End" TextWrapping="Wrap" />
                         </Grid>
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                             <TextBlock Text="{loc:Translate Chat_InfoSim}" FontSize="13" Foreground="#8A8F98" />

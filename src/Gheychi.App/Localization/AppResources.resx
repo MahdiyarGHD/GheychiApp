@@ -177,6 +177,12 @@
   <data name="Chat_InfoStatus" xml:space="preserve">
     <value>Status</value>
   </data>
+  <data name="Chat_InfoReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Chat_SendNow" xml:space="preserve">
+    <value>Send now</value>
+  </data>
   <data name="Chat_Copied" xml:space="preserve">
     <value>Copied to clipboard</value>
   </data>
@@ -1130,6 +1136,9 @@
   </data>
   <data name="Chat_ScheduleEmpty" xml:space="preserve">
     <value>Type a message first</value>
+  </data>
+  <data name="Chat_DeleteFailed" xml:space="preserve">
+    <value>Could not delete. Make sure this is your default SMS app</value>
   </data>
   <data name="Chat_ScheduleTooSoon" xml:space="preserve">
     <value>Pick a time at least a minute ahead</value>

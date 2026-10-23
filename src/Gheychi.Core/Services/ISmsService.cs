@@ -18,6 +18,8 @@ public interface ISmsService
     Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default);
     /// <summary>Puts a received message (e.g. one restored from spam) into the inbox as read. Returns its thread id, or 0 on failure.</summary>
     Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId);
+    /// <summary>Why a failed outgoing message failed, as recorded when it did; null when nothing is known.</summary>
+    string? GetFailureReason(long messageId);
     Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> MarkThreadAsUnreadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> DeleteThreadsAsync(IReadOnlyList<long> threadIds, CancellationToken cancellationToken = default);

@@ -1329,6 +1329,26 @@ public sealed class AndroidSmsService : ISmsService
         SmsSendTracker.RaiseOutgoingUpdated(rowId, ThreadIdOf(context, rowId), ok);
     }
 
+    /// <summary>Puts the platform's result code of a failed send into the row's error_code column (API 19+).</summary>
+    internal static void SetErrorCode(Context context, long rowId, int code)
+    {
+        try
+        {
+            if (Telephony.Sms.ContentUri is not { } smsUri)
+                return;
+
+            var values = new ContentValues();
+            values.Put(Telephony.Sms.InterfaceConsts.ErrorCode, code);
+            context.ContentResolver?.Update(smsUri, values, $"{Telephony.Sms.InterfaceConsts.Id} = ?", [rowId.ToString()]);
+        }
+        catch (Exception ex)
+        {
+            global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"Could not store error_code: {ex.Message}");
+        }
+    }
+
+    public string? GetFailureReason(long messageId) => SmsFailureStore.Get(messageId);
+
     private static long ThreadIdOf(Context context, long rowId)
     {
         try
@@ -1416,6 +1436,8 @@ public sealed class AndroidSmsService : ISmsService
             var values = new ContentValues();
             values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Outbox);
             values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusPending);
+            values.Put(Telephony.Sms.InterfaceConsts.ErrorCode, 0);
+            SmsFailureStore.Clear(rowId);
             // Resent now; also keeps the retry from counting as unconfirmed straight away.
             values.Put(Telephony.Sms.InterfaceConsts.Date, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             context.ContentResolver?.Update(smsUri, values, $"{Telephony.Sms.InterfaceConsts.Id} = ?", [rowId.ToString()]);
@@ -1472,8 +1494,10 @@ public sealed class AndroidSmsService : ISmsService
                     ? Task.FromResult(false)
                     : SmsSendTracker.SendAsync(smsManager, address, text, parts, context, messageId);
             }
-            catch
+            catch (Exception ex)
             {
+                global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"Preparing the send failed for row {messageId}: {ex}");
+                SmsFailureStore.Record(context, messageId, 0, $"Could not prepare the send: {ex.GetType().Name}: {ex.Message}");
                 outcome = Task.FromResult(false);
             }
 

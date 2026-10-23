@@ -41,6 +41,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public IReadOnlyList<SimCardInfo> ActiveSims => _activeSims ?? Array.Empty<SimCardInfo>();
 
     private readonly ISmsService _smsService;
+    private readonly SemaphoreSlim _queueGate = new(1, 1);
     private readonly IDateFormattingService _dateFormatter;
     private readonly IMessageMetadataRepository _metadataRepo;
     private readonly IThreadSettings? _threadSettings;
@@ -975,6 +976,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _ = RefreshNewestAsync();
     }
 
+    /// <summary>Why a failed message failed, when it was recorded; null for messages still held (no row yet) or sent by another app.</summary>
+    public string? FailureReasonOf(ChatMessage message) =>
+        message.Id > 0 && !message.IsHeld ? _smsService.GetFailureReason(message.Id) : null;
+
     /// <summary>Takes the held messages back into the box, ahead of what has been typed since.</summary>
     public void UndoHeld()
     {
@@ -1122,7 +1127,18 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             var threadId = Thread.ThreadId;
             if (storeFirst)
             {
-                var rowId = await _smsService.QueueOutgoingAsync(address, text, subId, threadId);
+                // One at a time, so several messages released together are stored in the order they were typed.
+                long rowId;
+                await _queueGate.WaitAsync();
+                try
+                {
+                    rowId = await _smsService.QueueOutgoingAsync(address, text, subId, threadId);
+                }
+                finally
+                {
+                    _queueGate.Release();
+                }
+
                 if (rowId > 0)
                 {
                     message.Id = rowId;
@@ -1617,8 +1633,54 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             RemoveEmptyDaySeparators();
             ShiftLoadedCount(-1);
             EvictCache(Thread.ThreadId);
+            return true;
         }
-        return success;
+
+        return await ReconcileAfterFailedDeleteAsync([message]);
+    }
+
+    /// <summary>
+    /// A delete that removed nothing usually means the rows were already gone (the chat showed an old page). The chat is
+    /// read again from the provider, the rows that no longer exist leave the list, and the result says whether every
+    /// message asked for is gone. False means some still exist and could not be deleted.
+    /// </summary>
+    private async Task<bool> ReconcileAfterFailedDeleteAsync(IReadOnlyCollection<ChatMessage> attempted)
+    {
+        var thread = Thread;
+        EvictCache(thread.ThreadId);
+        try
+        {
+            var data = await Task.Run(() => FetchMessagesAsync(thread, Math.Max(_loadedCount, RecentPageSize), 0));
+            var present = data.Messages.Where(m => m.Id > 0).Select(m => m.Id).ToHashSet();
+
+            return await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                if (Thread.ThreadId != thread.ThreadId)
+                    return true;
+
+                var gone = Messages.Where(m => m.Id > 0 && !present.Contains(m.Id)).ToList();
+                foreach (var msg in gone)
+                {
+                    Items.Remove(msg);
+                    Messages.Remove(msg);
+                }
+
+                if (gone.Count > 0)
+                {
+                    RemoveEmptyDaySeparators();
+                    ShiftLoadedCount(-gone.Count);
+                }
+
+                var failed = attempted.Any(m => present.Contains(m.Id));
+                if (!failed)
+                    ExitSelectionMode();
+                return !failed;
+            });
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public async Task<bool> DeleteSelectedMessagesAsync()
@@ -1640,8 +1702,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             ExitSelectionMode();
             ShiftLoadedCount(-selected.Count);
             EvictCache(Thread.ThreadId);
+            return true;
         }
-        return success;
+
+        return await ReconcileAfterFailedDeleteAsync(selected);
     }
 
     public string GetSelectedMessagesText() => string.Join(Environment.NewLine, GetSelectedMessageBodies());

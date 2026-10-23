@@ -133,6 +133,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         {
             t.MarkAsRead();
             var threadId = t.ThreadId;
+            ChatViewModel.EvictCache(threadId);
             _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(threadId));
         }
 
@@ -329,6 +330,13 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         var threadIds = selected.Select(t => t.ThreadId).ToList();
         var success = await _smsService.DeleteThreadsAsync(threadIds);
+
+        // The provider can keep an emptied conversation and hand its id out again for the same number, so a page cached
+        // for it would reappear when the contact is opened from compose or search. Dropped even when the delete failed
+        // part way, so the next open reads what is really left.
+        foreach (var threadId in threadIds)
+            ChatViewModel.InvalidateThread(threadId);
+
         if (success)
         {
             _drafts?.Remove(threadIds);
@@ -508,6 +516,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 continue;
 
             var threadId = t.ThreadId;
+            // The cached page carries the unread divider of the old state.
+            ChatViewModel.EvictCache(threadId);
             if (unread)
             {
                 t.MarkAsUnread();

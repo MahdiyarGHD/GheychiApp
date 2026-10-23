@@ -25,6 +25,8 @@ public sealed class PendingSends : INotifyPropertyChanged
     private bool _hasScheduled;
     private string _delayText = string.Empty;
     private string _delayPreview = string.Empty;
+    private string _delayFull = string.Empty;
+    private bool _delayExpanded;
     private string _scheduledText = string.Empty;
 
     public PendingSends(IDateFormattingService dates)
@@ -46,6 +48,14 @@ public sealed class PendingSends : INotifyPropertyChanged
     public string DelayText => _delayText;
 
     public string DelayPreview => _delayPreview;
+
+    /// <summary>The whole text of the newest held message, for the bar when it is opened up to proofread it.</summary>
+    public string DelayFull => _delayFull;
+
+    /// <summary>The bar shows <see cref="DelayFull"/> instead of the one-line preview.</summary>
+    public bool DelayExpanded => _delayExpanded;
+
+    public void ToggleDelayExpanded() => Set(ref _delayExpanded, !_delayExpanded, nameof(DelayExpanded));
 
     public bool HasScheduled => _hasScheduled;
 
@@ -122,6 +132,13 @@ public sealed class PendingSends : INotifyPropertyChanged
         }
 
         return taken;
+    }
+
+    /// <summary>Sends every held message now, oldest first, the way the timer would have; whoever claims a message first sends it, so none goes twice.</summary>
+    public void SendHeldNow()
+    {
+        foreach (var held in Held())
+            Dispatch(held.Id);
     }
 
     public bool Schedule(long threadId, string address, string text, int subId, long atMillis)
@@ -201,8 +218,10 @@ public sealed class PendingSends : INotifyPropertyChanged
         var hasDelayed = delayed.Count > 0;
         var delayText = string.Empty;
         var delayPreview = string.Empty;
+        var delayFull = string.Empty;
         if (hasDelayed)
         {
+            delayFull = delayed[^1].Text.Trim();
             var left = Math.Max(1, (int)Math.Ceiling((delayed.Max(m => m.SendAtMillis) - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) / 1000.0));
             delayText = string.Format(loc["Chat_SendingIn"], left);
             delayPreview = Preview(delayed[^1].Text);
@@ -220,6 +239,9 @@ public sealed class PendingSends : INotifyPropertyChanged
         Set(ref _hasDelayed, hasDelayed, nameof(HasDelayed));
         Set(ref _delayText, delayText, nameof(DelayText));
         Set(ref _delayPreview, delayPreview, nameof(DelayPreview));
+        Set(ref _delayFull, delayFull, nameof(DelayFull));
+        if (!hasDelayed)
+            Set(ref _delayExpanded, false, nameof(DelayExpanded));
         Set(ref _hasScheduled, scheduled.Count > 0, nameof(HasScheduled));
         Set(ref _scheduledText, scheduledText, nameof(ScheduledText));
         Updated?.Invoke();

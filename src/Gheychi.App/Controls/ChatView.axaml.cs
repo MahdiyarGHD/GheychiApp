@@ -1058,6 +1058,9 @@ public partial class ChatView : UserControl
             MessageInfoStatus.Unconfirmed => loc["Chat_InfoUnconfirmed"],
             _ => loc["Chat_InfoSent"],
         };
+        var reason = msg.HasFailed && msg.IsOutgoing ? Vm?.FailureReasonOf(msg) : null;
+        InfoReasonLabel.Text = reason ?? string.Empty;
+        InfoReasonRow.IsVisible = !string.IsNullOrEmpty(reason);
         InfoSimLabel.Text = !string.IsNullOrWhiteSpace(msg.CarrierName)
             ? $"{loc["Chat_InfoSim"]} {msg.SimSlot} ({msg.CarrierName})"
             : $"{loc["Chat_InfoSim"]} {msg.SimSlot}";
@@ -1094,7 +1097,8 @@ public partial class ChatView : UserControl
 
         if (confirm)
         {
-            await Vm.DeleteMessageAsync(target);
+            if (!await Vm.DeleteMessageAsync(target))
+                Toast.Show(loc["Chat_DeleteFailed"]);
         }
     }
 
@@ -1158,7 +1162,8 @@ public partial class ChatView : UserControl
 
         if (confirm)
         {
-            await Vm.DeleteSelectedMessagesAsync();
+            if (!await Vm.DeleteSelectedMessagesAsync())
+                Toast.Show(loc["Chat_DeleteFailed"]);
         }
     }
 
