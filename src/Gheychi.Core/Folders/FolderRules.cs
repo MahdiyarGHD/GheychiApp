@@ -30,7 +30,7 @@ public static class FolderRules
         return folder.Smart switch
         {
             SmartFolder.Unread => facts.IsUnread,
-            SmartFolder.Contacts => facts.IsContact,
+            SmartFolder.Contacts => facts.IsContact && !facts.IsSender,
             SmartFolder.Unknown => !facts.IsContact && !facts.IsSender,
             SmartFolder.Senders => facts.IsSender,
             SmartFolder.Codes => facts.HasCode,

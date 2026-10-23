@@ -732,9 +732,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var archived = new List<ThreadItem>();
         foreach (var t in rawThreads)
         {
+            var isSender = PhoneNumberNormalizer.IsAlphanumeric(t.Address);
             var name = !string.IsNullOrWhiteSpace(t.ContactName)
                 ? t.ContactName
-                : PhoneNumberNormalizer.IsAlphanumeric(t.Address)
+                : isSender
                     ? t.Address
                     : PhoneNumberNormalizer.FormatDisplay(t.Address);
 
@@ -756,8 +757,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 IsPinned = !isArchived && pinned.Contains(t.ThreadId),
                 IsUnread = t.UnreadCount > 0,
                 HasFailed = t.HasFailed,
-                IsContact = !string.IsNullOrWhiteSpace(t.ContactName),
-                IsSender = PhoneNumberNormalizer.IsAlphanumeric(t.Address),
+                // The thread reader fills ContactName with the sender id itself for alphanumeric senders, so the
+                // name alone does not make a contact: only a phone number with a saved name does.
+                IsContact = !isSender && !string.IsNullOrWhiteSpace(t.ContactName),
+                IsSender = isSender,
                 HasCode = findCodes && OtpDetector.Find(t.Snippet) is not null
             });
         }

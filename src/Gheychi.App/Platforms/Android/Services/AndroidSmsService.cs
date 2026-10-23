@@ -501,7 +501,8 @@ public sealed class AndroidSmsService : ISmsService
             var results = new List<SearchResultChat>(candidates.Count);
             foreach (var (threadId, thread) in candidates)
             {
-                var isKnown = !string.IsNullOrWhiteSpace(thread.ContactName);
+                // An alphanumeric sender carries its own id as ContactName, which does not make it a saved contact.
+                var isKnown = !PhoneNumberNormalizer.IsAlphanumeric(thread.Address) && !string.IsNullOrWhiteSpace(thread.ContactName);
                 if (kind == SearchFilterKind.Known && !isKnown)
                     continue;
                 if (kind == SearchFilterKind.Unknown && isKnown)
