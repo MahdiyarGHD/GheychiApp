@@ -88,6 +88,11 @@ public class MainActivity : AvaloniaMainActivity
             || Avalonia.Rendering.Composition.ElementComposition.GetElementVisual(view)?.Compositor is not { } compositor)
             return;
 
+        // The first frame shown is the inbox as it was left, not an empty list that fills a moment later.
+        var left = deadline - SystemClock.UptimeMillis();
+        if (left > 0)
+            await Task.WhenAny(view.InboxPainted, Task.Delay(TimeSpan.FromMilliseconds(left)));
+
         // A frame rendered before the surface existed went nowhere; the second batch from now is drawn on the surface.
         await compositor.RequestCompositionBatchCommitAsync().Rendered;
         await compositor.RequestCompositionBatchCommitAsync().Rendered;

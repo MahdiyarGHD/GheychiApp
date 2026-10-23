@@ -46,8 +46,22 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
         base.OnCreate();
 
-        // The alarm is gone after a force stop, and an app update can leave it unset.
+        _ = ScheduleAlarmsAsync();
+    }
+
+    // The alarm is gone after a force stop, and an app update can leave it unset. Setting them reads the database and
+    // talks to the alarm service, which took CPU from the first frame: when the app is being opened (its activity is
+    // created right after this) they wait. A process started for a text has no activity and sets them at once.
+    private static async Task ScheduleAlarmsAsync()
+    {
+        await Task.Delay(ActivityCheckDelay).ConfigureAwait(false);
+        if (Platform.CurrentActivity is not null)
+            await Task.Delay(OpeningDelay).ConfigureAwait(false);
+
         _ = Task.Run(() => SpamDigestNotifier.Schedule(Platform.AppContext));
         _ = Task.Run(() => Gheychi.App.Platforms.Android.Services.ScheduledSendAlarm.RescheduleAll(Platform.AppContext));
     }
+
+    private static readonly TimeSpan ActivityCheckDelay = TimeSpan.FromMilliseconds(300);
+    private static readonly TimeSpan OpeningDelay = TimeSpan.FromSeconds(5);
 }

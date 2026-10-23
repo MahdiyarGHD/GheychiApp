@@ -10,6 +10,7 @@ public static class AppPreferences
     private const string ThemeKey = "app_theme_v1";
     private const string LanguageKey = "app_language_v1";
     private const string AccentKey = "app_accent_v1";
+    private const string SystemThemeKey = "system_theme_applied_v1";
     private const string TextSizeKey = "app_text_size_v1";
     private const string SendDelayKey = "send_delay_seconds_v1";
     private const string ExactAlarmAskedKey = "exact_alarm_asked_v1";
@@ -93,6 +94,13 @@ public static class AppPreferences
     {
         get => (AppTheme)Committed.GetInt(ThemeKey, (int)AppTheme.Unspecified);
         set => Committed.Edit()!.PutInt(ThemeKey, (int)value)!.Commit();
+    }
+
+    /// <summary>The theme last handed to the system (<see cref="ThemeState.ApplyToSystem"/>); -1 before the first time.</summary>
+    public static int SystemTheme
+    {
+        get => Committed.GetInt(SystemThemeKey, -1);
+        set => Committed.Edit()!.PutInt(SystemThemeKey, value)!.Commit();
     }
 
     /// <summary>The <see cref="Theming.AccentScheme.Id"/> picked in Appearance; empty for the default.</summary>

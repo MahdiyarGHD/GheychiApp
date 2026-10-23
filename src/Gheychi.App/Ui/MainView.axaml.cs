@@ -53,6 +53,9 @@ public partial class MainView : UserControl
     /// <summary>The layer full-screen overlays are added to; later children are above earlier ones (or use <c>ZIndex</c>).</summary>
     public Panel Overlays => OverlayHost;
 
+    /// <summary>Done once the inbox shows what it had last time (or has nothing to show); done at once when another page opened first.</summary>
+    public Task InboxPainted => (_pages[MessagesIndex] as MessagesPage)?.CachedInboxTried ?? Task.CompletedTask;
+
     public MainView()
     {
         InitializeComponent();

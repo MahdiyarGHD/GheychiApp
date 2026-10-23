@@ -32,6 +32,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private DateTime _lastLoadedAt;
     private bool _reloadPending;
     private Task<BuiltThreads>? _snapshotTask;
+    private readonly TaskCompletionSource _cachedInboxTried = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private const string ArchivedKey = "archived_threads_v1";
     private const int MaxIncrementalChanges = 40;
@@ -57,6 +58,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         // waited for: the CPU belongs to the chat until it is up, so the read waits for InitializeAsync.
         if (!ChatLaunchRequests.HasPending)
             _snapshotTask = StartSnapshotLoad();
+        else
+            _cachedInboxTried.TrySetResult();
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
         NotificationActionReceiver.ThreadsChanged += OnSmsReceived;
@@ -586,18 +589,31 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         private set => SetField(ref _hasPermission, value);
     }
 
+    /// <summary>
+    /// Done once the last known inbox is on the list, or there is none. The launch screen stays up until then (for a
+    /// moment at most), so the first frame is the inbox and not an empty list that fills a moment later.
+    /// </summary>
+    public Task CachedInboxTried => _cachedInboxTried.Task;
+
     /// <summary>The last known inbox, when the list is still empty: enough to know the names of the conversations.</summary>
     public async Task EnsureCachedInboxAsync()
     {
-        if (Threads.Count > 0)
-            return;
-
-        var cached = await (_snapshotTask ??= StartSnapshotLoad());
-        if (cached.Inbox.Count > 0 && Threads.Count == 0)
+        try
         {
-            ShowInbox(cached.Inbox);
-            if (ArchivedThreads.Count == 0)
-                ArchivedThreads.Reset(cached.Archived);
+            if (Threads.Count > 0)
+                return;
+
+            var cached = await (_snapshotTask ??= StartSnapshotLoad());
+            if (cached.Inbox.Count > 0 && Threads.Count == 0)
+            {
+                ShowInbox(cached.Inbox);
+                if (ArchivedThreads.Count == 0)
+                    ArchivedThreads.Reset(cached.Archived);
+            }
+        }
+        finally
+        {
+            _cachedInboxTried.TrySetResult();
         }
     }
 

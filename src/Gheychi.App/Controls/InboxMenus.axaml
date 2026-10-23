@@ -1,0 +1,128 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             x:Class="Gheychi.App.Controls.InboxMenus">
+
+    <!-- Built on the first use, not with the inbox: nothing of it is on screen when the app opens. -->
+    <Panel>
+        <!-- Dropdown from the three dots -->
+        <Panel x:Name="SelectBoxOverlay" IsVisible="False" Background="Transparent">
+            <Border x:Name="SelectBox"
+                    Margin="0,56,16,0"
+                    Padding="4"
+                    MinWidth="200"
+                    MaxWidth="300"
+                    BorderThickness="1"
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                    CornerRadius="12"
+                    Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
+                    BoxShadow="0 6 16 0 #40000000"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top">
+                <StackPanel>
+                    <Grid x:Name="PinItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Pin}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_Pin}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="UnpinItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Pin}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_Unpin}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.FolderGeneral}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_AddTo}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="MarkReadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Check}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_MarkAsRead}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="MarkUnreadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.TabMessages}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Messages_MarkAsUnread}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- The menu of a folder tab, from a long press on it -->
+        <Panel x:Name="FolderMenuOverlay" IsVisible="False" Background="Transparent">
+            <Border x:Name="FolderMenu"
+                    Margin="16,116,16,0"
+                    Padding="4"
+                    MinWidth="220"
+                    MaxWidth="320"
+                    BorderThickness="1"
+                    BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                    CornerRadius="14"
+                    Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
+                    BoxShadow="0 6 16 0 #40000000"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock x:Name="FolderMenuTitle"
+                               Margin="12,10,12,4"
+                               FontSize="12"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               Foreground="#8A8F98"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="1" />
+                    <Grid x:Name="FolderMarkReadItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Check}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_MarkRead}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderRenameItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Compose}" Width="18" Height="18" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_Rename}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <Grid x:Name="FolderDeleteItem" Margin="12,11" ColumnDefinitions="Auto,*" ColumnSpacing="10" Background="Transparent">
+                        <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Trash}" Width="18" Height="18" Foreground="#EF4444" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{loc:Translate Folder_Delete}"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="#EF4444"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Panel>
+    </Panel>
+</UserControl>
