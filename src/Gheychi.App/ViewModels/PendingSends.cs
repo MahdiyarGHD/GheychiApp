@@ -81,37 +81,47 @@ public sealed class PendingSends : INotifyPropertyChanged
         _tick.Stop();
     }
 
-    /// <summary>Holds a typed message for the send delay. Returns false when there is nowhere to keep it, and the caller sends it at once.</summary>
-    public bool Hold(long threadId, string address, string text, int subId, int delaySeconds)
+    /// <summary>Raised after the waiting messages were read again; the chat drops the bubbles of messages that were sent without it.</summary>
+    public event Action? Updated;
+
+    /// <summary>The messages of the bound conversation held by the send delay, oldest first.</summary>
+    public IReadOnlyList<ScheduledMessage> Held() =>
+        _store?.ForThread(_threadId).Where(m => m.IsDelay).OrderBy(m => m.SendAtMillis).ToList() ?? [];
+
+    /// <summary>
+    /// Holds a typed message for the send delay and returns its id. Returns null when there is nowhere to keep it,
+    /// and the caller sends it at once.
+    /// </summary>
+    public string? Hold(long threadId, string address, string text, int subId, int delaySeconds)
     {
         if (_store is null || _scheduler is null || delaySeconds <= 0)
-            return false;
+            return null;
 
         var message = new ScheduledMessage(NewId(), threadId, address, text, subId,
             DateTimeOffset.UtcNow.AddSeconds(delaySeconds).ToUnixTimeMilliseconds(), IsDelay: true);
         _store.Add(message);
         _scheduler.Schedule(message);
         _ = SendAfterAsync(message.Id, delaySeconds);
-        return true;
+        return message.Id;
     }
 
-    /// <summary>The texts of the held messages, taken back so the user can edit them; they are not sent.</summary>
-    public string Undo()
+    /// <summary>The held messages, taken back so the user can edit them; they are not sent.</summary>
+    public IReadOnlyList<ScheduledMessage> Undo()
     {
         if (_store is null)
-            return string.Empty;
+            return [];
 
-        var texts = new List<string>();
+        var taken = new List<ScheduledMessage>();
         foreach (var held in _store.ForThread(_threadId).Where(m => m.IsDelay))
         {
-            if (_store.Claim(held.Id) is { } taken)
+            if (_store.Claim(held.Id) is { } claimed)
             {
-                _scheduler?.Cancel(taken.Id);
-                texts.Add(taken.Text);
+                _scheduler?.Cancel(claimed.Id);
+                taken.Add(claimed);
             }
         }
 
-        return string.Join("\n", texts);
+        return taken;
     }
 
     public bool Schedule(long threadId, string address, string text, int subId, long atMillis)
@@ -212,6 +222,7 @@ public sealed class PendingSends : INotifyPropertyChanged
         Set(ref _delayPreview, delayPreview, nameof(DelayPreview));
         Set(ref _hasScheduled, scheduled.Count > 0, nameof(HasScheduled));
         Set(ref _scheduledText, scheduledText, nameof(ScheduledText));
+        Updated?.Invoke();
     }
 
     public static string Preview(string text)

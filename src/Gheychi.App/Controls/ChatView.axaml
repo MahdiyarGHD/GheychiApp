@@ -706,7 +706,7 @@
                         <TextBlock Text="{Binding Thread.Name}"
                                    ui:TextDirection.KeepSide="True"
                                    Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
-                                   FontSize="20"
+                                   FontSize="17"
                                    FontFamily="{x:Static app:AppFonts.Regular}"
                                    TextTrimming="CharacterEllipsis"
                                    MaxLines="1" />
@@ -1401,6 +1401,7 @@
                             <Grid ColumnDefinitions="10,Auto,10,*,10"
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
+                                  x:Name="MenuStarRow"
                                   Tapped="OnMenuStarTapped">
                                 <ui:Icon x:Name="MenuStarIcon" Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Star}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock x:Name="MenuStarLabel"
@@ -1411,12 +1412,13 @@
                                            VerticalAlignment="Center" />
                             </Grid>
 
-                            <Border Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
+                            <Border x:Name="MenuDividerTop" Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
 
                             <!-- Select More -->
                             <Grid ColumnDefinitions="10,Auto,10,*,10"
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
+                                  x:Name="MenuSelectRow"
                                   Tapped="OnMenuSelectMoreTapped">
                                 <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Checklist}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock Grid.Row="1" Grid.Column="3"
@@ -1430,6 +1432,7 @@
                             <Grid ColumnDefinitions="10,Auto,10,*,10"
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
+                                  x:Name="MenuInfoRow"
                                   Tapped="OnMenuInfoTapped">
                                 <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Info}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}" />
                                 <TextBlock Grid.Row="1" Grid.Column="3"
@@ -1453,12 +1456,13 @@
                                            VerticalAlignment="Center" />
                             </Grid>
 
-                            <Border Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
+                            <Border x:Name="MenuDividerBottom" Height="1" Margin="0,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
 
                             <!-- Delete -->
                             <Grid ColumnDefinitions="10,Auto,10,*,10"
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"
+                                  x:Name="MenuDeleteRow"
                                   Tapped="OnMenuDeleteTapped">
                                 <ui:Icon Grid.Row="1" Grid.Column="1" Data="{StaticResource Icon.Trash}" Width="18" Height="18" VerticalAlignment="Center" Foreground="#EF4444" />
                                 <TextBlock Grid.Row="1" Grid.Column="3"

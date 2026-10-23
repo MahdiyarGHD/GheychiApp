@@ -57,7 +57,11 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public static IBrush MessageTimeColor => TimeBrush;
 
     public long Id { get; set; }
-    public DateTime Timestamp { get; init; }
+
+    /// <summary>Typed and shown, but still waiting out the send delay: nothing is stored yet, so there is no row to act on.</summary>
+    public bool IsHeld { get; set; }
+
+    public DateTime Timestamp { get; set; }
 
     public required string Body { get; init; }
 
@@ -114,7 +118,12 @@ public sealed class ChatMessage : INotifyPropertyChanged
 
     public bool IsOutgoing { get; init; }
     public bool IsNotOutgoing => !IsOutgoing;
-    public required string Time { get; init; }
+    private string _time = string.Empty;
+    public required string Time
+    {
+        get => _time;
+        set => SetField(ref _time, value);
+    }
     public bool HasMedia { get; init; }
     public bool HasLink => Links is not null;
     public bool HasUrl => Link.Length > 0;

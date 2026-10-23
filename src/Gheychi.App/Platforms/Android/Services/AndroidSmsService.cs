@@ -1255,17 +1255,17 @@ public sealed class AndroidSmsService : ISmsService
     // send itself is not cancelled: it can still go out, and the stored row follows the real result.
     private static readonly TimeSpan SendWaitLimit = TimeSpan.FromSeconds(60);
 
-    public Task<long> QueueOutgoingAsync(string address, string text, int subId, CancellationToken cancellationToken = default) =>
+    public Task<long> QueueOutgoingAsync(string address, string text, int subId, long threadId = 0, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
         {
-            var id = InsertOutgoing(Platform.AppContext, address, text, subId, finalOk: null);
+            var id = InsertOutgoing(Platform.AppContext, address, text, subId, finalOk: null, threadId);
             if (id > 0)
                 InvalidateSearchCaches();
             return id;
         }, cancellationToken);
 
     /// <summary>Inserts an outgoing row: Outbox when <paramref name="finalOk"/> is null, otherwise already Sent/Failed. Returns 0 on failure.</summary>
-    private static long InsertOutgoing(Context context, string address, string text, int subId, bool? finalOk)
+    private static long InsertOutgoing(Context context, string address, string text, int subId, bool? finalOk, long threadId = 0)
     {
         // Called from async-void handlers: a provider failure (e.g. default-SMS role lost) must
         // not escape and kill the process.
@@ -1287,6 +1287,10 @@ public sealed class AndroidSmsService : ISmsService
             }
             if (subId > 0)
                 values.Put("sub_id", subId);
+            // Without it the provider picks the thread by comparing the address with the known ones, and a number written
+            // differently from the one the conversation was opened with can land in another thread: the open chat stays empty.
+            if (threadId > 0)
+                values.Put(Telephony.Sms.InterfaceConsts.ThreadId, threadId);
 
             var target = finalOk.HasValue ? Telephony.Sms.Sent.ContentUri : Telephony.Sms.Outbox.ContentUri;
             var inserted = target == null ? null : context.ContentResolver?.Insert(target, values);

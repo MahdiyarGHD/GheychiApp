@@ -51,6 +51,9 @@ public partial class ChatView : UserControl
     private double _targetAnchorX;
     private Geometry? _starIcon;
     private Geometry? _starFillIcon;
+    // ElevatedBubbleBorder's own Padding and BorderThickness in the markup, put back after a big emoji took them off.
+    private static readonly Thickness BubblePadding = new(10, 7);
+    private static readonly Thickness BubbleRingThickness = new(1.5);
     private IBrush? _bubbleRing;
     private BoxShadows? _bubbleShadow;
 
@@ -850,10 +853,14 @@ public partial class ChatView : UserControl
             ElevatedBubbleBorder.Background = Palette.Transparent;
             ElevatedBubbleBorder.BorderBrush = Palette.Transparent;
             ElevatedBubbleBorder.BoxShadow = default;
+            ElevatedBubbleBorder.BorderThickness = default;
+            ElevatedBubbleBorder.Padding = msg.EmojiPadding;
             ElevatedBubbleBody.FontSize = msg.EmojiSize;
         }
         else
         {
+            ElevatedBubbleBorder.BorderThickness = BubbleRingThickness;
+            ElevatedBubbleBorder.Padding = BubblePadding;
             ElevatedBubbleBorder.BorderBrush = _bubbleRing;
             ElevatedBubbleBorder.BoxShadow = _bubbleShadow.Value;
             ElevatedBubbleBody.FontSize = TextScale.Body;
@@ -877,6 +884,15 @@ public partial class ChatView : UserControl
         CopyUrlActionRow.IsVisible = msg.HasUrl;
         MenuReportRow.IsVisible = !msg.IsOutgoing;
 
+        // A message still in the send delay is not stored yet: only copying makes sense.
+        var stored = !msg.IsHeld;
+        MenuStarRow.IsVisible = stored;
+        MenuDividerTop.IsVisible = stored;
+        MenuSelectRow.IsVisible = stored;
+        MenuInfoRow.IsVisible = stored;
+        MenuDividerBottom.IsVisible = stored;
+        MenuDeleteRow.IsVisible = stored;
+
         var loc = LocalizationManager.Instance;
         MenuStarLabel.Text = msg.IsStarred ? loc["Chat_Unstar"] : loc["Chat_Star"];
         MenuStarIcon.Data = msg.IsStarred
@@ -893,7 +909,8 @@ public partial class ChatView : UserControl
         else
             OverlayContent.VerticalAlignment = VerticalAlignment.Center;
 
-        ElevatedBubbleBorder.Width = bounds is { Width: > 0 } ? bounds.Width + 8 : double.NaN;
+        // A big emoji sizes to itself: the row's width leaves no room for it to wrap onto a second line.
+        ElevatedBubbleBorder.Width = bounds is { Width: > 0 } && !msg.IsBigEmoji ? bounds.Width + 8 : double.NaN;
 
         SelectionOverlay.IsVisible = true;
         SelectionOverlay.Opacity = 0;
