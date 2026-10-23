@@ -4,7 +4,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Gheychi.App.Localization;
-using Gheychi.App.Platforms.Android;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Models;
@@ -239,6 +238,15 @@ public partial class ComposeView : UserControl
         }
     }
 
+    // Avalonia's bidi ignores U+2066/U+2069 around a number after right-to-left words (it comes out as "0003 000 912 98+"),
+    // so a number inside such text is bracketed by left-to-right marks instead.
+    private const char LeftToRightMark = (char)0x200E;
+
+    private static string Ltr(string number) =>
+        CultureService.GetFlowDirection() == Avalonia.Media.FlowDirection.RightToLeft
+            ? $"{LeftToRightMark}{number}{LeftToRightMark}"
+            : number;
+
     private static BuiltContacts BuildContacts(IReadOnlyList<ContactEntry> entries)
     {
         var index = new ContactIndex(entries);
@@ -259,7 +267,7 @@ public partial class ComposeView : UserControl
                 ContactName = contact.Name,
                 Address = contact.Number,
                 Initials = letter == ContactListBuilder.OtherLetter ? string.Empty : ThreadItem.GenerateInitials(contact.Name),
-                Subtitle = $"{contact.Label} · {LtrNumbers.Wrap(PhoneNumberNormalizer.FormatDisplay(contact.Number))}"
+                Subtitle = $"{contact.Label} · {Ltr(PhoneNumberNormalizer.FormatDisplay(contact.Number))}"
             };
         }
 
@@ -296,7 +304,7 @@ public partial class ComposeView : UserControl
             {
                 Kind = ComposeRowKind.Typed,
                 Address = typed,
-                Name = string.Format(loc["Compose_SendTo"], LtrNumbers.Wrap(PhoneNumberNormalizer.FormatDisplay(typed))),
+                Name = string.Format(loc["Compose_SendTo"], Ltr(PhoneNumberNormalizer.FormatDisplay(typed))),
                 Subtitle = loc["Compose_NewNumber"]
             });
         }

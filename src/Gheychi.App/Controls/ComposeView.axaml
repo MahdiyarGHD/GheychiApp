@@ -39,11 +39,13 @@
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                       ui:TextDirection.KeepSide="True"
                                        FontSize="15"
                                        FontFamily="{x:Static app:AppFonts.Regular}"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{theme:ThemeBrush Light=#3B3D40, Dark=#C9CED4}" />
                             <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
+                                       ui:TextDirection.KeepSide="True"
                                        IsVisible="{Binding HasSubtitle, Mode=OneTime}"
                                        FontSize="13"
                                        TextTrimming="CharacterEllipsis"
@@ -65,11 +67,13 @@
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                       ui:TextDirection.KeepSide="True"
                                        FontSize="15"
                                        FontFamily="{x:Static app:AppFonts.Regular}"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{theme:ThemeBrush Light=#3B3D40, Dark=#C9CED4}" />
                             <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
+                                       ui:TextDirection.KeepSide="True"
                                        IsVisible="{Binding HasSubtitle, Mode=OneTime}"
                                        FontSize="13"
                                        TextTrimming="CharacterEllipsis"
@@ -91,11 +95,13 @@
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
+                                       ui:TextDirection.KeepSide="True"
                                        FontSize="15"
                                        FontFamily="{x:Static app:AppFonts.Regular}"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{theme:ThemeBrush Light=#3B3D40, Dark=#C9CED4}" />
                             <TextBlock Text="{Binding Subtitle, Mode=OneTime}"
+                                       ui:TextDirection.KeepSide="True"
                                        FontSize="13"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{theme:AccentBrush Role=Icon}" />
