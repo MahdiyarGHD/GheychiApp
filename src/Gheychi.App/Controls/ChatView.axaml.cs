@@ -51,6 +51,8 @@ public partial class ChatView : UserControl
     private double _targetAnchorX;
     private Geometry? _starIcon;
     private Geometry? _starFillIcon;
+    private IBrush? _bubbleRing;
+    private BoxShadows? _bubbleShadow;
 
     private readonly IBlockedSenders? _blocked;
     private ChatMessage? _targetMessage;
@@ -86,9 +88,15 @@ public partial class ChatView : UserControl
         MessagesList.AddHandler(TappedEvent, OnMessageTapped);
         MessagesList.AddHandler(HoldingEvent, OnMessageHolding);
         InitTextSelection();
+        InitEmoji();
 
         // The soft keyboard resizes the page: the box being focused means the newest message has to stay in view.
         MessageEntry.GotFocus += (_, _) => ScrollToEnd();
+        MessageEntry.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty)
+                UpdateSendButton();
+        };
     }
 
     public event Func<Task>? BackRequested;
@@ -238,6 +246,22 @@ public partial class ChatView : UserControl
     // The whole pill is the input, not only the line of text in it.
     private void OnInputBarTapped(object? sender, TappedEventArgs e) => MessageEntry.Focus();
 
+    // The send button is there while the box holds something to send, and grows in when the first character is typed.
+    private void UpdateSendButton()
+    {
+        var show = !string.IsNullOrWhiteSpace(MessageEntry.Text);
+        if (show == SendButton.IsVisible)
+            return;
+
+        SendButton.IsVisible = show;
+        if (!show)
+            return;
+
+        SendButton.UpdateLayout();
+        _ = OverlayAnimator.FadeAsync(SendButton, 0, 1, ButtonFade);
+        _ = ScaleAsync(SendButton, 0.6, 1.0, ButtonFade, 0.5);
+    }
+
     private void OnUnblockTapped(object? sender, TappedEventArgs e)
     {
         if (_blocked is null || Vm?.Thread.Phone is not { Length: > 0 } phone)
@@ -265,6 +289,7 @@ public partial class ChatView : UserControl
         HideSkeleton();
         DropSelection(MessageEntry);
         DropSelection(SearchEntry);
+        CloseEmojiPanel();
         ReleaseInputFocus();
         return Task.CompletedTask;
     }
@@ -301,6 +326,7 @@ public partial class ChatView : UserControl
         MessageInfoModal.IsVisible = false;
         HeaderMenuOverlay.IsVisible = false;
         LinkPopup.Hide();
+        CloseEmojiPanel();
     }
 
     // ---- Scrolling ----------------------------------------------------------------------------
@@ -665,6 +691,7 @@ public partial class ChatView : UserControl
             _holdFired = true;
             e.Handled = true;
             TriggerHaptic(global::Android.Views.FeedbackConstants.LongPress);
+            CloseEmojiPanel();
             SafePrependItems(() => vm.EnterSelectionMode(row));
         }
     }
@@ -773,7 +800,9 @@ public partial class ChatView : UserControl
         vm.Send();
         if (vm.Items.Count > count)
         {
-            ReleaseInputFocus();
+            // With the emoji panel open the box keeps its place, like in Google Messages.
+            if (!_emojiOpen)
+                ReleaseInputFocus();
             ScrollToEnd();
         }
     }
@@ -803,6 +832,7 @@ public partial class ChatView : UserControl
             return;
         }
 
+        CloseEmojiPanel();
         _targetMessage = msg;
         _heldAnchors = MessagesList.CaptureAnchors();
 
@@ -812,15 +842,31 @@ public partial class ChatView : UserControl
         var isDark = ThemeState.IsDark;
         var side = msg.IsOutgoing ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         _targetAnchorX = msg.IsOutgoing ? 1.0 : 0.0;
-        if (msg.IsOutgoing)
+        _bubbleRing ??= ElevatedBubbleBorder.BorderBrush;
+        _bubbleShadow ??= ElevatedBubbleBorder.BoxShadow;
+        if (msg.IsBigEmoji)
         {
-            ElevatedBubbleBorder.Background = Palette.Accent(AccentRole.Solid);
-            ElevatedBubbleBody.Foreground = Brushes.White;
+            // Nothing is lifted but the emoji itself: no fill, ring or shadow around it.
+            ElevatedBubbleBorder.Background = Palette.Transparent;
+            ElevatedBubbleBorder.BorderBrush = Palette.Transparent;
+            ElevatedBubbleBorder.BoxShadow = default;
+            ElevatedBubbleBody.FontSize = msg.EmojiSize;
         }
         else
         {
-            ElevatedBubbleBorder.Background = ChatMessage.IncomingBubbleBg;
-            ElevatedBubbleBody.Foreground = isDark ? Palette.Brush("#E8EAED") : Palette.Brush("#1B1E24");
+            ElevatedBubbleBorder.BorderBrush = _bubbleRing;
+            ElevatedBubbleBorder.BoxShadow = _bubbleShadow.Value;
+            ElevatedBubbleBody.FontSize = TextScale.Body;
+            if (msg.IsOutgoing)
+            {
+                ElevatedBubbleBorder.Background = Palette.Accent(AccentRole.Bubble);
+                ElevatedBubbleBody.Foreground = Palette.Accent(AccentRole.OnBubble);
+            }
+            else
+            {
+                ElevatedBubbleBorder.Background = ChatMessage.IncomingBubbleBg;
+                ElevatedBubbleBody.Foreground = isDark ? Palette.Brush("#E8EAED") : Palette.Brush("#1B1E24");
+            }
         }
 
         ElevatedBubbleBorder.HorizontalAlignment = side;
@@ -970,6 +1016,7 @@ public partial class ChatView : UserControl
         await DismissSelectionOverlayAsync();
         if (target is not null && Vm is not null)
         {
+            CloseEmojiPanel();
             SafePrependItems(() => Vm.EnterSelectionMode(target));
             TriggerHaptic();
         }
@@ -1100,6 +1147,12 @@ public partial class ChatView : UserControl
 
     public bool HandleBack()
     {
+        if (_emojiOpen)
+        {
+            CloseEmojiPanel();
+            return true;
+        }
+
         if (IsTextSelected)
         {
             CloseTextSelection();

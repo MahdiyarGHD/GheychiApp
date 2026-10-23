@@ -19,8 +19,17 @@ public static class AppPreferences
     private const string RememberFolderKey = "folder_remember_v1";
     private const string LastFolderKey = "folder_last_v1";
 
+    private const string RecentEmojiKey = "emoji_recent_v1";
+
     public const string LanguageEnglish = "en";
     public const string LanguagePersian = "fa";
+
+    /// <summary>The emoji picked lately, newest first, separated by spaces (<see cref="Gheychi.Core.Emoji.EmojiRecents"/>).</summary>
+    public static string RecentEmoji
+    {
+        get => Preferences.Default.Get(RecentEmojiKey, string.Empty);
+        set => Preferences.Default.Set(RecentEmojiKey, value);
+    }
 
     /// <summary>The SIM a new message starts on; 0 for the first one.</summary>
     public static int DefaultSubId

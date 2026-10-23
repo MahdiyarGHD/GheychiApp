@@ -458,6 +458,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 Timestamp = msg.Timestamp,
                 Body = msg.Body,
                 Links = links,
+                EmojiCount = EmojiText.BigCount(msg.Body),
                 CopyableCode = code?.Code,
                 IsDynamicPassword = code?.Kind == OtpKind.DynamicPassword,
                 IsOutgoing = msg.IsOutgoing,
@@ -991,6 +992,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         {
             Body = text,
             Links = TextLinker.Find(text),
+            EmojiCount = EmojiText.BigCount(text),
             IsOutgoing = true,
             IsDelivered = false,
             Time = timeStr,

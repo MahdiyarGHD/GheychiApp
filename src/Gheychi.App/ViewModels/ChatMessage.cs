@@ -105,6 +105,13 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public string CopyCodeText => Localization.LocalizationManager.Instance[
         _codeCopied ? "Chat_CodeCopied" : IsDynamicPassword ? "Chat_CopyDynamicPassword" : "Chat_CopyCode"];
 
+    /// <summary>How many emoji the message is, 1 to 3, when it is nothing else: it is drawn large, with no bubble. 0 for any other message.</summary>
+    public int EmojiCount { get; init; }
+
+    public bool IsBigEmoji => EmojiCount > 0;
+
+    public double EmojiSize => TextScale.Emoji(EmojiCount);
+
     public bool IsOutgoing { get; init; }
     public bool IsNotOutgoing => !IsOutgoing;
     public required string Time { get; init; }
@@ -131,6 +138,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
                 OnPropertyChanged(nameof(HasReaction));
                 OnPropertyChanged(nameof(ReactionText));
                 OnPropertyChanged(nameof(BubblePadding));
+                OnPropertyChanged(nameof(EmojiPadding));
                 OnPropertyChanged(nameof(RowSpacingForReaction));
             }
         }
@@ -139,6 +147,9 @@ public sealed class ChatMessage : INotifyPropertyChanged
     public bool HasReaction => !string.IsNullOrWhiteSpace(_reactionEmoji);
 
     public Thickness BubblePadding => HasReaction ? new Thickness(10, 7, 10, 16) : new Thickness(10, 7, 10, 7);
+    /// <summary>Around a large emoji: no bubble, just room for the search outline, and for the reaction that overlaps its foot.</summary>
+    public Thickness EmojiPadding => HasReaction ? new Thickness(4, 2, 4, 14) : new Thickness(4, 2);
+
     public double RowSpacingForReaction => HasReaction ? 10 : 2;
 
     // The pill used to be a stack of emoji, spinner and "!" labels; one label is much cheaper to create
@@ -201,6 +212,9 @@ public sealed class ChatMessage : INotifyPropertyChanged
     }
 
     private static readonly IBrush MatchStroke = Palette.Brush("#F2B84B");
+
+    // Amber is lost on the light fill of a sent message; this one holds about 3:1 against it and against either page.
+    private static readonly IBrush OutgoingMatchStroke = Palette.Brush("#B7791F");
     private const double MatchStrokeThickness = 1.5;
     private const double CurrentStrokeThickness = 3;
 
@@ -221,7 +235,7 @@ public sealed class ChatMessage : INotifyPropertyChanged
         }
     }
 
-    public IBrush SearchStroke => _searchMark == SearchMark.None ? Palette.Transparent : MatchStroke;
+    public IBrush SearchStroke => _searchMark == SearchMark.None ? Palette.Transparent : IsOutgoing ? OutgoingMatchStroke : MatchStroke;
     public double SearchStrokeThickness => _searchMark switch
     {
         SearchMark.Current => CurrentStrokeThickness,

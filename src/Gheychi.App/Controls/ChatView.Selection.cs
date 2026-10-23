@@ -21,7 +21,7 @@ public partial class ChatView
 {
     private const char ZeroWidthNonJoiner = (char)0x200C;
 
-    private static readonly IBrush OutgoingSelection = Palette.Brush("#55FFFFFF");
+    private static readonly IBrush OutgoingSelection = Palette.Brush("#40000000");
     private static readonly IBrush IncomingSelection = Palette.Accent(AccentRole.Solid, 80);
 
     private const double TapSlop = 12;

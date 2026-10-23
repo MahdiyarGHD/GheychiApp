@@ -74,4 +74,7 @@
     <StreamGeometry x:Key="Icon.FolderDrafts">M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z</StreamGeometry>
     <StreamGeometry x:Key="Icon.FolderCode">M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z</StreamGeometry>
     <StreamGeometry x:Key="Icon.FolderAdd">M20 6h-8l-2-2H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-1 8h-3v3h-2v-3h-3v-2h3V9h2v3h3v2z</StreamGeometry>
+    <!-- Material Symbols (outlined): a smiling face for the emoji button, a keyboard to switch back -->
+    <StreamGeometry x:Key="Icon.Emoji">F0 M12 2A10 10 0 1 1 12 22A10 10 0 1 1 12 2Z M12 4A8 8 0 1 0 12 20A8 8 0 1 0 12 4Z M8.5 8A1.5 1.5 0 1 1 8.5 11A1.5 1.5 0 1 1 8.5 8Z M15.5 8A1.5 1.5 0 1 1 15.5 11A1.5 1.5 0 1 1 15.5 8Z M6.8 13.6A5.46 5.46 0 0 0 17.2 13.6L15.8 13.6A4.61 4.61 0 0 1 8.2 13.6Z</StreamGeometry>
+    <StreamGeometry x:Key="Icon.Keyboard">M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 12H4V7h16v10zM8 8h2v2H8zM8 11h2v2H8zM5 8h2v2H5zM5 11h2v2H5zM11 8h2v2h-2zM11 11h2v2h-2zM14 8h2v2h-2zM14 11h2v2h-2zM17 8h2v2h-2zM17 11h2v2h-2zM8 14h8v2H8z</StreamGeometry>
 </ResourceDictionary>

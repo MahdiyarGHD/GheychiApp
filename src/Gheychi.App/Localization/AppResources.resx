@@ -63,6 +63,12 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>Send</value>
   </data>
+  <data name="Chat_SendLabel" xml:space="preserve">
+    <value>SMS</value>
+  </data>
+  <data name="Chat_Emoji" xml:space="preserve">
+    <value>Emoji</value>
+  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -1580,5 +1586,38 @@
   </data>
   <data name="Trash_RestoreFailed" xml:space="preserve">
     <value>Could not restore. Is Gheychi the default SMS app?</value>
+  </data>
+  <data name="Emoji_Recent" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="Emoji_Smileys" xml:space="preserve">
+    <value>Smileys &amp; Emotion</value>
+  </data>
+  <data name="Emoji_People" xml:space="preserve">
+    <value>People &amp; Body</value>
+  </data>
+  <data name="Emoji_Animals" xml:space="preserve">
+    <value>Animals &amp; Nature</value>
+  </data>
+  <data name="Emoji_Food" xml:space="preserve">
+    <value>Food &amp; Drink</value>
+  </data>
+  <data name="Emoji_Travel" xml:space="preserve">
+    <value>Travel &amp; Places</value>
+  </data>
+  <data name="Emoji_Activities" xml:space="preserve">
+    <value>Activities</value>
+  </data>
+  <data name="Emoji_Objects" xml:space="preserve">
+    <value>Objects</value>
+  </data>
+  <data name="Emoji_Symbols" xml:space="preserve">
+    <value>Symbols</value>
+  </data>
+  <data name="Emoji_Flags" xml:space="preserve">
+    <value>Flags</value>
+  </data>
+  <data name="Emoji_Backspace" xml:space="preserve">
+    <value>Delete</value>
   </data>
 </root>

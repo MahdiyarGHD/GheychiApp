@@ -24,6 +24,7 @@ public partial class ChatView
         _sendHoldFired = true;
         e.Handled = true;
         TriggerHaptic(global::Android.Views.FeedbackConstants.LongPress);
+        CloseEmojiPanel();
 
         var loc = LocalizationManager.Instance;
         if (string.IsNullOrWhiteSpace(vm.Draft))

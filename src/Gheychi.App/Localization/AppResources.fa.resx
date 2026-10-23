@@ -63,6 +63,12 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>ارسال</value>
   </data>
+  <data name="Chat_SendLabel" xml:space="preserve">
+    <value>پیامک</value>
+  </data>
+  <data name="Chat_Emoji" xml:space="preserve">
+    <value>ایموجی</value>
+  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>انصراف</value>
   </data>
@@ -1580,5 +1586,38 @@
   </data>
   <data name="Trash_RestoreFailed" xml:space="preserve">
     <value>بازگردانی ممکن نشد. آیا قیچی برنامه پیامک پیش‌فرض است؟</value>
+  </data>
+  <data name="Emoji_Recent" xml:space="preserve">
+    <value>اخیر</value>
+  </data>
+  <data name="Emoji_Smileys" xml:space="preserve">
+    <value>شکلک‌ها و احساسات</value>
+  </data>
+  <data name="Emoji_People" xml:space="preserve">
+    <value>افراد و بدن</value>
+  </data>
+  <data name="Emoji_Animals" xml:space="preserve">
+    <value>حیوانات و طبیعت</value>
+  </data>
+  <data name="Emoji_Food" xml:space="preserve">
+    <value>غذا و نوشیدنی</value>
+  </data>
+  <data name="Emoji_Travel" xml:space="preserve">
+    <value>سفر و مکان‌ها</value>
+  </data>
+  <data name="Emoji_Activities" xml:space="preserve">
+    <value>فعالیت‌ها</value>
+  </data>
+  <data name="Emoji_Objects" xml:space="preserve">
+    <value>اشیا</value>
+  </data>
+  <data name="Emoji_Symbols" xml:space="preserve">
+    <value>نمادها</value>
+  </data>
+  <data name="Emoji_Flags" xml:space="preserve">
+    <value>پرچم‌ها</value>
+  </data>
+  <data name="Emoji_Backspace" xml:space="preserve">
+    <value>حذف</value>
   </data>
 </root>
