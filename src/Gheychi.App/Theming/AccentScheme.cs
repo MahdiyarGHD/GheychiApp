@@ -101,7 +101,8 @@ public sealed class AccentScheme
     /// <summary>The presets, then the phone's own colour (Material You) where it has one.</summary>
     public static IReadOnlyList<AccentScheme> All { get; } = FromSystem() is { } system ? [.. Presets, system] : Presets;
 
-    public static AccentScheme Default => Presets[0];
+    /// <summary>Until one is picked: the phone's own colour where it has one, green elsewhere.</summary>
+    public static AccentScheme Default { get; } = All.Count > Presets.Length ? All[^1] : Presets[0];
 
     public const string SystemId = "system";
 
