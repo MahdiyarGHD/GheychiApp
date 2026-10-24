@@ -1449,6 +1449,24 @@ public sealed class AndroidSmsService : ISmsService
         InvalidateSearchCaches();
     }
 
+    private static IList<string>? DivideMessage(SmsManager? smsManager, string text)
+    {
+        if (smsManager == null)
+            return null;
+
+        try
+        {
+            return smsManager.DivideMessage(text);
+        }
+        catch (Java.Lang.SecurityException ex)
+        {
+            // For a long non-GSM text some builds check the carrier's EMS support through
+            // TelephonyManager.getGroupIdLevel1, which needs READ_PHONE_STATE that this app does not hold.
+            global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"DivideMessage refused, splitting here: {ex.Message}");
+            return SmsSegmentCounter.Split(text);
+        }
+    }
+
     public Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default) =>
         Task.Run(async () =>
         {
@@ -1489,7 +1507,7 @@ public sealed class AndroidSmsService : ISmsService
             Task<bool> outcome;
             try
             {
-                var parts = smsManager?.DivideMessage(text);
+                var parts = DivideMessage(smsManager, text);
                 outcome = smsManager == null
                     ? Task.FromResult(false)
                     : SmsSendTracker.SendAsync(smsManager, address, text, parts, context, messageId);

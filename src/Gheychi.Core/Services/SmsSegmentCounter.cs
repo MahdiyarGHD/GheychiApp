@@ -64,6 +64,62 @@ public static class SmsSegmentCounter
         return new SmsSegments(parts, GsmPart - used, SmsEncoding.Gsm7);
     }
 
+    /// <summary>
+    /// Cuts <paramref name="text"/> into the parts <see cref="Count(string?)"/> counts, for when
+    /// <c>SmsManager.DivideMessage</c> cannot be used. The text is split as given, not trimmed.
+    /// </summary>
+    public static IList<string> Split(string text)
+    {
+        var gsm = true;
+        var septets = 0;
+        foreach (var c in text)
+        {
+            var cost = c < GsmCost.Length ? GsmCost[c] : 0;
+            if (cost == 0)
+            {
+                gsm = false;
+                break;
+            }
+            septets += cost;
+        }
+
+        if (gsm ? septets <= GsmSingle : text.Length <= UcsSingle)
+            return [text];
+
+        var parts = new List<string>();
+        var start = 0;
+        if (gsm)
+        {
+            var used = 0;
+            for (var i = 0; i < text.Length; i++)
+            {
+                var cost = GsmCost[text[i]];
+                if (used + cost > GsmPart)
+                {
+                    parts.Add(text[start..i]);
+                    start = i;
+                    used = 0;
+                }
+                used += cost;
+            }
+        }
+        else
+        {
+            while (text.Length - start > UcsPart)
+            {
+                var end = start + UcsPart;
+                // An emoji (a surrogate pair) is never cut in two, matching DivideMessage.
+                if (char.IsHighSurrogate(text[end - 1]))
+                    end--;
+                parts.Add(text[start..end]);
+                start = end;
+            }
+        }
+
+        parts.Add(text[start..]);
+        return parts;
+    }
+
     private static SmsSegments CountUcs2(int units)
     {
         if (units <= UcsSingle)
