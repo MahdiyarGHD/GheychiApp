@@ -41,6 +41,7 @@ public partial class ChatView : UserControl
     private bool _counterOn;
     private int _counterParts = -1;
     private int _counterRemaining;
+    private bool _composerUpdateQueued;
     private bool _loadingOlder;
     private bool _stickPending;
     private bool _stickyPending;
@@ -100,11 +101,19 @@ public partial class ChatView : UserControl
         MessageEntry.GotFocus += (_, _) => ScrollToEnd();
         MessageEntry.PropertyChanged += (_, e) =>
         {
-            if (e.Property != TextBox.TextProperty)
+            if (e.Property != TextBox.TextProperty || _composerUpdateQueued)
                 return;
 
-            UpdateSendButton();
-            UpdateCounter();
+            // Many keyboards retype the word being typed on every key: Avalonia deletes it, then inserts the new one,
+            // so Text is briefly shorter (empty while on the first word). Acting on that would close and reopen the
+            // send button, and its forced layout would let the box drop a line and the list jump. Act once, after the key.
+            _composerUpdateQueued = true;
+            Dispatcher.UIThread.Post(() =>
+            {
+                _composerUpdateQueued = false;
+                UpdateSendButton();
+                UpdateCounter();
+            }, DispatcherPriority.Normal);
         };
     }
 
