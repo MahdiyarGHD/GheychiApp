@@ -997,7 +997,22 @@
     <value>The new theme is applied after the app restarts.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>The app restarts to apply a new theme, accent colour, text size or language.</value>
+    <value>The app restarts to apply a new theme, accent colour, text size, language or calendar.</value>
+  </data>
+  <data name="Settings_SectionCalendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="Settings_CalendarLanguage" xml:space="preserve">
+    <value>By language</value>
+  </data>
+  <data name="Settings_CalendarSolar" xml:space="preserve">
+    <value>Solar</value>
+  </data>
+  <data name="Settings_CalendarGregorian" xml:space="preserve">
+    <value>Gregorian</value>
+  </data>
+  <data name="Settings_RestartCalendarMessage" xml:space="preserve">
+    <value>The new calendar is applied after the app restarts.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>Update available</value>

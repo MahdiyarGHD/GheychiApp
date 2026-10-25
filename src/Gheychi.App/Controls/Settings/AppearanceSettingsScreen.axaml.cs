@@ -9,6 +9,7 @@ using Gheychi.App.Platforms.Android;
 using Gheychi.App.Services;
 using Gheychi.App.Theming;
 using Gheychi.App.Ui;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.Controls.Settings;
 
@@ -16,6 +17,7 @@ public partial class AppearanceSettingsScreen : SettingsScreen
 {
     private readonly (Border Segment, AppTheme Theme)[] _themes;
     private readonly (Border Segment, string Language)[] _languages;
+    private readonly (Border Segment, CalendarChoice Calendar)[] _calendars;
     private readonly Border[] _textSizes;
     private readonly List<(AccentScheme Scheme, Border Ring, Icon Check)> _accents = [];
 
@@ -24,6 +26,7 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         InitializeComponent();
         _themes = [(ThemeSystem, AppTheme.Unspecified), (ThemeLight, AppTheme.Light), (ThemeDark, AppTheme.Dark)];
         _languages = [(LanguageSystem, string.Empty), (LanguageEnglish, AppPreferences.LanguageEnglish), (LanguagePersian, AppPreferences.LanguagePersian)];
+        _calendars = [(CalendarLanguage, CalendarChoice.Language), (CalendarSolar, CalendarChoice.Solar), (CalendarGregorian, CalendarChoice.Gregorian)];
         _textSizes = [TextSizeSmall, TextSizeDefault, TextSizeLarge, TextSizeLargest];
         BuildAccentPicker();
     }
@@ -37,6 +40,8 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         SettingsUi.Select(_textSizes, _textSizes[Math.Clamp(AppPreferences.TextSize, 0, _textSizes.Length - 1)]);
         var language = AppPreferences.Language;
         SettingsUi.Select(_languages.Select(l => l.Segment), _languages.FirstOrDefault(l => l.Language == language).Segment);
+        var calendar = AppPreferences.Calendar;
+        SettingsUi.Select(_calendars.Select(c => c.Segment), _calendars.FirstOrDefault(c => c.Calendar == calendar).Segment);
     }
 
     private void BuildAccentPicker()
@@ -215,6 +220,28 @@ public partial class AppearanceSettingsScreen : SettingsScreen
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Changing the language failed: {ex}");
+        }
+    }
+
+    // Dates are formatted when lists are built and kept, so like the language the calendar is applied by restarting.
+    private async void OnCalendarTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            var choice = _calendars.FirstOrDefault(c => c.Segment == sender);
+            if (choice.Segment is null || choice.Calendar == AppPreferences.Calendar)
+                return;
+
+            var loc = LocalizationManager.Instance;
+            if (!await Confirm(loc["Settings_RestartTitle"], loc["Settings_RestartCalendarMessage"], loc["Settings_Restart"]))
+                return;
+
+            AppPreferences.Calendar = choice.Calendar;
+            AppStatus.Restart();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Changing the calendar failed: {ex}");
         }
     }
 }

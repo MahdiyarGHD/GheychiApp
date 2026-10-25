@@ -7,15 +7,13 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Gheychi.App.Localization;
 using Gheychi.App.Theming;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.Ui;
 
 /// <summary>A day and a time of day, picked on the app's own sheets: a month to tap a day on, and two columns to step a time.</summary>
 public static class DateTimeSheets
 {
-    private static readonly string[] PersianMonths =
-        ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
-
     // Indexed by DayOfWeek, Sunday first.
     private static readonly string[] PersianDays = ["ی", "د", "س", "چ", "پ", "ج", "ش"];
 
@@ -27,15 +25,16 @@ public static class DateTimeSheets
 
     // ---- Day -------------------------------------------------------------------------------------
 
-    /// <summary>The day picked (as the calendar of the language: Jalali in Persian), or null. Days before today cannot be picked.</summary>
+    /// <summary>The day picked (on the calendar chosen in Settings, by default the language's), or null. Days before today cannot be picked.</summary>
     public static Task<DateTime?> PickDateAsync(DateTimeOffset now)
     {
         var loc = LocalizationManager.Instance;
         var persian = LocalizedNumbers.IsPersian;
-        System.Globalization.Calendar calendar = persian ? new PersianCalendar() : new GregorianCalendar();
         var culture = CultureInfo.CurrentUICulture;
+        var solar = DateFormattingService.UsesSolar(culture);
+        System.Globalization.Calendar calendar = solar ? new PersianCalendar() : new GregorianCalendar();
         var today = now.LocalDateTime.Date;
-        var weekStart = persian ? DayOfWeek.Saturday : culture.DateTimeFormat.FirstDayOfWeek;
+        var weekStart = solar ? DayOfWeek.Saturday : culture.DateTimeFormat.FirstDayOfWeek;
 
         DateTime FirstOfMonth(DateTime date) => calendar.ToDateTime(calendar.GetYear(date), calendar.GetMonth(date), 1, 0, 0, 0, 0);
 
@@ -55,8 +54,8 @@ public static class DateTimeSheets
 
             void Render()
             {
-                title.Text = persian
-                    ? $"{PersianMonths[calendar.GetMonth(shown) - 1]} {Digits(calendar.GetYear(shown))}"
+                title.Text = persian || solar
+                    ? $"{DateFormattingService.MonthName(calendar.GetMonth(shown), solar, persian)} {Digits(calendar.GetYear(shown))}"
                     : shown.ToString("MMMM yyyy", culture);
                 if (previous is not null)
                     previous.Opacity = shown > firstAllowed ? 1 : 0.25;

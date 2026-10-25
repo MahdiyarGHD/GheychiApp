@@ -997,7 +997,22 @@
     <value>پوسته جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>برای اعمال پوسته، رنگ تأکید، اندازه نوشته یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
+    <value>برای اعمال پوسته، رنگ تأکید، اندازه نوشته، زبان یا تقویم جدید، برنامه دوباره اجرا می‌شود.</value>
+  </data>
+  <data name="Settings_SectionCalendar" xml:space="preserve">
+    <value>تقویم</value>
+  </data>
+  <data name="Settings_CalendarLanguage" xml:space="preserve">
+    <value>طبق زبان</value>
+  </data>
+  <data name="Settings_CalendarSolar" xml:space="preserve">
+    <value>شمسی</value>
+  </data>
+  <data name="Settings_CalendarGregorian" xml:space="preserve">
+    <value>میلادی</value>
+  </data>
+  <data name="Settings_RestartCalendarMessage" xml:space="preserve">
+    <value>تقویم جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>به‌روزرسانی موجود است</value>

@@ -83,6 +83,21 @@
                         </Border>
                     </Grid>
                 </Border>
+
+                <TextBlock Text="{settings:UpperTranslate Settings_SectionCalendar}" Classes="sectionTitle" />
+                <Border Classes="card" Padding="10">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Border x:Name="CalendarLanguage" Grid.Column="0" Classes="segment" Tapped="OnCalendarTapped">
+                            <TextBlock Text="{loc:Translate Settings_CalendarLanguage}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="CalendarSolar" Grid.Column="1" Classes="segment" Tapped="OnCalendarTapped">
+                            <TextBlock Text="{loc:Translate Settings_CalendarSolar}" Classes="segmentTitle" />
+                        </Border>
+                        <Border x:Name="CalendarGregorian" Grid.Column="2" Classes="segment" Tapped="OnCalendarTapped">
+                            <TextBlock Text="{loc:Translate Settings_CalendarGregorian}" Classes="segmentTitle" />
+                        </Border>
+                    </Grid>
+                </Border>
                 <TextBlock Text="{loc:Translate Settings_RestartHint}" Classes="note" Margin="26,8,26,0" />
             </StackPanel>
         </ScrollViewer>

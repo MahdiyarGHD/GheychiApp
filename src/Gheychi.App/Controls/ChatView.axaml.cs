@@ -1084,6 +1084,24 @@ public partial class ChatView : UserControl
         }
     }
 
+    // The full date and time, on the calendar picked in Settings; written out by hand so the culture's own calendar does not decide.
+    private static string FormatInfoTime(DateTime time)
+    {
+        var invariant = System.Globalization.CultureInfo.InvariantCulture;
+        string date;
+        if (DateFormattingService.UsesSolar(System.Globalization.CultureInfo.CurrentUICulture))
+        {
+            var pc = new System.Globalization.PersianCalendar();
+            date = $"{pc.GetYear(time):D4}-{pc.GetMonth(time):D2}-{pc.GetDayOfMonth(time):D2}";
+        }
+        else
+        {
+            date = time.ToString("yyyy-MM-dd", invariant);
+        }
+
+        return $"{date} {time.ToString("HH:mm:ss", invariant)}";
+    }
+
     private async void OnMenuInfoTapped(object? sender, TappedEventArgs e)
     {
         var msg = _targetMessage;
@@ -1093,7 +1111,7 @@ public partial class ChatView : UserControl
 
         var loc = LocalizationManager.Instance;
         InfoTypeLabel.Text = msg.IsOutgoing ? loc["Chat_InfoSent"] : loc["Chat_InfoReceived"];
-        InfoTimeLabel.Text = msg.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+        InfoTimeLabel.Text = FormatInfoTime(msg.Timestamp);
         InfoStatusLabel.Text = SmsStatusHelper.GetInfoStatus(msg.IsOutgoing, msg.HasFailed, msg.IsDelivered, msg.IsSending, msg.IsUnconfirmed) switch
         {
             MessageInfoStatus.Received => loc["Chat_InfoReceived"],
