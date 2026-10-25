@@ -434,14 +434,15 @@ public sealed class EmojiPanel : UserControl
             BorderThickness = new Thickness(1);
             Focusable = false;
 
-            // The Material "backspace" glyph.
+            // The Material "backspace" glyph. Its shape is 24 x 18, and a stretched path is drawn from its top-left
+            // corner, not centred: in a square box it would sit high, so the box has the glyph's own proportions.
             Child = new Avalonia.Controls.Shapes.Path
             {
                 Data = Geometry.Parse("M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"),
                 Fill = Palette.Pick("#3C4043", "#E8EAED"),
                 Stretch = Stretch.Uniform,
                 Width = 22,
-                Height = 22,
+                Height = 16.5,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 IsHitTestVisible = false
