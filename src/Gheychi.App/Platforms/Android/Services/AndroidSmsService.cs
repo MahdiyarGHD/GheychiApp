@@ -501,7 +501,8 @@ public sealed class AndroidSmsService : ISmsService
             var results = new List<SearchResultChat>(candidates.Count);
             foreach (var (threadId, thread) in candidates)
             {
-                var isKnown = !string.IsNullOrWhiteSpace(thread.ContactName);
+                // An alphanumeric sender carries its own id as ContactName, which does not make it a saved contact.
+                var isKnown = !PhoneNumberNormalizer.IsAlphanumeric(thread.Address) && !string.IsNullOrWhiteSpace(thread.ContactName);
                 if (kind == SearchFilterKind.Known && !isKnown)
                     continue;
                 if (kind == SearchFilterKind.Unknown && isKnown)
@@ -1254,17 +1255,17 @@ public sealed class AndroidSmsService : ISmsService
     // send itself is not cancelled: it can still go out, and the stored row follows the real result.
     private static readonly TimeSpan SendWaitLimit = TimeSpan.FromSeconds(60);
 
-    public Task<long> QueueOutgoingAsync(string address, string text, int subId, CancellationToken cancellationToken = default) =>
+    public Task<long> QueueOutgoingAsync(string address, string text, int subId, long threadId = 0, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
         {
-            var id = InsertOutgoing(Platform.AppContext, address, text, subId, finalOk: null);
+            var id = InsertOutgoing(Platform.AppContext, address, text, subId, finalOk: null, threadId);
             if (id > 0)
                 InvalidateSearchCaches();
             return id;
         }, cancellationToken);
 
     /// <summary>Inserts an outgoing row: Outbox when <paramref name="finalOk"/> is null, otherwise already Sent/Failed. Returns 0 on failure.</summary>
-    private static long InsertOutgoing(Context context, string address, string text, int subId, bool? finalOk)
+    private static long InsertOutgoing(Context context, string address, string text, int subId, bool? finalOk, long threadId = 0)
     {
         // Called from async-void handlers: a provider failure (e.g. default-SMS role lost) must
         // not escape and kill the process.
@@ -1286,6 +1287,10 @@ public sealed class AndroidSmsService : ISmsService
             }
             if (subId > 0)
                 values.Put("sub_id", subId);
+            // Without it the provider picks the thread by comparing the address with the known ones, and a number written
+            // differently from the one the conversation was opened with can land in another thread: the open chat stays empty.
+            if (threadId > 0)
+                values.Put(Telephony.Sms.InterfaceConsts.ThreadId, threadId);
 
             var target = finalOk.HasValue ? Telephony.Sms.Sent.ContentUri : Telephony.Sms.Outbox.ContentUri;
             var inserted = target == null ? null : context.ContentResolver?.Insert(target, values);
@@ -1323,6 +1328,26 @@ public sealed class AndroidSmsService : ISmsService
         InvalidateSearchCaches();
         SmsSendTracker.RaiseOutgoingUpdated(rowId, ThreadIdOf(context, rowId), ok);
     }
+
+    /// <summary>Puts the platform's result code of a failed send into the row's error_code column (API 19+).</summary>
+    internal static void SetErrorCode(Context context, long rowId, int code)
+    {
+        try
+        {
+            if (Telephony.Sms.ContentUri is not { } smsUri)
+                return;
+
+            var values = new ContentValues();
+            values.Put(Telephony.Sms.InterfaceConsts.ErrorCode, code);
+            context.ContentResolver?.Update(smsUri, values, $"{Telephony.Sms.InterfaceConsts.Id} = ?", [rowId.ToString()]);
+        }
+        catch (Exception ex)
+        {
+            global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"Could not store error_code: {ex.Message}");
+        }
+    }
+
+    public string? GetFailureReason(long messageId) => SmsFailureStore.Get(messageId);
 
     private static long ThreadIdOf(Context context, long rowId)
     {
@@ -1411,6 +1436,8 @@ public sealed class AndroidSmsService : ISmsService
             var values = new ContentValues();
             values.Put(Telephony.Sms.InterfaceConsts.Type, (int)SmsMessageType.Outbox);
             values.Put(Telephony.Sms.InterfaceConsts.Status, SmsStatusHelper.StatusPending);
+            values.Put(Telephony.Sms.InterfaceConsts.ErrorCode, 0);
+            SmsFailureStore.Clear(rowId);
             // Resent now; also keeps the retry from counting as unconfirmed straight away.
             values.Put(Telephony.Sms.InterfaceConsts.Date, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             context.ContentResolver?.Update(smsUri, values, $"{Telephony.Sms.InterfaceConsts.Id} = ?", [rowId.ToString()]);
@@ -1420,6 +1447,24 @@ public sealed class AndroidSmsService : ISmsService
         }
 
         InvalidateSearchCaches();
+    }
+
+    private static IList<string>? DivideMessage(SmsManager? smsManager, string text)
+    {
+        if (smsManager == null)
+            return null;
+
+        try
+        {
+            return smsManager.DivideMessage(text);
+        }
+        catch (Java.Lang.SecurityException ex)
+        {
+            // For a long non-GSM text some builds check the carrier's EMS support through
+            // TelephonyManager.getGroupIdLevel1, which needs READ_PHONE_STATE that this app does not hold.
+            global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"DivideMessage refused, splitting here: {ex.Message}");
+            return SmsSegmentCounter.Split(text);
+        }
     }
 
     public Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default) =>
@@ -1462,13 +1507,15 @@ public sealed class AndroidSmsService : ISmsService
             Task<bool> outcome;
             try
             {
-                var parts = smsManager?.DivideMessage(text);
+                var parts = DivideMessage(smsManager, text);
                 outcome = smsManager == null
                     ? Task.FromResult(false)
                     : SmsSendTracker.SendAsync(smsManager, address, text, parts, context, messageId);
             }
-            catch
+            catch (Exception ex)
             {
+                global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"Preparing the send failed for row {messageId}: {ex}");
+                SmsFailureStore.Record(context, messageId, 0, $"Could not prepare the send: {ex.GetType().Name}: {ex.Message}");
                 outcome = Task.FromResult(false);
             }
 

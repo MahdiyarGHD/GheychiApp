@@ -1,4 +1,5 @@
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.App.Services;
@@ -9,6 +10,8 @@ namespace Gheychi.App.Controls.Settings;
 
 public partial class SendingSettingsScreen : SettingsScreen
 {
+    private bool _binding;
+
     public SendingSettingsScreen()
     {
         InitializeComponent();
@@ -19,6 +22,15 @@ public partial class SendingSettingsScreen : SettingsScreen
     {
         ShowDelay();
         ShowExact();
+        _binding = true;
+        CharCounterSwitch.IsChecked = AppPreferences.ShowCharCounter;
+        _binding = false;
+    }
+
+    private void OnCharCounterToggled(object? sender, RoutedEventArgs e)
+    {
+        if (!_binding)
+            AppPreferences.ShowCharCounter = CharCounterSwitch.IsChecked == true;
     }
 
     private static string DelayLabel(int seconds) => seconds == 0

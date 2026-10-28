@@ -38,6 +38,10 @@ public partial class ChatView : UserControl
     private ChatViewModel? _liveVm;
     private bool _initialLayoutSettled;
     private bool _buttonVisible;
+    private bool _counterOn;
+    private int _counterParts = -1;
+    private int _counterRemaining;
+    private bool _composerUpdateQueued;
     private bool _loadingOlder;
     private bool _stickPending;
     private bool _stickyPending;
@@ -51,6 +55,11 @@ public partial class ChatView : UserControl
     private double _targetAnchorX;
     private Geometry? _starIcon;
     private Geometry? _starFillIcon;
+    // ElevatedBubbleBorder's own Padding and BorderThickness in the markup, put back after a big emoji took them off.
+    private static readonly Thickness BubblePadding = new(10, 7);
+    private static readonly Thickness BubbleRingThickness = new(1.5);
+    private IBrush? _bubbleRing;
+    private BoxShadows? _bubbleShadow;
 
     private readonly IBlockedSenders? _blocked;
     private ChatMessage? _targetMessage;
@@ -86,9 +95,26 @@ public partial class ChatView : UserControl
         MessagesList.AddHandler(TappedEvent, OnMessageTapped);
         MessagesList.AddHandler(HoldingEvent, OnMessageHolding);
         InitTextSelection();
+        InitEmoji();
 
         // The soft keyboard resizes the page: the box being focused means the newest message has to stay in view.
         MessageEntry.GotFocus += (_, _) => ScrollToEnd();
+        MessageEntry.PropertyChanged += (_, e) =>
+        {
+            if (e.Property != TextBox.TextProperty || _composerUpdateQueued)
+                return;
+
+            // Many keyboards retype the word being typed on every key: Avalonia deletes it, then inserts the new one,
+            // so Text is briefly shorter (empty while on the first word). Acting on that would close and reopen the
+            // send button, and its forced layout would let the box drop a line and the list jump. Act once, after the key.
+            _composerUpdateQueued = true;
+            Dispatcher.UIThread.Post(() =>
+            {
+                _composerUpdateQueued = false;
+                UpdateSendButton();
+                UpdateCounter();
+            }, DispatcherPriority.Normal);
+        };
     }
 
     public event Func<Task>? BackRequested;
@@ -146,6 +172,7 @@ public partial class ChatView : UserControl
 
     private PreparedChatData? PrepareForTransitionCore(ThreadItem thread)
     {
+        LoadCounterSetting();
         CloseTextSelection();
         _followTail = true;
         _initialLayoutSettled = false;
@@ -217,6 +244,7 @@ public partial class ChatView : UserControl
 
     public void Bind(ChatViewModel vm)
     {
+        LoadCounterSetting();
         _initialLayoutSettled = false;
         _lastFirstVisibleIndex = -1;
         vm.SafeDispatcher = SafePrependItems;
@@ -237,6 +265,50 @@ public partial class ChatView : UserControl
 
     // The whole pill is the input, not only the line of text in it.
     private void OnInputBarTapped(object? sender, TappedEventArgs e) => MessageEntry.Focus();
+
+    // The send button is there while the box holds something to send, and grows in when the first character is typed.
+    private void UpdateSendButton()
+    {
+        var show = !string.IsNullOrWhiteSpace(MessageEntry.Text);
+        if (show == SendButton.IsVisible)
+            return;
+
+        SendButton.IsVisible = show;
+        if (!show)
+            return;
+
+        SendButton.UpdateLayout();
+        _ = OverlayAnimator.FadeAsync(SendButton, 0, 1, ButtonFade);
+        _ = ScaleAsync(SendButton, 0.6, 1.0, ButtonFade, 0.5);
+    }
+
+    // The setting is read when a chat opens, not on every key.
+    private void LoadCounterSetting()
+    {
+        _counterOn = Gheychi.App.Services.AppPreferences.ShowCharCounter;
+        UpdateCounter();
+    }
+
+    // "52 / 2": characters left in the current part, then the number of parts. Hidden while the send button is.
+    private void UpdateCounter()
+    {
+        var text = MessageEntry.Text;
+        if (!_counterOn || string.IsNullOrWhiteSpace(text))
+        {
+            SegmentCounter.IsVisible = false;
+            _counterParts = -1;
+            return;
+        }
+
+        var segments = SmsSegmentCounter.Count(text);
+        if (segments.Parts == _counterParts && segments.Remaining == _counterRemaining)
+            return;
+
+        _counterParts = segments.Parts;
+        _counterRemaining = segments.Remaining;
+        SegmentCounter.Text = $"{segments.Remaining} / {segments.Parts}";
+        SegmentCounter.IsVisible = true;
+    }
 
     private void OnUnblockTapped(object? sender, TappedEventArgs e)
     {
@@ -265,6 +337,7 @@ public partial class ChatView : UserControl
         HideSkeleton();
         DropSelection(MessageEntry);
         DropSelection(SearchEntry);
+        CloseEmojiPanel();
         ReleaseInputFocus();
         return Task.CompletedTask;
     }
@@ -301,6 +374,7 @@ public partial class ChatView : UserControl
         MessageInfoModal.IsVisible = false;
         HeaderMenuOverlay.IsVisible = false;
         LinkPopup.Hide();
+        CloseEmojiPanel();
     }
 
     // ---- Scrolling ----------------------------------------------------------------------------
@@ -665,6 +739,7 @@ public partial class ChatView : UserControl
             _holdFired = true;
             e.Handled = true;
             TriggerHaptic(global::Android.Views.FeedbackConstants.LongPress);
+            CloseEmojiPanel();
             SafePrependItems(() => vm.EnterSelectionMode(row));
         }
     }
@@ -714,7 +789,7 @@ public partial class ChatView : UserControl
             return;
 
         TriggerHaptic();
-        if (!OtpClipboard.Copy(Platform.AppContext, code, sensitive: false))
+        if (!OtpClipboard.Copy(Platform.AppContext, code))
             return;
 
         message.CodeCopied = true;
@@ -773,7 +848,9 @@ public partial class ChatView : UserControl
         vm.Send();
         if (vm.Items.Count > count)
         {
-            ReleaseInputFocus();
+            // With the emoji panel open the box keeps its place, like in Google Messages.
+            if (!_emojiOpen)
+                ReleaseInputFocus();
             ScrollToEnd();
         }
     }
@@ -803,6 +880,7 @@ public partial class ChatView : UserControl
             return;
         }
 
+        CloseEmojiPanel();
         _targetMessage = msg;
         _heldAnchors = MessagesList.CaptureAnchors();
 
@@ -812,15 +890,35 @@ public partial class ChatView : UserControl
         var isDark = ThemeState.IsDark;
         var side = msg.IsOutgoing ? HorizontalAlignment.Right : HorizontalAlignment.Left;
         _targetAnchorX = msg.IsOutgoing ? 1.0 : 0.0;
-        if (msg.IsOutgoing)
+        _bubbleRing ??= ElevatedBubbleBorder.BorderBrush;
+        _bubbleShadow ??= ElevatedBubbleBorder.BoxShadow;
+        if (msg.IsBigEmoji)
         {
-            ElevatedBubbleBorder.Background = Palette.Accent(AccentRole.Solid);
-            ElevatedBubbleBody.Foreground = Brushes.White;
+            // Nothing is lifted but the emoji itself: no fill, ring or shadow around it.
+            ElevatedBubbleBorder.Background = Palette.Transparent;
+            ElevatedBubbleBorder.BorderBrush = Palette.Transparent;
+            ElevatedBubbleBorder.BoxShadow = default;
+            ElevatedBubbleBorder.BorderThickness = default;
+            ElevatedBubbleBorder.Padding = msg.EmojiPadding;
+            ElevatedBubbleBody.FontSize = msg.EmojiSize;
         }
         else
         {
-            ElevatedBubbleBorder.Background = ChatMessage.IncomingBubbleBg;
-            ElevatedBubbleBody.Foreground = isDark ? Palette.Brush("#E8EAED") : Palette.Brush("#1B1E24");
+            ElevatedBubbleBorder.BorderThickness = BubbleRingThickness;
+            ElevatedBubbleBorder.Padding = BubblePadding;
+            ElevatedBubbleBorder.BorderBrush = _bubbleRing;
+            ElevatedBubbleBorder.BoxShadow = _bubbleShadow.Value;
+            ElevatedBubbleBody.FontSize = TextScale.Body;
+            if (msg.IsOutgoing)
+            {
+                ElevatedBubbleBorder.Background = Palette.Accent(AccentRole.Bubble);
+                ElevatedBubbleBody.Foreground = Palette.Accent(AccentRole.OnBubble);
+            }
+            else
+            {
+                ElevatedBubbleBorder.Background = ChatMessage.IncomingBubbleBg;
+                ElevatedBubbleBody.Foreground = isDark ? Palette.Brush("#E8EAED") : Palette.Brush("#1B1E24");
+            }
         }
 
         ElevatedBubbleBorder.HorizontalAlignment = side;
@@ -830,6 +928,15 @@ public partial class ChatView : UserControl
 
         CopyUrlActionRow.IsVisible = msg.HasUrl;
         MenuReportRow.IsVisible = !msg.IsOutgoing;
+
+        // A message still in the send delay is not stored yet: only copying makes sense.
+        var stored = !msg.IsHeld;
+        MenuStarRow.IsVisible = stored;
+        MenuDividerTop.IsVisible = stored;
+        MenuSelectRow.IsVisible = stored;
+        MenuInfoRow.IsVisible = stored;
+        MenuDividerBottom.IsVisible = stored;
+        MenuDeleteRow.IsVisible = stored;
 
         var loc = LocalizationManager.Instance;
         MenuStarLabel.Text = msg.IsStarred ? loc["Chat_Unstar"] : loc["Chat_Star"];
@@ -847,7 +954,8 @@ public partial class ChatView : UserControl
         else
             OverlayContent.VerticalAlignment = VerticalAlignment.Center;
 
-        ElevatedBubbleBorder.Width = bounds is { Width: > 0 } ? bounds.Width + 8 : double.NaN;
+        // A big emoji sizes to itself: the row's width leaves no room for it to wrap onto a second line.
+        ElevatedBubbleBorder.Width = bounds is { Width: > 0 } && !msg.IsBigEmoji ? bounds.Width + 8 : double.NaN;
 
         SelectionOverlay.IsVisible = true;
         SelectionOverlay.Opacity = 0;
@@ -970,9 +1078,28 @@ public partial class ChatView : UserControl
         await DismissSelectionOverlayAsync();
         if (target is not null && Vm is not null)
         {
+            CloseEmojiPanel();
             SafePrependItems(() => Vm.EnterSelectionMode(target));
             TriggerHaptic();
         }
+    }
+
+    // The full date and time, on the calendar picked in Settings; written out by hand so the culture's own calendar does not decide.
+    private static string FormatInfoTime(DateTime time)
+    {
+        var invariant = System.Globalization.CultureInfo.InvariantCulture;
+        string date;
+        if (DateFormattingService.UsesSolar(System.Globalization.CultureInfo.CurrentUICulture))
+        {
+            var pc = new System.Globalization.PersianCalendar();
+            date = $"{pc.GetYear(time):D4}-{pc.GetMonth(time):D2}-{pc.GetDayOfMonth(time):D2}";
+        }
+        else
+        {
+            date = time.ToString("yyyy-MM-dd", invariant);
+        }
+
+        return $"{date} {time.ToString("HH:mm:ss", invariant)}";
     }
 
     private async void OnMenuInfoTapped(object? sender, TappedEventArgs e)
@@ -984,7 +1111,7 @@ public partial class ChatView : UserControl
 
         var loc = LocalizationManager.Instance;
         InfoTypeLabel.Text = msg.IsOutgoing ? loc["Chat_InfoSent"] : loc["Chat_InfoReceived"];
-        InfoTimeLabel.Text = msg.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+        InfoTimeLabel.Text = FormatInfoTime(msg.Timestamp);
         InfoStatusLabel.Text = SmsStatusHelper.GetInfoStatus(msg.IsOutgoing, msg.HasFailed, msg.IsDelivered, msg.IsSending, msg.IsUnconfirmed) switch
         {
             MessageInfoStatus.Received => loc["Chat_InfoReceived"],
@@ -994,6 +1121,9 @@ public partial class ChatView : UserControl
             MessageInfoStatus.Unconfirmed => loc["Chat_InfoUnconfirmed"],
             _ => loc["Chat_InfoSent"],
         };
+        var reason = msg.HasFailed && msg.IsOutgoing ? Vm?.FailureReasonOf(msg) : null;
+        InfoReasonLabel.Text = reason ?? string.Empty;
+        InfoReasonRow.IsVisible = !string.IsNullOrEmpty(reason);
         InfoSimLabel.Text = !string.IsNullOrWhiteSpace(msg.CarrierName)
             ? $"{loc["Chat_InfoSim"]} {msg.SimSlot} ({msg.CarrierName})"
             : $"{loc["Chat_InfoSim"]} {msg.SimSlot}";
@@ -1030,7 +1160,8 @@ public partial class ChatView : UserControl
 
         if (confirm)
         {
-            await Vm.DeleteMessageAsync(target);
+            if (!await Vm.DeleteMessageAsync(target))
+                Toast.Show(loc["Chat_DeleteFailed"]);
         }
     }
 
@@ -1094,12 +1225,19 @@ public partial class ChatView : UserControl
 
         if (confirm)
         {
-            await Vm.DeleteSelectedMessagesAsync();
+            if (!await Vm.DeleteSelectedMessagesAsync())
+                Toast.Show(loc["Chat_DeleteFailed"]);
         }
     }
 
     public bool HandleBack()
     {
+        if (_emojiOpen)
+        {
+            CloseEmojiPanel();
+            return true;
+        }
+
         if (IsTextSelected)
         {
             CloseTextSelection();

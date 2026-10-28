@@ -34,7 +34,19 @@ public enum AccentRole
     OnSolid,
 
     /// <summary>Brighter text on a Solid fill: links.</summary>
-    OnSolidBright
+    OnSolidBright,
+
+    /// <summary>The fill of a sent message: a light tone of the accent in both themes, under dark text.</summary>
+    Bubble,
+
+    /// <summary>Text on a <see cref="Bubble"/>: near black in both themes.</summary>
+    OnBubble,
+
+    /// <summary>Quieter text and glyphs on a <see cref="Bubble"/>: message time, sending spinner, ticks.</summary>
+    OnBubbleMuted,
+
+    /// <summary>Links on a <see cref="Bubble"/>: the accent, darkened until it reads.</summary>
+    OnBubbleLink
 }
 
 /// <summary>
@@ -101,7 +113,8 @@ public sealed class AccentScheme
     /// <summary>The presets, then the phone's own colour (Material You) where it has one.</summary>
     public static IReadOnlyList<AccentScheme> All { get; } = FromSystem() is { } system ? [.. Presets, system] : Presets;
 
-    public static AccentScheme Default => Presets[0];
+    /// <summary>Until one is picked: the phone's own colour where it has one, green elsewhere.</summary>
+    public static AccentScheme Default { get; } = All.Count > Presets.Length ? All[^1] : Presets[0];
 
     public const string SystemId = "system";
 
@@ -135,11 +148,13 @@ public sealed class AccentScheme
             var solid = Pick(tones, 600, 1, 4.5, 0xFFFFFF);
             var ink = Pick(tones, 700, 1, 4.5, 0xFFFFFF);
             var glow = Pick(tones, 200, -1, 4.5, 0x1E1F22);
+            var bubble = Pick(tones, 200, -1, MinBubbleBody, BubbleInk);
             return new AccentScheme(SystemId, "Accent_System",
                 solid: Hex(solid), ink: Hex(ink), glow: Hex(glow),
                 softLight: Hex(100), softDark: Hex(800), strongLight: Hex(200), strongDark: Hex(700),
                 washLight: Hex(50), washDark: Hex(900), midLight: Hex(300), midDark: Hex(500),
-                deep: Hex(900), onSolid: Hex(100), onSolidBright: Hex(50));
+                deep: Hex(900), onSolid: Hex(100), onSolidBright: Hex(50),
+                bubbleLight: Hex(bubble), bubbleDark: Hex(bubble));
         }
         catch (Exception ex)
         {
@@ -163,6 +178,39 @@ public sealed class AccentScheme
         return steps[step > 0 ? steps.Length - 1 : 0];
     }
 
+    // The text on a sent message. The fill is light in both themes, so the text is the same in both.
+    private const int BubbleInk = 0x1A1C1E;
+
+    // Room above the 4.5 that body text needs, so the muted tone can still reach it.
+    private const double MinBubbleBody = 7;
+
+    private const double MinMuted = 4.5;
+
+    // The colour nearest to `from` on the way to `to` that holds the contrast against the fill.
+    private static int Toward(int from, int to, int fill, double minimum)
+    {
+        for (var step = 0; step <= 20; step++)
+        {
+            var color = Mix(from, to, step / 20.0);
+            if (Contrast(color, fill) >= minimum)
+                return color;
+        }
+
+        return to;
+    }
+
+    private static int Mix(int from, int to, double amount)
+    {
+        static int Channel(int a, int b, double t) => (int)Math.Round(a + (b - a) * t);
+        return Channel(from >> 16 & 0xFF, to >> 16 & 0xFF, amount) << 16 |
+               Channel(from >> 8 & 0xFF, to >> 8 & 0xFF, amount) << 8 |
+               Channel(from & 0xFF, to & 0xFF, amount);
+    }
+
+    private static int Parse(string hex) => Convert.ToInt32(hex[1..], 16);
+
+    private static string Format(int rgb) => "#" + rgb.ToString("X6");
+
     private static double Contrast(int a, int b)
     {
         var (hi, lo) = (Luminance(a), Luminance(b));
@@ -184,13 +232,15 @@ public sealed class AccentScheme
 
     private readonly string _solid, _ink, _glow, _deep, _onSolid, _onSolidBright;
     private readonly string _softLight, _softDark, _strongLight, _strongDark, _washLight, _washDark, _midLight, _midDark;
+    private readonly string _bubbleLight, _bubbleDark, _mutedLight, _mutedDark, _linkLight, _linkDark;
 
     private AccentScheme(
         string id, string nameKey,
         string solid, string ink, string glow,
         string softLight, string softDark, string strongLight, string strongDark,
         string washLight, string washDark, string midLight, string midDark,
-        string deep, string onSolid, string onSolidBright)
+        string deep, string onSolid, string onSolidBright,
+        string? bubbleLight = null, string? bubbleDark = null)
     {
         Id = id;
         NameKey = nameKey;
@@ -208,6 +258,17 @@ public sealed class AccentScheme
         _deep = deep;
         _onSolid = onSolid;
         _onSolidBright = onSolidBright;
+
+        // A sent message is the Strong tint in light and the Glow in dark unless a scheme chose its own tones. The time
+        // and ticks are the text tone moved toward the fill until it only just holds 4.5, the link is the accent's
+        // dark tone moved toward the text until it holds 4.5.
+        _bubbleLight = bubbleLight ?? strongLight;
+        _bubbleDark = bubbleDark ?? glow;
+        var (light, dark) = (Parse(_bubbleLight), Parse(_bubbleDark));
+        _mutedLight = Format(Toward(light, BubbleInk, light, MinMuted));
+        _mutedDark = Format(Toward(dark, BubbleInk, dark, MinMuted));
+        _linkLight = Format(Toward(Parse(ink), BubbleInk, light, 4.5));
+        _linkDark = Format(Toward(Parse(ink), BubbleInk, dark, 4.5));
     }
 
     /// <summary>The value stored in the preferences.</summary>
@@ -232,6 +293,10 @@ public sealed class AccentScheme
         AccentRole.Glow => _glow,
         AccentRole.OnSolid => _onSolid,
         AccentRole.OnSolidBright => _onSolidBright,
+        AccentRole.Bubble => dark ? _bubbleDark : _bubbleLight,
+        AccentRole.OnBubble => Format(BubbleInk),
+        AccentRole.OnBubbleMuted => dark ? _mutedDark : _mutedLight,
+        AccentRole.OnBubbleLink => dark ? _linkDark : _linkLight,
         _ => _solid
     };
 }

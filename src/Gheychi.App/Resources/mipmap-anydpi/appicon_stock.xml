@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 7.x has no adaptive icons: the same art on a rounded square, the glyph kept inside it. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="@color/appicon_stock_background" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/appicon_stock_foreground"
+        android:top="-12dp" android:bottom="-12dp" android:left="-12dp" android:right="-12dp" />
+</layer-list>

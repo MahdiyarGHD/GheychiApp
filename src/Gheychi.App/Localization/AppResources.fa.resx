@@ -63,6 +63,12 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>ارسال</value>
   </data>
+  <data name="Chat_SendLabel" xml:space="preserve">
+    <value>پیامک</value>
+  </data>
+  <data name="Chat_Emoji" xml:space="preserve">
+    <value>ایموجی</value>
+  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>انصراف</value>
   </data>
@@ -170,6 +176,12 @@
   </data>
   <data name="Chat_InfoStatus" xml:space="preserve">
     <value>وضعیت</value>
+  </data>
+  <data name="Chat_InfoReason" xml:space="preserve">
+    <value>دلیل</value>
+  </data>
+  <data name="Chat_SendNow" xml:space="preserve">
+    <value>ارسال فوری</value>
   </data>
   <data name="Chat_Copied" xml:space="preserve">
     <value>در حافظه کپی شد</value>
@@ -985,7 +997,22 @@
     <value>پوسته جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>برای اعمال پوسته، رنگ تأکید، اندازه نوشته یا زبان جدید، برنامه دوباره اجرا می‌شود.</value>
+    <value>برای اعمال پوسته، رنگ تأکید، اندازه نوشته، زبان یا تقویم جدید، برنامه دوباره اجرا می‌شود.</value>
+  </data>
+  <data name="Settings_SectionCalendar" xml:space="preserve">
+    <value>تقویم</value>
+  </data>
+  <data name="Settings_CalendarLanguage" xml:space="preserve">
+    <value>طبق زبان</value>
+  </data>
+  <data name="Settings_CalendarSolar" xml:space="preserve">
+    <value>شمسی</value>
+  </data>
+  <data name="Settings_CalendarGregorian" xml:space="preserve">
+    <value>میلادی</value>
+  </data>
+  <data name="Settings_RestartCalendarMessage" xml:space="preserve">
+    <value>تقویم جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>به‌روزرسانی موجود است</value>
@@ -1125,6 +1152,9 @@
   <data name="Chat_ScheduleEmpty" xml:space="preserve">
     <value>ابتدا پیام را بنویسید</value>
   </data>
+  <data name="Chat_DeleteFailed" xml:space="preserve">
+    <value>حذف نشد. مطمئن شوید این برنامه پیام‌رسان پیش‌فرض است</value>
+  </data>
   <data name="Chat_ScheduleTooSoon" xml:space="preserve">
     <value>زمانی دست‌کم یک دقیقه جلوتر انتخاب کنید</value>
   </data>
@@ -1163,6 +1193,12 @@
   </data>
   <data name="Settings_SendDelayHint" xml:space="preserve">
     <value>پیام را چند ثانیه نگه می‌دارد تا بتوانید لغوش کنید</value>
+  </data>
+  <data name="Settings_CharCounter" xml:space="preserve">
+    <value>شمارنده نویسه</value>
+  </data>
+  <data name="Settings_CharCounterHint" xml:space="preserve">
+    <value>نویسه‌های باقی‌مانده در بخش فعلی و تعداد بخش‌های پیام را بالای دکمه ارسال نشان می‌دهد</value>
   </data>
   <data name="Settings_SendDelayOff" xml:space="preserve">
     <value>خاموش</value>
@@ -1380,6 +1416,18 @@
   <data name="Settings_RestartAccentMessage" xml:space="preserve">
     <value>رنگ تأکید جدید پس از اجرای دوباره برنامه اعمال می‌شود.</value>
   </data>
+  <data name="Settings_SectionAppIcon" xml:space="preserve">
+    <value>نماد برنامه</value>
+  </data>
+  <data name="Settings_IconGheychi" xml:space="preserve">
+    <value>قیچی</value>
+  </data>
+  <data name="Settings_IconStock" xml:space="preserve">
+    <value>پیام‌ها</value>
+  </data>
+  <data name="Settings_IconChanged" xml:space="preserve">
+    <value>ممکن است کمی طول بکشد تا صفحه اصلی به‌روز شود. برخی لانچرها میان‌بر صفحه اصلی را جابه‌جا یا حذف می‌کنند.</value>
+  </data>
   <data name="Accent_Green" xml:space="preserve">
     <value>سبز</value>
   </data>
@@ -1408,7 +1456,7 @@
     <value>کهربایی</value>
   </data>
   <data name="Accent_System" xml:space="preserve">
-    <value>سیستم (Material You)</value>
+    <value>سیستم</value>
   </data>
   <data name="Accent_Graphite" xml:space="preserve">
     <value>گرافیتی</value>
@@ -1580,5 +1628,38 @@
   </data>
   <data name="Trash_RestoreFailed" xml:space="preserve">
     <value>بازگردانی ممکن نشد. آیا قیچی برنامه پیامک پیش‌فرض است؟</value>
+  </data>
+  <data name="Emoji_Recent" xml:space="preserve">
+    <value>اخیر</value>
+  </data>
+  <data name="Emoji_Smileys" xml:space="preserve">
+    <value>شکلک‌ها و احساسات</value>
+  </data>
+  <data name="Emoji_People" xml:space="preserve">
+    <value>افراد و بدن</value>
+  </data>
+  <data name="Emoji_Animals" xml:space="preserve">
+    <value>حیوانات و طبیعت</value>
+  </data>
+  <data name="Emoji_Food" xml:space="preserve">
+    <value>غذا و نوشیدنی</value>
+  </data>
+  <data name="Emoji_Travel" xml:space="preserve">
+    <value>سفر و مکان‌ها</value>
+  </data>
+  <data name="Emoji_Activities" xml:space="preserve">
+    <value>فعالیت‌ها</value>
+  </data>
+  <data name="Emoji_Objects" xml:space="preserve">
+    <value>اشیا</value>
+  </data>
+  <data name="Emoji_Symbols" xml:space="preserve">
+    <value>نمادها</value>
+  </data>
+  <data name="Emoji_Flags" xml:space="preserve">
+    <value>پرچم‌ها</value>
+  </data>
+  <data name="Emoji_Backspace" xml:space="preserve">
+    <value>حذف</value>
   </data>
 </root>

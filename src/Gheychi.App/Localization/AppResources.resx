@@ -63,6 +63,12 @@
   <data name="Chat_Send" xml:space="preserve">
     <value>Send</value>
   </data>
+  <data name="Chat_SendLabel" xml:space="preserve">
+    <value>SMS</value>
+  </data>
+  <data name="Chat_Emoji" xml:space="preserve">
+    <value>Emoji</value>
+  </data>
   <data name="Chat_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -170,6 +176,12 @@
   </data>
   <data name="Chat_InfoStatus" xml:space="preserve">
     <value>Status</value>
+  </data>
+  <data name="Chat_InfoReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Chat_SendNow" xml:space="preserve">
+    <value>Send now</value>
   </data>
   <data name="Chat_Copied" xml:space="preserve">
     <value>Copied to clipboard</value>
@@ -985,7 +997,22 @@
     <value>The new theme is applied after the app restarts.</value>
   </data>
   <data name="Settings_RestartHint" xml:space="preserve">
-    <value>The app restarts to apply a new theme, accent colour, text size or language.</value>
+    <value>The app restarts to apply a new theme, accent colour, text size, language or calendar.</value>
+  </data>
+  <data name="Settings_SectionCalendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="Settings_CalendarLanguage" xml:space="preserve">
+    <value>By language</value>
+  </data>
+  <data name="Settings_CalendarSolar" xml:space="preserve">
+    <value>Solar</value>
+  </data>
+  <data name="Settings_CalendarGregorian" xml:space="preserve">
+    <value>Gregorian</value>
+  </data>
+  <data name="Settings_RestartCalendarMessage" xml:space="preserve">
+    <value>The new calendar is applied after the app restarts.</value>
   </data>
   <data name="Settings_ModelUpdateAvailable" xml:space="preserve">
     <value>Update available</value>
@@ -1125,6 +1152,9 @@
   <data name="Chat_ScheduleEmpty" xml:space="preserve">
     <value>Type a message first</value>
   </data>
+  <data name="Chat_DeleteFailed" xml:space="preserve">
+    <value>Could not delete. Make sure this is your default SMS app</value>
+  </data>
   <data name="Chat_ScheduleTooSoon" xml:space="preserve">
     <value>Pick a time at least a minute ahead</value>
   </data>
@@ -1163,6 +1193,12 @@
   </data>
   <data name="Settings_SendDelayHint" xml:space="preserve">
     <value>Hold a message for a few seconds so you can undo it</value>
+  </data>
+  <data name="Settings_CharCounter" xml:space="preserve">
+    <value>Character counter</value>
+  </data>
+  <data name="Settings_CharCounterHint" xml:space="preserve">
+    <value>Shows the characters left in the current part and the number of parts above the send button</value>
   </data>
   <data name="Settings_SendDelayOff" xml:space="preserve">
     <value>Off</value>
@@ -1380,6 +1416,18 @@
   <data name="Settings_RestartAccentMessage" xml:space="preserve">
     <value>The new accent colour is applied after the app restarts.</value>
   </data>
+  <data name="Settings_SectionAppIcon" xml:space="preserve">
+    <value>App icon</value>
+  </data>
+  <data name="Settings_IconGheychi" xml:space="preserve">
+    <value>Gheychi</value>
+  </data>
+  <data name="Settings_IconStock" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="Settings_IconChanged" xml:space="preserve">
+    <value>The home screen may take a moment to update. Some launchers move or remove the shortcut on the home screen.</value>
+  </data>
   <data name="Accent_Green" xml:space="preserve">
     <value>Green</value>
   </data>
@@ -1408,7 +1456,7 @@
     <value>Amber</value>
   </data>
   <data name="Accent_System" xml:space="preserve">
-    <value>System (Material You)</value>
+    <value>System</value>
   </data>
   <data name="Accent_Graphite" xml:space="preserve">
     <value>Graphite</value>
@@ -1580,5 +1628,38 @@
   </data>
   <data name="Trash_RestoreFailed" xml:space="preserve">
     <value>Could not restore. Is Gheychi the default SMS app?</value>
+  </data>
+  <data name="Emoji_Recent" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="Emoji_Smileys" xml:space="preserve">
+    <value>Smileys &amp; Emotion</value>
+  </data>
+  <data name="Emoji_People" xml:space="preserve">
+    <value>People &amp; Body</value>
+  </data>
+  <data name="Emoji_Animals" xml:space="preserve">
+    <value>Animals &amp; Nature</value>
+  </data>
+  <data name="Emoji_Food" xml:space="preserve">
+    <value>Food &amp; Drink</value>
+  </data>
+  <data name="Emoji_Travel" xml:space="preserve">
+    <value>Travel &amp; Places</value>
+  </data>
+  <data name="Emoji_Activities" xml:space="preserve">
+    <value>Activities</value>
+  </data>
+  <data name="Emoji_Objects" xml:space="preserve">
+    <value>Objects</value>
+  </data>
+  <data name="Emoji_Symbols" xml:space="preserve">
+    <value>Symbols</value>
+  </data>
+  <data name="Emoji_Flags" xml:space="preserve">
+    <value>Flags</value>
+  </data>
+  <data name="Emoji_Backspace" xml:space="preserve">
+    <value>Delete</value>
   </data>
 </root>

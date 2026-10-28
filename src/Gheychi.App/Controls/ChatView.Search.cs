@@ -37,6 +37,7 @@ public partial class ChatView
         if (Vm is not { } vm)
             return;
 
+        CloseEmojiPanel();
         CloseSearch();
         _searchVm = vm;
         vm.Search.CurrentHitChanged += OnSearchHitChanged;

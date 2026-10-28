@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Gheychi.App.Platforms.Android.Services;
+using Gheychi.Core.Services;
 
 namespace Gheychi.App.Platforms.Android.Receivers;
 
@@ -25,6 +26,16 @@ public sealed class SmsSentReceiver : BroadcastReceiver
         try
         {
             var ok = ResultCode == Result.Ok;
+            var rowId = intent.GetLongExtra(SmsSendTracker.ExtraRowId, 0);
+            if (!ok)
+            {
+                // Before the tally: the row is marked failed right after the last part, and its Info sheet should find the reason by then.
+                var part = intent.GetIntExtra(SmsSendTracker.ExtraPart, 0) + 1;
+                var parts = intent.GetIntExtra(SmsSendTracker.ExtraParts, 1);
+                var detail = SmsFailureReason.DescribeSendFailure((int)ResultCode, part, parts, intent.GetIntExtra("errorCode", -1));
+                global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"Send failed, row {rowId}: {detail}");
+                SmsFailureStore.Record(context, rowId, (int)ResultCode, detail);
+            }
 
             // Same process as the sender: its continuation updates the row once all parts are in.
             if (SmsSendTracker.CompletePart(token, ok))
@@ -32,7 +43,6 @@ public sealed class SmsSentReceiver : BroadcastReceiver
 
             // Process was restarted after the send; there is no waiter, so update the row from
             // this single part (any failed part marks the message failed).
-            var rowId = intent.GetLongExtra(SmsSendTracker.ExtraRowId, 0);
             if (rowId > 0)
                 AndroidSmsService.UpdateOutgoingState(context, rowId, ok, onlyIfPending: ok);
         }

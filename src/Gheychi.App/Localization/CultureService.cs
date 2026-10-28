@@ -5,9 +5,11 @@ namespace Gheychi.App.Localization;
 
 public static class CultureService
 {
-    /// <summary>The language picked in Settings, else the phone's.</summary>
+    /// <summary>The language picked in Settings, else the phone's, and the calendar picked there.</summary>
     public static void ApplyCulture()
     {
+        Gheychi.Core.Services.DateFormattingService.Calendar = Services.AppPreferences.Calendar;
+
         var culture = Services.AppPreferences.Language switch
         {
             Services.AppPreferences.LanguageEnglish => new CultureInfo("en-US"),

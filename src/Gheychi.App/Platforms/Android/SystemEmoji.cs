@@ -13,9 +13,14 @@ internal static class SystemEmoji
 {
     private const string Family = "Noto Color Emoji";
     private static readonly Uri CollectionKey = new("fonts:SystemEmoji");
+    private const string PathKey = "system_emoji_font_v1";
+
+    // Looking the file up opens every font of the phone, which held up each launch (and each SMS that started the
+    // process) before the first frame. The path found by the last look is used instead, and looked up again after start.
+    private static readonly TimeSpan RescanDelay = TimeSpan.FromSeconds(15);
 
     /// <summary>Null when the phone has no updated emoji font, and the system's own is the newest there is.</summary>
-    private static readonly string? UpdatedFontPath = Find();
+    private static readonly string? UpdatedFontPath = Remembered();
 
     public static FontFallback[]? Fallbacks => UpdatedFontPath is null
         ? null
@@ -34,6 +39,22 @@ internal static class SystemEmoji
     {
         if (UpdatedFontPath is not null)
             FontManager.Current.AddFontCollection(new EmbeddedFontCollection(CollectionKey, new Uri("file://" + UpdatedFontPath)));
+    }
+
+    // An emoji update through Play removes the old file, so a path that is gone counts as none until the next look.
+    private static string? Remembered()
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+            return null;
+
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(RescanDelay);
+            Preferences.Default.Set(PathKey, Find() ?? string.Empty);
+        });
+
+        var path = Preferences.Default.Get(PathKey, string.Empty);
+        return path.Length > 0 && File.Exists(path) ? path : null;
     }
 
     private static string? Find()

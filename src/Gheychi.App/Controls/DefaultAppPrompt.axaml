@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             x:Class="Gheychi.App.Controls.DefaultAppPrompt">
+
+    <!-- Not the default SMS app: Android keeps the inbox from working properly, so it is not shown. Built only then. -->
+    <Panel Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+        <StackPanel Margin="32,0" Spacing="10" VerticalAlignment="Center">
+            <Border Width="64"
+                    Height="64"
+                    CornerRadius="32"
+                    Background="{theme:ThemeBrush Light=#FCF2E1, Dark=#3A3020}"
+                    HorizontalAlignment="Center">
+                <ui:Icon Data="{StaticResource Icon.Chat}" Width="28" Height="28" Foreground="{theme:ThemeBrush Light=#8A5A0E, Dark=#E8C27A}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="{loc:Translate Messages_NotDefaultTitle}"
+                       Margin="0,6,0,0"
+                       FontSize="18"
+                       FontFamily="{x:Static app:AppFonts.Bold}"
+                       Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="{loc:Translate Messages_NotDefaultText}"
+                       FontSize="14"
+                       Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap" />
+            <Border Margin="0,12,0,0"
+                    Padding="22,12"
+                    CornerRadius="22"
+                    Background="{theme:AccentBrush Role=Solid}"
+                    HorizontalAlignment="Center"
+                    x:Name="SetDefaultButton">
+                <TextBlock Text="{loc:Translate Messages_NotDefaultAction}"
+                           FontSize="15"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="White" />
+            </Border>
+        </StackPanel>
+    </Panel>
+</UserControl>

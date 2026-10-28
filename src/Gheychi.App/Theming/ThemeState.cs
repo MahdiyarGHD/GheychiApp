@@ -52,8 +52,10 @@ public static class ThemeState
 
         // From Android 12 the splash is drawn by the system before any app code runs. The system keeps this mode and
         // picks the light or dark launch resources by it, so the splash follows the app's theme, not only the phone's.
-        // It is also what the next process starts with, so it is set before a restart for the new theme.
-        if (OperatingSystem.IsAndroidVersionAtLeast(31) && Platform.AppContext.GetSystemService(global::Android.Content.Context.UiModeService) is global::Android.App.UiModeManager uiMode)
+        // It is also what the next process starts with, so it is set before a restart for the new theme. The system
+        // keeps it, so it is only sent when it changed: a call to the system on the main thread of every launch otherwise.
+        if (OperatingSystem.IsAndroidVersionAtLeast(31) && Services.AppPreferences.SystemTheme != (int)theme
+            && Platform.AppContext.GetSystemService(global::Android.Content.Context.UiModeService) is global::Android.App.UiModeManager uiMode)
         {
             uiMode.SetApplicationNightMode((int)(theme switch
             {
@@ -61,6 +63,7 @@ public static class ThemeState
                 AppTheme.Dark => global::Android.App.UiNightMode.Yes,
                 _ => global::Android.App.UiNightMode.Auto
             }));
+            Services.AppPreferences.SystemTheme = (int)theme;
         }
     }
 }

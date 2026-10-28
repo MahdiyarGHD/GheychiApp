@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Gheychi.Core.Services;
 
 namespace Gheychi.Core.Folders;
 
@@ -11,7 +12,7 @@ public sealed class FolderBook
     private readonly List<Folder> _folders = [];
     private readonly Dictionary<string, HashSet<long>> _members = [];
 
-    private sealed record Saved(List<Folder>? Folders, Dictionary<string, List<long>>? Members);
+    internal sealed record Saved(List<Folder>? Folders, Dictionary<string, List<long>>? Members);
 
     /// <summary>In the order of the tabs, without the "All" tab.</summary>
     public IReadOnlyList<Folder> Folders => _folders;
@@ -111,7 +112,8 @@ public sealed class FolderBook
 
     public string Serialize() => JsonSerializer.Serialize(new Saved(
         _folders.ToList(),
-        _members.Where(m => m.Value.Count > 0).ToDictionary(m => m.Key, m => m.Value.ToList())));
+        _members.Where(m => m.Value.Count > 0).ToDictionary(m => m.Key, m => m.Value.ToList())),
+        CoreJsonContext.Default.Saved);
 
     public static FolderBook Load(string? json)
     {
@@ -121,7 +123,7 @@ public sealed class FolderBook
 
         try
         {
-            if (JsonSerializer.Deserialize<Saved>(json) is not { } saved)
+            if (JsonSerializer.Deserialize(json, CoreJsonContext.Default.Saved) is not { } saved)
                 return book;
 
             foreach (var folder in saved.Folders ?? [])

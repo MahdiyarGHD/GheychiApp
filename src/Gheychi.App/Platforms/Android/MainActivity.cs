@@ -13,9 +13,12 @@ using Gheychi.App.Platforms.Android.Notifications;
 namespace Gheychi.App;
 
 [Activity(
+    // A fixed name, because the launcher aliases in AndroidManifest.xml point at it. The launcher entry itself is the
+    // alias, so MainLauncher is off: otherwise both icons would show.
+    Name = "com.evergreen.gheychiapp.MainActivity",
+    Exported = true,
     Label = "@string/app_name",
     Theme = "@style/Gheychi.Splash",
-    MainLauncher = true,
     // One instance for the whole app: another app's intent (a contact's message button, the share sheet) used to start
     // a second one in its own task, and both then answered the request through the same static events.
     LaunchMode = LaunchMode.SingleTask,
@@ -87,6 +90,11 @@ public class MainActivity : AvaloniaMainActivity
         if (Ui.MainView.Current is not { } view
             || Avalonia.Rendering.Composition.ElementComposition.GetElementVisual(view)?.Compositor is not { } compositor)
             return;
+
+        // The first frame shown is the inbox as it was left, not an empty list that fills a moment later.
+        var left = deadline - SystemClock.UptimeMillis();
+        if (left > 0)
+            await Task.WhenAny(view.InboxPainted, Task.Delay(TimeSpan.FromMilliseconds(left)));
 
         // A frame rendered before the surface existed went nowhere; the second batch from now is drawn on the surface.
         await compositor.RequestCompositionBatchCommitAsync().Rendered;

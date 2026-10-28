@@ -25,13 +25,18 @@ public sealed class SmsDeliveredReceiver : BroadcastReceiver
 
         try
         {
-            switch (ReadOutcome(intent))
+            var outcome = ReadOutcome(intent, out var status, out var format);
+            switch (outcome)
             {
                 case DeliveryOutcome.Delivered:
                     if (SmsDeliveryTally.Delivered(rowId, intent.GetIntExtra(SmsSendTracker.ExtraParts, 1)))
                         AndroidSmsService.MarkDelivered(context, rowId);
                     break;
                 case DeliveryOutcome.Failed:
+                    var detail = SmsFailureReason.DescribeReportFailure(
+                        status, format, intent.GetIntExtra(SmsSendTracker.ExtraPart, 0) + 1, intent.GetIntExtra(SmsSendTracker.ExtraParts, 1));
+                    global::Android.Util.Log.Warn(SmsSendTracker.LogTag, $"Delivery failed, row {rowId}: {detail}");
+                    SmsFailureStore.Record(context, rowId, status, detail);
                     SmsDeliveryTally.Forget(rowId);
                     AndroidSmsService.MarkDeliveryFailed(context, rowId);
                     break;
@@ -44,16 +49,21 @@ public sealed class SmsDeliveredReceiver : BroadcastReceiver
     }
 
     // A report that the carrier is still trying, or that carries nothing readable, changes nothing: the final one follows.
-    private static DeliveryOutcome ReadOutcome(Intent intent)
+    private static DeliveryOutcome ReadOutcome(Intent intent, out int status, out string? format)
     {
+        status = -1;
+        format = intent.GetStringExtra("format");
         var pdu = intent.GetByteArrayExtra("pdu");
         if (pdu is null || pdu.Length == 0)
             return DeliveryOutcome.Pending;
 
-        var format = intent.GetStringExtra("format");
 #pragma warning disable CA1422
         var report = format is null ? TelephonySmsMessage.CreateFromPdu(pdu) : TelephonySmsMessage.CreateFromPdu(pdu, format);
 #pragma warning restore CA1422
-        return report is null ? DeliveryOutcome.Pending : SmsStatusHelper.ClassifyReport(report.Status);
+        if (report is null)
+            return DeliveryOutcome.Pending;
+
+        status = report.Status;
+        return SmsStatusHelper.ClassifyReport(status);
     }
 }

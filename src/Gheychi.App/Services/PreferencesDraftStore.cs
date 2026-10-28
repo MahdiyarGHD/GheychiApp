@@ -20,7 +20,7 @@ public sealed class PreferencesDraftStore : IDraftStore
         try
         {
             var raw = Preferences.Default.Get(Key, string.Empty);
-            if (!string.IsNullOrEmpty(raw) && JsonSerializer.Deserialize<List<MessageDraft>>(raw) is { } saved)
+            if (!string.IsNullOrEmpty(raw) && JsonSerializer.Deserialize(raw, AppJsonContext.Default.ListMessageDraft) is { } saved)
             {
                 foreach (var draft in saved.Where(d => !string.IsNullOrWhiteSpace(d.Text)))
                     _drafts[draft.ThreadId] = draft;
@@ -91,7 +91,7 @@ public sealed class PreferencesDraftStore : IDraftStore
         _version++;
         try
         {
-            Preferences.Default.Set(Key, JsonSerializer.Serialize(_drafts.Values.ToList()));
+            Preferences.Default.Set(Key, JsonSerializer.Serialize(_drafts.Values.ToList(), AppJsonContext.Default.ListMessageDraft));
         }
         catch (Exception ex)
         {

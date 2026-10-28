@@ -19,8 +19,16 @@
         <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
 
+    <!--
+        No SelectionForegroundBrush: the theme's white selected text splits the text into runs, which makes the touch
+        handles throw ("Covered length must be greater than zero") when a selection in Persian text reaches a Latin word
+        or a number. The selected text keeps its colour, under a see-through accent highlight.
+    -->
     <Style Selector="TextBox">
         <Setter Property="ui:TextMenu.Enabled" Value="True" />
+        <Setter Property="ui:SelectionDragScroll.Enabled" Value="True" />
+        <Setter Property="SelectionForegroundBrush" Value="{x:Null}" />
+        <Setter Property="SelectionBrush" Value="{theme:AccentBrush Role=Solid, Alpha=80}" />
     </Style>
     <Style Selector="FlyoutPresenter.textmenu">
         <Setter Property="Background" Value="Transparent" />

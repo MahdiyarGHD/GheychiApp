@@ -32,6 +32,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private DateTime _lastLoadedAt;
     private bool _reloadPending;
     private Task<BuiltThreads>? _snapshotTask;
+    private readonly TaskCompletionSource _cachedInboxTried = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private const string ArchivedKey = "archived_threads_v1";
     private const int MaxIncrementalChanges = 40;
@@ -57,6 +58,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         // waited for: the CPU belongs to the chat until it is up, so the read waits for InitializeAsync.
         if (!ChatLaunchRequests.HasPending)
             _snapshotTask = StartSnapshotLoad();
+        else
+            _cachedInboxTried.TrySetResult();
 
         SmsDeliverReceiver.SmsReceived += OnSmsReceived;
         NotificationActionReceiver.ThreadsChanged += OnSmsReceived;
@@ -130,6 +133,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         {
             t.MarkAsRead();
             var threadId = t.ThreadId;
+            ChatViewModel.EvictCache(threadId);
             _ = Task.Run(() => _smsService.MarkThreadAsReadAsync(threadId));
         }
 
@@ -326,6 +330,13 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         var threadIds = selected.Select(t => t.ThreadId).ToList();
         var success = await _smsService.DeleteThreadsAsync(threadIds);
+
+        // The provider can keep an emptied conversation and hand its id out again for the same number, so a page cached
+        // for it would reappear when the contact is opened from compose or search. Dropped even when the delete failed
+        // part way, so the next open reads what is really left.
+        foreach (var threadId in threadIds)
+            ChatViewModel.InvalidateThread(threadId);
+
         if (success)
         {
             _drafts?.Remove(threadIds);
@@ -505,6 +516,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 continue;
 
             var threadId = t.ThreadId;
+            // The cached page carries the unread divider of the old state.
+            ChatViewModel.EvictCache(threadId);
             if (unread)
             {
                 t.MarkAsUnread();
@@ -586,18 +599,31 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         private set => SetField(ref _hasPermission, value);
     }
 
+    /// <summary>
+    /// Done once the last known inbox is on the list, or there is none. The launch screen stays up until then (for a
+    /// moment at most), so the first frame is the inbox and not an empty list that fills a moment later.
+    /// </summary>
+    public Task CachedInboxTried => _cachedInboxTried.Task;
+
     /// <summary>The last known inbox, when the list is still empty: enough to know the names of the conversations.</summary>
     public async Task EnsureCachedInboxAsync()
     {
-        if (Threads.Count > 0)
-            return;
-
-        var cached = await (_snapshotTask ??= StartSnapshotLoad());
-        if (cached.Inbox.Count > 0 && Threads.Count == 0)
+        try
         {
-            ShowInbox(cached.Inbox);
-            if (ArchivedThreads.Count == 0)
-                ArchivedThreads.Reset(cached.Archived);
+            if (Threads.Count > 0)
+                return;
+
+            var cached = await (_snapshotTask ??= StartSnapshotLoad());
+            if (cached.Inbox.Count > 0 && Threads.Count == 0)
+            {
+                ShowInbox(cached.Inbox);
+                if (ArchivedThreads.Count == 0)
+                    ArchivedThreads.Reset(cached.Archived);
+            }
+        }
+        finally
+        {
+            _cachedInboxTried.TrySetResult();
         }
     }
 
@@ -716,9 +742,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         var archived = new List<ThreadItem>();
         foreach (var t in rawThreads)
         {
+            var isSender = PhoneNumberNormalizer.IsAlphanumeric(t.Address);
             var name = !string.IsNullOrWhiteSpace(t.ContactName)
                 ? t.ContactName
-                : PhoneNumberNormalizer.IsAlphanumeric(t.Address)
+                : isSender
                     ? t.Address
                     : PhoneNumberNormalizer.FormatDisplay(t.Address);
 
@@ -740,8 +767,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 IsPinned = !isArchived && pinned.Contains(t.ThreadId),
                 IsUnread = t.UnreadCount > 0,
                 HasFailed = t.HasFailed,
-                IsContact = !string.IsNullOrWhiteSpace(t.ContactName),
-                IsSender = PhoneNumberNormalizer.IsAlphanumeric(t.Address),
+                // The thread reader fills ContactName with the sender id itself for alphanumeric senders, so the
+                // name alone does not make a contact: only a phone number with a saved name does.
+                IsContact = !isSender && !string.IsNullOrWhiteSpace(t.ContactName),
+                IsSender = isSender,
                 HasCode = findCodes && OtpDetector.Find(t.Snippet) is not null
             });
         }

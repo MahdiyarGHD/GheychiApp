@@ -40,10 +40,8 @@ internal static class AppStatus
     public static void Restart()
     {
         var context = Platform.AppContext;
-        var intent = context.PackageManager?.GetLaunchIntentForPackage(context.PackageName!);
-        if (intent is null)
-            return;
-
+        // MainActivity itself, not the launcher intent: which launcher alias is enabled does not matter then.
+        var intent = new Intent(context, typeof(MainActivity));
         intent.AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);
         context.StartActivity(intent);
         Java.Lang.JavaSystem.Exit(0);

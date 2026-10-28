@@ -10,7 +10,9 @@ public enum ChatRowKind
     Outgoing,
     OutgoingLink,
     DateSeparator,
-    UnreadSeparator
+    UnreadSeparator,
+    EmojiIncoming,
+    EmojiOutgoing
 }
 
 /// <summary>
@@ -27,14 +29,18 @@ public sealed class ChatTemplateSelector : IDataTemplate
     public IDataTemplate? OutgoingLinkTemplate { get; set; }
     public IDataTemplate? DateSeparatorTemplate { get; set; }
     public IDataTemplate? UnreadSeparatorTemplate { get; set; }
+    public IDataTemplate? EmojiIncomingTemplate { get; set; }
+    public IDataTemplate? EmojiOutgoingTemplate { get; set; }
 
     // A message's link never changes after it is parsed, so link rows get their own template instead
-    // of every row carrying a hidden formatted-text label.
+    // of every row carrying a hidden formatted-text label; the same goes for a message that is only emoji.
     public static ChatRowKind KindOf(object? item) =>
         item switch
         {
             UnreadSeparatorItem => ChatRowKind.UnreadSeparator,
             DateSeparatorItem => ChatRowKind.DateSeparator,
+            ChatMessage { IsOutgoing: true, EmojiCount: > 0 } => ChatRowKind.EmojiOutgoing,
+            ChatMessage { EmojiCount: > 0 } => ChatRowKind.EmojiIncoming,
             ChatMessage { IsOutgoing: true, HasLink: true } => ChatRowKind.OutgoingLink,
             ChatMessage { IsOutgoing: true } => ChatRowKind.Outgoing,
             ChatMessage { HasLink: true } => ChatRowKind.IncomingLink,
@@ -59,6 +65,8 @@ public sealed class ChatTemplateSelector : IDataTemplate
         {
             ChatRowKind.UnreadSeparator => UnreadSeparatorTemplate ?? throw new InvalidOperationException(nameof(UnreadSeparatorTemplate)),
             ChatRowKind.DateSeparator => DateSeparatorTemplate ?? throw new InvalidOperationException(nameof(DateSeparatorTemplate)),
+            ChatRowKind.EmojiOutgoing => EmojiOutgoingTemplate ?? throw new InvalidOperationException(nameof(EmojiOutgoingTemplate)),
+            ChatRowKind.EmojiIncoming => EmojiIncomingTemplate ?? throw new InvalidOperationException(nameof(EmojiIncomingTemplate)),
             ChatRowKind.OutgoingLink => OutgoingLinkTemplate ?? throw new InvalidOperationException(nameof(OutgoingLinkTemplate)),
             ChatRowKind.Outgoing => OutgoingTemplate ?? throw new InvalidOperationException(nameof(OutgoingTemplate)),
             ChatRowKind.IncomingLink => IncomingLinkTemplate ?? throw new InvalidOperationException(nameof(IncomingLinkTemplate)),

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
 using Xunit;
@@ -22,6 +23,25 @@ public sealed class ThreadSnapshotStoreTests : IDisposable
         var loaded = ThreadSnapshotStore.TryLoad(path);
 
         Assert.Equal([thread], loaded);
+    }
+
+    // A snapshot written by an older version (reflection serializer) must still load, and nothing about the file changes.
+    [Fact]
+    public void Save_WritesTheSameJsonAsTheReflectionSerializer()
+    {
+        var path = Path.Combine(_dir, "compat.json");
+        List<SmsThread> threads =
+        [
+            new(5, "+989121110000", "Ali", "hi “there”", new DateTime(2026, 10, 4, 9, 30, 0), 12, 2, true, 3, HasDraft: true),
+            new(6, "Bank", null, "رمز پویا: 123456", new DateTime(2026, 10, 4, 9, 31, 0, DateTimeKind.Utc), 1, 1, false, -1)
+        ];
+        var old = JsonSerializer.Serialize(threads);
+
+        ThreadSnapshotStore.Save(path, threads);
+        Assert.Equal(old, File.ReadAllText(path));
+
+        File.WriteAllText(path, old);
+        Assert.Equal(threads, ThreadSnapshotStore.TryLoad(path));
     }
 
     [Fact]

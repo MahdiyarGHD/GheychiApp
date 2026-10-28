@@ -41,6 +41,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public IReadOnlyList<SimCardInfo> ActiveSims => _activeSims ?? Array.Empty<SimCardInfo>();
 
     private readonly ISmsService _smsService;
+    private readonly SemaphoreSlim _queueGate = new(1, 1);
     private readonly IDateFormattingService _dateFormatter;
     private readonly IMessageMetadataRepository _metadataRepo;
     private readonly IThreadSettings? _threadSettings;
@@ -66,6 +67,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         if (_thread.ThreadId > 0)
             _draft = _drafts?.Get(_thread.ThreadId)?.Text ?? string.Empty;
         Pending = new PendingSends(_dateFormatter) { Send = SendHeld };
+        Pending.Updated += ReconcileHeld;
         Pending.Bind(_thread.ThreadId);
         Items = [];
         Messages = [];
@@ -99,6 +101,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             if (SetField(ref _thread, value) && value.ThreadId != previous)
             {
                 RestoreDraft();
+                _firstPageApplied = false;
                 Pending.Bind(value.ThreadId);
             }
         }
@@ -458,6 +461,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 Timestamp = msg.Timestamp,
                 Body = msg.Body,
                 Links = links,
+                EmojiCount = EmojiText.BigCount(msg.Body),
                 CopyableCode = code?.Code,
                 IsDynamicPassword = code?.Kind == OtpKind.DynamicPassword,
                 IsOutgoing = msg.IsOutgoing,
@@ -513,6 +517,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _prefetchTask = null;
         _prefetchOffset = -1;
         _prefetchThreadId = 0;
+        _held.Clear();
+        _firstPageApplied = false;
         FirstUnreadIndex = null;
         _simChosenForOpen = false;
     }
@@ -700,6 +706,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         Items.Reset(data.Items);
         Messages.Reset(data.Messages);
         StickyDate = data.StickyDate;
+        _firstPageApplied = true;
+        ShowHeldBubbles();
         ApplyPreferredSim();
         if (Search.IsActive)
             RefreshSearchMarks();
@@ -914,16 +922,79 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         var subId = ResolveSubId(0);
         // Held for the send delay, the message goes out when it ends; Undo brings it back as a draft until then.
-        if (Pending.Hold(Thread.ThreadId, SendAddress, text, subId, Gheychi.App.Services.AppPreferences.SendDelaySeconds))
+        // Its bubble is shown at once (sending) and is the one that goes on to be sent.
+        if (Pending.Hold(Thread.ThreadId, SendAddress, text, subId, Gheychi.App.Services.AppPreferences.SendDelaySeconds) is { } heldId)
+        {
+            _held[heldId] = AddHeldBubble(text, subId, DateTime.Now);
             return;
+        }
 
         await SendNowAsync(text, subId);
     }
 
+    // Message ids of the delay (not row ids) to the bubbles shown for them.
+    private readonly Dictionary<string, ChatMessage> _held = [];
+
+    // The first page of the open conversation is in the list (possibly empty): newer rows may be appended to it.
+    private bool _firstPageApplied;
+
+    private ChatMessage AddHeldBubble(string text, int subId, DateTime at)
+    {
+        var bubble = NewOutgoingBubble(text, subId, at);
+        bubble.IsHeld = true;
+        AppendMessage(bubble);
+        return bubble;
+    }
+
+    // The conversation was bound again: what is still held is shown under what was read.
+    private void ShowHeldBubbles()
+    {
+        _held.Clear();
+        foreach (var message in Pending.Held())
+            _held[message.Id] = AddHeldBubble(message.Text, message.SubId, DateTime.Now);
+    }
+
+    // A message was sent without this chat (the alarm behind the delay): its bubble is replaced by the stored row.
+    private void ReconcileHeld()
+    {
+        if (_held.Count == 0)
+            return;
+
+        var waiting = Pending.Held().Select(m => m.Id).ToHashSet();
+        var gone = _held.Where(pair => !waiting.Contains(pair.Key)).ToList();
+        if (gone.Count == 0)
+            return;
+
+        foreach (var (id, bubble) in gone)
+        {
+            _held.Remove(id);
+            Items.Remove(bubble);
+            Messages.Remove(bubble);
+        }
+
+        RemoveEmptyDaySeparators();
+        _ = RefreshNewestAsync();
+    }
+
+    /// <summary>Why a failed message failed, when it was recorded; null for messages still held (no row yet) or sent by another app.</summary>
+    public string? FailureReasonOf(ChatMessage message) =>
+        message.Id > 0 && !message.IsHeld ? _smsService.GetFailureReason(message.Id) : null;
+
     /// <summary>Takes the held messages back into the box, ahead of what has been typed since.</summary>
     public void UndoHeld()
     {
-        var text = Pending.Undo();
+        var taken = Pending.Undo();
+        foreach (var message in taken)
+        {
+            if (_held.Remove(message.Id, out var bubble))
+            {
+                Items.Remove(bubble);
+                Messages.Remove(bubble);
+            }
+        }
+
+        RemoveEmptyDaySeparators();
+        var text = string.Join("\n", taken.Select(m => m.Text));
         if (text.Length > 0)
             Draft = string.IsNullOrEmpty(Draft) ? text : text + "\n" + Draft;
     }
@@ -952,17 +1023,19 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             return;
         }
 
-        _ = SendHeldHereAsync(message);
+        // The bubble shown since the message was typed goes on to be sent; without one (the chat was bound again) it is added now.
+        _held.Remove(message.Id, out var bubble);
+        _ = SendHeldHereAsync(message, bubble);
         MessagesAppended?.Invoke();
     }
 
     // The chat may have been left while the message was held, and the inbox was read then, before this row existed:
     // it is told once the message is stored.
-    private async Task SendHeldHereAsync(ScheduledMessage message)
+    private async Task SendHeldHereAsync(ScheduledMessage message, ChatMessage? bubble)
     {
         try
         {
-            await SendNowAsync(message.Text, message.SubId);
+            await SendNowAsync(message.Text, message.SubId, bubble);
         }
         finally
         {
@@ -983,25 +1056,34 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
     }
 
-    private async Task SendNowAsync(string text, int subId)
+    private ChatMessage NewOutgoingBubble(string text, int subId, DateTime at) => new()
     {
-        var timeStr = _dateFormatter.FormatMessageTime(DateTime.Now, CultureInfo.CurrentUICulture);
+        Body = text,
+        Links = TextLinker.Find(text),
+        EmojiCount = EmojiText.BigCount(text),
+        IsOutgoing = true,
+        IsDelivered = false,
+        Time = _dateFormatter.FormatMessageTime(at, CultureInfo.CurrentUICulture),
+        // Kept so a retry goes out on the SIM this was sent with, not on whichever one is selected by then.
+        SubId = subId,
+        SimSlot = _simSlot,
+        IsDualSim = _isDualSim ?? false,
+        Timestamp = at
+    };
 
-        var outgoingMsg = new ChatMessage
+    // With a <paramref name="heldBubble"/> the message already on screen is the one sent, so it does not appear twice.
+    private async Task SendNowAsync(string text, int subId, ChatMessage? heldBubble = null)
+    {
+        var outgoingMsg = heldBubble ?? NewOutgoingBubble(text, subId, DateTime.Now);
+        if (heldBubble is null)
+            AppendMessage(outgoingMsg);
+        else
         {
-            Body = text,
-            Links = TextLinker.Find(text),
-            IsOutgoing = true,
-            IsDelivered = false,
-            Time = timeStr,
-            // Kept so a retry goes out on the SIM this was sent with, not on whichever one is selected by then.
-            SubId = subId,
-            SimSlot = _simSlot,
-            IsDualSim = _isDualSim ?? false,
-            Timestamp = DateTime.Now
-        };
-
-        AppendMessage(outgoingMsg);
+            // Stored now, so it carries the time the row will have.
+            heldBubble.IsHeld = false;
+            heldBubble.Timestamp = DateTime.Now;
+            heldBubble.Time = _dateFormatter.FormatMessageTime(heldBubble.Timestamp, CultureInfo.CurrentUICulture);
+        }
 
         EvictCache(Thread.ThreadId);
 
@@ -1042,9 +1124,21 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         try
         {
             var address = SendAddress;
+            var threadId = Thread.ThreadId;
             if (storeFirst)
             {
-                var rowId = await _smsService.QueueOutgoingAsync(address, text, subId);
+                // One at a time, so several messages released together are stored in the order they were typed.
+                long rowId;
+                await _queueGate.WaitAsync();
+                try
+                {
+                    rowId = await _smsService.QueueOutgoingAsync(address, text, subId, threadId);
+                }
+                finally
+                {
+                    _queueGate.Release();
+                }
+
                 if (rowId > 0)
                 {
                     message.Id = rowId;
@@ -1204,8 +1298,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     private void AppendNew(long threadId, PreparedChatData data)
     {
-        // Another chat was opened while this was being read, or the first page is still loading.
-        if (Thread.ThreadId != threadId || Messages.Count == 0)
+        // Another chat was opened while this was being read, or the first page is still loading. A chat whose first page
+        // was empty (a new conversation) is loaded all the same and takes the row.
+        if (Thread.ThreadId != threadId || !_firstPageApplied)
             return;
 
         var known = new Dictionary<long, ChatMessage>();
@@ -1216,7 +1311,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         }
 
         // A send whose row is not stored yet (Id 0) would show up here as a "new" outgoing message.
-        var sendInFlight = Messages.Any(m => m.Id == 0 && m.IsOutgoing);
+        // A held message has no row yet either, but nothing is being stored for it, so it does not hide other rows.
+        var sendInFlight = Messages.Any(m => m.Id == 0 && m.IsOutgoing && !m.IsHeld);
 
         var appended = 0;
         var seen = ChatPresence.IsAppVisible;
@@ -1363,6 +1459,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public void EnterSelectionMode(ChatMessage initialMessage)
     {
+        // Selecting is for acting on stored rows; a held message has none.
+        if (initialMessage.IsHeld)
+            return;
+
         IsSelectionMode = true;
         initialMessage.IsSelected = true;
         UpdateSelectedCount();
@@ -1375,7 +1475,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public void ToggleMessageSelection(ChatMessage message)
     {
-        if (!IsSelectionMode)
+        if (!IsSelectionMode || message.IsHeld)
             return;
 
         message.IsSelected = !message.IsSelected;
@@ -1390,7 +1490,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     public void SelectAllMessages()
     {
         foreach (var msg in Messages)
-            msg.IsSelected = true;
+            msg.IsSelected = !msg.IsHeld;
         UpdateSelectedCount();
     }
 
@@ -1533,8 +1633,54 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             RemoveEmptyDaySeparators();
             ShiftLoadedCount(-1);
             EvictCache(Thread.ThreadId);
+            return true;
         }
-        return success;
+
+        return await ReconcileAfterFailedDeleteAsync([message]);
+    }
+
+    /// <summary>
+    /// A delete that removed nothing usually means the rows were already gone (the chat showed an old page). The chat is
+    /// read again from the provider, the rows that no longer exist leave the list, and the result says whether every
+    /// message asked for is gone. False means some still exist and could not be deleted.
+    /// </summary>
+    private async Task<bool> ReconcileAfterFailedDeleteAsync(IReadOnlyCollection<ChatMessage> attempted)
+    {
+        var thread = Thread;
+        EvictCache(thread.ThreadId);
+        try
+        {
+            var data = await Task.Run(() => FetchMessagesAsync(thread, Math.Max(_loadedCount, RecentPageSize), 0));
+            var present = data.Messages.Where(m => m.Id > 0).Select(m => m.Id).ToHashSet();
+
+            return await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                if (Thread.ThreadId != thread.ThreadId)
+                    return true;
+
+                var gone = Messages.Where(m => m.Id > 0 && !present.Contains(m.Id)).ToList();
+                foreach (var msg in gone)
+                {
+                    Items.Remove(msg);
+                    Messages.Remove(msg);
+                }
+
+                if (gone.Count > 0)
+                {
+                    RemoveEmptyDaySeparators();
+                    ShiftLoadedCount(-gone.Count);
+                }
+
+                var failed = attempted.Any(m => present.Contains(m.Id));
+                if (!failed)
+                    ExitSelectionMode();
+                return !failed;
+            });
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public async Task<bool> DeleteSelectedMessagesAsync()
@@ -1556,8 +1702,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             ExitSelectionMode();
             ShiftLoadedCount(-selected.Count);
             EvictCache(Thread.ThreadId);
+            return true;
         }
-        return success;
+
+        return await ReconcileAfterFailedDeleteAsync(selected);
     }
 
     public string GetSelectedMessagesText() => string.Join(Environment.NewLine, GetSelectedMessageBodies());

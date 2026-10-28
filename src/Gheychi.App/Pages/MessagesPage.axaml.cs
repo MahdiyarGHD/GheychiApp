@@ -64,6 +64,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private MessagesViewModel? Vm => DataContext as MessagesViewModel;
 
+    /// <inheritdoc cref="MessagesViewModel.CachedInboxTried"/>
+    internal Task CachedInboxTried => Vm?.CachedInboxTried ?? Task.CompletedTask;
+
     // ChatView (1000+ lines of XAML) and SearchView are only needed once the user opens them; they are built when first
     // needed or by the warm-up, so the first inbox frame does not wait for them.
     private ChatView ChatOverlay => _chatOverlay ??= CreateChatOverlay();
@@ -216,13 +219,24 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     // ---- Tab lifecycle --------------------------------------------------------------------------
 
-    private bool IsDefaultAppGateShown => NotDefaultScreen.IsVisible;
+    private DefaultAppPrompt? _defaultAppPrompt;
+
+    private bool IsDefaultAppGateShown => _defaultAppPrompt?.IsVisible == true;
 
     // Back from the default-app prompt the answer is known only once the app is in front again.
     private void UpdateDefaultAppGate()
     {
         var gated = SmsService is { } sms && !sms.IsDefaultSmsApp();
-        NotDefaultScreen.IsVisible = gated;
+        if (gated && _defaultAppPrompt is null)
+        {
+            _defaultAppPrompt = new DefaultAppPrompt();
+            _defaultAppPrompt.Tapped += OnNotDefaultTapEater;
+            _defaultAppPrompt.SetDefaultButton.Tapped += OnSetDefaultTapped;
+            DefaultAppPromptHost.Children.Add(_defaultAppPrompt);
+        }
+
+        if (_defaultAppPrompt is not null)
+            _defaultAppPrompt.IsVisible = gated;
         ThreadsList.IsVisible = !gated;
     }
 
@@ -293,7 +307,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         _inboxShown = false;
         _reorder.Cancel();
         // A selection or an open menu does not wait for the user to come back to the tab.
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         Vm?.ExitSelectionMode();
         MainActivity.Resumed -= OnAppResumed;
         ChatLaunchRequests.Requested -= OnChatLaunchRequested;
@@ -679,7 +693,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     // Whatever is open gives way, so the request is not answered underneath it.
     private async Task DismissForExternalAsync()
     {
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm?.IsSelectionMode == true)
             Vm.ExitSelectionMode();
 
@@ -848,13 +862,13 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnExitSelectionModeTapped(object? sender, TappedEventArgs e)
     {
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         Vm?.ExitSelectionMode();
     }
 
     private async void OnDeleteSelectedThreadsTapped(object? sender, TappedEventArgs e)
     {
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm == null || Vm.SelectedCount == 0)
             return;
 
@@ -881,7 +895,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private async void OnArchiveSelectedThreadsTapped(object? sender, TappedEventArgs e)
     {
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm == null || Vm.SelectedCount == 0)
             return;
 
@@ -890,22 +904,62 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreeDotsTapped(object? sender, TappedEventArgs e)
     {
-        PinItem.IsVisible = Vm?.AnySelectedNotPinned ?? false;
-        UnpinItem.IsVisible = Vm?.AnySelectedPinned ?? false;
+        var menus = Menus;
+        menus.PinItem.IsVisible = Vm?.AnySelectedNotPinned ?? false;
+        menus.UnpinItem.IsVisible = Vm?.AnySelectedPinned ?? false;
         // Only what would change something: "mark as read" for a chat that is read already does nothing.
-        MarkReadItem.IsVisible = Vm?.AnySelectedUnread ?? false;
-        MarkUnreadItem.IsVisible = Vm?.AnySelectedRead ?? false;
-        SelectBoxOverlay.IsVisible = !SelectBoxOverlay.IsVisible;
+        menus.MarkReadItem.IsVisible = Vm?.AnySelectedUnread ?? false;
+        menus.MarkUnreadItem.IsVisible = Vm?.AnySelectedRead ?? false;
+        menus.SelectBoxOverlay.IsVisible = !menus.SelectBoxOverlay.IsVisible;
     }
 
-    private void OnCloseSelectBoxTapped(object? sender, TappedEventArgs e) => SelectBoxOverlay.IsVisible = false;
+    private InboxMenus? _menus;
+
+    private InboxMenus Menus => _menus ??= CreateMenus();
+
+    private InboxMenus CreateMenus()
+    {
+        var menus = new InboxMenus();
+        menus.SelectBoxOverlay.Tapped += OnCloseSelectBoxTapped;
+        menus.SelectBox.Tapped += OnSelectBoxTapEater;
+        menus.PinItem.Tapped += OnPinTapped;
+        menus.UnpinItem.Tapped += OnUnpinTapped;
+        menus.FolderItem.Tapped += OnAddToFolderTapped;
+        menus.MarkReadItem.Tapped += OnMarkAsReadTapped;
+        menus.MarkUnreadItem.Tapped += OnMarkAsUnreadTapped;
+        menus.FolderMenuOverlay.Tapped += OnCloseFolderMenuTapped;
+        menus.FolderMenu.Tapped += OnSelectBoxTapEater;
+        menus.FolderMarkReadItem.Tapped += OnFolderMarkReadTapped;
+        menus.FolderRenameItem.Tapped += OnFolderRenameTapped;
+        menus.FolderDeleteItem.Tapped += OnFolderDeleteTapped;
+        MenuHost.Children.Add(menus);
+        return menus;
+    }
+
+    private bool IsSelectBoxOpen => _menus?.SelectBoxOverlay.IsVisible == true;
+
+    private bool IsFolderMenuOpen => _menus?.FolderMenuOverlay.IsVisible == true;
+
+    private void CloseSelectBox()
+    {
+        if (_menus is { } menus)
+            menus.SelectBoxOverlay.IsVisible = false;
+    }
+
+    private void CloseFolderMenu()
+    {
+        if (_menus is { } menus)
+            menus.FolderMenuOverlay.IsVisible = false;
+    }
+
+    private void OnCloseSelectBoxTapped(object? sender, TappedEventArgs e) => CloseSelectBox();
 
     private void OnSelectBoxTapEater(object? sender, TappedEventArgs e) => e.Handled = true;
 
     private async void OnPinTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm == null || Vm.SelectedCount == 0)
             return;
 
@@ -915,7 +969,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private async void OnUnpinTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm == null || Vm.SelectedCount == 0)
             return;
 
@@ -925,7 +979,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private async void OnMarkAsReadTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm == null || Vm.SelectedCount == 0)
             return;
 
@@ -935,7 +989,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private async void OnMarkAsUnreadTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm == null || Vm.SelectedCount == 0)
             return;
 
@@ -971,18 +1025,19 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
         var folder = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>()?.Find(pill.Id);
         _menuPill = pill;
-        FolderMenuTitle.Text = pill.Title;
-        FolderRenameItem.IsVisible = folder is { IsSmart: false };
-        FolderDeleteItem.IsVisible = folder is not null;
-        FolderMenuOverlay.IsVisible = true;
+        var menus = Menus;
+        menus.FolderMenuTitle.Text = pill.Title;
+        menus.FolderRenameItem.IsVisible = folder is { IsSmart: false };
+        menus.FolderDeleteItem.IsVisible = folder is not null;
+        menus.FolderMenuOverlay.IsVisible = true;
     }
 
-    private void OnCloseFolderMenuTapped(object? sender, TappedEventArgs e) => FolderMenuOverlay.IsVisible = false;
+    private void OnCloseFolderMenuTapped(object? sender, TappedEventArgs e) => CloseFolderMenu();
 
     private async void OnFolderMarkReadTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        FolderMenuOverlay.IsVisible = false;
+        CloseFolderMenu();
         if (Vm is not { } vm || _menuPill is not { } pill)
             return;
 
@@ -994,7 +1049,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private async void OnFolderRenameTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        FolderMenuOverlay.IsVisible = false;
+        CloseFolderMenu();
         var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
         if (_menuPill is not { } pill || store?.Find(pill.Id) is not { IsSmart: false } folder)
             return;
@@ -1006,7 +1061,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private async void OnFolderDeleteTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        FolderMenuOverlay.IsVisible = false;
+        CloseFolderMenu();
         var store = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
         if (_menuPill is not { } pill || store?.Find(pill.Id) is not { } folder)
             return;
@@ -1029,7 +1084,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private async void OnAddToFolderTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;
-        SelectBoxOverlay.IsVisible = false;
+        CloseSelectBox();
         if (Vm == null || Vm.SelectedCount == 0)
             return;
 
@@ -1649,7 +1704,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         get
         {
-            if (_animating || _reorder.IsBusy || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || SelectBoxOverlay.IsVisible || FolderMenuOverlay.IsVisible || Vm?.IsSelectionMode == true
+            if (_animating || _reorder.IsBusy || !IsChatClosed || !IsSearchClosed || !IsComposeClosed || !IsShareClosed || IsSelectBoxOpen || IsFolderMenuOpen || Vm?.IsSelectionMode == true
                 || IsDefaultAppGateShown)
                 return 0;
 
@@ -1818,9 +1873,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             return true;
         }
 
-        if (SelectBoxOverlay.IsVisible)
+        if (IsSelectBoxOpen)
         {
-            SelectBoxOverlay.IsVisible = false;
+            CloseSelectBox();
             return true;
         }
 

@@ -91,13 +91,14 @@ public partial class SpamAnalyticsScreen : SettingsScreen
 
         var today = DateTime.Today;
         var persian = new PersianCalendar();
+        var solar = Gheychi.Core.Services.DateFormattingService.UsesSolar(CultureInfo.CurrentUICulture);
         for (var i = 0; i < daily.Count; i++)
         {
             if ((daily.Count - 1 - i) % 2 != 0)
                 continue;
 
             var date = today.AddDays(i - (daily.Count - 1));
-            var day = SettingsUi.IsPersian ? persian.GetDayOfMonth(date) : date.Day;
+            var day = solar ? persian.GetDayOfMonth(date) : date.Day;
             var label = new TextBlock
             {
                 Text = SettingsUi.Number(day),

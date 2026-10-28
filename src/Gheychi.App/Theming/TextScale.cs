@@ -24,5 +24,8 @@ public static class TextScale
 
     public static double Reaction => Scaled(13);
 
+    /// <summary>The size of a message that is only <paramref name="count"/> emoji (1 to 3): fewer are bigger.</summary>
+    public static double Emoji(int count) => Scaled(count switch { 1 => 44, 2 => 38, _ => 32 });
+
     private static double Scaled(double size) => Math.Round(size * Current * 2) / 2;
 }

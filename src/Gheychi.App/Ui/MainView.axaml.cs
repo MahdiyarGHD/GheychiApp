@@ -53,6 +53,9 @@ public partial class MainView : UserControl
     /// <summary>The layer full-screen overlays are added to; later children are above earlier ones (or use <c>ZIndex</c>).</summary>
     public Panel Overlays => OverlayHost;
 
+    /// <summary>Done once the inbox shows what it had last time (or has nothing to show); done at once when another page opened first.</summary>
+    public Task InboxPainted => (_pages[MessagesIndex] as MessagesPage)?.CachedInboxTried ?? Task.CompletedTask;
+
     public MainView()
     {
         InitializeComponent();
@@ -113,8 +116,13 @@ public partial class MainView : UserControl
         SpamTabRequests.Requested += OnSpamTabRequested;
         MainActivity.Resumed += OnAppResumed;
         SmsDeliverReceiver.SpamReceived += OnSpamArrived;
-        SubscribeUpdates();
-        OnAppResumed();
+        // After the first frame: the badges build the update services (their HTTP clients) and read the database, and
+        // nothing of that is on screen yet.
+        _topLevel.RequestAnimationFrame(_ => Dispatcher.UIThread.Post(() =>
+        {
+            SubscribeUpdates();
+            OnAppResumed();
+        }, DispatcherPriority.Background));
 
         if (_detached)
         {

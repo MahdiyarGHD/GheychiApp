@@ -9,12 +9,17 @@ public interface ISmsService
     Task<bool> EnsurePermissionsAsync();
     Task<IReadOnlyList<SmsThread>> GetThreadsAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SmsMessage>> GetMessagesAsync(long threadId, int? limit = null, int offset = 0, CancellationToken cancellationToken = default);
-    /// <summary>Stores the message as outgoing before it is sent. Returns its row id, or 0 if it could not be stored.</summary>
-    Task<long> QueueOutgoingAsync(string address, string text, int subId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Stores the message as outgoing before it is sent. Returns its row id, or 0 if it could not be stored. With a
+    /// <paramref name="threadId"/> the row is filed in that conversation instead of the one the provider derives from the address.
+    /// </summary>
+    Task<long> QueueOutgoingAsync(string address, string text, int subId, long threadId = 0, CancellationToken cancellationToken = default);
     /// <summary>Sends the message. With a <paramref name="messageId"/> from <see cref="QueueOutgoingAsync"/> (or a failed message being retried) that row is updated in place; with 0 a row is created.</summary>
     Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default);
     /// <summary>Puts a received message (e.g. one restored from spam) into the inbox as read. Returns its thread id, or 0 on failure.</summary>
     Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId);
+    /// <summary>Why a failed outgoing message failed, as recorded when it did; null when nothing is known.</summary>
+    string? GetFailureReason(long messageId);
     Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> MarkThreadAsUnreadAsync(long threadId, CancellationToken cancellationToken = default);
     Task<bool> DeleteThreadsAsync(IReadOnlyList<long> threadIds, CancellationToken cancellationToken = default);
