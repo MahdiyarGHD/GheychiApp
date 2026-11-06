@@ -1049,8 +1049,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged
     {
         try
         {
-            await _smsService.SendSmsAsync(message.Address, message.Text, message.SubId);
-            NotificationActionReceiver.RaiseThreadsChanged(message.ThreadId);
+            // In the conversation's thread, as ScheduledSendReceiver does.
+            var rowId = await _smsService.QueueOutgoingAsync(message.Address, message.Text, message.SubId, message.ThreadId);
+            await _smsService.SendSmsAsync(message.Address, message.Text, message.SubId, rowId);
+            MainThread.BeginInvokeOnMainThread(() => NotificationActionReceiver.RaiseThreadsChanged(message.ThreadId));
         }
         catch (Exception ex)
         {
@@ -1235,6 +1237,8 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _live = true;
         _active = this;
         SmsDeliverReceiver.SmsReceived += OnIncomingSms;
+        // A held message sent by the alarm while the app was away: its bubble is gone, and only this brings the row in.
+        NotificationActionReceiver.ThreadsChanged += OnIncomingSms;
         SmsSendTracker.OutgoingUpdated += OnOutgoingUpdated;
         SmsSendTracker.Delivered += OnDelivered;
         SmsSendTracker.DeliveryFailed += OnDeliveryFailed;
@@ -1250,6 +1254,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
             _active = null;
         _live = false;
         SmsDeliverReceiver.SmsReceived -= OnIncomingSms;
+        NotificationActionReceiver.ThreadsChanged -= OnIncomingSms;
         SmsSendTracker.OutgoingUpdated -= OnOutgoingUpdated;
         SmsSendTracker.Delivered -= OnDelivered;
         SmsSendTracker.DeliveryFailed -= OnDeliveryFailed;
