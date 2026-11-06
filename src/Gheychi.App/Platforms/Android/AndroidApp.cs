@@ -19,7 +19,7 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
-        builder = base.CustomizeAppBuilder(builder);
+        builder = Ui.BidiRunOrder.Register(base.CustomizeAppBuilder(builder));
 
         var fallbacks = new List<FontFallback>();
         if (AppFonts.PersianLetters is { } persian)
