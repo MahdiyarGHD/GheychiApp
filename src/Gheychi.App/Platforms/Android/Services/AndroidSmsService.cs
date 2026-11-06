@@ -1826,6 +1826,31 @@ public sealed class AndroidSmsService : ISmsService
         return null;
     }
 
+    // 1-based slot -> subscription id of the SIM in it. Needs no permission, but only exists on Android 11+.
+    private static Dictionary<int, int> ActiveSubscriptionsBySlot(Context context, int slotCount)
+    {
+        var bySlot = new Dictionary<int, int>();
+        if (!OperatingSystem.IsAndroidVersionAtLeast(30) ||
+            context.GetSystemService(Context.TelephonySubscriptionService) is not SubscriptionManager manager)
+            return bySlot;
+
+        for (var slot = 0; slot < slotCount; slot++)
+        {
+            try
+            {
+#pragma warning disable CA1422
+                if (manager.GetSubscriptionIds(slot) is { Length: > 0 } ids && ids[0] > 0)
+                    bySlot[slot + 1] = ids[0];
+#pragma warning restore CA1422
+            }
+            catch
+            {
+            }
+        }
+
+        return bySlot;
+    }
+
     private static void EnsureSimInfoInternal()
     {
         lock (SimLock)
@@ -1899,6 +1924,10 @@ public sealed class AndroidSmsService : ISmsService
         {
         }
 
+        // Guessing subscriptions from SMS history and ids 1/2 can point a slot at a removed SIM's subscription, and
+        // SmsManager then quietly sends from the default SIM: the system's own slot -> subscription mapping wins.
+        var activeSubBySlot = ActiveSubscriptionsBySlot(context, phoneCount);
+        knownSubIds.UnionWith(activeSubBySlot.Values);
         knownSubIds.Add(1);
         knownSubIds.Add(2);
 
@@ -1955,7 +1984,9 @@ public sealed class AndroidSmsService : ISmsService
 
         foreach (var slot in distinctSlots)
         {
-            var matchingSubId = slotMap.FirstOrDefault(kvp => kvp.Value == slot).Key;
+            var matchingSubId = activeSubBySlot.TryGetValue(slot, out var activeSub)
+                ? activeSub
+                : slotMap.FirstOrDefault(kvp => kvp.Value == slot).Key;
             if (matchingSubId <= 0)
                 matchingSubId = slot;
 

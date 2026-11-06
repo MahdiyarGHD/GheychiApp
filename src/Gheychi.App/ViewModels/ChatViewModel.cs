@@ -903,7 +903,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         if (slot <= 0)
             return;
         _simSlot = slot;
-        _simSubId = subId > 0 ? subId : (_simSlotMap != null ? _simSlotMap.FirstOrDefault(kvp => kvp.Value == slot).Key : slot);
+        // The SIM now in that slot, not the subscription the conversation last used: that one may be a SIM since removed.
+        _simSubId = ActiveSims.FirstOrDefault(s => s.SlotIndex == slot)?.SubId
+            ?? (subId > 0 ? subId : (_simSlotMap != null ? _simSlotMap.FirstOrDefault(kvp => kvp.Value == slot).Key : slot));
         OnPropertyChanged(nameof(SimText));
         OnPropertyChanged(nameof(SimBadgeColor));
     }

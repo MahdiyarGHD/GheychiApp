@@ -847,12 +847,7 @@ public partial class ChatView : UserControl
         var count = vm.Items.Count;
         vm.Send();
         if (vm.Items.Count > count)
-        {
-            // With the emoji panel open the box keeps its place, like in Google Messages.
-            if (!_emojiOpen)
-                ReleaseInputFocus();
             ScrollToEnd();
-        }
     }
 
     private void OnSimTap(object? sender, TappedEventArgs e)
