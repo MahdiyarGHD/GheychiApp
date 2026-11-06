@@ -144,6 +144,13 @@ public partial class MainView : UserControl
 
     private void OnAppResumed()
     {
+        // Runs on the first frame and on every return to the app, so a tapped update notification is seen either way.
+        if (AboutScreenRequests.Take())
+        {
+            Select(SettingsIndex);
+            (_pages[SettingsIndex] as SettingsPage)?.OpenAbout();
+        }
+
         _ = Services.UpdateAutoCheck.RunAsync();
         _ = UpdateSpamBadgeAsync();
         // The keyboard and the bars may have changed while the app was away without a callback reaching it.

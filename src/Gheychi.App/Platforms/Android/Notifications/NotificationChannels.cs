@@ -13,6 +13,7 @@ internal static class NotificationChannels
     private static volatile bool _created;
     private static volatile bool _spamDigestCreated;
     private static volatile bool _deliveryCreated;
+    private static volatile bool _updatesCreated;
 
     public static void Ensure(Context context)
     {
@@ -78,6 +79,26 @@ internal static class NotificationChannels
 
         manager.CreateNotificationChannel(channel);
         _deliveryCreated = true;
+    }
+
+    /// <summary>Low importance, like the spam summary: nothing about an update is urgent.</summary>
+    public static void EnsureUpdates(Context context)
+    {
+        if (_updatesCreated || !OperatingSystem.IsAndroidVersionAtLeast(26))
+            return;
+
+        if (context.GetSystemService(Context.NotificationService) is not NotificationManager manager)
+            return;
+
+        var loc = LocalizationManager.Instance;
+        var channel = new NotificationChannel(NotificationIds.ChannelUpdates, loc["Notification_ChannelUpdates"], NotificationImportance.Low)
+        {
+            Description = loc["Notification_ChannelUpdatesDescription"]
+        };
+        channel.SetShowBadge(false);
+
+        manager.CreateNotificationChannel(channel);
+        _updatesCreated = true;
     }
 
     /// <summary>

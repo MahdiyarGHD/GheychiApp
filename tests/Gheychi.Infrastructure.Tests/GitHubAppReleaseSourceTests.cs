@@ -86,6 +86,14 @@ public sealed class GitHubAppReleaseSourceTests
     }
 
     [Fact]
+    public async Task FindApk_ReadsTheApkSize()
+    {
+        var source = new GitHubAppReleaseSource(new HttpClient(new StatusHandler(_ => HttpStatusCode.OK, length: 1234)));
+
+        Assert.Equal(1234, (await source.FindApkAsync(Release))?.Size);
+    }
+
+    [Fact]
     public async Task FindApk_WithAbi_NotAttached_OffersTheUniversalApk()
     {
         var handler = new StatusHandler(url => url == Arm64Apk ? HttpStatusCode.NotFound : HttpStatusCode.Found);
@@ -111,7 +119,7 @@ public sealed class GitHubAppReleaseSourceTests
         await Assert.ThrowsAsync<HttpRequestException>(() => source.FindApkAsync(Release));
     }
 
-    private sealed class StatusHandler(Func<string, HttpStatusCode> status) : HttpMessageHandler
+    private sealed class StatusHandler(Func<string, HttpStatusCode> status, int length = 0) : HttpMessageHandler
     {
         public HttpMethod? Method { get; private set; }
         public List<string> Requested { get; } = [];
@@ -121,7 +129,7 @@ public sealed class GitHubAppReleaseSourceTests
             Method = request.Method;
             var url = request.RequestUri!.AbsoluteUri;
             Requested.Add(url);
-            return Task.FromResult(new HttpResponseMessage(status(url)));
+            return Task.FromResult(new HttpResponseMessage(status(url)) { Content = new ByteArrayContent(new byte[length]) });
         }
     }
 }

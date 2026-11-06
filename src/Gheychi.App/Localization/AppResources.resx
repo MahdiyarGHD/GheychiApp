@@ -715,7 +715,7 @@
     <value>Check for app updates</value>
   </data>
   <data name="Settings_AppUpdateHint" xml:space="preserve">
-    <value>Checked automatically every hour</value>
+    <value>Tap to check now</value>
   </data>
   <data name="Settings_AppUpdateAvailable" xml:space="preserve">
     <value>New version available</value>
@@ -728,6 +728,42 @@
   </data>
   <data name="Settings_AboutUpdateHint" xml:space="preserve">
     <value>Version {0} · update available</value>
+  </data>
+  <data name="Settings_AppUpdateAvailableSizeHint" xml:space="preserve">
+    <value>Version {0} · {1} MB · tap to download</value>
+  </data>
+  <data name="Settings_AppUpdateDownloading" xml:space="preserve">
+    <value>Downloading… {0}% · tap to stop</value>
+  </data>
+  <data name="Settings_AppUpdateReady" xml:space="preserve">
+    <value>Version {0} · tap to install</value>
+  </data>
+  <data name="Settings_AppUpdateInstalling" xml:space="preserve">
+    <value>Installing…</value>
+  </data>
+  <data name="Settings_AppAutoUpdate" xml:space="preserve">
+    <value>Check for updates automatically</value>
+  </data>
+  <data name="Settings_AppAutoUpdateHint" xml:space="preserve">
+    <value>When you open the app, and once a day</value>
+  </data>
+  <data name="AppUpdate_DownloadStopped" xml:space="preserve">
+    <value>Download stopped. Tap to resume</value>
+  </data>
+  <data name="AppUpdate_Damaged" xml:space="preserve">
+    <value>The download was damaged. Tap to try again</value>
+  </data>
+  <data name="AppUpdate_AllowInstall" xml:space="preserve">
+    <value>Allow Gheychi to install updates, then come back</value>
+  </data>
+  <data name="AppUpdate_SignerMismatch" xml:space="preserve">
+    <value>This version is signed differently and can't replace the installed app</value>
+  </data>
+  <data name="AppUpdate_NoStorage" xml:space="preserve">
+    <value>Not enough storage to install the update</value>
+  </data>
+  <data name="AppUpdate_Failed" xml:space="preserve">
+    <value>Update failed. Tap to try again</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
     <value>100% on-device processing</value>
@@ -1046,6 +1082,18 @@
   </data>
   <data name="Notification_ChannelSpamDigestDescription" xml:space="preserve">
     <value>A quiet daily note of the spam that was caught</value>
+  </data>
+  <data name="Notification_ChannelUpdates" xml:space="preserve">
+    <value>App updates</value>
+  </data>
+  <data name="Notification_ChannelUpdatesDescription" xml:space="preserve">
+    <value>When a new version of Gheychi is out</value>
+  </data>
+  <data name="Notification_UpdateTitle" xml:space="preserve">
+    <value>Gheychi {0} is available</value>
+  </data>
+  <data name="Notification_UpdateText" xml:space="preserve">
+    <value>Tap to update</value>
   </data>
   <data name="Spam_DigestTitleTodayOne" xml:space="preserve">
     <value>1 spam message detected today</value>

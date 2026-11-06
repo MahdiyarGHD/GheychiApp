@@ -8,6 +8,7 @@ public sealed class PreferencesAppUpdateState : IAppUpdateState
     private const string AvailableTagKey = "app_update_available_tag_v1";
     private const string AvailablePageKey = "app_update_available_page_v1";
     private const string AvailableDownloadKey = "app_update_available_download_v1";
+    private const string AvailableSizeKey = "app_update_available_size_v1";
 
     public DateTime? LastCheckedUtc
     {
@@ -30,7 +31,10 @@ public sealed class PreferencesAppUpdateState : IAppUpdateState
             var tag = Preferences.Default.Get(AvailableTagKey, string.Empty);
             var page = Preferences.Default.Get(AvailablePageKey, string.Empty);
             var download = Preferences.Default.Get(AvailableDownloadKey, string.Empty);
-            return tag.Length == 0 || page.Length == 0 ? null : new AppRelease(tag, page, download.Length == 0 ? null : download);
+            var size = Preferences.Default.Get(AvailableSizeKey, 0L);
+            return tag.Length == 0 || page.Length == 0
+                ? null
+                : new AppRelease(tag, page, download.Length == 0 ? null : download, size > 0 ? size : null);
         }
         set
         {
@@ -39,12 +43,14 @@ public sealed class PreferencesAppUpdateState : IAppUpdateState
                 Preferences.Default.Remove(AvailableTagKey);
                 Preferences.Default.Remove(AvailablePageKey);
                 Preferences.Default.Remove(AvailableDownloadKey);
+                Preferences.Default.Remove(AvailableSizeKey);
             }
             else
             {
                 Preferences.Default.Set(AvailableTagKey, value.Tag);
                 Preferences.Default.Set(AvailablePageKey, value.PageUrl);
                 Preferences.Default.Set(AvailableDownloadKey, value.DownloadUrl ?? string.Empty);
+                Preferences.Default.Set(AvailableSizeKey, value.Size ?? 0L);
             }
         }
     }

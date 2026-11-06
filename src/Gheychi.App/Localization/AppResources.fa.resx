@@ -715,7 +715,7 @@
     <value>بررسی به‌روزرسانی برنامه</value>
   </data>
   <data name="Settings_AppUpdateHint" xml:space="preserve">
-    <value>هر ساعت خودکار بررسی می‌شود</value>
+    <value>برای بررسی بزنید</value>
   </data>
   <data name="Settings_AppUpdateAvailable" xml:space="preserve">
     <value>نسخه جدید موجود است</value>
@@ -728,6 +728,42 @@
   </data>
   <data name="Settings_AboutUpdateHint" xml:space="preserve">
     <value>نسخه {0} · به‌روزرسانی موجود است</value>
+  </data>
+  <data name="Settings_AppUpdateAvailableSizeHint" xml:space="preserve">
+    <value>نسخه {0} · {1} مگابایت · برای دانلود بزنید</value>
+  </data>
+  <data name="Settings_AppUpdateDownloading" xml:space="preserve">
+    <value>در حال دانلود… {0}٪ · برای توقف بزنید</value>
+  </data>
+  <data name="Settings_AppUpdateReady" xml:space="preserve">
+    <value>نسخه {0} · برای نصب بزنید</value>
+  </data>
+  <data name="Settings_AppUpdateInstalling" xml:space="preserve">
+    <value>در حال نصب…</value>
+  </data>
+  <data name="Settings_AppAutoUpdate" xml:space="preserve">
+    <value>بررسی خودکار به‌روزرسانی</value>
+  </data>
+  <data name="Settings_AppAutoUpdateHint" xml:space="preserve">
+    <value>هنگام باز کردن برنامه و روزی یک بار</value>
+  </data>
+  <data name="AppUpdate_DownloadStopped" xml:space="preserve">
+    <value>دانلود متوقف شد. برای ادامه بزنید</value>
+  </data>
+  <data name="AppUpdate_Damaged" xml:space="preserve">
+    <value>فایل دانلودشده خراب بود. دوباره بزنید</value>
+  </data>
+  <data name="AppUpdate_AllowInstall" xml:space="preserve">
+    <value>اجازه نصب به‌روزرسانی را به قیچی بدهید و برگردید</value>
+  </data>
+  <data name="AppUpdate_SignerMismatch" xml:space="preserve">
+    <value>این نسخه امضای دیگری دارد و نمی‌تواند جایگزین برنامه نصب‌شده شود</value>
+  </data>
+  <data name="AppUpdate_NoStorage" xml:space="preserve">
+    <value>فضای کافی برای نصب به‌روزرسانی نیست</value>
+  </data>
+  <data name="AppUpdate_Failed" xml:space="preserve">
+    <value>به‌روزرسانی انجام نشد. دوباره بزنید</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
     <value>پردازش کامل روی گوشی</value>
@@ -1046,6 +1082,18 @@
   </data>
   <data name="Notification_ChannelSpamDigestDescription" xml:space="preserve">
     <value>یادداشتی بی‌صدا، روزی یک بار، از هرزنامه‌های شناسایی‌شده</value>
+  </data>
+  <data name="Notification_ChannelUpdates" xml:space="preserve">
+    <value>به‌روزرسانی برنامه</value>
+  </data>
+  <data name="Notification_ChannelUpdatesDescription" xml:space="preserve">
+    <value>وقتی نسخه جدید قیچی منتشر می‌شود</value>
+  </data>
+  <data name="Notification_UpdateTitle" xml:space="preserve">
+    <value>قیچی {0} آماده است</value>
+  </data>
+  <data name="Notification_UpdateText" xml:space="preserve">
+    <value>برای به‌روزرسانی بزنید</value>
   </data>
   <data name="Spam_DigestTitleTodayOne" xml:space="preserve">
     <value>امروز ۱ پیامک هرزنامه شناسایی شد</value>
