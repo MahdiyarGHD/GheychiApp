@@ -1866,6 +1866,9 @@
   <data name="Scan_Moved" xml:space="preserve">
     <value>{0} پیام به هرزنامه منتقل شد</value>
   </data>
+  <data name="Scan_Restoring" xml:space="preserve">
+    <value>در حال بازگرداندن {0} پیام به صندوق ورودی…</value>
+  </data>
   <data name="Scan_Undo" xml:space="preserve">
     <value>برگرداندن</value>
   </data>

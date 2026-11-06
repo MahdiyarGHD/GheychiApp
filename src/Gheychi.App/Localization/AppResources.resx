@@ -1866,6 +1866,9 @@
   <data name="Scan_Moved" xml:space="preserve">
     <value>{0} messages moved to Spam</value>
   </data>
+  <data name="Scan_Restoring" xml:space="preserve">
+    <value>Putting {0} messages back in the inbox…</value>
+  </data>
   <data name="Scan_Undo" xml:space="preserve">
     <value>Undo</value>
   </data>

@@ -28,6 +28,7 @@ public partial class SpamPage : UserControl
         {
             DataContext = viewModel;
             viewModel.Items.CollectionChanged += OnItemsChanged;
+            viewModel.Changed += UpdateScanBanner;
             _ = LoadAsync(viewModel);
         }
 
@@ -169,7 +170,8 @@ public partial class SpamPage : UserControl
             ScanStage.Scanning => (string.Format(loc["Scan_Running"], SpamItem.FormatPercent(_scan.Percent)), string.Empty),
             ScanStage.Review => (loc["Scan_Pending"], loc["Scan_Review"]),
             ScanStage.Applying => (loc["Scan_Moving"], string.Empty),
-            _ when _undo is { } undo => (string.Format(loc["Scan_Moved"], LocalizedNumbers.Number(undo.Moved)), loc["Scan_Undo"]),
+            _ when Vm is { RestoringLeft: > 0 } vm => (string.Format(loc["Scan_Restoring"], LocalizedNumbers.Number(vm.RestoringLeft)), string.Empty),
+            _ when _undo is { } undo && Vm?.Batch(undo.ScanId) is not null => (string.Format(loc["Scan_Moved"], LocalizedNumbers.Number(undo.Moved)), loc["Scan_Undo"]),
             _ => null
         };
 

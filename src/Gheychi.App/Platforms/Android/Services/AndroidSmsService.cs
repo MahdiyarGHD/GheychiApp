@@ -1382,6 +1382,23 @@ public sealed class AndroidSmsService : ISmsService
         return threadId;
     }
 
+    public Task<IReadOnlyList<long>> RestoreIncomingManyAsync(IReadOnlyList<SpamMessage> messages) =>
+        Task.Run<IReadOnlyList<long>>(() =>
+        {
+            var context = Platform.AppContext;
+            var stored = new List<long>();
+            foreach (var message in messages)
+            {
+                var millis = new DateTimeOffset(message.Timestamp).ToUnixTimeMilliseconds();
+                if (IncomingSmsHandler.Store(context, message.Address, message.Body, millis, message.SubId, read: !message.Unread) > 0)
+                    stored.Add(message.Id);
+            }
+
+            if (stored.Count > 0)
+                InvalidateSearchCaches();
+            return stored;
+        });
+
     public Task<IReadOnlyList<ReceivedSms>> GetReceivedMessagesAsync(CancellationToken cancellationToken = default) =>
         Task.Run<IReadOnlyList<ReceivedSms>>(() =>
         {

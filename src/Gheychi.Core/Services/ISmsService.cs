@@ -19,6 +19,11 @@ public interface ISmsService
     Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default);
     /// <summary>Puts a received message (e.g. one restored from spam) into the inbox. Returns its thread id, or 0 on failure.</summary>
     Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId, bool read = true);
+    /// <summary>
+    /// Puts quarantined messages into the inbox in one pass, without the per-message refresh
+    /// <see cref="RestoreIncomingAsync"/> raises; the caller refreshes once. Returns the ids of the ones stored.
+    /// </summary>
+    Task<IReadOnlyList<long>> RestoreIncomingManyAsync(IReadOnlyList<SpamMessage> messages);
     /// <summary>Every received message, newest first, leaving out the ones the user locked.</summary>
     Task<IReadOnlyList<ReceivedSms>> GetReceivedMessagesAsync(CancellationToken cancellationToken = default);
     /// <summary>

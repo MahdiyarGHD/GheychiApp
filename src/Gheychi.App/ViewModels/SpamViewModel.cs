@@ -65,6 +65,9 @@ public sealed class SpamViewModel : INotifyPropertyChanged
 
     public int RetentionDays => _settings.RetentionDays;
 
+    /// <summary>How many messages batch restores are still putting back; 0 when none is running.</summary>
+    public int RestoringLeft { get; private set; }
+
     public string SearchText
     {
         get => _searchText;
@@ -162,19 +165,57 @@ public sealed class SpamViewModel : INotifyPropertyChanged
         if (Batch(scanId) is not { } batch)
             return 0;
 
-        var restored = new List<SpamItem>();
-        foreach (var item in batch.Items.ToList())
+        // Off the list at once: while it goes back it cannot be opened, restored or undone again.
+        _batches.Remove(batch);
+        var messages = batch.Items.Select(i => i.Message).Where(m => _restoring.Add(m.Id)).ToList();
+        var left = messages.Count;
+        RestoringLeft += left;
+        ApplyFilter();
+        RaiseChanged();
+
+        var restored = new HashSet<long>();
+        try
         {
-            if (await RestoreOneAsync(item, keep))
-                restored.Add(item);
+            // In chunks, each deleted from quarantine right after it is in the inbox, so a crash leaves at most one
+            // chunk in both places and never loses a message.
+            foreach (var chunk in messages.Chunk(50))
+            {
+                var stored = (await _smsService.RestoreIncomingManyAsync(chunk)).ToHashSet();
+                var back = chunk.Where(m => stored.Contains(m.Id)).ToList();
+                restored.UnionWith(stored);
+                if (keep && back.Count > 0)
+                    await _scans.KeepAsync(back.Select(m => (m.Address, new DateTimeOffset(m.Timestamp).ToUnixTimeMilliseconds())).ToList());
+                await _repository.DeleteAsync(stored);
+
+                left -= chunk.Length;
+                RestoringLeft -= chunk.Length;
+                RaiseChanged();
+            }
+        }
+        finally
+        {
+            RestoringLeft -= left;
+            NotificationActionReceiver.RaiseThreadsChanged(0);
+            if (restored.Count < messages.Count)
+            {
+                // What did not go back is still in quarantine: show it again.
+                _restoring.ExceptWith(messages.Select(m => m.Id).Where(id => !restored.Contains(id)));
+                await ReloadAsync();
+            }
+            else
+            {
+                RaiseChanged();
+            }
         }
 
-        Remove(restored);
         return restored.Count;
     }
 
     public async Task DeleteAsync(SpamItem item)
     {
+        if (_restoring.Contains(item.Id))
+            return;
+
         await _repository.DeleteAsync([item.Id]);
         Remove([item]);
     }
@@ -249,10 +290,19 @@ public sealed class SpamViewModel : INotifyPropertyChanged
                 return (live.Select(m => ToItem(m, now, culture)).ToList(), built);
             });
 
+            // A restore running now has taken its messages off the list; a load must not bring them back.
             _all.Clear();
-            _all.AddRange(items);
+            _all.AddRange(items.Where(i => !_restoring.Contains(i.Id)));
             _batches.Clear();
-            _batches.AddRange(batches);
+            foreach (var batch in batches)
+            {
+                var shown = batch.Items.Where(i => !_restoring.Contains(i.Id)).ToList();
+                if (shown.Count == batch.Items.Count)
+                    _batches.Add(batch);
+                else if (shown.Count > 0)
+                    _batches.Add(BuildBatch(batch.Scan, shown));
+            }
+
             ApplyFilter();
             RaiseChanged();
         }
