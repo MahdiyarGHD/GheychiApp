@@ -53,4 +53,36 @@ public sealed class TrashPolicyTests
         Assert.Equal(2, a.Messages.Count);
         Assert.Equal(Ms(Now.AddHours(-4)), a.Newest.DateMs);
     }
+
+    [Fact]
+    public void Group_OneChatWithTheNumberWrittenTwoWays_IsOneItemUnderTheReceivedForm()
+    {
+        var at = Ms(Now.AddDays(-1));
+        var groups = TrashPolicy.Group(
+        [
+            Message("+989121234567", Now.AddHours(-3), at, SmsStatusHelper.TypeSent),
+            Message("09121234567", Now.AddHours(-2), at, SmsStatusHelper.TypeInbox),
+            Message("+989121234567", Now.AddHours(-1), at, SmsStatusHelper.TypeSent)
+        ]);
+
+        var group = Assert.Single(groups);
+        Assert.Equal("09121234567", group.Address);
+        Assert.Equal(3, group.Messages.Count);
+    }
+
+    [Fact]
+    public void ConversationAddresses_PrefersTheReceivedForm_ElseTheFirst()
+    {
+        var at = Ms(Now);
+        var addresses = TrashPolicy.ConversationAddresses(
+        [
+            Message("+989121234567", Now, at, SmsStatusHelper.TypeSent),
+            Message("09121234567", Now, at, SmsStatusHelper.TypeInbox),
+            Message("+989351112222", Now, at, SmsStatusHelper.TypeSent)
+        ]);
+
+        Assert.Equal(2, addresses.Count);
+        Assert.Equal("09121234567", addresses[PhoneNumberNormalizer.ToLookupKey("+989121234567")]);
+        Assert.Equal("+989351112222", addresses[PhoneNumberNormalizer.ToLookupKey("09351112222")]);
+    }
 }

@@ -1795,11 +1795,14 @@ public sealed class AndroidSmsService : ISmsService
             if (smsUri is null || messages.Count == 0)
                 return 0;
 
+            var threads = RestoreThreads(context, messages);
             var rows = new List<ContentValues>(messages.Count);
             foreach (var message in messages)
             {
                 var type = TrashPolicy.RestoredType(message.Type);
                 var values = new ContentValues();
+                if (threads.TryGetValue(PhoneNumberNormalizer.ToLookupKey(message.Address), out var threadId))
+                    values.Put(Telephony.Sms.InterfaceConsts.ThreadId, threadId);
                 values.Put(Telephony.Sms.InterfaceConsts.Address, message.Address);
                 values.Put(Telephony.Sms.InterfaceConsts.Body, message.Body);
                 values.Put(Telephony.Sms.InterfaceConsts.Date, message.DateMs);
@@ -1830,22 +1833,72 @@ public sealed class AndroidSmsService : ISmsService
             if (restored > 0)
             {
                 InvalidateSearchCaches();
-                var threads = messages
-                    .Select(m => m.Address)
-                    .Distinct()
-                    .Select(address => Telephony.Threads.GetOrCreateThreadId(context, address))
-                    .Where(id => id > 0)
-                    .ToList();
+                var touched = threads.Values.Distinct().ToList();
                 // The inbox and an open chat read the store again.
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    foreach (var threadId in threads)
+                    foreach (var threadId in touched)
                         Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.RaiseSmsReceived(threadId);
                 });
             }
 
             return restored;
         });
+
+    /// <summary>
+    /// The thread each restored conversation goes back into, by lookup key: the chat still open for that number if there
+    /// is one, else a thread for the number as the other side writes it. Pinned like a sent message is (see
+    /// InsertOutgoing): left to the provider, a chat's sent and received messages, whose numbers are often written
+    /// differently, came back as two threads, and the chat showed only one side while search found the rest.
+    /// </summary>
+    private static Dictionary<string, long> RestoreThreads(Context context, IReadOnlyList<TrashedMessage> messages)
+    {
+        var open = ThreadsByLookupKey(context);
+        var threads = new Dictionary<string, long>();
+        foreach (var (key, address) in TrashPolicy.ConversationAddresses(messages))
+        {
+            if (key.Length == 0)
+                continue;
+
+            try
+            {
+                var threadId = open.TryGetValue(key, out var found) ? found : Telephony.Threads.GetOrCreateThreadId(context, address);
+                if (threadId > 0)
+                    threads[key] = threadId;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Finding the thread to restore into failed: {ex}");
+            }
+        }
+
+        return threads;
+    }
+
+    // Single-recipient threads only: a group chat is never one number's conversation.
+    private static Dictionary<string, long> ThreadsByLookupKey(Context context)
+    {
+        var byKey = new Dictionary<string, long>();
+        var canonical = LoadCanonicalAddresses(context);
+        try
+        {
+            var uri = global::Android.Net.Uri.Parse("content://mms-sms/conversations?simple=true");
+            using var cursor = uri == null ? null : context.ContentResolver?.Query(uri, ["_id", "recipient_ids"], null, null, "date DESC");
+            while (cursor is not null && cursor.MoveToNext())
+            {
+                var recipients = cursor.GetString(1)?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (recipients is { Length: 1 } && long.TryParse(recipients[0], out var recipient) &&
+                    canonical.TryGetValue(recipient, out var address))
+                    byKey.TryAdd(PhoneNumberNormalizer.ToLookupKey(address), cursor.GetLong(0));
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading the threads failed: {ex}");
+        }
+
+        return byKey;
+    }
 
     public Task<bool> DeleteMessagesAsync(IReadOnlyList<long> messageIds, CancellationToken cancellationToken = default) =>
         Task.Run(async () =>
