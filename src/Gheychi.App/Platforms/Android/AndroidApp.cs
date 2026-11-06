@@ -19,7 +19,7 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
-        builder = base.CustomizeAppBuilder(builder);
+        builder = Ui.TextLineFixes.Register(base.CustomizeAppBuilder(builder));
 
         var fallbacks = new List<FontFallback>();
         if (AppFonts.PersianLetters is { } persian)
@@ -60,6 +60,7 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
         _ = Task.Run(() => SpamDigestNotifier.Schedule(Platform.AppContext));
         _ = Task.Run(() => Gheychi.App.Platforms.Android.Services.ScheduledSendAlarm.RescheduleAll(Platform.AppContext));
+        _ = Task.Run(() => Gheychi.App.Platforms.Android.Services.UpdateCheckJob.Schedule(Platform.AppContext));
     }
 
     private static readonly TimeSpan ActivityCheckDelay = TimeSpan.FromMilliseconds(300);

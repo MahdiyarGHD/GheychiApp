@@ -22,4 +22,9 @@ public sealed class SpamMessageEntity
     public int ModelVersion { get; set; }
 
     public float Threshold { get; set; }
+
+    [Indexed]
+    public long ScanId { get; set; }
+
+    public bool Unread { get; set; }
 }

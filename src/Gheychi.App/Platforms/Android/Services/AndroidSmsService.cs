@@ -1,3 +1,4 @@
+using System.Globalization;
 using Android;
 using Android.App;
 using Android.App.Roles;
@@ -12,6 +13,7 @@ using AndroidX.Core.Content;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
+using Gheychi.Core.Spam;
 using SmsMessage = Gheychi.Core.Models.SmsMessage;
 
 namespace Gheychi.App.Platforms.Android.Services;
@@ -1366,11 +1368,11 @@ public sealed class AndroidSmsService : ISmsService
         }
     }
 
-    public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId)
+    public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId, bool read = true)
     {
         var context = Platform.AppContext;
         var millis = new DateTimeOffset(timestamp).ToUnixTimeMilliseconds();
-        var threadId = await Task.Run(() => IncomingSmsHandler.Store(context, address, body, millis, subId, read: true));
+        var threadId = await Task.Run(() => IncomingSmsHandler.Store(context, address, body, millis, subId, read));
         if (threadId > 0)
         {
             InvalidateSearchCaches();
@@ -1379,6 +1381,102 @@ public sealed class AndroidSmsService : ISmsService
 
         return threadId;
     }
+
+    public Task<IReadOnlyList<long>> RestoreIncomingManyAsync(IReadOnlyList<SpamMessage> messages) =>
+        Task.Run<IReadOnlyList<long>>(() =>
+        {
+            var context = Platform.AppContext;
+            var stored = new List<long>();
+            foreach (var message in messages)
+            {
+                var millis = new DateTimeOffset(message.Timestamp).ToUnixTimeMilliseconds();
+                if (IncomingSmsHandler.Store(context, message.Address, message.Body, millis, message.SubId, read: !message.Unread) > 0)
+                    stored.Add(message.Id);
+            }
+
+            if (stored.Count > 0)
+                InvalidateSearchCaches();
+            return stored;
+        });
+
+    public Task<IReadOnlyList<ReceivedSms>> GetReceivedMessagesAsync(CancellationToken cancellationToken = default) =>
+        Task.Run<IReadOnlyList<ReceivedSms>>(() =>
+        {
+            var context = Platform.AppContext;
+            var smsUri = Telephony.Sms.ContentUri;
+            if (smsUri == null)
+                return [];
+
+            var contacts = LoadContacts(context);
+            var list = new List<ReceivedSms>();
+            using var cursor = context.ContentResolver?.Query(
+                smsUri,
+                [Telephony.Sms.InterfaceConsts.Id, Telephony.Sms.InterfaceConsts.ThreadId, Telephony.Sms.InterfaceConsts.Address,
+                    Telephony.Sms.InterfaceConsts.Body, Telephony.Sms.InterfaceConsts.Date, Telephony.Sms.InterfaceConsts.Read, "sub_id"],
+                $"{Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox} AND {Telephony.Sms.InterfaceConsts.Locked} = 0",
+                null,
+                $"{Telephony.Sms.InterfaceConsts.Date} DESC");
+            if (cursor == null)
+                return list;
+
+            var subCol = cursor.GetColumnIndex("sub_id");
+            while (cursor.MoveToNext())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var address = cursor.GetString(2) ?? string.Empty;
+                var fromContact = PhoneNumberNormalizer.ToContactKey(address) is { } key && contacts.ContainsKey(key);
+                list.Add(new ReceivedSms(
+                    cursor.GetLong(0),
+                    cursor.GetLong(1),
+                    address,
+                    cursor.GetString(3) ?? string.Empty,
+                    cursor.GetLong(4),
+                    subCol >= 0 && !cursor.IsNull(subCol) ? cursor.GetInt(subCol) : 0,
+                    Unread: cursor.GetInt(5) == 0,
+                    fromContact));
+            }
+
+            return list;
+        }, cancellationToken);
+
+    public Task<IReadOnlyList<long>> RemoveReceivedAsync(IReadOnlyList<ReceivedSms> messages, CancellationToken cancellationToken = default) =>
+        Task.Run<IReadOnlyList<long>>(async () =>
+        {
+            var context = Platform.AppContext;
+            var smsUri = Telephony.Sms.ContentUri;
+            var removed = new List<long>();
+            if (smsUri == null || context.ContentResolver is not { } resolver)
+                return removed;
+
+            // The row must still be the one the user approved: an id the provider reused, or a message edited or locked
+            // since the scan, is left alone.
+            var where = $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Date} = ? " +
+                        $"AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox} AND {Telephony.Sms.InterfaceConsts.Locked} = 0 " +
+                        $"AND {Telephony.Sms.InterfaceConsts.Address} = ? AND {Telephony.Sms.InterfaceConsts.Body} = ? AND {Telephony.Sms.InterfaceConsts.Read} = ?";
+            foreach (var message in messages)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    var args = new[] { message.Id.ToString(CultureInfo.InvariantCulture), message.DateMillis.ToString(CultureInfo.InvariantCulture), message.Address, message.Body, message.Unread ? "0" : "1" };
+                    if (resolver.Delete(smsUri, where, args) > 0)
+                        removed.Add(message.Id);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Removing a scanned message failed: {ex}");
+                }
+            }
+
+            if (removed.Count > 0)
+            {
+                if (_metadataRepo != null)
+                    await _metadataRepo.DeleteAsync(removed);
+                InvalidateSearchCaches();
+            }
+
+            return removed;
+        }, cancellationToken);
 
     /// <summary>A delivery report confirmed the message reached the phone.</summary>
     internal static void MarkDelivered(Context context, long rowId) =>
@@ -1714,11 +1812,14 @@ public sealed class AndroidSmsService : ISmsService
             if (smsUri is null || messages.Count == 0)
                 return 0;
 
+            var threads = RestoreThreads(context, messages);
             var rows = new List<ContentValues>(messages.Count);
             foreach (var message in messages)
             {
                 var type = TrashPolicy.RestoredType(message.Type);
                 var values = new ContentValues();
+                if (threads.TryGetValue(PhoneNumberNormalizer.ToLookupKey(message.Address), out var threadId))
+                    values.Put(Telephony.Sms.InterfaceConsts.ThreadId, threadId);
                 values.Put(Telephony.Sms.InterfaceConsts.Address, message.Address);
                 values.Put(Telephony.Sms.InterfaceConsts.Body, message.Body);
                 values.Put(Telephony.Sms.InterfaceConsts.Date, message.DateMs);
@@ -1749,22 +1850,72 @@ public sealed class AndroidSmsService : ISmsService
             if (restored > 0)
             {
                 InvalidateSearchCaches();
-                var threads = messages
-                    .Select(m => m.Address)
-                    .Distinct()
-                    .Select(address => Telephony.Threads.GetOrCreateThreadId(context, address))
-                    .Where(id => id > 0)
-                    .ToList();
+                var touched = threads.Values.Distinct().ToList();
                 // The inbox and an open chat read the store again.
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    foreach (var threadId in threads)
+                    foreach (var threadId in touched)
                         Gheychi.App.Platforms.Android.Receivers.SmsDeliverReceiver.RaiseSmsReceived(threadId);
                 });
             }
 
             return restored;
         });
+
+    /// <summary>
+    /// The thread each restored conversation goes back into, by lookup key: the chat still open for that number if there
+    /// is one, else a thread for the number as the other side writes it. Pinned like a sent message is (see
+    /// InsertOutgoing): left to the provider, a chat's sent and received messages, whose numbers are often written
+    /// differently, came back as two threads, and the chat showed only one side while search found the rest.
+    /// </summary>
+    private static Dictionary<string, long> RestoreThreads(Context context, IReadOnlyList<TrashedMessage> messages)
+    {
+        var open = ThreadsByLookupKey(context);
+        var threads = new Dictionary<string, long>();
+        foreach (var (key, address) in TrashPolicy.ConversationAddresses(messages))
+        {
+            if (key.Length == 0)
+                continue;
+
+            try
+            {
+                var threadId = open.TryGetValue(key, out var found) ? found : Telephony.Threads.GetOrCreateThreadId(context, address);
+                if (threadId > 0)
+                    threads[key] = threadId;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Finding the thread to restore into failed: {ex}");
+            }
+        }
+
+        return threads;
+    }
+
+    // Single-recipient threads only: a group chat is never one number's conversation.
+    private static Dictionary<string, long> ThreadsByLookupKey(Context context)
+    {
+        var byKey = new Dictionary<string, long>();
+        var canonical = LoadCanonicalAddresses(context);
+        try
+        {
+            var uri = global::Android.Net.Uri.Parse("content://mms-sms/conversations?simple=true");
+            using var cursor = uri == null ? null : context.ContentResolver?.Query(uri, ["_id", "recipient_ids"], null, null, "date DESC");
+            while (cursor is not null && cursor.MoveToNext())
+            {
+                var recipients = cursor.GetString(1)?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (recipients is { Length: 1 } && long.TryParse(recipients[0], out var recipient) &&
+                    canonical.TryGetValue(recipient, out var address))
+                    byKey.TryAdd(PhoneNumberNormalizer.ToLookupKey(address), cursor.GetLong(0));
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Reading the threads failed: {ex}");
+        }
+
+        return byKey;
+    }
 
     public Task<bool> DeleteMessagesAsync(IReadOnlyList<long> messageIds, CancellationToken cancellationToken = default) =>
         Task.Run(async () =>
@@ -1824,6 +1975,31 @@ public sealed class AndroidSmsService : ISmsService
         {
         }
         return null;
+    }
+
+    // 1-based slot -> subscription id of the SIM in it. Needs no permission, but only exists on Android 11+.
+    private static Dictionary<int, int> ActiveSubscriptionsBySlot(Context context, int slotCount)
+    {
+        var bySlot = new Dictionary<int, int>();
+        if (!OperatingSystem.IsAndroidVersionAtLeast(30) ||
+            context.GetSystemService(Context.TelephonySubscriptionService) is not SubscriptionManager manager)
+            return bySlot;
+
+        for (var slot = 0; slot < slotCount; slot++)
+        {
+            try
+            {
+#pragma warning disable CA1422
+                if (manager.GetSubscriptionIds(slot) is { Length: > 0 } ids && ids[0] > 0)
+                    bySlot[slot + 1] = ids[0];
+#pragma warning restore CA1422
+            }
+            catch
+            {
+            }
+        }
+
+        return bySlot;
     }
 
     private static void EnsureSimInfoInternal()
@@ -1899,6 +2075,10 @@ public sealed class AndroidSmsService : ISmsService
         {
         }
 
+        // Guessing subscriptions from SMS history and ids 1/2 can point a slot at a removed SIM's subscription, and
+        // SmsManager then quietly sends from the default SIM: the system's own slot -> subscription mapping wins.
+        var activeSubBySlot = ActiveSubscriptionsBySlot(context, phoneCount);
+        knownSubIds.UnionWith(activeSubBySlot.Values);
         knownSubIds.Add(1);
         knownSubIds.Add(2);
 
@@ -1955,7 +2135,9 @@ public sealed class AndroidSmsService : ISmsService
 
         foreach (var slot in distinctSlots)
         {
-            var matchingSubId = slotMap.FirstOrDefault(kvp => kvp.Value == slot).Key;
+            var matchingSubId = activeSubBySlot.TryGetValue(slot, out var activeSub)
+                ? activeSub
+                : slotMap.FirstOrDefault(kvp => kvp.Value == slot).Key;
             if (matchingSubId <= 0)
                 matchingSubId = slot;
 

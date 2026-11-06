@@ -46,7 +46,11 @@ public sealed class ScheduledSendReceiver : BroadcastReceiver
         if (store is null || sms is null || store.Claim(id) is not { } message)
             return null;
 
-        var result = await sms.SendSmsAsync(message.Address, message.Text, message.SubId);
+        // Stored in the conversation's thread before sending, and the open chat told: its held bubble went at the claim,
+        // and without the thread the provider can file the row under a differently written number, leaving the chat empty.
+        var rowId = await sms.QueueOutgoingAsync(message.Address, message.Text, message.SubId, message.ThreadId);
+        MainThread.BeginInvokeOnMainThread(() => NotificationActionReceiver.RaiseThreadsChanged(message.ThreadId));
+        var result = await sms.SendSmsAsync(message.Address, message.Text, message.SubId, rowId);
         MainThread.BeginInvokeOnMainThread(() => NotificationActionReceiver.RaiseThreadsChanged(message.ThreadId));
         return result;
     }

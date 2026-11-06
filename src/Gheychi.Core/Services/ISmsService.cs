@@ -1,4 +1,5 @@
 using Gheychi.Core.Models;
+using Gheychi.Core.Spam;
 
 namespace Gheychi.Core.Services;
 
@@ -16,8 +17,20 @@ public interface ISmsService
     Task<long> QueueOutgoingAsync(string address, string text, int subId, long threadId = 0, CancellationToken cancellationToken = default);
     /// <summary>Sends the message. With a <paramref name="messageId"/> from <see cref="QueueOutgoingAsync"/> (or a failed message being retried) that row is updated in place; with 0 a row is created.</summary>
     Task<SmsSendResult> SendSmsAsync(string address, string text, int subId, long messageId = 0, CancellationToken cancellationToken = default);
-    /// <summary>Puts a received message (e.g. one restored from spam) into the inbox as read. Returns its thread id, or 0 on failure.</summary>
-    Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId);
+    /// <summary>Puts a received message (e.g. one restored from spam) into the inbox. Returns its thread id, or 0 on failure.</summary>
+    Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId, bool read = true);
+    /// <summary>
+    /// Puts quarantined messages into the inbox in one pass, without the per-message refresh
+    /// <see cref="RestoreIncomingAsync"/> raises; the caller refreshes once. Returns the ids of the ones stored.
+    /// </summary>
+    Task<IReadOnlyList<long>> RestoreIncomingManyAsync(IReadOnlyList<SpamMessage> messages);
+    /// <summary>Every received message, newest first, leaving out the ones the user locked.</summary>
+    Task<IReadOnlyList<ReceivedSms>> GetReceivedMessagesAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Deletes received messages for good, without a trash copy, each only while its row is still exactly as given
+    /// (read state included) and not locked. Returns the ids of the rows it deleted.
+    /// </summary>
+    Task<IReadOnlyList<long>> RemoveReceivedAsync(IReadOnlyList<ReceivedSms> messages, CancellationToken cancellationToken = default);
     /// <summary>Why a failed outgoing message failed, as recorded when it did; null when nothing is known.</summary>
     string? GetFailureReason(long messageId);
     Task<bool> MarkThreadAsReadAsync(long threadId, CancellationToken cancellationToken = default);

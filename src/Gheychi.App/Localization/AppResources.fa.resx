@@ -715,7 +715,7 @@
     <value>بررسی به‌روزرسانی برنامه</value>
   </data>
   <data name="Settings_AppUpdateHint" xml:space="preserve">
-    <value>هر ساعت خودکار بررسی می‌شود</value>
+    <value>برای بررسی بزنید</value>
   </data>
   <data name="Settings_AppUpdateAvailable" xml:space="preserve">
     <value>نسخه جدید موجود است</value>
@@ -728,6 +728,42 @@
   </data>
   <data name="Settings_AboutUpdateHint" xml:space="preserve">
     <value>نسخه {0} · به‌روزرسانی موجود است</value>
+  </data>
+  <data name="Settings_AppUpdateAvailableSizeHint" xml:space="preserve">
+    <value>نسخه {0} · {1} مگابایت · برای دانلود بزنید</value>
+  </data>
+  <data name="Settings_AppUpdateDownloading" xml:space="preserve">
+    <value>در حال دانلود… {0}٪ · برای توقف بزنید</value>
+  </data>
+  <data name="Settings_AppUpdateReady" xml:space="preserve">
+    <value>نسخه {0} · برای نصب بزنید</value>
+  </data>
+  <data name="Settings_AppUpdateInstalling" xml:space="preserve">
+    <value>در حال نصب…</value>
+  </data>
+  <data name="Settings_AppAutoUpdate" xml:space="preserve">
+    <value>بررسی خودکار به‌روزرسانی</value>
+  </data>
+  <data name="Settings_AppAutoUpdateHint" xml:space="preserve">
+    <value>هنگام باز کردن برنامه و روزی یک بار</value>
+  </data>
+  <data name="AppUpdate_DownloadStopped" xml:space="preserve">
+    <value>دانلود متوقف شد. برای ادامه بزنید</value>
+  </data>
+  <data name="AppUpdate_Damaged" xml:space="preserve">
+    <value>فایل دانلودشده خراب بود. دوباره بزنید</value>
+  </data>
+  <data name="AppUpdate_AllowInstall" xml:space="preserve">
+    <value>اجازه نصب به‌روزرسانی را به قیچی بدهید و برگردید</value>
+  </data>
+  <data name="AppUpdate_SignerMismatch" xml:space="preserve">
+    <value>این نسخه امضای دیگری دارد و نمی‌تواند جایگزین برنامه نصب‌شده شود</value>
+  </data>
+  <data name="AppUpdate_NoStorage" xml:space="preserve">
+    <value>فضای کافی برای نصب به‌روزرسانی نیست</value>
+  </data>
+  <data name="AppUpdate_Failed" xml:space="preserve">
+    <value>به‌روزرسانی انجام نشد. دوباره بزنید</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
     <value>پردازش کامل روی گوشی</value>
@@ -1046,6 +1082,18 @@
   </data>
   <data name="Notification_ChannelSpamDigestDescription" xml:space="preserve">
     <value>یادداشتی بی‌صدا، روزی یک بار، از هرزنامه‌های شناسایی‌شده</value>
+  </data>
+  <data name="Notification_ChannelUpdates" xml:space="preserve">
+    <value>به‌روزرسانی برنامه</value>
+  </data>
+  <data name="Notification_ChannelUpdatesDescription" xml:space="preserve">
+    <value>وقتی نسخه جدید قیچی منتشر می‌شود</value>
+  </data>
+  <data name="Notification_UpdateTitle" xml:space="preserve">
+    <value>قیچی {0} آماده است</value>
+  </data>
+  <data name="Notification_UpdateText" xml:space="preserve">
+    <value>برای به‌روزرسانی بزنید</value>
   </data>
   <data name="Spam_DigestTitleTodayOne" xml:space="preserve">
     <value>امروز ۱ پیامک هرزنامه شناسایی شد</value>
@@ -1661,5 +1709,188 @@
   </data>
   <data name="Emoji_Backspace" xml:space="preserve">
     <value>حذف</value>
+  </data>
+  <data name="Settings_ScanHistory" xml:space="preserve">
+    <value>بررسی پیام‌های قبلی</value>
+  </data>
+  <data name="Settings_ScanHistoryHint" xml:space="preserve">
+    <value>پیدا کردن هرزنامه‌های موجود در صندوق پیام</value>
+  </data>
+  <data name="Scan_EmptyLink" xml:space="preserve">
+    <value>بررسی پیام‌هایی که از قبل دارید</value>
+  </data>
+  <data name="Scan_Title" xml:space="preserve">
+    <value>جستجوی هرزنامه</value>
+  </data>
+  <data name="Scan_Intro" xml:space="preserve">
+    <value>پیام‌های دریافتی شما را بررسی می‌کند. تا شما تأیید نکنید، هیچ پیامی جابه‌جا نمی‌شود.</value>
+  </data>
+  <data name="Scan_Total" xml:space="preserve">
+    <value>{0} پیام دریافتی</value>
+  </data>
+  <data name="Scan_Skipped" xml:space="preserve">
+    <value>بررسی نمی‌شوند: مخاطبین، فرستنده‌های مورد اعتماد و {0} پیامی که قبلاً نگه داشتید</value>
+  </data>
+  <data name="Scan_FilterOff" xml:space="preserve">
+    <value>برای بررسی، فیلتر هرزنامه را روشن کنید.</value>
+  </data>
+  <data name="Scan_Start" xml:space="preserve">
+    <value>شروع بررسی</value>
+  </data>
+  <data name="Scan_Reading" xml:space="preserve">
+    <value>در حال خواندن پیام‌ها…</value>
+  </data>
+  <data name="Scan_Progress" xml:space="preserve">
+    <value>{0} از {1} بررسی شد</value>
+  </data>
+  <data name="Scan_Found" xml:space="preserve">
+    <value>{0} مورد پیدا شد</value>
+  </data>
+  <data name="Scan_Background" xml:space="preserve">
+    <value>می‌توانید از این صفحه خارج شوید؛ بررسی ادامه پیدا می‌کند.</value>
+  </data>
+  <data name="Scan_Stop" xml:space="preserve">
+    <value>توقف</value>
+  </data>
+  <data name="Scan_StoppedAt" xml:space="preserve">
+    <value>در {0} از {1} متوقف شد. تاکنون {2} مورد پیدا شد.</value>
+  </data>
+  <data name="Scan_StoppedNote" xml:space="preserve">
+    <value>در {0} از {1} متوقف شد.</value>
+  </data>
+  <data name="Scan_Running" xml:space="preserve">
+    <value>در حال بررسی… {0}</value>
+  </data>
+  <data name="Scan_Review" xml:space="preserve">
+    <value>بازبینی</value>
+  </data>
+  <data name="Scan_Discard" xml:space="preserve">
+    <value>کنار گذاشتن</value>
+  </data>
+  <data name="Scan_DiscardTitle" xml:space="preserve">
+    <value>نتیجه بررسی کنار گذاشته شود؟</value>
+  </data>
+  <data name="Scan_DiscardBody" xml:space="preserve">
+    <value>هیچ پیامی جابه‌جا نمی‌شود. هر وقت خواستید می‌توانید دوباره بررسی کنید.</value>
+  </data>
+  <data name="Scan_None" xml:space="preserve">
+    <value>در {0} پیام، هرزنامه‌ای پیدا نشد</value>
+  </data>
+  <data name="Scan_Done" xml:space="preserve">
+    <value>تمام</value>
+  </data>
+  <data name="Scan_ModelFailed" xml:space="preserve">
+    <value>مدل هرزنامه بارگذاری نشد، بنابراین چیزی بررسی نشد.</value>
+  </data>
+  <data name="Scan_Failed" xml:space="preserve">
+    <value>بررسی کامل نشد. هیچ پیامی جابه‌جا نشد.</value>
+  </data>
+  <data name="Scan_SaveFailed" xml:space="preserve">
+    <value>نتیجه بررسی ذخیره نشد. هیچ پیامی جابه‌جا نشد.</value>
+  </data>
+  <data name="Scan_Unchecked" xml:space="preserve">
+    <value>{0} پیام بررسی نشد.</value>
+  </data>
+  <data name="Scan_Pending" xml:space="preserve">
+    <value>نتیجه بررسی منتظر تأیید شماست</value>
+  </data>
+  <data name="Scan_ReviewHeader" xml:space="preserve">
+    <value>{0} پیام از {1} فرستنده هرزنامه به نظر می‌رسد</value>
+  </data>
+  <data name="Scan_Messages" xml:space="preserve">
+    <value>{0} پیام</value>
+  </data>
+  <data name="Scan_FilterAll" xml:space="preserve">
+    <value>همه</value>
+  </data>
+  <data name="Scan_FilterStrong" xml:space="preserve">
+    <value>احتمالاً هرزنامه</value>
+  </data>
+  <data name="Scan_FilterMaybe" xml:space="preserve">
+    <value>شاید</value>
+  </data>
+  <data name="Scan_SectionMaybe" xml:space="preserve">
+    <value>شاید هرزنامه، انتخاب نشده</value>
+  </data>
+  <data name="Scan_MoreFromSender" xml:space="preserve">
+    <value>{0} پیام دیگر از این فرستنده، انتخاب نشده</value>
+  </data>
+  <data name="Scan_NotSpam" xml:space="preserve">
+    <value>هرزنامه نیست</value>
+  </data>
+  <data name="Scan_NotSpamAsk" xml:space="preserve">
+    <value>گزارش شود تا فیلتر بهتر شود؟ شماره‌ها و لینک‌ها حذف می‌شوند.</value>
+  </data>
+  <data name="Scan_Report" xml:space="preserve">
+    <value>گزارش</value>
+  </data>
+  <data name="Scan_NoReport" xml:space="preserve">
+    <value>نیازی به گزارش نیست</value>
+  </data>
+  <data name="Scan_ReportSpam" xml:space="preserve">
+    <value>گزارش به‌عنوان هرزنامه</value>
+  </data>
+  <data name="Scan_ReportNotSpam" xml:space="preserve">
+    <value>گزارش به‌عنوان پیام معمولی</value>
+  </data>
+  <data name="Scan_TrustSender" xml:space="preserve">
+    <value>اعتماد به این فرستنده</value>
+  </data>
+  <data name="Scan_Move" xml:space="preserve">
+    <value>انتقال {0} پیام به هرزنامه</value>
+  </data>
+  <data name="Scan_MoveTitle" xml:space="preserve">
+    <value>{0} پیام به هرزنامه منتقل شود؟</value>
+  </data>
+  <data name="Scan_MoveBody" xml:space="preserve">
+    <value>این پیام‌ها در {0} حذف می‌شوند، مگر این‌که بازگردانده شوند.</value>
+  </data>
+  <data name="Scan_MoveThreads" xml:space="preserve">
+    <value>{0} گفتگو از صندوق پیام حذف می‌شود.</value>
+  </data>
+  <data name="Scan_AlsoReport" xml:space="preserve">
+    <value>این پیام‌ها به‌عنوان هرزنامه گزارش هم شوند</value>
+  </data>
+  <data name="Scan_MoveConfirm" xml:space="preserve">
+    <value>انتقال</value>
+  </data>
+  <data name="Scan_Moving" xml:space="preserve">
+    <value>در حال انتقال پیام‌ها به هرزنامه…</value>
+  </data>
+  <data name="Scan_NeedDefaultApp" xml:space="preserve">
+    <value>برای جابه‌جایی پیام‌ها، قیچی را برنامه پیش‌فرض پیامک کنید.</value>
+  </data>
+  <data name="Scan_NothingMoved" xml:space="preserve">
+    <value>هیچ پیامی جابه‌جا نشد: پیام‌ها پس از بررسی تغییر کرده بودند. برای بررسی دوباره، اسکن را تکرار کنید.</value>
+  </data>
+  <data name="Scan_Moved" xml:space="preserve">
+    <value>{0} پیام به هرزنامه منتقل شد</value>
+  </data>
+  <data name="Scan_Restoring" xml:space="preserve">
+    <value>در حال بازگرداندن {0} پیام به صندوق ورودی…</value>
+  </data>
+  <data name="Scan_Undo" xml:space="preserve">
+    <value>برگرداندن</value>
+  </data>
+  <data name="Scan_Changed" xml:space="preserve">
+    <value>{0} پیام پس از بررسی تغییر کرده بود و جابه‌جا نشد</value>
+  </data>
+  <data name="Scan_BatchTitle" xml:space="preserve">
+    <value>هرزنامه‌های بررسی‌شده</value>
+  </data>
+  <data name="Scan_Batch" xml:space="preserve">
+    <value>بررسی · {0} پیام از {1} فرستنده</value>
+  </data>
+  <data name="Scan_BatchExpires" xml:space="preserve">
+    <value>حذف در {0}</value>
+  </data>
+  <data name="Scan_RestoreAll" xml:space="preserve">
+    <value>بازگرداندن همه</value>
+  </data>
+  <data name="Scan_RestoreAllTitle" xml:space="preserve">
+    <value>{0} پیام بازگردانده شود؟</value>
+  </data>
+  <data name="Scan_RestoreAllBody" xml:space="preserve">
+    <value>این پیام‌ها به صندوق پیام برمی‌گردند و بررسی‌های بعدی آن‌ها را نادیده می‌گیرند.</value>
   </data>
 </root>

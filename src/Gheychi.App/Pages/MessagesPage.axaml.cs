@@ -38,6 +38,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private bool _animating;
     private long _lastScrollTime;
     private bool _timerRunning;
+    private bool _topRestorePending;
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
     private bool _holdFired;
@@ -99,6 +100,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         viewModel.PreloadTargets = VisibleThreads;
         viewModel.FolderSwitching += () => ThreadsList.Opacity = 0;
         viewModel.FolderSwitched += OnFolderSwitched;
+        viewModel.Threads.CollectionChanged += (_, _) => KeepInboxAtTop();
         Ui.RowPressEffect.Attach(ThreadsList, ThreadsHost);
 
         // The pinned rows at the top of the list are moved by holding one and dragging it.
@@ -455,6 +457,24 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     }
 
     private void OnScrollSettled() => Vm?.StartChatPreload();
+
+    // A row put at the top while the list sits at the top lands above the viewport: the scroll presenter's anchoring
+    // follows the old first row at a sub-pixel offset, and the panel keeps that row at 0 when its viewport start is not
+    // exactly 0. ScrollIntoView(0) re-anchors the panel on row 0 (ScrollToHome is a no-op when the offset is already 0).
+    // Read here, before the change is laid out, so the offset is still the one the user left.
+    private void KeepInboxAtTop()
+    {
+        if (_topRestorePending || _threadsScroll is not { Offset.Y: < 1 })
+            return;
+
+        _topRestorePending = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            _topRestorePending = false;
+            if (ThreadsList.ItemCount > 0)
+                ThreadsList.ScrollIntoView(0);
+        }, DispatcherPriority.Loaded);
+    }
 
     // What is on screen plus a few rows each side, which the list has built or is about to build. Read from the scroll
     // viewer, not from the last scroll event: the list can be showing rows it was never scrolled to.

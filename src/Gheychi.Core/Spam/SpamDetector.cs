@@ -13,16 +13,20 @@ public sealed class SpamDetector(ISpamClassifier classifier, ISpamSettings setti
     /// <summary>The verdict when the message is spam; null when it is not, or when it could not be classified.</summary>
     public async Task<SpamVerdict?> DetectAsync(string address, string body, bool fromContact, CancellationToken cancellationToken = default)
     {
-        if (!settings.Enabled || fromContact || string.IsNullOrWhiteSpace(body) || trustedSenders.IsTrusted(address))
-            return null;
-
-        // A reaction (Liked "...") quotes a message of the conversation; it is never spam, and quarantining it
-        // made the reaction vanish for the person who sent it.
-        if (ReactionHelper.TryParseReaction(body).IsReaction)
+        if (!settings.Enabled || IsExempt(address, body, fromContact))
             return null;
 
         var threshold = settings.Threshold;
         var score = await classifier.ScoreAsync(body, cancellationToken);
         return score is { } s && s.Probability >= threshold ? new SpamVerdict(s, threshold) : null;
     }
+
+    /// <summary>Messages never judged, whatever the model would say: from a contact or trusted sender, empty, or a reaction.</summary>
+    public bool IsExempt(string address, string body, bool fromContact) =>
+        fromContact
+        || string.IsNullOrWhiteSpace(body)
+        || trustedSenders.IsTrusted(address)
+        // A reaction (Liked "...") quotes a message of the conversation; it is never spam, and quarantining it
+        // made the reaction vanish for the person who sent it.
+        || ReactionHelper.TryParseReaction(body).IsReaction;
 }

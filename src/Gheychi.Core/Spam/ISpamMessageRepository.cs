@@ -13,5 +13,9 @@ public interface ISpamMessageRepository
 
     Task DeleteAllAsync();
 
+    /// <summary>Messages caught on arrival before <paramref name="cutoff"/>. A scan's messages expire with their scan instead.</summary>
     Task DeleteOlderThanAsync(DateTime cutoff);
+
+    /// <summary>Every message the given history scans moved here. False when they could not be deleted.</summary>
+    Task<bool> DeleteScansAsync(IEnumerable<long> scanIds);
 }

@@ -84,7 +84,7 @@
                 ClipToBounds="True"
                 Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
         <Grid RowDefinitions="Auto,*">
-            <Grid Grid.Row="0" Margin="22,20,10,6" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+            <Grid Grid.Row="0" Margin="22,20,10,6" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
                 <TextBlock Grid.Row="0"
                            Grid.Column="0"
                            Text="{loc:Translate Spam_PageTitle}"
@@ -112,6 +112,38 @@
                            Text="{Binding Subtitle}"
                            FontSize="12"
                            Foreground="#8A8F98" />
+                <!-- The history scan: running, waiting for review, or just moved messages (with undo) -->
+                <Border x:Name="ScanBanner"
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        IsVisible="False"
+                        Margin="-8,10,2,0"
+                        Padding="14,0,4,0"
+                        Height="42"
+                        CornerRadius="14"
+                        Background="{theme:AccentBrush Role=Soft}"
+                        Tapped="OnScanBannerTapped">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <ui:Icon Data="{StaticResource Icon.ManageSearch}" Width="18" Height="18" Margin="0,0,10,0" Foreground="{theme:AccentBrush Role=Text}" />
+                        <TextBlock x:Name="ScanBannerText"
+                                   Grid.Column="1"
+                                   FontSize="13"
+                                   Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1"
+                                   VerticalAlignment="Center" />
+                        <TextBlock x:Name="ScanBannerAction"
+                                   Grid.Column="2"
+                                   Padding="10,8"
+                                   FontSize="13"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:AccentBrush Role=Text}"
+                                   Background="Transparent"
+                                   VerticalAlignment="Center"
+                                   Tapped="OnScanBannerActionTapped" />
+                    </Grid>
+                </Border>
             </Grid>
         <Panel x:Name="SpamHost" Grid.Row="1">
         <ItemsControl x:Name="SpamList"
@@ -200,6 +232,59 @@
                             </Grid>
                         </DataTemplate>
                     </vm:SpamTemplateSelector.SpamTemplate>
+                    <vm:SpamTemplateSelector.BatchTemplate>
+                        <DataTemplate x:DataType="vm:SpamBatchItem">
+                            <!-- Everything one history scan moved here, opened as a list of its own -->
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto,Auto" Background="Transparent">
+                                <Border Grid.Row="0"
+                                        Grid.RowSpan="2"
+                                        Grid.Column="0"
+                                        Width="40"
+                                        Height="40"
+                                        Margin="16,10,12,0"
+                                        CornerRadius="20"
+                                        Background="{theme:AccentBrush Role=Soft}"
+                                        VerticalAlignment="Top">
+                                    <ui:Icon Data="{StaticResource Icon.ManageSearch}" Width="21" Height="21" Foreground="{theme:AccentBrush Role=Text}" />
+                                </Border>
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="1"
+                                           Margin="0,9,8,0"
+                                           Text="{Binding Title}"
+                                           FontSize="15"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="2"
+                                           Margin="0,9,8,0"
+                                           Text="{Binding Clock}"
+                                           FontSize="11.5"
+                                           Foreground="#8A8F98"
+                                           VerticalAlignment="Center" />
+                                <ui:Icon Grid.Row="0"
+                                         Grid.RowSpan="2"
+                                         Grid.Column="3"
+                                         Margin="0,0,14,0"
+                                         Data="{StaticResource Icon.ChevronRight}"
+                                         Width="18"
+                                         Height="18"
+                                         Foreground="#8A8F98"
+                                         VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="1"
+                                           Grid.Column="1"
+                                           Grid.ColumnSpan="2"
+                                           Margin="0,1,12,9"
+                                           Text="{Binding Subtitle}"
+                                           FontSize="13"
+                                           Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1" />
+                            </Grid>
+                        </DataTemplate>
+                    </vm:SpamTemplateSelector.BatchTemplate>
                 </vm:SpamTemplateSelector>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
@@ -222,11 +307,20 @@
                        Foreground="#8A8F98"
                        TextAlignment="Center"
                        TextWrapping="Wrap" />
+            <TextBlock Text="{loc:Translate Scan_EmptyLink}"
+                       Padding="12,8"
+                       HorizontalAlignment="Center"
+                       FontSize="13.5"
+                       FontFamily="{x:Static app:AppFonts.Bold}"
+                       Foreground="{theme:AccentBrush Role=Text}"
+                       Background="Transparent"
+                       Tapped="OnScanLinkTapped" />
         </StackPanel>
         </Panel>
         </Grid>
         </Border>
 
+        <controls:SpamScanView x:Name="ScanView" Grid.RowSpan="4" />
         <controls:SpamOverlay x:Name="Overlay" Grid.RowSpan="4" />
     </Grid>
 </UserControl>

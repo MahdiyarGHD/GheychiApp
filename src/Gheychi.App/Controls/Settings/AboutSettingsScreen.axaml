@@ -34,16 +34,29 @@
                                 <TextBlock x:Name="VersionValue" Grid.Column="1" Classes="valueChipLabel" />
                             </Grid>
                         </Border>
-                        <Border Classes="divider" Margin="16,0" />
-                        <Border Classes="row" Tapped="OnAppUpdateTapped">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
-                                <StackPanel Spacing="1" VerticalAlignment="Center">
-                                    <TextBlock x:Name="AppUpdateTitle" Classes="rowTitle" />
-                                    <TextBlock x:Name="AppUpdateHint" Classes="rowSubtitle" />
-                                </StackPanel>
-                                <ui:Icon Grid.Column="1" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
-                            </Grid>
-                        </Border>
+                        <StackPanel x:Name="AppUpdateRows">
+                            <Border Classes="divider" Margin="16,0" />
+                            <Border Classes="row" Tapped="OnAppUpdateTapped">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                    <StackPanel Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock x:Name="AppUpdateTitle" Classes="rowTitle" />
+                                        <TextBlock x:Name="AppUpdateHint" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="1" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                                </Grid>
+                            </Border>
+                            <Border Classes="divider" Margin="16,0" />
+                            <Border Classes="row">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                    <StackPanel Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{loc:Translate Settings_AppAutoUpdate}" Classes="rowTitle" />
+                                        <TextBlock Text="{loc:Translate Settings_AppAutoUpdateHint}" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ToggleButton x:Name="AutoUpdateSwitch" Grid.Column="1" Classes="setting"
+                                                  IsCheckedChanged="OnAutoUpdateToggled" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
                         <Border Classes="divider" Margin="16,0" />
                         <Border Classes="row">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">

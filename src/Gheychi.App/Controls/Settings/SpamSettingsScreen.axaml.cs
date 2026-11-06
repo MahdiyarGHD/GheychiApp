@@ -240,6 +240,8 @@ public partial class SpamSettingsScreen : SettingsScreen
 
     private void OnAnalyticsTapped(object? sender, TappedEventArgs e) => RequestOpen(SettingsScreenKind.Analytics);
 
+    private void OnScanHistoryTapped(object? sender, TappedEventArgs e) => MainView.Current?.ShowSpamScan();
+
     private async void OnModelUpdateTapped(object? sender, TappedEventArgs e)
     {
         if (_modelUpdates is not { } updates || _updating)

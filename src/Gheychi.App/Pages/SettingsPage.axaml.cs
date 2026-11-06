@@ -78,6 +78,12 @@ public partial class SettingsPage : UserControl
         Open(SettingsScreenKind.Spam);
     }
 
+    public void OpenAbout()
+    {
+        CloseAll();
+        Open(SettingsScreenKind.About);
+    }
+
     /// <summary>The tab came into view (legacy OnAppearing).</summary>
     public void OnShown()
     {

@@ -45,24 +45,25 @@ public sealed class GitHubAppReleaseSource : IAppReleaseSource
         string?[] candidates = _abi is null ? [release.DownloadUrl] : [ApkUrl(release.Tag, _abi), release.DownloadUrl];
         foreach (var url in candidates.Distinct())
         {
-            if (url is not null && await ExistsAsync(url, cancellationToken))
-                return release with { DownloadUrl = url };
+            if (url is not null && await LengthAsync(url, cancellationToken) is { } length)
+                return release with { DownloadUrl = url, Size = length > 0 ? length : null };
         }
 
         return null;
     }
 
-    private async Task<bool> ExistsAsync(string url, CancellationToken cancellationToken)
+    /// <summary>Null when the file is not published; otherwise its length, 0 when the server did not say.</summary>
+    private async Task<long?> LengthAsync(string url, CancellationToken cancellationToken)
     {
         // Only the headers: GitHub answers a missing asset with 404 and a published one with a redirect to the file.
         using var request = new HttpRequestMessage(HttpMethod.Head, url);
         using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-            return false;
+            return null;
         if ((int)response.StatusCode >= 400)
             throw new HttpRequestException($"Checking {url} returned {(int)response.StatusCode}.");
 
-        return true;
+        return response.Content.Headers.ContentLength ?? 0;
     }
 
     // The feed holds only the newest releases (10), which is all a check needs.

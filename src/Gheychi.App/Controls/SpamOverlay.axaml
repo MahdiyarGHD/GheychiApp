@@ -87,12 +87,18 @@
                     <Border Padding="12,10"
                             CornerRadius="14"
                             Background="{theme:ThemeBrush Light=#F3F3F3, Dark=#262728}">
-                        <TextBlock x:Name="MenuPreview"
-                                   FontSize="13"
-                                   Foreground="{theme:ThemeBrush Light=#404346, Dark=#C9CDD3}"
-                                   TextTrimming="CharacterEllipsis"
-                                   TextWrapping="Wrap"
-                                   MaxLines="8" />
+                        <!-- Read-only box rather than a label: holding on a word selects it, for copying part of the message -->
+                        <TextBox x:Name="MenuPreview"
+                                 Classes="plain"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MaxLines="8"
+                                 VerticalContentAlignment="Top"
+                                 FontSize="13"
+                                 Foreground="{theme:ThemeBrush Light=#404346, Dark=#C9CDD3}"
+                                 CaretBrush="Transparent"
+                                 ScrollViewer.VerticalScrollBarVisibility="Hidden" />
                     </Border>
                 </StackPanel>
 

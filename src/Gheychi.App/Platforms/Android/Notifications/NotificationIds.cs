@@ -14,12 +14,17 @@ internal static class NotificationIds
     public const string DeliveryGroupKey = "com.evergreen.gheychiapp.DELIVERY";
     public const string DeliveryTag = "delivery";
 
+    public const string ChannelUpdates = "app_updates";
+    public const string UpdateGroupKey = "com.evergreen.gheychiapp.UPDATES";
+    public const int UpdateId = 3;
+
     public const string ExtraThreadId = "com.evergreen.gheychiapp.THREAD_ID";
     public const string ExtraAddress = "com.evergreen.gheychiapp.ADDRESS";
     public const string ExtraName = "com.evergreen.gheychiapp.NAME";
     public const string ExtraSubId = "com.evergreen.gheychiapp.SUB_ID";
     public const string ExtraCode = "com.evergreen.gheychiapp.CODE";
     public const string ExtraOpenSpamTab = "com.evergreen.gheychiapp.OPEN_SPAM_TAB";
+    public const string ExtraOpenAbout = "com.evergreen.gheychiapp.OPEN_ABOUT";
 
     private const int ThreadIdBase = 1000;
     private const int ThreadIdRange = 100_000_000;

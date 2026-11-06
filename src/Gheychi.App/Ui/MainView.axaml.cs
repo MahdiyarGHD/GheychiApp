@@ -144,6 +144,13 @@ public partial class MainView : UserControl
 
     private void OnAppResumed()
     {
+        // Runs on the first frame and on every return to the app, so a tapped update notification is seen either way.
+        if (AboutScreenRequests.Take())
+        {
+            Select(SettingsIndex);
+            (_pages[SettingsIndex] as SettingsPage)?.OpenAbout();
+        }
+
         _ = Services.UpdateAutoCheck.RunAsync();
         _ = UpdateSpamBadgeAsync();
         // The keyboard and the bars may have changed while the app was away without a callback reaching it.
@@ -184,6 +191,13 @@ public partial class MainView : UserControl
     public void SelectMessagesTab() => Select(MessagesIndex);
 
     public void ShowSpam() => Select(SpamIndex);
+
+    /// <summary>The Spam tab with the history scan open on it.</summary>
+    public void ShowSpamScan()
+    {
+        Select(SpamIndex);
+        (_pages[SpamIndex] as SpamPage)?.OpenScan();
+    }
 
     public void ShowSettings() => Select(SettingsIndex);
 
@@ -508,7 +522,7 @@ public partial class MainView : UserControl
                 return;
 
             var seen = SpamDigestPreferences.SeenAt;
-            var any = (await Task.Run(() => repository.GetAllAsync())).Any(m => seen is null || m.Timestamp > seen);
+            var any = (await Task.Run(() => repository.GetAllAsync())).Any(m => m.ScanId == 0 && (seen is null || m.Timestamp > seen));
             MainThread.BeginInvokeOnMainThread(() => SetSpamBadge(any && _selected != SpamIndex));
         }
         catch (Exception ex)

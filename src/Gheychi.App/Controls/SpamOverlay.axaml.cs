@@ -26,6 +26,19 @@ public partial class SpamOverlay : UserControl
         var services = IPlatformApplication.Current?.Services;
         _viewModel = services?.GetService(typeof(SpamViewModel)) as SpamViewModel;
         _dates = services?.GetService(typeof(IDateFormattingService)) as IDateFormattingService ?? new DateFormattingService();
+        // Takes focus from the message box when the card goes, so its selection handles go with it.
+        Focusable = true;
+    }
+
+    // The handles live in a layer above the page and only go once the box loses focus with its menu closed.
+    private void DropPreviewSelection()
+    {
+        TextMenu.Close(MenuPreview);
+        if (MenuPreview.SelectionStart == MenuPreview.SelectionEnd && !MenuPreview.IsFocused)
+            return;
+
+        MenuPreview.ClearSelection();
+        Focus();
     }
 
     public void ShowMenu(SpamItem item)
@@ -95,6 +108,8 @@ public partial class SpamOverlay : UserControl
     private async Task OpenAsync(Control card, bool fromBottom)
     {
         var generation = ++_generation;
+        if (card != MenuSheet)
+            DropPreviewSelection();
         foreach (var other in (ReadOnlySpan<Control>)[MenuSheet, InfoCard, ConfirmCard])
         {
             if (other != card)
@@ -124,6 +139,7 @@ public partial class SpamOverlay : UserControl
         var generation = ++_generation;
         var card = _openCard;
         _openCard = null;
+        DropPreviewSelection();
         _confirm?.TrySetResult(false);
         _confirm = null;
         _backdropShown = false;

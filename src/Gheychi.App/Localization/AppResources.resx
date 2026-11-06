@@ -715,7 +715,7 @@
     <value>Check for app updates</value>
   </data>
   <data name="Settings_AppUpdateHint" xml:space="preserve">
-    <value>Checked automatically every hour</value>
+    <value>Tap to check now</value>
   </data>
   <data name="Settings_AppUpdateAvailable" xml:space="preserve">
     <value>New version available</value>
@@ -728,6 +728,42 @@
   </data>
   <data name="Settings_AboutUpdateHint" xml:space="preserve">
     <value>Version {0} · update available</value>
+  </data>
+  <data name="Settings_AppUpdateAvailableSizeHint" xml:space="preserve">
+    <value>Version {0} · {1} MB · tap to download</value>
+  </data>
+  <data name="Settings_AppUpdateDownloading" xml:space="preserve">
+    <value>Downloading… {0}% · tap to stop</value>
+  </data>
+  <data name="Settings_AppUpdateReady" xml:space="preserve">
+    <value>Version {0} · tap to install</value>
+  </data>
+  <data name="Settings_AppUpdateInstalling" xml:space="preserve">
+    <value>Installing…</value>
+  </data>
+  <data name="Settings_AppAutoUpdate" xml:space="preserve">
+    <value>Check for updates automatically</value>
+  </data>
+  <data name="Settings_AppAutoUpdateHint" xml:space="preserve">
+    <value>When you open the app, and once a day</value>
+  </data>
+  <data name="AppUpdate_DownloadStopped" xml:space="preserve">
+    <value>Download stopped. Tap to resume</value>
+  </data>
+  <data name="AppUpdate_Damaged" xml:space="preserve">
+    <value>The download was damaged. Tap to try again</value>
+  </data>
+  <data name="AppUpdate_AllowInstall" xml:space="preserve">
+    <value>Allow Gheychi to install updates, then come back</value>
+  </data>
+  <data name="AppUpdate_SignerMismatch" xml:space="preserve">
+    <value>This version is signed differently and can't replace the installed app</value>
+  </data>
+  <data name="AppUpdate_NoStorage" xml:space="preserve">
+    <value>Not enough storage to install the update</value>
+  </data>
+  <data name="AppUpdate_Failed" xml:space="preserve">
+    <value>Update failed. Tap to try again</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
     <value>100% on-device processing</value>
@@ -1046,6 +1082,18 @@
   </data>
   <data name="Notification_ChannelSpamDigestDescription" xml:space="preserve">
     <value>A quiet daily note of the spam that was caught</value>
+  </data>
+  <data name="Notification_ChannelUpdates" xml:space="preserve">
+    <value>App updates</value>
+  </data>
+  <data name="Notification_ChannelUpdatesDescription" xml:space="preserve">
+    <value>When a new version of Gheychi is out</value>
+  </data>
+  <data name="Notification_UpdateTitle" xml:space="preserve">
+    <value>Gheychi {0} is available</value>
+  </data>
+  <data name="Notification_UpdateText" xml:space="preserve">
+    <value>Tap to update</value>
   </data>
   <data name="Spam_DigestTitleTodayOne" xml:space="preserve">
     <value>1 spam message detected today</value>
@@ -1661,5 +1709,188 @@
   </data>
   <data name="Emoji_Backspace" xml:space="preserve">
     <value>Delete</value>
+  </data>
+  <data name="Settings_ScanHistory" xml:space="preserve">
+    <value>Scan existing messages</value>
+  </data>
+  <data name="Settings_ScanHistoryHint" xml:space="preserve">
+    <value>Find spam already in your inbox</value>
+  </data>
+  <data name="Scan_EmptyLink" xml:space="preserve">
+    <value>Scan messages you already have</value>
+  </data>
+  <data name="Scan_Title" xml:space="preserve">
+    <value>Scan for spam</value>
+  </data>
+  <data name="Scan_Intro" xml:space="preserve">
+    <value>Checks the messages you've received. Nothing is moved until you approve it.</value>
+  </data>
+  <data name="Scan_Total" xml:space="preserve">
+    <value>{0} received messages</value>
+  </data>
+  <data name="Scan_Skipped" xml:space="preserve">
+    <value>Skipped: contacts, trusted senders and {0} messages you kept before</value>
+  </data>
+  <data name="Scan_FilterOff" xml:space="preserve">
+    <value>Turn on the spam filter to scan.</value>
+  </data>
+  <data name="Scan_Start" xml:space="preserve">
+    <value>Start scan</value>
+  </data>
+  <data name="Scan_Reading" xml:space="preserve">
+    <value>Reading your messages…</value>
+  </data>
+  <data name="Scan_Progress" xml:space="preserve">
+    <value>Checked {0} of {1}</value>
+  </data>
+  <data name="Scan_Found" xml:space="preserve">
+    <value>{0} found</value>
+  </data>
+  <data name="Scan_Background" xml:space="preserve">
+    <value>You can leave this screen; the scan keeps going.</value>
+  </data>
+  <data name="Scan_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Scan_StoppedAt" xml:space="preserve">
+    <value>Stopped at {0} of {1}. {2} found so far.</value>
+  </data>
+  <data name="Scan_StoppedNote" xml:space="preserve">
+    <value>Stopped at {0} of {1}.</value>
+  </data>
+  <data name="Scan_Running" xml:space="preserve">
+    <value>Scanning… {0}</value>
+  </data>
+  <data name="Scan_Review" xml:space="preserve">
+    <value>Review</value>
+  </data>
+  <data name="Scan_Discard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="Scan_DiscardTitle" xml:space="preserve">
+    <value>Discard the scan results?</value>
+  </data>
+  <data name="Scan_DiscardBody" xml:space="preserve">
+    <value>Nothing will be moved. You can scan again any time.</value>
+  </data>
+  <data name="Scan_None" xml:space="preserve">
+    <value>No spam found in {0} messages</value>
+  </data>
+  <data name="Scan_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Scan_ModelFailed" xml:space="preserve">
+    <value>The spam model couldn't be loaded, so nothing was checked.</value>
+  </data>
+  <data name="Scan_Failed" xml:space="preserve">
+    <value>The scan couldn't finish. Nothing was moved.</value>
+  </data>
+  <data name="Scan_SaveFailed" xml:space="preserve">
+    <value>The scan results couldn't be saved. Nothing was moved.</value>
+  </data>
+  <data name="Scan_Unchecked" xml:space="preserve">
+    <value>{0} messages couldn't be checked.</value>
+  </data>
+  <data name="Scan_Pending" xml:space="preserve">
+    <value>Scan results are waiting for your review</value>
+  </data>
+  <data name="Scan_ReviewHeader" xml:space="preserve">
+    <value>{0} messages from {1} senders look like spam</value>
+  </data>
+  <data name="Scan_Messages" xml:space="preserve">
+    <value>{0} messages</value>
+  </data>
+  <data name="Scan_FilterAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Scan_FilterStrong" xml:space="preserve">
+    <value>Likely spam</value>
+  </data>
+  <data name="Scan_FilterMaybe" xml:space="preserve">
+    <value>Maybe</value>
+  </data>
+  <data name="Scan_SectionMaybe" xml:space="preserve">
+    <value>Maybe spam, not selected</value>
+  </data>
+  <data name="Scan_MoreFromSender" xml:space="preserve">
+    <value>{0} more from this sender, not selected</value>
+  </data>
+  <data name="Scan_NotSpam" xml:space="preserve">
+    <value>Not spam</value>
+  </data>
+  <data name="Scan_NotSpamAsk" xml:space="preserve">
+    <value>Report it so the filter improves? Numbers and links are removed.</value>
+  </data>
+  <data name="Scan_Report" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="Scan_NoReport" xml:space="preserve">
+    <value>No need to report</value>
+  </data>
+  <data name="Scan_ReportSpam" xml:space="preserve">
+    <value>Report as spam</value>
+  </data>
+  <data name="Scan_ReportNotSpam" xml:space="preserve">
+    <value>Report as not spam</value>
+  </data>
+  <data name="Scan_TrustSender" xml:space="preserve">
+    <value>Trust this sender</value>
+  </data>
+  <data name="Scan_Move" xml:space="preserve">
+    <value>Move {0} to Spam</value>
+  </data>
+  <data name="Scan_MoveTitle" xml:space="preserve">
+    <value>Move {0} messages to Spam?</value>
+  </data>
+  <data name="Scan_MoveBody" xml:space="preserve">
+    <value>They'll be deleted on {0} unless you restore them.</value>
+  </data>
+  <data name="Scan_MoveThreads" xml:space="preserve">
+    <value>{0} conversations will leave the inbox.</value>
+  </data>
+  <data name="Scan_AlsoReport" xml:space="preserve">
+    <value>Also report them as spam</value>
+  </data>
+  <data name="Scan_MoveConfirm" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="Scan_Moving" xml:space="preserve">
+    <value>Moving messages to Spam…</value>
+  </data>
+  <data name="Scan_NeedDefaultApp" xml:space="preserve">
+    <value>Make Gheychi your default SMS app to move messages.</value>
+  </data>
+  <data name="Scan_NothingMoved" xml:space="preserve">
+    <value>No message was moved: they changed since the scan. Scan again to check them.</value>
+  </data>
+  <data name="Scan_Moved" xml:space="preserve">
+    <value>{0} messages moved to Spam</value>
+  </data>
+  <data name="Scan_Restoring" xml:space="preserve">
+    <value>Putting {0} messages back in the inbox…</value>
+  </data>
+  <data name="Scan_Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Scan_Changed" xml:space="preserve">
+    <value>{0} messages changed since the scan and were left in place</value>
+  </data>
+  <data name="Scan_BatchTitle" xml:space="preserve">
+    <value>Scanned spam</value>
+  </data>
+  <data name="Scan_Batch" xml:space="preserve">
+    <value>Scan · {0} messages from {1} senders</value>
+  </data>
+  <data name="Scan_BatchExpires" xml:space="preserve">
+    <value>Deleted on {0}</value>
+  </data>
+  <data name="Scan_RestoreAll" xml:space="preserve">
+    <value>Restore all</value>
+  </data>
+  <data name="Scan_RestoreAllTitle" xml:space="preserve">
+    <value>Restore {0} messages?</value>
+  </data>
+  <data name="Scan_RestoreAllBody" xml:space="preserve">
+    <value>They go back to the inbox, and later scans leave them out.</value>
   </data>
 </root>
