@@ -53,7 +53,7 @@ internal static class SpamDigestNotifier
         {
             if (SpamDigestPreferences.Enabled
                 && IPlatformApplication.Current?.Services.GetService<ISpamMessageRepository>() is { } repository
-                && SpamDigests.Compose(await repository.GetAllAsync(), since, now, SpamDigestPreferences.SeenAt) is { } digest)
+                && SpamDigests.Compose((await repository.GetAllAsync()).Where(m => m.ScanId == 0), since, now, SpamDigestPreferences.SeenAt) is { } digest)
                 Show(context, digest);
         }
         catch (Exception ex)

@@ -28,6 +28,7 @@ internal static class AppServices
         services.Singleton<ISpamMessageRepository>(() => new SpamMessageRepository(databasePath));
         services.Singleton<ITrashRepository>(() => new TrashRepository(databasePath));
         services.Singleton<ISpamStatsRepository>(() => new SpamStatRepository(databasePath));
+        services.Singleton<ISpamScanStore>(() => new SpamScanStore(databasePath));
         services.Singleton(() => new SpamModelStore(
             Path.Combine(FileSystem.AppDataDirectory, "spam-model"),
             name => FileSystem.OpenAppPackageFileAsync($"SpamModel/{name}")));
@@ -66,9 +67,20 @@ internal static class AppServices
         services.Singleton(() => new SpamViewModel(
             services.Get<ISpamMessageRepository>(),
             services.Get<ISpamStatsRepository>(),
+            services.Get<ISpamScanStore>(),
             services.Get<ISmsService>(),
             services.Get<ISpamSettings>(),
             services.Get<ITrustedSenders>(),
+            services.Get<IDateFormattingService>()));
+        services.Singleton(() => new SpamScanViewModel(
+            new SpamHistoryScan(services.Get<ISpamClassifier>(), services.Get<SpamDetector>()),
+            services.Get<ISpamScanStore>(),
+            services.Get<ISpamMessageRepository>(),
+            services.Get<ISpamStatsRepository>(),
+            services.Get<ISmsService>(),
+            services.Get<ISpamSettings>(),
+            services.Get<ITrustedSenders>(),
+            services.Get<SpamViewModel>(),
             services.Get<IDateFormattingService>()));
 
         services.Singleton(() => new ActiveChatState());

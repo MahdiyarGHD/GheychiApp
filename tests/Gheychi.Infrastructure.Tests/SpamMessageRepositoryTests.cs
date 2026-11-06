@@ -73,4 +73,36 @@ public sealed class SpamMessageRepositoryTests : IDisposable
         await repository.DeleteAllAsync();
         Assert.Empty(await repository.GetAllAsync());
     }
+
+    [Fact]
+    public async Task SpamStoredBeforeTheScanColumn_StillExpiresByAge()
+    {
+        var old = new SQLite.SQLiteConnection(_dbPath);
+        old.Execute("CREATE TABLE SpamMessage (Id integer primary key autoincrement not null, Address varchar, Body varchar, TimestampMillis integer, SubId integer, Score float, ModelVersion integer, Threshold float)");
+        old.Execute("INSERT INTO SpamMessage (Address, Body, TimestampMillis, SubId, Score, ModelVersion, Threshold) VALUES ('a', 'expired', 1000, 0, 0.9, 1, 0.85)");
+        old.Close();
+
+        var repository = new SpamMessageRepository(_dbPath);
+        Assert.Equal(0, Assert.Single(await repository.GetAllAsync()).ScanId);
+
+        await repository.DeleteOlderThanAsync(new DateTime(2026, 1, 1));
+        Assert.Empty(await repository.GetAllAsync());
+    }
+
+    [Fact]
+    public async Task ScannedMessages_OutliveAgeRetention_AndGoWithTheirScan()
+    {
+        var repository = new SpamMessageRepository(_dbPath);
+        var now = new DateTime(2026, 10, 6, 12, 0, 0, DateTimeKind.Local);
+        var scanned = new SpamMessage(0, "a", "old ad", now.AddYears(-2), 1, 0.97f, 4, 0.9f, ScanId: 3, Unread: true);
+
+        var scannedId = await repository.AddAsync(scanned);
+        var otherScanId = await repository.AddAsync(scanned with { Body = "other", ScanId = 4 });
+
+        await repository.DeleteOlderThanAsync(now.AddDays(-30));
+        Assert.Equal(scanned with { Id = scannedId }, (await repository.GetAllAsync()).Single(m => m.ScanId == 3));
+
+        await repository.DeleteScansAsync([3]);
+        Assert.Equal([otherScanId], (await repository.GetAllAsync()).Select(m => m.Id));
+    }
 }

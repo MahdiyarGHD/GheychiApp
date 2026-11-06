@@ -1,0 +1,368 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:app="clr-namespace:Gheychi.App"
+             xmlns:loc="clr-namespace:Gheychi.App.Localization"
+             xmlns:theme="clr-namespace:Gheychi.App.Theming"
+             xmlns:ui="clr-namespace:Gheychi.App.Ui"
+             xmlns:vm="clr-namespace:Gheychi.App.ViewModels"
+             x:Class="Gheychi.App.Controls.SpamScanView"
+             IsVisible="False">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.body">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#4B4E52, Dark=#B5BAC2}" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#8A8F98" />
+        </Style>
+        <Style Selector="Border.primary">
+            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="Padding" Value="26,0" />
+            <Setter Property="CornerRadius" Value="23" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{theme:AccentBrush Role=Solid}" />
+        </Style>
+        <Style Selector="Border.primary > TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.chip">
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{theme:ThemeBrush Light=#DADCE0, Dark=#3A3D42}" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.chip > TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{theme:ThemeBrush Light=#3C4043, Dark=#C9CDD3}" />
+        </Style>
+        <Style Selector="Border.chip.on">
+            <Setter Property="Background" Value="{theme:AccentBrush Role=Soft}" />
+            <Setter Property="BorderBrush" Value="{theme:AccentBrush Role=Soft}" />
+        </Style>
+        <Style Selector="Border.chip.on > TextBlock">
+            <Setter Property="FontFamily" Value="{x:Static app:AppFonts.Bold}" />
+            <Setter Property="Foreground" Value="{theme:AccentBrush Role=Text}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto" Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="10,10,10,6" ColumnDefinitions="Auto,*,Auto">
+            <Border Width="40"
+                    Height="40"
+                    CornerRadius="20"
+                    Background="Transparent"
+                    VerticalAlignment="Center"
+                    Tapped="OnBackTapped">
+                <ui:Icon Data="{StaticResource Icon.Back}" Width="20" Height="20" Foreground="{theme:ThemeBrush Light=#2E3032, Dark=#E8EAED}" />
+            </Border>
+            <TextBlock x:Name="TitleText"
+                       Grid.Column="1"
+                       Margin="6,0"
+                       FontSize="18"
+                       FontFamily="{x:Static app:AppFonts.Bold}"
+                       Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
+                       TextTrimming="CharacterEllipsis"
+                       MaxLines="1"
+                       VerticalAlignment="Center" />
+            <TextBlock x:Name="HeaderAction"
+                       Grid.Column="2"
+                       IsVisible="False"
+                       Padding="10,8"
+                       FontSize="13"
+                       FontFamily="{x:Static app:AppFonts.Bold}"
+                       Foreground="{theme:AccentBrush Role=Text}"
+                       Background="Transparent"
+                       VerticalAlignment="Center"
+                       Tapped="OnHeaderActionTapped" />
+        </Grid>
+
+        <Panel Grid.Row="1">
+
+            <!-- Start -->
+            <StackPanel x:Name="StartPanel" Margin="28,40,28,0" Spacing="12" VerticalAlignment="Top">
+                <Border Width="64" Height="64" CornerRadius="32" HorizontalAlignment="Center"
+                        Background="{theme:AccentBrush Role=Soft}">
+                    <ui:Icon Data="{StaticResource Icon.ManageSearch}" Width="30" Height="30" Foreground="{theme:AccentBrush Role=Text}" />
+                </Border>
+                <TextBlock Classes="body" Text="{loc:Translate Scan_Intro}" />
+                <TextBlock x:Name="StartTotal"
+                           FontSize="15"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           TextAlignment="Center"
+                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                <TextBlock x:Name="StartSkipped" Classes="muted" />
+                <TextBlock x:Name="StartWarning" Classes="muted" />
+                <Border x:Name="StartButton" Classes="primary" Margin="0,10,0,0" Tapped="OnStartTapped">
+                    <TextBlock Text="{loc:Translate Scan_Start}" />
+                </Border>
+            </StackPanel>
+
+            <!-- Scanning -->
+            <StackPanel x:Name="ScanningPanel" Margin="28,56,28,0" Spacing="12" VerticalAlignment="Top" IsVisible="False">
+                <TextBlock x:Name="ScanPercent"
+                           FontSize="34"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           TextAlignment="Center"
+                           Foreground="{theme:AccentBrush Role=Text}" />
+                <ProgressBar x:Name="ScanBar"
+                             Minimum="0"
+                             Maximum="1"
+                             Height="6"
+                             MinHeight="6"
+                             CornerRadius="3"
+                             Foreground="{theme:AccentBrush Role=Solid}"
+                             Background="{theme:ThemeBrush Light=#1F000000, Dark=#26FFFFFF}" />
+                <TextBlock x:Name="ScanProgress" Classes="body" />
+                <TextBlock x:Name="ScanFound"
+                           FontSize="15"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           TextAlignment="Center"
+                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                <TextBlock Classes="muted" Text="{loc:Translate Scan_Background}" />
+                <Border Classes="primary" Margin="0,10,0,0" Tapped="OnStopTapped"
+                        Background="{theme:ThemeBrush Light=#FBEAEA, Dark=#3A2323}">
+                    <TextBlock Text="{loc:Translate Scan_Stop}" Foreground="#D64545" />
+                </Border>
+            </StackPanel>
+
+            <!-- Applying -->
+            <StackPanel x:Name="ApplyingPanel" Margin="28,72,28,0" Spacing="14" VerticalAlignment="Top" IsVisible="False">
+                <ProgressBar IsIndeterminate="True"
+                             Height="6"
+                             MinHeight="6"
+                             CornerRadius="3"
+                             Foreground="{theme:AccentBrush Role=Solid}"
+                             Background="{theme:ThemeBrush Light=#1F000000, Dark=#26FFFFFF}" />
+                <TextBlock Classes="body" Text="{loc:Translate Scan_Moving}" />
+            </StackPanel>
+
+            <!-- Finished without anything to review -->
+            <StackPanel x:Name="FinishedPanel" Margin="28,56,28,0" Spacing="12" VerticalAlignment="Top" IsVisible="False">
+                <Border Width="64" Height="64" CornerRadius="32" HorizontalAlignment="Center"
+                        Background="{theme:ThemeBrush Light=#E9EAEB, Dark=#2D2E30}">
+                    <ui:Icon Data="{StaticResource Icon.Shield}" Width="28" Height="28" Foreground="{theme:AccentBrush Role=Text}" />
+                </Border>
+                <TextBlock x:Name="FinishedText"
+                           FontSize="15"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                <TextBlock x:Name="FinishedDetail" Classes="muted" />
+                <Border Classes="primary" Margin="0,10,0,0" Tapped="OnDoneTapped">
+                    <TextBlock Text="{loc:Translate Scan_Done}" />
+                </Border>
+            </StackPanel>
+
+            <!-- Review, or a moved batch -->
+            <Grid x:Name="ListPanel" RowDefinitions="Auto,*" IsVisible="False">
+                <StackPanel Grid.Row="0" Margin="22,4,22,8" Spacing="6">
+                    <TextBlock x:Name="ListHeader"
+                               FontSize="15"
+                               FontFamily="{x:Static app:AppFonts.Bold}"
+                               TextWrapping="Wrap"
+                               Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                    <TextBlock x:Name="ListNote" FontSize="12.5" TextWrapping="Wrap" Foreground="#8A8F98" />
+                    <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                        <Border x:Name="ChipAll" Classes="chip" Tapped="OnChipTapped">
+                            <TextBlock Text="{loc:Translate Scan_FilterAll}" />
+                        </Border>
+                        <Border x:Name="ChipStrong" Classes="chip" Tapped="OnChipTapped">
+                            <TextBlock Text="{loc:Translate Scan_FilterStrong}" />
+                        </Border>
+                        <Border x:Name="ChipMaybe" Classes="chip" Tapped="OnChipTapped">
+                            <TextBlock Text="{loc:Translate Scan_FilterMaybe}" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Grid.Row="1"
+                        CornerRadius="28,28,0,0"
+                        ClipToBounds="True"
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+                    <ItemsControl x:Name="RowList" Margin="0,10,0,0" Tapped="OnRowsTapped">
+                        <ItemsControl.Template>
+                            <ControlTemplate TargetType="ItemsControl">
+                                <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <vm:ScanTemplateSelector>
+                                <vm:ScanTemplateSelector.NoteTemplate>
+                                    <DataTemplate x:DataType="vm:ScanNoteRow">
+                                        <TextBlock Text="{Binding Text}"
+                                                   ui:TextDirection.KeepSide="True"
+                                                   Padding="22,12,22,4"
+                                                   FontSize="12"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   Foreground="{theme:AccentBrush Role=Text}" />
+                                    </DataTemplate>
+                                </vm:ScanTemplateSelector.NoteTemplate>
+
+                                <vm:ScanTemplateSelector.GroupTemplate>
+                                    <DataTemplate x:DataType="vm:ScanGroupRow">
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" Background="Transparent">
+                                            <!-- The check: its own tap target, wider than it looks -->
+                                            <Border Grid.RowSpan="2"
+                                                    Tag="check"
+                                                    Padding="16,10,10,10"
+                                                    Background="Transparent"
+                                                    IsVisible="{Binding ShowCheck}"
+                                                    VerticalAlignment="Center">
+                                                <Border Width="22"
+                                                        Height="22"
+                                                        CornerRadius="11"
+                                                        BorderThickness="1.5"
+                                                        Background="{Binding CheckFill}"
+                                                        BorderBrush="{Binding CheckStroke}">
+                                                    <TextBlock Text="{Binding CheckGlyph}"
+                                                               FontSize="12"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                                </Border>
+                                            </Border>
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="16,10,8,0"
+                                                       Text="{Binding Sender}"
+                                                       ui:TextDirection.KeepSide="True"
+                                                       FontSize="15"
+                                                       FontFamily="{x:Static app:AppFonts.Bold}"
+                                                       Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxLines="1" />
+                                            <TextBlock Grid.Column="2"
+                                                       Margin="0,10,4,0"
+                                                       Text="{Binding CountText}"
+                                                       FontSize="12"
+                                                       Foreground="#8A8F98"
+                                                       VerticalAlignment="Center" />
+                                            <ui:Icon Grid.Column="3"
+                                                     Grid.RowSpan="2"
+                                                     Margin="4,0,16,0"
+                                                     Data="{StaticResource Icon.ChevronRight}"
+                                                     Width="18"
+                                                     Height="18"
+                                                     Foreground="#8A8F98"
+                                                     VerticalAlignment="Center"
+                                                     RenderTransform="{Binding Chevron}" />
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="1"
+                                                       Grid.ColumnSpan="2"
+                                                       Margin="16,2,8,10"
+                                                       Text="{Binding Snippet}"
+                                                       ui:TextDirection.KeepSide="True"
+                                                       FontSize="13"
+                                                       Foreground="{theme:ThemeBrush Light=#5E6166, Dark=#9AA0AB}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxLines="1" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </vm:ScanTemplateSelector.GroupTemplate>
+
+                                <vm:ScanTemplateSelector.MessageTemplate>
+                                    <DataTemplate x:DataType="vm:ScanMessageRow">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto"
+                                              Margin="28,0,0,0"
+                                              Background="Transparent"
+                                              Opacity="{Binding RowOpacity}">
+                                            <Border Grid.RowSpan="2"
+                                                    Padding="14,10,8,10"
+                                                    Background="Transparent"
+                                                    IsVisible="{Binding ShowCheck}"
+                                                    VerticalAlignment="Top">
+                                                <Border Width="20"
+                                                        Height="20"
+                                                        CornerRadius="10"
+                                                        BorderThickness="1.5"
+                                                        Background="{Binding CheckFill}"
+                                                        BorderBrush="{Binding CheckStroke}">
+                                                    <TextBlock Text="{Binding CheckGlyph}"
+                                                               FontSize="11"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                                </Border>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="14,10,0,0">
+                                                <TextBlock Text="{Binding Percent}"
+                                                           FontSize="11.5"
+                                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                                           Foreground="{Binding ConfidenceColor}" />
+                                                <TextBlock Text="{Binding DateText}" FontSize="11.5" Foreground="#8A8F98" />
+                                            </StackPanel>
+                                            <!-- Actions: not spam, report as spam, trust or delete -->
+                                            <Border Grid.Column="2"
+                                                    Grid.RowSpan="2"
+                                                    Tag="more"
+                                                    Width="44"
+                                                    Height="44"
+                                                    Margin="0,0,6,0"
+                                                    Background="Transparent"
+                                                    VerticalAlignment="Center">
+                                                <ui:Icon Data="{StaticResource Icon.MoreVert}" Width="18" Height="18" Foreground="#8A8F98" />
+                                            </Border>
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="1"
+                                                       Margin="14,2,4,10"
+                                                       Text="{Binding Body}"
+                                                       ui:TextDirection.KeepSide="True"
+                                                       FontSize="13.5"
+                                                       Foreground="{theme:ThemeBrush Light=#3C4043, Dark=#C9CDD3}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       TextWrapping="Wrap"
+                                                       MaxLines="3" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </vm:ScanTemplateSelector.MessageTemplate>
+                            </vm:ScanTemplateSelector>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </Grid>
+        </Panel>
+
+        <!-- Review actions -->
+        <Border x:Name="BottomBar"
+                Grid.Row="2"
+                IsVisible="False"
+                Padding="16,10,16,14"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{theme:ThemeBrush Light=#E3E5E8, Dark=#2A2E35}"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+            <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Text="{loc:Translate Scan_Discard}"
+                           Padding="12,12"
+                           FontSize="14"
+                           FontFamily="{x:Static app:AppFonts.Bold}"
+                           Foreground="{theme:ThemeBrush Light=#595C61, Dark=#9AA0AB}"
+                           Background="Transparent"
+                           VerticalAlignment="Center"
+                           Tapped="OnDiscardTapped" />
+                <Border x:Name="MoveButton" Grid.Column="1" Classes="primary" HorizontalAlignment="Right" Tapped="OnMoveTapped">
+                    <TextBlock x:Name="MoveText" />
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

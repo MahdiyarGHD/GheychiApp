@@ -51,7 +51,9 @@ public sealed class SpamMessageRepository : ISpamMessageRepository
                 SubId = message.SubId,
                 Score = message.Score,
                 ModelVersion = message.ModelVersion,
-                Threshold = message.Threshold
+                Threshold = message.Threshold,
+                ScanId = message.ScanId,
+                Unread = message.Unread
             };
             await _db.InsertAsync(entity);
             return entity.Id;
@@ -117,11 +119,30 @@ public sealed class SpamMessageRepository : ISpamMessageRepository
         {
             await EnsureInitializedAsync();
             var cutoffMillis = new DateTimeOffset(cutoff).ToUnixTimeMilliseconds();
-            await _db.ExecuteAsync("DELETE FROM SpamMessage WHERE TimestampMillis < ?", cutoffMillis);
+            await _db.ExecuteAsync("DELETE FROM SpamMessage WHERE IFNULL(ScanId, 0) = 0 AND TimestampMillis < ?", cutoffMillis);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Deleting old spam failed: {ex}");
+        }
+    }
+
+    public async Task<bool> DeleteScansAsync(IEnumerable<long> scanIds)
+    {
+        try
+        {
+            await EnsureInitializedAsync();
+            foreach (var chunk in scanIds.Distinct().Where(id => id > 0).Chunk(400))
+            {
+                var placeholders = string.Join(",", chunk.Select(_ => "?"));
+                await _db.ExecuteAsync($"DELETE FROM SpamMessage WHERE ScanId IN ({placeholders})", chunk.Cast<object>().ToArray());
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Deleting scanned spam failed: {ex}");
+            return false;
         }
     }
 
@@ -134,5 +155,7 @@ public sealed class SpamMessageRepository : ISpamMessageRepository
             entity.SubId,
             entity.Score,
             entity.ModelVersion,
-            entity.Threshold);
+            entity.Threshold,
+            entity.ScanId,
+            entity.Unread);
 }

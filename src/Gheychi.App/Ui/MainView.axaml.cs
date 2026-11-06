@@ -192,6 +192,13 @@ public partial class MainView : UserControl
 
     public void ShowSpam() => Select(SpamIndex);
 
+    /// <summary>The Spam tab with the history scan open on it.</summary>
+    public void ShowSpamScan()
+    {
+        Select(SpamIndex);
+        (_pages[SpamIndex] as SpamPage)?.OpenScan();
+    }
+
     public void ShowSettings() => Select(SettingsIndex);
 
     private void OnChatLaunchRequested() => MainThread.BeginInvokeOnMainThread(() => Select(MessagesIndex));
@@ -515,7 +522,7 @@ public partial class MainView : UserControl
                 return;
 
             var seen = SpamDigestPreferences.SeenAt;
-            var any = (await Task.Run(() => repository.GetAllAsync())).Any(m => seen is null || m.Timestamp > seen);
+            var any = (await Task.Run(() => repository.GetAllAsync())).Any(m => m.ScanId == 0 && (seen is null || m.Timestamp > seen));
             MainThread.BeginInvokeOnMainThread(() => SetSpamBadge(any && _selected != SpamIndex));
         }
         catch (Exception ex)

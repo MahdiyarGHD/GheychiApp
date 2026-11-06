@@ -1,3 +1,4 @@
+using System.Globalization;
 using Android;
 using Android.App;
 using Android.App.Roles;
@@ -12,6 +13,7 @@ using AndroidX.Core.Content;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.Core.Models;
 using Gheychi.Core.Services;
+using Gheychi.Core.Spam;
 using SmsMessage = Gheychi.Core.Models.SmsMessage;
 
 namespace Gheychi.App.Platforms.Android.Services;
@@ -1366,11 +1368,11 @@ public sealed class AndroidSmsService : ISmsService
         }
     }
 
-    public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId)
+    public async Task<long> RestoreIncomingAsync(string address, string body, DateTime timestamp, int subId, bool read = true)
     {
         var context = Platform.AppContext;
         var millis = new DateTimeOffset(timestamp).ToUnixTimeMilliseconds();
-        var threadId = await Task.Run(() => IncomingSmsHandler.Store(context, address, body, millis, subId, read: true));
+        var threadId = await Task.Run(() => IncomingSmsHandler.Store(context, address, body, millis, subId, read));
         if (threadId > 0)
         {
             InvalidateSearchCaches();
@@ -1379,6 +1381,85 @@ public sealed class AndroidSmsService : ISmsService
 
         return threadId;
     }
+
+    public Task<IReadOnlyList<ReceivedSms>> GetReceivedMessagesAsync(CancellationToken cancellationToken = default) =>
+        Task.Run<IReadOnlyList<ReceivedSms>>(() =>
+        {
+            var context = Platform.AppContext;
+            var smsUri = Telephony.Sms.ContentUri;
+            if (smsUri == null)
+                return [];
+
+            var contacts = LoadContacts(context);
+            var list = new List<ReceivedSms>();
+            using var cursor = context.ContentResolver?.Query(
+                smsUri,
+                [Telephony.Sms.InterfaceConsts.Id, Telephony.Sms.InterfaceConsts.ThreadId, Telephony.Sms.InterfaceConsts.Address,
+                    Telephony.Sms.InterfaceConsts.Body, Telephony.Sms.InterfaceConsts.Date, Telephony.Sms.InterfaceConsts.Read, "sub_id"],
+                $"{Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox} AND {Telephony.Sms.InterfaceConsts.Locked} = 0",
+                null,
+                $"{Telephony.Sms.InterfaceConsts.Date} DESC");
+            if (cursor == null)
+                return list;
+
+            var subCol = cursor.GetColumnIndex("sub_id");
+            while (cursor.MoveToNext())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var address = cursor.GetString(2) ?? string.Empty;
+                var fromContact = PhoneNumberNormalizer.ToContactKey(address) is { } key && contacts.ContainsKey(key);
+                list.Add(new ReceivedSms(
+                    cursor.GetLong(0),
+                    cursor.GetLong(1),
+                    address,
+                    cursor.GetString(3) ?? string.Empty,
+                    cursor.GetLong(4),
+                    subCol >= 0 && !cursor.IsNull(subCol) ? cursor.GetInt(subCol) : 0,
+                    Unread: cursor.GetInt(5) == 0,
+                    fromContact));
+            }
+
+            return list;
+        }, cancellationToken);
+
+    public Task<IReadOnlyList<long>> RemoveReceivedAsync(IReadOnlyList<ReceivedSms> messages, CancellationToken cancellationToken = default) =>
+        Task.Run<IReadOnlyList<long>>(async () =>
+        {
+            var context = Platform.AppContext;
+            var smsUri = Telephony.Sms.ContentUri;
+            var removed = new List<long>();
+            if (smsUri == null || context.ContentResolver is not { } resolver)
+                return removed;
+
+            // The row must still be the one the user approved: an id the provider reused, or a message edited or locked
+            // since the scan, is left alone.
+            var where = $"{Telephony.Sms.InterfaceConsts.Id} = ? AND {Telephony.Sms.InterfaceConsts.Date} = ? " +
+                        $"AND {Telephony.Sms.InterfaceConsts.Type} = {(int)SmsMessageType.Inbox} AND {Telephony.Sms.InterfaceConsts.Locked} = 0 " +
+                        $"AND {Telephony.Sms.InterfaceConsts.Address} = ? AND {Telephony.Sms.InterfaceConsts.Body} = ? AND {Telephony.Sms.InterfaceConsts.Read} = ?";
+            foreach (var message in messages)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    var args = new[] { message.Id.ToString(CultureInfo.InvariantCulture), message.DateMillis.ToString(CultureInfo.InvariantCulture), message.Address, message.Body, message.Unread ? "0" : "1" };
+                    if (resolver.Delete(smsUri, where, args) > 0)
+                        removed.Add(message.Id);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Removing a scanned message failed: {ex}");
+                }
+            }
+
+            if (removed.Count > 0)
+            {
+                if (_metadataRepo != null)
+                    await _metadataRepo.DeleteAsync(removed);
+                InvalidateSearchCaches();
+            }
+
+            return removed;
+        }, cancellationToken);
 
     /// <summary>A delivery report confirmed the message reached the phone.</summary>
     internal static void MarkDelivered(Context context, long rowId) =>
