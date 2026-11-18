@@ -30,7 +30,7 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
         if (SystemEmoji.Fallbacks is { } emoji)
         {
             fallbacks.AddRange(emoji);
-            builder = builder.AfterSetup(_ =>
+            builder = builder.AfterSetup(setUp =>
             {
                 // Made here first: FontManager.Current creates and registers itself without a lock, and the worker
                 // below racing the UI thread for it could lose the emoji collection.
