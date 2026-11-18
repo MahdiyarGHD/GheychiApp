@@ -30,6 +30,18 @@ public partial class AboutSettingsScreen : SettingsScreen
         VersionValue.Text = SettingsUi.Digits($"{AppInfo.Current.VersionString} ({AppInfo.Current.BuildString})");
     }
 
+    // Undocumented on purpose: hands over the timings of the last launches (StartupTiming) for a performance report.
+    // A double tap, so a habitual tap on the version never replaces what is on the clipboard (a copied code).
+    private void OnVersionDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        var history = StartupTiming.ReadHistory();
+        if (history.Length == 0)
+            return;
+
+        _ = Clipboard.Default.SetTextAsync(history);
+        Toast.Show(LocalizationManager.Instance["Chat_Copied"]);
+    }
+
     public override void OnShown()
     {
         _binding = true;

@@ -58,6 +58,7 @@ public partial class MainView : UserControl
 
     public MainView()
     {
+        StartupTiming.Mark("mainview.start");
         InitializeComponent();
         Current = this;
         // Insets are applied by ApplyInsets, which lets Root paint under the system bars.
@@ -73,6 +74,7 @@ public partial class MainView : UserControl
         AddHandler(PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(PointerCaptureLostEvent, OnPointerCaptureLost, RoutingStrategies.Tunnel, handledEventsToo: true);
+        StartupTiming.Mark("mainview.end");
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)

@@ -37,8 +37,13 @@ internal static class SystemEmoji
     /// <summary>Reads the file into the engine; call once the platform is set up.</summary>
     public static void Register()
     {
-        if (UpdatedFontPath is not null)
-            FontManager.Current.AddFontCollection(new EmbeddedFontCollection(CollectionKey, new Uri("file://" + UpdatedFontPath)));
+        if (UpdatedFontPath is null)
+            return;
+
+        // Full name: in this namespace "Services" is Platforms.Android.Services.
+        Gheychi.App.Services.StartupTiming.Mark("emoji.start");
+        FontManager.Current.AddFontCollection(new EmbeddedFontCollection(CollectionKey, new Uri("file://" + UpdatedFontPath)));
+        Gheychi.App.Services.StartupTiming.Mark("emoji.end");
     }
 
     // An emoji update through Play removes the old file, so a path that is gone counts as none until the next look.

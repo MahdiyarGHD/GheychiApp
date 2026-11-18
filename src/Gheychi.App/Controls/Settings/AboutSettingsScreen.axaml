@@ -28,7 +28,7 @@
 
                 <Border Classes="card">
                     <StackPanel>
-                        <Border Classes="row">
+                        <Border Classes="row" DoubleTapped="OnVersionDoubleTapped">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <TextBlock Text="{loc:Translate Settings_Version}" Classes="rowTitle" VerticalAlignment="Center" />
                                 <TextBlock x:Name="VersionValue" Grid.Column="1" Classes="valueChipLabel" />

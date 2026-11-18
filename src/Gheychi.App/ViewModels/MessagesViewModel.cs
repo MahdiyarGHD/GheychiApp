@@ -225,7 +225,12 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private Task<BuiltThreads> StartSnapshotLoad()
     {
         var snapshotPath = SnapshotPath;
-        return Task.Run(() => BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath)));
+        return Task.Run(() =>
+        {
+            var built = BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath));
+            StartupTiming.Mark("snapshot.built");
+            return built;
+        });
     }
 
     public FastObservableCollection<ThreadItem> Threads { get; } = [];
@@ -623,6 +628,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
         finally
         {
+            StartupTiming.Mark("inbox.cached");
             _cachedInboxTried.TrySetResult();
         }
     }

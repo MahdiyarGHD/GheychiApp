@@ -11,11 +11,13 @@ public partial class App : Avalonia.Application
 {
     public override void Initialize()
     {
+        Services.StartupTiming.Mark("app.xaml.start");
         RequestedThemeVariant = ThemeState.IsDark ? ThemeVariant.Dark : ThemeVariant.Light;
         Platforms.Android.LtrNumbers.Register();
         TextDirection.Register();
         AvaloniaXamlLoader.Load(this);
         RegisterAccentBrushes();
+        Services.StartupTiming.Mark("app.xaml.end");
     }
 
     // The accent is chosen before the app starts (changing it restarts the app), so these are plain brushes.

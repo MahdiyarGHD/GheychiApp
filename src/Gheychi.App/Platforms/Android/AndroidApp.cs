@@ -37,14 +37,17 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
     // starts only this process (a receiver), with no activity and so no Avalonia window.
     public override void OnCreate()
     {
+        Services.StartupTiming.Mark("app.oncreate");
         CultureService.ApplyCulture();
         ThemeState.Resolve();
         // The system's dialogs (delete confirms, pickers) and the launch window follow the app's theme choice, not the phone's.
         ThemeState.ApplyToSystem(Services.AppPreferences.Theme);
         SQLitePCL.Batteries_V2.Init();
         IPlatformApplication.Current = new PlatformApplication(AppServices.Build());
+        Services.StartupTiming.Mark("services");
 
         base.OnCreate();
+        Services.StartupTiming.Mark("avalonia.setup");
 
         _ = ScheduleAlarmsAsync();
     }

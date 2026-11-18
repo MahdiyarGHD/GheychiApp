@@ -140,6 +140,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
                     RevealInbox();
             }, TimeSpan.FromSeconds(4));
         }
+
+        Services.StartupTiming.Mark("messagespage.end");
     }
 
     // ---- Overlay creation -----------------------------------------------------------------------

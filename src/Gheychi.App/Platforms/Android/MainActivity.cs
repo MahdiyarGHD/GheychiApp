@@ -46,6 +46,7 @@ public class MainActivity : AvaloniaMainActivity
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        Services.StartupTiming.Mark("activity.oncreate");
         // The first view is built during base.OnCreate, and has to know a notified chat is coming.
         ChatLaunchRequests.FromIntent(Intent);
         SpamTabRequests.FromIntent(Intent);
@@ -54,6 +55,8 @@ public class MainActivity : AvaloniaMainActivity
 
         Platform.CurrentActivity = this;
         base.OnCreate(savedInstanceState);
+        // After MainView's constructor Avalonia still builds its view, attaches the tree and styles it, all in here.
+        Services.StartupTiming.Mark("activity.created");
         ApplySystemBarIcons();
         HoldFirstDrawUntilRendered();
     }
@@ -74,7 +77,12 @@ public class MainActivity : AvaloniaMainActivity
         var rendered = false;
         var deadline = SystemClock.UptimeMillis() + (long)FirstFrameWait.TotalMilliseconds;
         decor.ViewTreeObserver?.AddOnPreDrawListener(new FirstDrawGate(decor, () => rendered || SystemClock.UptimeMillis() > deadline));
-        _ = WaitForFirstFrameAsync(decor, deadline).ContinueWith(_ => rendered = true, TaskScheduler.Default);
+        _ = WaitForFirstFrameAsync(decor, deadline).ContinueWith(_ =>
+        {
+            rendered = true;
+            Services.StartupTiming.Mark("gate.open");
+            Services.StartupTiming.Finish();
+        }, TaskScheduler.Default);
     }
 
     private static async Task WaitForFirstFrameAsync(View root, long deadline)
@@ -88,6 +96,7 @@ public class MainActivity : AvaloniaMainActivity
             await Task.Delay(16);
         }
 
+        Services.StartupTiming.Mark("surface.valid");
         if (Ui.MainView.Current is not { } view
             || Avalonia.Rendering.Composition.ElementComposition.GetElementVisual(view)?.Compositor is not { } compositor)
             return;
@@ -96,6 +105,7 @@ public class MainActivity : AvaloniaMainActivity
         var left = deadline - SystemClock.UptimeMillis();
         if (left > 0)
             await Task.WhenAny(view.InboxPainted, Task.Delay(TimeSpan.FromMilliseconds(left)));
+        Services.StartupTiming.Mark("inbox.wait.done");
 
         // A frame rendered before the surface existed went nowhere; the second batch from now is drawn on the surface.
         await compositor.RequestCompositionBatchCommitAsync().Rendered;
