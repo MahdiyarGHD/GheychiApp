@@ -97,6 +97,15 @@ public partial class ChatView : UserControl
         InitTextSelection();
         InitEmoji();
 
+        // A touch released on a button that cannot take focus hands focus to the nearest parent that can, PageContent,
+        // and the keyboard closes with the box. Handled before it reaches the send or SIM button, the release gives no
+        // focus away; it still taps, since gestures do not look at Handled.
+        Composer.AddHandler(PointerReleasedEvent, (_, e) =>
+        {
+            if (e.Source is Visual source && source.GetSelfAndVisualAncestors().Any(v => v == SendButton || v == SimButton))
+                e.Handled = true;
+        }, RoutingStrategies.Tunnel);
+
         // The soft keyboard resizes the page: the box being focused means the newest message has to stay in view.
         MessageEntry.GotFocus += (_, _) => ScrollToEnd();
         MessageEntry.PropertyChanged += (_, e) =>

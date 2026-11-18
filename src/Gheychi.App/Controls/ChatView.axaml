@@ -1158,7 +1158,8 @@
                             </Border>
                         </Grid>
                     </Border>
-                    <Border Grid.Column="1"
+                    <Border x:Name="SimButton"
+                            Grid.Column="1"
                             Margin="6,0,0,0"
                             Width="40" Height="40"
                             CornerRadius="20"
