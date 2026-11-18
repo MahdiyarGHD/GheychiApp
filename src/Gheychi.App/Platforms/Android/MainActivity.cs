@@ -44,9 +44,18 @@ public class MainActivity : AvaloniaMainActivity
     /// <summary>Raised with the recognised text, or null when the user cancelled / nothing was heard.</summary>
     public static event Action<string?>? VoiceSearchCompleted;
 
+    // Once per process: the launch window let the first frame through, or stopped waiting for it. Work that is not on the
+    // first frame (the other tabs, the badges, the provider refresh) waits for this, not for a delay that could end
+    // in the middle of a slow launch's first render.
+    private static readonly TaskCompletionSource FirstFrameShown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    public static Task FirstFrame => FirstFrameShown.Task;
+
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         Services.StartupTiming.Mark("activity.oncreate");
+        // Nothing waits forever on a first frame that never comes (no window, or the app left during the launch).
+        _ = Task.Delay(FirstFrameWait * 2).ContinueWith(_ => FirstFrameShown.TrySetResult(), TaskScheduler.Default);
         // The first view is built during base.OnCreate, and has to know a notified chat is coming.
         ChatLaunchRequests.FromIntent(Intent);
         SpamTabRequests.FromIntent(Intent);
@@ -57,6 +66,7 @@ public class MainActivity : AvaloniaMainActivity
         base.OnCreate(savedInstanceState);
         // After MainView's constructor Avalonia still builds its view, attaches the tree and styles it, all in here.
         Services.StartupTiming.Mark("activity.created");
+        Services.StartupTiming.MarkGc("activity.created");
         ApplySystemBarIcons();
         HoldFirstDrawUntilRendered();
     }
@@ -72,7 +82,10 @@ public class MainActivity : AvaloniaMainActivity
     private void HoldFirstDrawUntilRendered()
     {
         if (Window?.DecorView is not { } decor)
+        {
+            FirstFrameShown.TrySetResult();
             return;
+        }
 
         var rendered = false;
         var deadline = SystemClock.UptimeMillis() + (long)FirstFrameWait.TotalMilliseconds;
@@ -81,7 +94,9 @@ public class MainActivity : AvaloniaMainActivity
         {
             rendered = true;
             Services.StartupTiming.Mark("gate.open");
+            Services.StartupTiming.MarkGc("gate.open");
             Services.StartupTiming.Finish();
+            FirstFrameShown.TrySetResult();
         }, TaskScheduler.Default);
     }
 
@@ -108,8 +123,14 @@ public class MainActivity : AvaloniaMainActivity
         Services.StartupTiming.Mark("inbox.wait.done");
 
         // A frame rendered before the surface existed went nowhere; the second batch from now is drawn on the surface.
-        await compositor.RequestCompositionBatchCommitAsync().Rendered;
-        await compositor.RequestCompositionBatchCommitAsync().Rendered;
+        // It is asked for once the first has reached the render thread, not after that frame and a trip back through
+        // the UI queue (which the held draw serves once per vsync): batches are applied at the start of a render tick,
+        // so the second still lands in a later tick than the first.
+        await compositor.RequestCompositionBatchCommitAsync().Processed;
+        Services.StartupTiming.Mark("frame1.processed");
+        // Nothing after this needs the UI thread.
+        await compositor.RequestCompositionBatchCommitAsync().Rendered.ConfigureAwait(false);
+        Services.StartupTiming.Mark("frame2.rendered");
     }
 
     private static SurfaceView? FindSurfaceView(View view)
@@ -172,6 +193,7 @@ public class MainActivity : AvaloniaMainActivity
 
     protected override void OnResume()
     {
+        Services.StartupTiming.Mark("activity.resume");
         base.OnResume();
         Platform.CurrentActivity = this;
         ChatPresence.AppVisibilityChanged(true);
@@ -180,6 +202,7 @@ public class MainActivity : AvaloniaMainActivity
         SpamTabRequests.RaiseIfPending();
         ExternalSendRequests.RaiseIfPending();
         Resumed?.Invoke();
+        Services.StartupTiming.Mark("activity.resumed");
     }
 
     protected override void OnPause()

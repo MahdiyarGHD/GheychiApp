@@ -21,6 +21,10 @@ internal static class StartupTiming
 
     public static void Mark(string name) => Trace.Mark(name);
 
+    /// <summary>Collections so far, as their own line: a collection between two marks pauses every managed thread.</summary>
+    public static void MarkGc(string at) =>
+        Trace.Mark($"gc0={GC.CollectionCount(0)} gc1={GC.CollectionCount(1)} @{at}");
+
     /// <summary>Called once the first frame is let through; writes the report on a worker thread.</summary>
     public static void Finish()
     {

@@ -629,6 +629,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         finally
         {
             StartupTiming.Mark("inbox.cached");
+            StartupTiming.MarkGc("inbox.cached");
             _cachedInboxTried.TrySetResult();
         }
     }
@@ -646,11 +647,15 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
 
         _initialized = true;
-        if (IPlatformApplication.Current?.Services.GetService<ITrashRepository>() is { } trash)
-            _ = Task.Run(() => trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now)));
 
         // Paint the last known inbox right away; the real query below refreshes it.
         await EnsureCachedInboxAsync();
+
+        // None of the rest is on the first frame, and the role and permission calls, the provider read and the trash
+        // clean-up took CPU (and GC pauses) from it. MainActivity bounds the wait, so it always comes.
+        await MainActivity.FirstFrame;
+        if (IPlatformApplication.Current?.Services.GetService<ITrashRepository>() is { } trash)
+            _ = Task.Run(() => trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now)));
 
         await _smsService.EnsureDefaultSmsAppAsync();
         var granted = await _smsService.EnsurePermissionsAsync();

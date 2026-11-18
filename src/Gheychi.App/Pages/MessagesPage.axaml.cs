@@ -95,7 +95,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         // Resolve the view model first: it starts loading the cached inbox on a worker thread while the XAML below is built.
         var viewModel = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
+        Services.StartupTiming.Mark("messagespage.vm");
         InitializeComponent();
+        Services.StartupTiming.Mark("messagespage.xaml");
         DataContext = viewModel;
         viewModel.PreloadTargets = VisibleThreads;
         viewModel.FolderSwitching += () => ThreadsList.Opacity = 0;

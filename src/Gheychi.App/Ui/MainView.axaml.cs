@@ -119,12 +119,16 @@ public partial class MainView : UserControl
         MainActivity.Resumed += OnAppResumed;
         SmsDeliverReceiver.SpamReceived += OnSpamArrived;
         // After the first frame: the badges build the update services (their HTTP clients) and read the database, and
-        // nothing of that is on screen yet.
-        _topLevel.RequestAnimationFrame(_ => Dispatcher.UIThread.Post(() =>
+        // nothing of that is on screen yet. Not RequestAnimationFrame: the first render it waits for comes before the
+        // surface exists, so that ran in the middle of the launch.
+        _ = MainActivity.FirstFrame.ContinueWith(_ => Dispatcher.UIThread.Post(() =>
         {
+            if (_topLevel is null)
+                return;
+
             SubscribeUpdates();
             OnAppResumed();
-        }, DispatcherPriority.Background));
+        }, DispatcherPriority.Background), TaskScheduler.Default);
 
         if (_detached)
         {
@@ -152,6 +156,10 @@ public partial class MainView : UserControl
             Select(SettingsIndex);
             (_pages[SettingsIndex] as SettingsPage)?.OpenAbout();
         }
+
+        // At launch the activity resumes before the first frame; the call queued in OnAttachedToVisualTree does the rest.
+        if (!MainActivity.FirstFrame.IsCompleted)
+            return;
 
         _ = Services.UpdateAutoCheck.RunAsync();
         _ = UpdateSpamBadgeAsync();
@@ -335,11 +343,16 @@ public partial class MainView : UserControl
     {
         try
         {
+            // Counted from the first frame: from the constructor, 600 ms ended inside the first render, and the Spam
+            // page was built on the UI thread before the inbox was on screen.
+            await MainActivity.FirstFrame;
             await Task.Delay(600);
             foreach (var index in (int[])[SpamIndex, SettingsIndex])
             {
                 await UserActivity.WaitForIdleAsync();
+                StartupTiming.Mark($"tab{index}.start");
                 _pages[index] ??= CreatePage(index);
+                StartupTiming.Mark($"tab{index}.end");
                 await Task.Delay(300);
             }
 
