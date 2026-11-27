@@ -14,15 +14,14 @@
                 <Panel>
                     <ui:Icon x:Name="ContactIcon"
                              Width="16" Height="16"
+                             CenterGeometry="True"
                              Foreground="{theme:AccentBrush Role=Text}"
                              HorizontalAlignment="Center"
                              VerticalAlignment="Center" />
-                    <TextBlock x:Name="ContactInitials"
-                               FontSize="12"
-                               FontFamily="{x:Static app:AppFonts.Bold}"
-                               Foreground="{theme:AccentBrush Role=Text}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
+                    <ui:AvatarText x:Name="ContactInitials"
+                                   FontSize="12"
+                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                   Foreground="{theme:AccentBrush Role=Text}" />
                 </Panel>
             </Border>
             <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">

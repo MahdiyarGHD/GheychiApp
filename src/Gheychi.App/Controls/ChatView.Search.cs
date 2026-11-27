@@ -190,7 +190,9 @@ public partial class ChatView
     private void OnMenuHelpTapped(object? sender, TappedEventArgs e)
     {
         HeaderMenuOverlay.IsVisible = false;
+#if !GOOGLE_PLAY
         _ = HelpLink.OpenAsync();
+#endif
     }
 
     private void OnCloseHeaderMenuTapped(object? sender, TappedEventArgs e) => HeaderMenuOverlay.IsVisible = false;

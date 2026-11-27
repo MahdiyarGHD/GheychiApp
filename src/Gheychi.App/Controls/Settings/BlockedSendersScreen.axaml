@@ -30,12 +30,12 @@
                                     Background="{theme:ThemeBrush Light=#D93025, Dark=#F28B82}">
                                 <Panel>
                                     <ui:Icon IsVisible="{Binding HasNoInitials}" Data="{StaticResource Icon.Person}"
-                                             Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Width="23" Height="23" CenterGeometry="True"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
                                              Foreground="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}" />
-                                    <TextBlock Text="{Binding Initials}" FontSize="19"
-                                               FontFamily="{x:Static app:AppFonts.Bold}"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Foreground="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}" />
+                                    <ui:AvatarText Text="{Binding Initials}" FontSize="19"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   Foreground="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}" />
                                 </Panel>
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">

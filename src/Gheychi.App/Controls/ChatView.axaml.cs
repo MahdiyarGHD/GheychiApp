@@ -993,7 +993,7 @@ public partial class ChatView : UserControl
         ContextActionMenu.HorizontalAlignment = side;
 
         CopyUrlActionRow.IsVisible = msg.HasUrl;
-        MenuReportRow.IsVisible = !msg.IsOutgoing;
+        MenuReportRow.IsVisible = global::Gheychi.App.AppBuildFeatures.FeedbackAndSpamReportingEnabled && !msg.IsOutgoing;
 
         // A message still in the send delay is not stored yet: only copying makes sense.
         var stored = !msg.IsHeld;
@@ -1233,10 +1233,12 @@ public partial class ChatView : UserControl
 
     private async void OnMenuReportTapped(object? sender, TappedEventArgs e)
     {
+#if !GOOGLE_PLAY
         var msg = _targetMessage;
         await DismissSelectionOverlayAsync();
         if (msg is not null)
             await SpamReport.SubmitAsync(msg.Body, isSpam: true);
+#endif
     }
 
     // ---- Selection mode -----------------------------------------------------------------------

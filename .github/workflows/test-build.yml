@@ -67,6 +67,7 @@ jobs:
           dotnet publish "$APP_PROJECT" -c Release -f net10.0-android \
             -p:AndroidPackageFormat=aab \
             -p:GheychiSelfUpdate=false \
+            -p:GheychiGooglePlayBuild=true \
             -p:ApplicationVersion=${{ github.run_number }} \
             -p:InstallAndroidDependencies=true \
             -p:AcceptAndroidSDKLicenses=True \

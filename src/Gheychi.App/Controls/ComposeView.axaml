@@ -30,12 +30,10 @@
                         <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
                                 ui:AvatarPhoto.Address="{Binding PhotoAddress}"
                                 Background="{Binding AvatarBgColor, Mode=OneTime}">
-                            <TextBlock Text="{Binding Initials, Mode=OneTime}"
-                                       FontSize="19"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{Binding AvatarTextColor, Mode=OneTime}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                            <ui:AvatarText Text="{Binding Initials, Mode=OneTime}"
+                                           FontSize="19"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
@@ -63,6 +61,9 @@
                                 Background="{Binding AvatarBgColor, Mode=OneTime}">
                             <ui:Icon Data="{StaticResource Icon.Person}"
                                      Width="23" Height="23"
+                                     CenterGeometry="True"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
                                      Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">

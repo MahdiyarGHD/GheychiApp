@@ -43,12 +43,12 @@
                                     Background="{Binding AvatarBgColor, Mode=OneTime}">
                                 <Panel>
                                     <ui:Icon IsVisible="{Binding HasNoInitials}" Data="{StaticResource Icon.Person}"
-                                             Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Width="23" Height="23" CenterGeometry="True"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
                                              Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
-                                    <TextBlock Text="{Binding Initials}" FontSize="19"
-                                               FontFamily="{x:Static app:AppFonts.Bold}"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
+                                    <ui:AvatarText Text="{Binding Initials}" FontSize="19"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
                                 </Panel>
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">

@@ -294,7 +294,12 @@ public partial class SettingsPage : UserControl
 
     private void OnPrivacyTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Privacy);
 
-    private void OnHelpTapped(object? sender, TappedEventArgs e) => _ = HelpLink.OpenAsync();
+    private void OnHelpTapped(object? sender, TappedEventArgs e)
+    {
+#if !GOOGLE_PLAY
+        _ = HelpLink.OpenAsync();
+#endif
+    }
 
     private void OnAboutTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.About);
 

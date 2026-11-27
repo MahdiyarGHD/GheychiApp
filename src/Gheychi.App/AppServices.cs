@@ -56,7 +56,9 @@ internal static class AppServices
             new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
             Path.Combine(FileSystem.CacheDirectory, "updates")));
 #endif
+#if !GOOGLE_PLAY
         services.Singleton<ISpamReporter>(() => new GoogleFormSpamReporter(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+#endif
         services.Singleton<ISpamModelUpdateState>(() => new Services.PreferencesSpamModelUpdateState());
         services.Singleton(() => new SpamModelUpdates(
             services.Get<ISpamModelSource>(),
