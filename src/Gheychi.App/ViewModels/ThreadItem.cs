@@ -17,7 +17,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
     private static readonly IBrush NameUnreadBrush = Palette.Pick("#000000", "#FFFFFF");
     private static readonly IBrush PreviewUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
     private static readonly IBrush TimeUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
-    private static readonly IBrush AvatarBgSelectedBrush = Palette.Accent(AccentRole.Solid);
+    private static readonly IBrush AvatarBgSelectedBrush = AvatarPalette.SelectionAccentFill;
     private static readonly IBrush IconTintBrush = Palette.Pick("#393B3E", "#DDDEDF");
     private static readonly IBrush SelectedRowBrush = Palette.Accent(AccentRole.Solid, ThemeState.IsDark ? (byte)0x26 : (byte)0x14);
 
@@ -160,6 +160,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public IBrush PreviewColor => HasFailed ? DangerBrush : _isUnread ? PreviewUnreadBrush : PreviewBrush;
     public IBrush AvatarBgColor => IsSelected ? AvatarBgSelectedBrush : AvatarColors.Bg;
     public IBrush AvatarTextColor => AvatarColors.Fg;
+    public IBrush SelectionCheckColor => AvatarPalette.CutoutForeground;
 
     public bool HasSameContent(ThreadItem other) =>
         ThreadId == other.ThreadId &&

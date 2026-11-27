@@ -151,8 +151,8 @@ public sealed class SearchResultItem
     private static readonly IBrush MatchBgBrush = Palette.Pick("#ECE1D3", "#332E27");
     private static readonly IBrush MatchTextBrush = Palette.Pick("#665E53", "#DED3C5");
 
-    // Same as the search page background, so the chip reads as cut out of the avatar.
-    private static readonly IBrush RingBrush = Palette.Pick("#F1F3F4", "#121212");
+    // Same as the search results card background, so the chip reads as cut out of the avatar.
+    private static readonly IBrush RingBrush = Palette.Pick("#FFFFFF", "#1E1F22");
 
     private static string? _spamTag;
     private static string? _archivedTag;

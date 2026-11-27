@@ -33,11 +33,9 @@
           Focusable="True"
           Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
 
-        <!-- Top header bar; the bottom border is the divider -->
+        <!-- Top header bar -->
         <Border Grid.Row="0"
-                Padding="12,10,16,9"
-                BorderThickness="0,0,0,1"
-                BorderBrush="{theme:ThemeBrush Light=#EBEBEC, Dark=#1F2021}">
+                Padding="12,10,16,12">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
 
                 <!-- Back button -->
@@ -62,7 +60,9 @@
                 <Border Grid.Column="1"
                         Height="44"
                         CornerRadius="22"
-                        Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
+                        BorderThickness="1"
+                        BorderBrush="{theme:ThemeBrush Light=#E2E4E8, Dark=#2A2C30}"
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#202021}"
                         Padding="10,0,8,0"
                         VerticalAlignment="Center">
                     <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6" VerticalAlignment="Center">
@@ -163,9 +163,15 @@
             </Grid>
         </Border>
 
+        <!-- Rounded content surface matching Inbox / Archive -->
+        <Border Grid.Row="1"
+                CornerRadius="28,28,0,0"
+                ClipToBounds="True"
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
+        <Panel>
+
         <!-- 1. Initial state: quick filters and recent searches -->
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Hidden"
+        <ScrollViewer VerticalScrollBarVisibility="Hidden"
                       HorizontalScrollBarVisibility="Disabled"
                       IsVisible="{Binding IsInitialSearchMode}">
             <StackPanel Spacing="28" Margin="20,18,20,32">
@@ -189,7 +195,7 @@
                                 <Border Margin="0,0,8,8"
                                         Padding="14,9"
                                         CornerRadius="18"
-                                        Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
+                                        Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#28292B}"
                                         IsVisible="{Binding IsVisible}"
                                         Tapped="OnFilterPillTapped">
                                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -293,15 +299,14 @@
         </ScrollViewer>
 
         <!-- 2. Chat results: category tabs, found count, one row per chat, deep search -->
-        <Grid Grid.Row="1"
-              RowDefinitions="Auto,*"
+        <Grid RowDefinitions="Auto,*"
               IsVisible="{Binding IsChatResultsMode}">
 
             <Border Grid.Row="0"
-                    Padding="16,8,16,9"
+                    Padding="16,12,16,9"
                     BorderThickness="0,0,0,1"
-                    BorderBrush="{theme:ThemeBrush Light=#EBEBEC, Dark=#1F2021}"
-                    Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+                    BorderBrush="{theme:ThemeBrush Light=#EEF0F2, Dark=#2A2C30}"
+                    Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
                 <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
 
                     <ScrollViewer Grid.Column="0"
@@ -506,7 +511,7 @@
                         <Border Margin="0,16,0,32"
                                 HorizontalAlignment="Center"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
+                                Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#28292B}"
                                 Padding="16,8"
                                 Tapped="OnDeepSearchTapped">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -548,15 +553,14 @@
         </Grid>
 
         <!-- 3. Links / Places results: one row per link (or place) found in a message -->
-        <Grid Grid.Row="1"
-              RowDefinitions="Auto,*"
+        <Grid RowDefinitions="Auto,*"
               IsVisible="{Binding IsLinkResultsMode}">
 
             <Border Grid.Row="0"
                     Padding="16,10,16,9"
                     BorderThickness="0,0,0,1"
-                    BorderBrush="{theme:ThemeBrush Light=#EBEBEC, Dark=#1F2021}"
-                    Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+                    BorderBrush="{theme:ThemeBrush Light=#EEF0F2, Dark=#2A2C30}"
+                    Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
                 <TextBlock Text="{Binding FoundCountText}"
                            FontSize="12"
                            Foreground="{theme:ThemeBrush Light=#74787D, Dark=#8A8F98}"
@@ -621,7 +625,7 @@
                         <Border Margin="0,16,0,32"
                                 HorizontalAlignment="Center"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#F1F1F2, Dark=#202021}"
+                                Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#28292B}"
                                 Padding="16,8"
                                 Tapped="OnDeepSearchTapped">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -664,9 +668,8 @@
         <!-- 4. Loading skeleton: shown while a search is running and there is nothing to show yet.
              The rows are created the first time they are needed (SearchView.EnsureSkeletonRows). -->
         <Grid x:Name="SkeletonOverlay"
-              Grid.Row="1"
               IsVisible="{Binding ShowSkeleton}"
-              Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+              Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
             <Panel x:Name="SkeletonRowsHost" VerticalAlignment="Top">
 
                 <!-- Chat results: avatar + two lines -->
@@ -734,6 +737,8 @@
                 </ItemsControl>
             </Panel>
         </Grid>
+        </Panel>
+        </Border>
     </Grid>
 
 </UserControl>

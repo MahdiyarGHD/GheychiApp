@@ -149,10 +149,10 @@
                 Margin="14,0,14,14"
                 Padding="16,0,6,0"
                 Height="46"
-                BorderThickness="1.5"
-                BorderBrush="Transparent"
+                BorderThickness="1"
+                BorderBrush="{theme:ThemeBrush Light=#E2E4E8, Dark=Transparent}"
                 CornerRadius="23"
-                Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1E1F22}">
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
                 <TextBlock Grid.Column="0"
                            Text="{loc:Translate Compose_To}"

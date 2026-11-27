@@ -220,7 +220,7 @@
                                                  Data="{StaticResource Icon.Check}"
                                                  Width="25"
                                                  Height="25"
-                                                 Foreground="White"
+                                                 Foreground="{Binding SelectionCheckColor}"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
                                     </Panel>

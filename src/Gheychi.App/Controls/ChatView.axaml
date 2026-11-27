@@ -654,7 +654,7 @@
         <Grid x:Name="PageContent"
               Focusable="True"
               RowDefinitions="Auto,*,Auto"
-              Background="{theme:ThemeBrush Light=#F1F3F4, Dark=#121212}">
+              Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#121212}">
 
             <!-- Row 0: Dual Header (Normal vs Selection Contextual Header) -->
             <Grid Grid.Row="0">
@@ -846,7 +846,7 @@
                                 Padding="14,0,12,0"
                                 Height="40"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                                 VerticalAlignment="Center">
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
                                 <TextBox x:Name="SearchEntry"
@@ -960,7 +960,7 @@
                 <Border Margin="0,8,0,0"
                         Padding="12,4"
                         CornerRadius="11"
-                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Top"
                         IsVisible="{Binding HasStickyDate}"
@@ -978,7 +978,7 @@
                             VerticalAlignment="Bottom">
                     <Border Width="210" Height="42"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="180" Height="52"
                             CornerRadius="16"
@@ -986,7 +986,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="260" Height="46"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="230" Height="42"
                             CornerRadius="16"
@@ -994,7 +994,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="160" Height="38"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                 </StackPanel>
 
@@ -1081,7 +1081,7 @@
                 <Border IsVisible="{Binding Pending.HasScheduled}"
                         Padding="16,10"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                         Tapped="OnScheduledBarTapped">
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                         <ui:Icon Data="{StaticResource Icon.Snooze}" Width="18" Height="18"
@@ -1104,7 +1104,7 @@
                         IsVisible="False"
                         Padding="16,9"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                         Tapped="OnUnblockTapped">
                     <StackPanel Spacing="1" HorizontalAlignment="Center">
                         <TextBlock Text="{loc:Translate Chat_Unblock}"
@@ -1122,7 +1122,7 @@
                         IsVisible="False"
                         Padding="16,12"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}">
+                        Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}">
                     <TextBlock Text="{loc:Translate Chat_NoReply}"
                                FontSize="13"
                                Foreground="#8A8F98"
@@ -1133,7 +1133,7 @@
                             Padding="12,0,4,0"
                             MinHeight="44"
                             CornerRadius="22"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#EFF2F6, Dark=#1C1F24}"
                             VerticalAlignment="Center"
                             Tapped="OnInputBarTapped">
                         <Grid ColumnDefinitions="*,Auto">

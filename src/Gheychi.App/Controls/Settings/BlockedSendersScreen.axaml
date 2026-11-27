@@ -27,15 +27,15 @@
                     <DataTemplate x:DataType="vm:BlockedSenderRow">
                         <Grid MinHeight="68" Margin="16,6,10,6" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                             <Border Width="44" Height="44" CornerRadius="22" VerticalAlignment="Center"
-                                    Background="{theme:ThemeBrush Light=#F7E3E1, Dark=#3A2224}">
+                                    Background="{theme:ThemeBrush Light=#D93025, Dark=#F28B82}">
                                 <Panel>
                                     <ui:Icon IsVisible="{Binding HasNoInitials}" Data="{StaticResource Icon.Person}"
                                              Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                             Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                                             Foreground="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}" />
                                     <TextBlock Text="{Binding Initials}" FontSize="19"
                                                FontFamily="{x:Static app:AppFonts.Bold}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Foreground="{theme:ThemeBrush Light=#B3261E, Dark=#F2B8B5}" />
+                                               Foreground="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}" />
                                 </Panel>
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">

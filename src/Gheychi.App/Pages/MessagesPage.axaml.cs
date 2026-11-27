@@ -1192,6 +1192,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     // ---- Chat -----------------------------------------------------------------------------------
 
+    private static readonly TimeSpan ChatOpenDuration = TimeSpan.FromMilliseconds(140);
+    private static readonly TimeSpan ChatCloseDuration = TimeSpan.FromMilliseconds(115);
+
     private double OverlayDistance =>
         MainView.Current is { Bounds.Height: > 0 } main ? main.Bounds.Height + 50 : 850;
 
@@ -1223,8 +1226,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             var cached = chat.PrepareForTransition(thread);
             if (sim is not null)
                 chat.Vm?.ChooseSim(sim.SlotIndex, sim.SubId);
-            var distance = OverlayDistance;
-            OverlayAnimator.SetTranslation(chat, 0, animate ? distance : 0);
+            var width = PageWidth;
+            OverlayAnimator.SetTranslation(chat, animate ? width : 0, 0);
             chat.IsVisible = true;
             ChatPresence.ChatOpened(thread.ThreadId);
 
@@ -1238,7 +1241,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             if (animate)
             {
                 await OverlayAnimator.SettleAsync();
-                await OverlayAnimator.SlideYAsync(chat, distance, 0, OverlayAnimator.OpenDuration, decelerate: true);
+                await OverlayAnimator.SlideXAsync(chat, width, 0, ChatOpenDuration, decelerate: true);
             }
 
             CoverInbox();
@@ -1295,7 +1298,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             if (!HasFullOverlayUnderChat)
                 UncoverInbox();
 
-            await OverlayAnimator.SlideYAsync(ChatOverlay, 0, OverlayDistance, OverlayAnimator.CloseDuration, decelerate: false);
+            await OverlayAnimator.SlideXAsync(ChatOverlay, 0, PageWidth, ChatCloseDuration, decelerate: false);
             ParkChatOverlay();
 
             // Replies sent, messages read or deleted inside the chat are not in the list yet.

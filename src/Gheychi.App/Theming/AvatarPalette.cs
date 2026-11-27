@@ -4,35 +4,43 @@ using Gheychi.Core.Services;
 namespace Gheychi.App.Theming;
 
 /// <summary>
-/// Hand-tuned pastel avatar pairs (soft tint + high-contrast ink) matching the app's light/dark accent tones,
-/// picked deterministically per contact or number so fallback avatars keep the same colour across every screen.
+/// Google-Messages-style contact avatar fills paired with a cutout foreground matching the list surface
+/// background (<c>#FFFFFF</c> in light mode, <c>#1E1F22</c> in dark mode), picked deterministically per
+/// contact or number across every screen.
 /// </summary>
 public static class AvatarPalette
 {
-    private readonly record struct Tone(string BgLight, string FgLight, string BgDark, string FgDark);
+    private readonly record struct Tone(string BgLight, string BgDark);
 
     private static readonly Tone[] Tones =
     [
-        new("#DCEFE3", "#1B5E43", "#1F4A35", "#6FD3A8"), // green
-        new("#DCEFEE", "#1C5C5A", "#204948", "#6FD0CC"), // teal
-        new("#D9E4F2", "#17519E", "#173152", "#A0C3EF"), // blue
-        new("#DBDBF0", "#363CD2", "#1C1D4D", "#BBBCEF"), // indigo
-        new("#E6DCEF", "#732EAE", "#361E4B", "#D2B6EA"), // purple
-        new("#F1DAE6", "#9B1F5D", "#4E1B35", "#EDAECE"), // pink
-        new("#F1DADB", "#A11D26", "#4F1A1D", "#EFB1B5"), // red
-        new("#F6E1D5", "#903704", "#592B10", "#F9AF85"), // orange
-        new("#F7EAD4", "#754A00", "#5B3F0E", "#FBB336"), // amber
+        new("#1A73E8", "#7CACF8"), // blue
+        new("#1E8E3E", "#6DD58C"), // green
+        new("#00897B", "#5BB9B0"), // teal
+        new("#3F51B5", "#9DA8FF"), // indigo
+        new("#9334E6", "#C58AF9"), // purple
+        new("#E52592", "#F48FB1"), // pink
+        new("#D93025", "#F28B82"), // red
+        new("#E8710A", "#FCAD70"), // orange
+        new("#0288D1", "#4FC3F7"), // cyan
     ];
+
+    /// <summary>Glyph/icon tint matching the rounded list surface so initials, icons and checkmarks read as clean cutouts.</summary>
+    public static IBrush CutoutForeground { get; } = Palette.Pick("#FFFFFF", "#1E1F22");
+
+    /// <summary>Selected-avatar background tuned to keep high contrast with <see cref="CutoutForeground"/> in both themes.</summary>
+    public static IBrush SelectionAccentFill =>
+        Palette.Pick(ThemeState.Accent.Hex(AccentRole.Solid, false), ThemeState.Accent.Hex(AccentRole.Glow, true));
 
     public static (IBrush Background, IBrush Foreground) For(string? address, string? name = null)
     {
         var key = KeyFor(address, name);
         if (key.Length == 0)
-            return (Palette.Accent(AccentRole.Soft), Palette.Accent(AccentRole.Text));
+            return (SelectionAccentFill, CutoutForeground);
 
         var index = (int)(Hash(key) % (uint)Tones.Length);
         var tone = Tones[index];
-        return (Palette.Pick(tone.BgLight, tone.BgDark), Palette.Pick(tone.FgLight, tone.FgDark));
+        return (Palette.Pick(tone.BgLight, tone.BgDark), CutoutForeground);
     }
 
     private static string KeyFor(string? address, string? name)
