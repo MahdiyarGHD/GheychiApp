@@ -703,7 +703,7 @@
     <value>Privacy &amp; storage</value>
   </data>
   <data name="Settings_PrivacyHint" xml:space="preserve">
-    <value>On-device only, clear saved data</value>
+    <value>On-device detection, policy &amp; saved data</value>
   </data>
   <data name="Settings_About" xml:space="preserve">
     <value>About</value>
@@ -766,16 +766,10 @@
     <value>Update failed. Tap to try again</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
-    <value>100% on-device processing</value>
+    <value>On-device spam detection</value>
   </data>
   <data name="Settings_FooterText" xml:space="preserve">
-    <value>Your messages never leave this phone</value>
-  </data>
-  <data name="Settings_CreditMadeWith" xml:space="preserve">
-    <value>Made with</value>
-  </data>
-  <data name="Settings_CreditBy" xml:space="preserve">
-    <value>by</value>
+    <value>Messages stay on your phone unless you choose to report spam</value>
   </data>
   <data name="Settings_Days" xml:space="preserve">
     <value>{0} days</value>
@@ -895,10 +889,16 @@
     <value>Language</value>
   </data>
   <data name="Settings_PrivacyCardTitle" xml:space="preserve">
-    <value>Everything stays on this phone</value>
+    <value>Messages stay on this phone</value>
   </data>
   <data name="Settings_PrivacyCardText" xml:space="preserve">
-    <value>Spam is detected by a model that runs on this phone. Your messages are never uploaded.</value>
+    <value>Spam is detected by a model running on this phone. Nothing leaves your device unless you choose to edit and send a spam report.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy" xml:space="preserve">
+    <value>Privacy policy &amp; data safety</value>
+  </data>
+  <data name="Settings_PrivacyPolicyHint" xml:space="preserve">
+    <value>How your messages, reports and updates are handled</value>
   </data>
   <data name="Settings_SectionData" xml:space="preserve">
     <value>Saved data</value>

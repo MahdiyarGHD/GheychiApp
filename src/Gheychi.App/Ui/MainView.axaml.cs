@@ -150,12 +150,14 @@ public partial class MainView : UserControl
 
     private void OnAppResumed()
     {
+#if SELF_UPDATE
         // Runs on the first frame and on every return to the app, so a tapped update notification is seen either way.
         if (AboutScreenRequests.Take())
         {
             Select(SettingsIndex);
             (_pages[SettingsIndex] as SettingsPage)?.OpenAbout();
         }
+#endif
 
         // At launch the activity resumes before the first frame; the call queued in OnAttachedToVisualTree does the rest.
         if (!MainActivity.FirstFrame.IsCompleted)
@@ -512,8 +514,10 @@ public partial class MainView : UserControl
             return;
 
         _subscribed = true;
+#if SELF_UPDATE
         if (services.GetService<AppUpdates>() is { } app)
             app.Changed += (_, _) => _ = UpdateBadgeAsync();
+#endif
         if (services.GetService<SpamModelUpdates>() is { } model)
             model.Changed += (_, _) => _ = UpdateBadgeAsync();
         _ = UpdateBadgeAsync();
@@ -551,7 +555,11 @@ public partial class MainView : UserControl
         try
         {
             var services = IPlatformApplication.Current?.Services;
+#if SELF_UPDATE
             var app = services?.GetService<AppUpdates>()?.GetAvailable() is not null;
+#else
+            const bool app = false;
+#endif
             var model = !app && services?.GetService<SpamModelUpdates>() is { } models
                 && await Task.Run(() => models.GetAvailableAsync()) is not null;
 

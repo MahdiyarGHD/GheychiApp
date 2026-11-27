@@ -1,3 +1,4 @@
+#if SELF_UPDATE
 using Android.App;
 using Android.App.Job;
 using Android.Content;
@@ -82,3 +83,4 @@ public class UpdateCheckJob : JobService
         return true;
     }
 }
+#endif

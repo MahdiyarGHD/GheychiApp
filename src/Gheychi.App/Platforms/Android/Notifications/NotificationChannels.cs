@@ -13,7 +13,9 @@ internal static class NotificationChannels
     private static volatile bool _created;
     private static volatile bool _spamDigestCreated;
     private static volatile bool _deliveryCreated;
+#if SELF_UPDATE
     private static volatile bool _updatesCreated;
+#endif
 
     public static void Ensure(Context context)
     {
@@ -81,6 +83,7 @@ internal static class NotificationChannels
         _deliveryCreated = true;
     }
 
+#if SELF_UPDATE
     /// <summary>Low importance, like the spam summary: nothing about an update is urgent.</summary>
     public static void EnsureUpdates(Context context)
     {
@@ -100,6 +103,7 @@ internal static class NotificationChannels
         manager.CreateNotificationChannel(channel);
         _updatesCreated = true;
     }
+#endif
 
     /// <summary>
     /// The channel a conversation's notifications go to: its own once the user has asked to manage it, otherwise the

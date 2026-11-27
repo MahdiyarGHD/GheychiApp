@@ -1,3 +1,4 @@
+#if SELF_UPDATE
 using Android.App;
 using Android.Content;
 using AndroidX.Core.App;
@@ -64,3 +65,4 @@ public static class AboutScreenRequests
     /// <summary>True once per request.</summary>
     public static bool Take() => Interlocked.Exchange(ref _pending, 0) == 1;
 }
+#endif

@@ -1,32 +1,40 @@
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Gheychi.App.Localization;
-using Gheychi.App.Platforms.Android.Services;
 using Gheychi.App.Services;
 using Gheychi.App.Ui;
 using Gheychi.Core.Spam;
+#if SELF_UPDATE
+using Gheychi.App.Platforms.Android.Services;
 using Gheychi.Core.Updates;
+#endif
 
 namespace Gheychi.App.Controls.Settings;
 
 public partial class AboutSettingsScreen : SettingsScreen
 {
     private readonly ISpamModelUpdater? _models;
+#if SELF_UPDATE
     private readonly AppUpdates? _appUpdates;
     private bool _checking;
     private bool _binding;
+#endif
 
     public AboutSettingsScreen()
     {
         InitializeComponent();
         var services = IPlatformApplication.Current?.Services;
         _models = services?.GetService<ISpamModelUpdater>();
+#if SELF_UPDATE
         _appUpdates = services?.GetService<AppUpdates>();
         if (_appUpdates is not null)
             _appUpdates.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowAppUpdate);
         AppUpdateFlow.Changed += ShowAppUpdate;
         // A build without the updater (Google Play) has no update rows.
         AppUpdateRows.IsVisible = _appUpdates is not null;
+#else
+        AppUpdateRows.IsVisible = false;
+#endif
         VersionValue.Text = SettingsUi.Digits($"{AppInfo.Current.VersionString} ({AppInfo.Current.BuildString})");
     }
 
@@ -44,13 +52,16 @@ public partial class AboutSettingsScreen : SettingsScreen
 
     public override void OnShown()
     {
+#if SELF_UPDATE
         _binding = true;
         AutoUpdateSwitch.IsChecked = AppPreferences.AutoUpdateCheck;
         _binding = false;
         ShowAppUpdate();
+#endif
         _ = ShowModelVersionAsync();
     }
 
+#if SELF_UPDATE
     private void ShowAppUpdate()
     {
         if (_checking)
@@ -121,6 +132,11 @@ public partial class AboutSettingsScreen : SettingsScreen
             ShowAppUpdate();
         }
     }
+#else
+    private void OnAutoUpdateToggled(object? sender, RoutedEventArgs e) { }
+
+    private void OnAppUpdateTapped(object? sender, TappedEventArgs e) { }
+#endif
 
     private async Task ShowModelVersionAsync()
     {
@@ -138,4 +154,6 @@ public partial class AboutSettingsScreen : SettingsScreen
     }
 
     private void OnLicensesTapped(object? sender, TappedEventArgs e) => RequestOpen(SettingsScreenKind.Licenses);
+
+    private void OnPrivacyPolicyTapped(object? sender, TappedEventArgs e) => _ = HelpLink.OpenPrivacyPolicyAsync();
 }
