@@ -1,23 +1,28 @@
 using Gheychi.App.Localization;
-using Gheychi.Infrastructure.Updates;
 
 namespace Gheychi.App.Ui;
 
-/// <summary>"Help &amp; feedback": the issues of the project on GitHub, where a problem is reported or an idea suggested.</summary>
+/// <summary>Links to the project's GitHub pages (issues, privacy policy).</summary>
 internal static class HelpLink
 {
-    public static readonly string IssuesUrl = $"https://github.com/{GitHubAppReleaseSource.Repository}/issues";
+    private const string Repository = "MahdiyarGHD/GheychiApp";
+    public static readonly string IssuesUrl = $"https://github.com/{Repository}/issues";
+    public static readonly string PrivacyPolicyUrl = $"https://github.com/{Repository}/blob/main/PRIVACY.md";
 
-    public static async Task OpenAsync()
+    public static Task OpenAsync() => OpenUrlAsync(IssuesUrl, "issues page");
+
+    public static Task OpenPrivacyPolicyAsync() => OpenUrlAsync(PrivacyPolicyUrl, "privacy policy");
+
+    private static async Task OpenUrlAsync(string url, string label)
     {
         try
         {
-            if (!await Launcher.Default.OpenAsync(IssuesUrl))
+            if (!await Launcher.Default.OpenAsync(url))
                 await Dialogs.AlertAsync(string.Empty, LocalizationManager.Instance["Chat_LinkOpenFailed"], "OK");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Opening the issues page failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Opening the {label} failed: {ex}");
         }
     }
 }

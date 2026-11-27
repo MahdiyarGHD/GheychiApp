@@ -21,8 +21,10 @@ public static class AppPreferences
     private const string FolderBarKey = "folder_bar_v1";
     private const string RememberFolderKey = "folder_remember_v1";
     private const string LastFolderKey = "folder_last_v1";
+#if SELF_UPDATE
     private const string AutoUpdateCheckKey = "app_update_auto_check_v1";
     private const string UpdateNotifiedTagKey = "app_update_notified_tag_v1";
+#endif
 
     private const string RecentEmojiKey = "emoji_recent_v1";
 
@@ -117,6 +119,7 @@ public static class AppPreferences
         set => Preferences.Default.Set(DeliveryNotificationsKey, value);
     }
 
+#if SELF_UPDATE
     /// <summary>Look for app updates without being asked: when the app opens, and once a day.</summary>
     public static bool AutoUpdateCheck
     {
@@ -130,6 +133,7 @@ public static class AppPreferences
         get => Preferences.Default.Get(UpdateNotifiedTagKey, string.Empty);
         set => Preferences.Default.Set(UpdateNotifiedTagKey, value);
     }
+#endif
 
     /// <summary>A bank's dynamic password (رمز پویا) goes to the clipboard as soon as its message arrives. Off until asked for.</summary>
     public static bool AutoCopyDynamicPassword

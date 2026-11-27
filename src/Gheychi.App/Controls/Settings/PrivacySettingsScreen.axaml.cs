@@ -45,4 +45,6 @@ public partial class PrivacySettingsScreen : SettingsScreen
             System.Diagnostics.Debug.WriteLine($"Clearing spam from settings failed: {ex}");
         }
     }
+
+    private void OnPrivacyPolicyTapped(object? sender, TappedEventArgs e) => _ = HelpLink.OpenPrivacyPolicyAsync();
 }

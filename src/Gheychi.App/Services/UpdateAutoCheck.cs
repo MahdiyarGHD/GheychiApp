@@ -1,14 +1,16 @@
+#if SELF_UPDATE
 using Gheychi.App.Platforms.Android.Notifications;
-using Gheychi.Core.Spam;
 using Gheychi.Core.Updates;
 using Gheychi.Infrastructure.Updates;
+#endif
+using Gheychi.Core.Spam;
 
 namespace Gheychi.App.Services;
 
 /// <summary>
-/// Looks for a newer app version and spam model each time the app comes to the front. <see cref="AppUpdates"/> and
-/// <see cref="SpamModelUpdates"/> still ask their source at most once per check interval; this only keeps a source
-/// that cannot be reached from being asked again on every return to the app.
+/// Looks for a newer app version (in self-update builds) and spam model each time the app comes to the front.
+/// Each updater still asks its source at most once per check interval; this only keeps a source that cannot be
+/// reached from being asked again on every return to the app.
 /// </summary>
 internal static class UpdateAutoCheck
 {
@@ -36,12 +38,14 @@ internal static class UpdateAutoCheck
             await Task.Delay(StartDelay);
             _lastAttemptTick = Environment.TickCount64;
 
+#if SELF_UPDATE
             // One failing does not keep the other from being checked.
             if (AppPreferences.AutoUpdateCheck && services.GetService<AppUpdates>() is { } app)
                 await CheckAsync("app", () => app.CheckAsync(force: false));
             // Once the update is installed, its APK and notification are left over.
             if (services.GetService<AppUpdates>()?.GetAvailable() is null)
                 await Task.Run(() => ClearInstalledUpdate(services));
+#endif
             if (services.GetService<SpamModelUpdates>() is { } model)
                 await CheckAsync("spam model", () => model.CheckAsync(force: false));
         }
@@ -51,6 +55,7 @@ internal static class UpdateAutoCheck
         }
     }
 
+#if SELF_UPDATE
     private static void ClearInstalledUpdate(IServiceProvider services)
     {
         try
@@ -63,6 +68,7 @@ internal static class UpdateAutoCheck
             System.Diagnostics.Debug.WriteLine($"Clearing the installed update's download failed: {ex}");
         }
     }
+#endif
 
     private static async Task CheckAsync(string what, Func<Task> check)
     {

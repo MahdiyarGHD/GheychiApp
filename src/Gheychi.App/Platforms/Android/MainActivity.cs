@@ -59,7 +59,9 @@ public class MainActivity : AvaloniaMainActivity
         // The first view is built during base.OnCreate, and has to know a notified chat is coming.
         ChatLaunchRequests.FromIntent(Intent);
         SpamTabRequests.FromIntent(Intent);
+#if SELF_UPDATE
         AboutScreenRequests.FromIntent(Intent);
+#endif
         ExternalSendRequests.FromIntent(Intent);
 
         Platform.CurrentActivity = this;
@@ -187,7 +189,9 @@ public class MainActivity : AvaloniaMainActivity
         base.OnNewIntent(intent);
         ChatLaunchRequests.FromIntent(intent);
         SpamTabRequests.FromIntent(intent);
+#if SELF_UPDATE
         AboutScreenRequests.FromIntent(intent);
+#endif
         ExternalSendRequests.FromIntent(intent);
     }
 

@@ -4,10 +4,12 @@ using Gheychi.Core.Notifications;
 using Gheychi.Core.Scheduling;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
+#if SELF_UPDATE
 using Gheychi.Core.Updates;
+using Gheychi.Infrastructure.Updates;
+#endif
 using Gheychi.Infrastructure.Data;
 using Gheychi.Infrastructure.Spam;
-using Gheychi.Infrastructure.Updates;
 
 namespace Gheychi.App;
 

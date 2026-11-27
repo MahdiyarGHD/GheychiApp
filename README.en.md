@@ -12,7 +12,8 @@
 <p align="center">
   <a href="README.md">فارسی</a> ·
   <a href="https://github.com/MahdiyarGHD/GheychiApp/releases/latest">Download the latest release</a> ·
-  <a href="https://github.com/MahdiyarGHD/sms-spam-dataset">Dataset &amp; model</a>
+  <a href="https://github.com/MahdiyarGHD/sms-spam-dataset">Dataset &amp; model</a> ·
+  <a href="PRIVACY.md">Privacy Policy</a>
 </p>
 
 <p align="center">
@@ -74,7 +75,8 @@ Reports sent from the app help improve the dataset and future versions of the mo
 
 - Spam detection happens entirely on the phone; message text is never sent anywhere to be checked.
 - Text leaves the phone only when you report a message yourself, after you have seen and edited it.
-- Checking for app and model updates only reads public GitHub files.
+- Checking for spam model updates (and app updates in GitHub APK builds) only reads public GitHub files.
+- See the full [Privacy Policy & Data Safety](PRIVACY.md) document for details.
 
 ## 📲 Install
 

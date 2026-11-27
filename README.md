@@ -14,7 +14,8 @@
 <p align="center">
   <a href="README.en.md">English</a> ·
   <a href="https://github.com/MahdiyarGHD/GheychiApp/releases/latest">دانلود آخرین نسخه</a> ·
-  <a href="https://github.com/MahdiyarGHD/sms-spam-dataset">دیتاست و مدل</a>
+  <a href="https://github.com/MahdiyarGHD/sms-spam-dataset">دیتاست و مدل</a> ·
+  <a href="PRIVACY.fa.md">حریم خصوصی</a>
 </p>
 
 <p align="center">
@@ -84,7 +85,8 @@
 
 * تشخیص هرزنامه کاملاً روی خود گوشی انجام می‌شه و متن پیام‌ها برای این کار هیچ‌جا فرستاده نمی‌شه.
 * فقط وقتی خودتون یه پیام رو گزارش کنید، متن اون پیام از گوشی خارج می‌شه؛ اون هم بعد از این که خودتون دیدیدش و هر چیزی که نمی‌خواستید رو حذف کردید.
-* برای بررسی نسخه‌ی جدید برنامه و مدل، فقط فایل‌های عمومی GitHub دریافت می‌شن.
+* برای بررسی نسخه‌ی جدید مدل (و نسخه‌ی برنامه در ساخت‌های گیت‌هاب)، فقط فایل‌های عمومی GitHub دریافت می‌شن.
+* جزئیات بیشتر و بخش امنیت داده‌ها در [سیاست حریم خصوصی](PRIVACY.fa.md) ([English](PRIVACY.md)) آمده است.
 
 ## 📲 نصب
 

@@ -122,7 +122,9 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
         _ = Task.Run(() => SpamDigestNotifier.Schedule(Platform.AppContext));
         _ = Task.Run(() => Gheychi.App.Platforms.Android.Services.ScheduledSendAlarm.RescheduleAll(Platform.AppContext));
+#if SELF_UPDATE
         _ = Task.Run(() => Gheychi.App.Platforms.Android.Services.UpdateCheckJob.Schedule(Platform.AppContext));
+#endif
     }
 
     private static readonly TimeSpan ActivityCheckDelay = TimeSpan.FromMilliseconds(300);
