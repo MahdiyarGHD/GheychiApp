@@ -148,8 +148,6 @@ public sealed class SearchResultItem
     private static readonly IBrush NameBrush = Palette.Pick("#2E3032", "#E8EAED");
     private static readonly IBrush TimeUnreadBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush TimeBrush = Palette.Pick("#74787D", "#8A8F98");
-    private static readonly IBrush AvatarBgBrush = Palette.Accent(AccentRole.Soft);
-    private static readonly IBrush AvatarTextBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush MatchBgBrush = Palette.Pick("#ECE1D3", "#332E27");
     private static readonly IBrush MatchTextBrush = Palette.Pick("#665E53", "#DED3C5");
 
@@ -201,10 +199,13 @@ public sealed class SearchResultItem
     public IBrush NameColor => NameBrush;
     public IBrush SimBadgeRingColor => RingBrush;
 
+    private (IBrush Bg, IBrush Fg)? _avatarColors;
+    private (IBrush Bg, IBrush Fg) AvatarColors => _avatarColors ??= AvatarPalette.For(Address, DisplayName);
+
     public IBrush TimeColor => IsUnread ? TimeUnreadBrush : TimeBrush;
 
-    public IBrush AvatarBgColor => AvatarBgBrush;
-    public IBrush AvatarTextColor => AvatarTextBrush;
+    public IBrush AvatarBgColor => AvatarColors.Bg;
+    public IBrush AvatarTextColor => AvatarColors.Fg;
     public IBrush MatchBgColor => MatchBgBrush;
     public IBrush MatchTextColor => MatchTextBrush;
 

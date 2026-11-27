@@ -157,7 +157,7 @@
                                                      Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
                                                      Width="27"
                                                      Height="27"
-                                                     Foreground="{theme:AccentBrush Role=Text}"
+                                                     Foreground="{Binding AvatarTextColor, Mode=OneTime}"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center" />
                                             <TextBlock Text="{Binding Initials, Mode=OneTime}"

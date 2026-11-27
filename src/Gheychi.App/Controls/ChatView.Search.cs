@@ -1,7 +1,9 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android;
+using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
@@ -98,6 +100,11 @@ public partial class ChatView
         MenuArchiveIcon.Data = IconCatalog.Find(archived ? "unarchive.png" : "archive.png");
         MenuArchiveLabel.Text = loc[archived ? "Profile_Unarchive" : "Profile_Archive"];
 
+        var muted = MuteDialogs.IsMuted(_threadSettings, vm.Thread.ThreadId);
+        MenuMuteRow.IsVisible = _threadSettings is not null && vm.Thread.ThreadId > 0;
+        MenuMuteIcon.Data = Avalonia.Application.Current?.FindResource(muted ? "Icon.Notifications" : "Icon.NotificationsOff") as Avalonia.Media.Geometry;
+        MenuMuteLabel.Text = loc[muted ? "Messages_Unmute" : "Messages_Mute"];
+
         var address = PhoneNumberNormalizer.ToSendAddress(vm.Thread.Phone);
         MenuBlockRow.IsVisible = _blocked is not null && !string.IsNullOrWhiteSpace(address);
         MenuBlockLabel.Text = loc[_blocked?.IsBlocked(address) == true ? "Profile_Unblock" : "Profile_Block"];
@@ -115,6 +122,35 @@ public partial class ChatView
         HeaderMenuOverlay.IsVisible = false;
         if (Vm is { } vm)
             ArchiveRequested?.Invoke(IsArchivedLookup?.Invoke(vm.Thread.ThreadId) != true);
+    }
+
+    private async void OnMenuMuteTapped(object? sender, TappedEventArgs e)
+    {
+        HeaderMenuOverlay.IsVisible = false;
+        try
+        {
+            if (_threadSettings is null || Vm is not { } vm || vm.Thread.ThreadId <= 0)
+                return;
+
+            var threadId = vm.Thread.ThreadId;
+            if (MuteDialogs.IsMuted(_threadSettings, threadId))
+            {
+                _threadSettings.SetSnoozedUntil(threadId, 0);
+                RefreshHeaderMute(threadId);
+                return;
+            }
+
+            if (await MuteDialogs.AskDurationMillisAsync() is not { } untilMillis)
+                return;
+
+            _threadSettings.SetSnoozedUntil(threadId, untilMillis);
+            RefreshHeaderMute(threadId);
+            _ = Task.Run(() => MessageNotifier.Cancel(Platform.AppContext, threadId));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Muting the conversation failed: {ex}");
+        }
     }
 
     private async void OnMenuBlockTapped(object? sender, TappedEventArgs e)
