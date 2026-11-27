@@ -1,3 +1,6 @@
+using Avalonia.Media;
+using Gheychi.App.Theming;
+
 namespace Gheychi.App.ViewModels;
 
 public enum ComposeRowKind
@@ -11,7 +14,7 @@ public enum ComposeRowKind
 
 /// <summary>
 /// One row of the new-message list. Rows are built once per contact load and reused by every
-/// filter and re-open, so they hold text only; colours come from the template's theme bindings.
+/// filter and re-open, so they hold text only; colours come from frozen theme palette brushes.
 /// </summary>
 public sealed class ComposeRow
 {
@@ -38,6 +41,12 @@ public sealed class ComposeRow
     public bool HasSubtitle => Subtitle.Length > 0;
     public bool HasInitials => Initials.Length > 0;
     public bool HasNoInitials => Initials.Length == 0;
+
+    private (IBrush Bg, IBrush Fg)? _avatarColors;
+    private (IBrush Bg, IBrush Fg) AvatarColors => _avatarColors ??= AvatarPalette.For(Address, Name);
+
+    public IBrush AvatarBgColor => AvatarColors.Bg;
+    public IBrush AvatarTextColor => AvatarColors.Fg;
 }
 
 public sealed record ComposeRecipient(string Address, string? ContactName, Gheychi.Core.Models.SimCardInfo? Sim);

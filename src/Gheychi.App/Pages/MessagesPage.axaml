@@ -205,7 +205,7 @@
                                                  Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}}"
                                                  Width="27"
                                                  Height="27"
-                                                 Foreground="{theme:AccentBrush Role=Text}"
+                                                 Foreground="{Binding AvatarTextColor}"
                                                  HorizontalAlignment="Center"
                                                  VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding Initials}"
@@ -250,6 +250,12 @@
                                                Foreground="{Binding TimeColor}"
                                                HorizontalAlignment="Right" />
                                     <StackPanel IsVisible="{Binding ShowBadgeRow}" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                        <ui:Icon IsVisible="{Binding IsMuted}"
+                                                 Data="{StaticResource Icon.NotificationsOff}"
+                                                 Width="15"
+                                                 Height="15"
+                                                 Foreground="{Binding TimeColor}"
+                                                 VerticalAlignment="Center" />
                                         <ui:Icon IsVisible="{Binding IsPinned}"
                                                  Data="{StaticResource Icon.Pin}"
                                                  Width="15"

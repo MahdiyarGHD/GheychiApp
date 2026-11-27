@@ -15,6 +15,8 @@ public sealed class PreferencesThreadSettings : IThreadSettings
     private readonly Dictionary<long, long> _snoozedUntil;
     private readonly Dictionary<long, int> _preferredSim;
 
+    public static event Action<long>? SnoozeChanged;
+
     public PreferencesThreadSettings()
     {
         _snoozedUntil = Load<long>(SnoozeKey, (string text, out long value) => long.TryParse(text, out value));
@@ -43,6 +45,8 @@ public sealed class PreferencesThreadSettings : IThreadSettings
 
             Save(SnoozeKey, _snoozedUntil);
         }
+
+        SnoozeChanged?.Invoke(threadId);
     }
 
     public int GetPreferredSubId(long threadId)

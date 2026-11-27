@@ -189,6 +189,12 @@
   <data name="Messages_Archive" xml:space="preserve">
     <value>بایگانی</value>
   </data>
+  <data name="Messages_Mute" xml:space="preserve">
+    <value>بی‌صدا کردن</value>
+  </data>
+  <data name="Messages_Unmute" xml:space="preserve">
+    <value>لغو بی‌صدا</value>
+  </data>
   <data name="Archive_Title" xml:space="preserve">
     <value>بایگانی‌شده</value>
   </data>
@@ -478,7 +484,7 @@
     <value>سفارشی</value>
   </data>
   <data name="Profile_Snooze" xml:space="preserve">
-    <value>بی‌صدا کردن موقت گفتگو</value>
+    <value>بی‌صدا کردن گفتگو</value>
   </data>
   <data name="Profile_SnoozeOff" xml:space="preserve">
     <value>غیرفعال</value>

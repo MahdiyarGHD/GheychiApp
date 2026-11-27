@@ -13,8 +13,10 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Notifications;
+using Gheychi.App.Services;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
+using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 using Gheychi.App.Theming;
 
@@ -62,6 +64,7 @@ public partial class ChatView : UserControl
     private BoxShadows? _bubbleShadow;
 
     private readonly IBlockedSenders? _blocked;
+    private readonly IThreadSettings? _threadSettings;
     private ChatMessage? _targetMessage;
 
     // Where the list was when a message was held: the actions of the menu change rows, and the list has to stay where it is.
@@ -82,6 +85,8 @@ public partial class ChatView : UserControl
         _blocked = IPlatformApplication.Current?.Services.GetService<IBlockedSenders>();
         if (_blocked is not null)
             _blocked.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(RefreshBlocked);
+        _threadSettings = IPlatformApplication.Current?.Services.GetService<IThreadSettings>();
+        PreferencesThreadSettings.SnoozeChanged += id => MainThread.BeginInvokeOnMainThread(() => RefreshHeaderMute(id));
 
         SimDigit.RenderTransform = new TranslateTransform(0, AppFonts.BadgeDigitOffsetY + 1.4);
         TextInputOptions.SetReturnKeyType(SearchEntry, TextInputReturnKeyType.Search);
@@ -199,6 +204,7 @@ public partial class ChatView : UserControl
         vm.ResetForOpen();
         vm.Thread = thread;
         RefreshBlocked();
+        RefreshHeaderMute(thread.ThreadId);
         vm.SafeDispatcher = SafePrependItems;
         vm.Items.Clear();
         vm.Messages.Clear();
@@ -261,6 +267,17 @@ public partial class ChatView : UserControl
         HideScrollToBottomButton();
         DataContext = vm;
         RefreshBlocked();
+        RefreshHeaderMute(vm.Thread.ThreadId);
+    }
+
+    private void RefreshHeaderMute(long threadId)
+    {
+        if (Vm is not { } vm || vm.Thread.ThreadId != threadId)
+            return;
+
+        var muted = MuteDialogs.IsMuted(_threadSettings, threadId);
+        vm.Thread.IsMuted = muted;
+        HeaderMutedIcon.IsVisible = muted;
     }
 
     private void RefreshBlocked()

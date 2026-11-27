@@ -9,7 +9,7 @@
     <!-- The contact a number in a message belongs to, with the avatar the inbox shows for them. Whoever shows it handles the tap. -->
     <Border Padding="10,8" CornerRadius="9" Background="Transparent">
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-            <Border Width="28" Height="28" CornerRadius="14" VerticalAlignment="Center"
+            <Border x:Name="AvatarBadge" Width="28" Height="28" CornerRadius="14" VerticalAlignment="Center"
                     Background="{theme:AccentBrush Role=Soft}">
                 <Panel>
                     <ui:Icon x:Name="ContactIcon"
