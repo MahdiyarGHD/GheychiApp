@@ -11,6 +11,7 @@ using Avalonia.Rendering.Composition;
 using Avalonia.Rendering.Composition.Animations;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Gheychi.App.Gestures;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Services;
@@ -48,6 +49,11 @@ public partial class ChatView : UserControl
     private bool _stickPending;
     private bool _stickyPending;
     private bool _holdFired;
+    private bool _closing;
+    private IPointer? _pressPointer;
+    private Point _pressPoint;
+    private bool _pressMoved;
+    private bool _pressInBackEdge;
     private bool _stoppedFling;
     private bool _initialPending;
     private int? _initialUnread;
@@ -97,6 +103,8 @@ public partial class ChatView : UserControl
         // One handler per gesture for the whole list: a row has no handlers of its own.
         MessagesList.Scrolled += OnMessagesScrolled;
         MessagesList.AddHandler(PointerPressedEvent, OnMessagePressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        MessagesList.AddHandler(PointerMovedEvent, OnMessagePointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        MessagesList.AddHandler(PointerCaptureLostEvent, OnMessagePointerCaptureLost, RoutingStrategies.Tunnel, handledEventsToo: true);
         MessagesList.AddHandler(TappedEvent, OnMessageTapped);
         MessagesList.AddHandler(HoldingEvent, OnMessageHolding);
         InitTextSelection();
@@ -111,8 +119,12 @@ public partial class ChatView : UserControl
                 e.Handled = true;
         }, RoutingStrategies.Tunnel);
 
-        // The soft keyboard resizes the page: the box being focused means the newest message has to stay in view.
-        MessageEntry.GotFocus += (_, _) => ScrollToEnd();
+        // The soft keyboard resizes the page: keep insets in sync and keep the newest message in view when focused.
+        MessageEntry.GotFocus += (_, _) =>
+        {
+            MainView.Current?.RefreshKeyboardInsets();
+            ScrollToEnd();
+        };
         MessageEntry.PropertyChanged += (_, e) =>
         {
             if (e.Property != TextBox.TextProperty || _composerUpdateQueued)
@@ -186,6 +198,10 @@ public partial class ChatView : UserControl
 
     private PreparedChatData? PrepareForTransitionCore(ThreadItem thread)
     {
+        _closing = false;
+        _pressPointer = null;
+        _pressMoved = false;
+        _pressInBackEdge = false;
         LoadCounterSetting();
         CloseTextSelection();
         _followTail = true;
@@ -356,9 +372,13 @@ public partial class ChatView : UserControl
 
     public Task Close()
     {
+        _closing = true;
+        _pressPointer = null;
+        _pressMoved = true;
         HeaderMenuOverlay.IsVisible = false;
         LinkPopup.Hide();
         CloseSearch();
+        Vm?.ExitSelectionMode();
         DetachLiveUpdates();
         HideSkeleton();
         DropSelection(MessageEntry);
@@ -393,7 +413,7 @@ public partial class ChatView : UserControl
             PageContent.Focus();
     }
 
-    /// <summary>Called once the overlay is out of sight: no popup of this chat may still be showing when it opens again.</summary>
+    /// <summary>Called once the overlay is out of sight: no popup or selection state of this chat may still show when it opens again.</summary>
     public void ResetAfterClose()
     {
         SelectionOverlay.IsVisible = false;
@@ -401,6 +421,7 @@ public partial class ChatView : UserControl
         HeaderMenuOverlay.IsVisible = false;
         LinkPopup.Hide();
         CloseEmojiPanel();
+        Vm?.ExitSelectionMode();
     }
 
     // ---- Scrolling ----------------------------------------------------------------------------
@@ -682,7 +703,26 @@ public partial class ChatView : UserControl
     {
         NotePress(e);
         _holdFired = false;
+        _pressPointer = e.Pointer;
+        _pressPoint = e.GetPosition(this);
+        _pressMoved = false;
+        _pressInBackEdge = SystemEdgeGestures.IsInBackEdge(this, _pressPoint);
         _stoppedFling = Environment.TickCount64 - _lastOffsetChangeTick < 80;
+    }
+
+    private void OnMessagePointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (!_pressMoved && ReferenceEquals(e.Pointer, _pressPointer) && Point.Distance(_pressPoint, e.GetPosition(this)) > TapSlop)
+            _pressMoved = true;
+    }
+
+    private void OnMessagePointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        if (ReferenceEquals(e.Pointer, _pressPointer))
+        {
+            _pressMoved = true;
+            _pressPointer = null;
+        }
     }
 
     private void OnMessageTapped(object? sender, TappedEventArgs e)
@@ -736,7 +776,8 @@ public partial class ChatView : UserControl
 
     private void OnMessageHolding(object? sender, HoldingRoutedEventArgs e)
     {
-        if (e.HoldingState != HoldingState.Started || _stoppedFling || Vm is not { IsSelectionMode: false })
+        if (e.HoldingState != HoldingState.Started || _closing || !IsVisible || _stoppedFling ||
+            _pressMoved || _pressInBackEdge || Vm is not { IsSelectionMode: false })
             return;
 
         CloseTextSelection();
@@ -758,6 +799,10 @@ public partial class ChatView : UserControl
             OpenSelectionMenu(message, new MessageBounds(origin.Y, bubble.Bounds.Height, bubble.Bounds.Width));
             return;
         }
+
+        // Held beside the bubble, on the row: ignore holds right at the horizontal screen edges where back swipes start.
+        if (SystemEdgeGestures.IsNearHorizontalEdge(this, _pressPoint))
+            return;
 
         // Held beside the bubble, on the row: the message is the first one picked in the selection mode.
         if (Vm is { } vm && (e.Source as StyledElement)?.DataContext is ChatMessage row)

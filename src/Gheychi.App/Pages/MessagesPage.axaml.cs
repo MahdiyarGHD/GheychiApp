@@ -42,6 +42,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
     private bool _holdFired;
+    private bool _pressInBackEdge;
     private bool _overlaysWarmedUp;
     private bool _earlyPreloadStarted;
     private bool _inboxShown;
@@ -117,6 +118,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         ThreadsList.AddHandler(PointerPressedEvent, (_, e) =>
         {
             _holdFired = false;
+            _pressInBackEdge = SystemEdgeGestures.IsInBackEdge(this, e.GetPosition(this));
             _toggleOnRelease = null;
             _selectedByHold = false;
             _reorder.OnPressed(e);
@@ -519,7 +521,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsHolding(object? sender, HoldingRoutedEventArgs e)
     {
-        if (e.HoldingState != HoldingState.Started || _animating || _reorder.IsBusy || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
+        if (e.HoldingState != HoldingState.Started || _pressInBackEdge || _animating || _reorder.IsBusy || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
             return;
 
         // Avalonia cancels a started hold once the finger drifts 4 px, then reports the release, still inside the
