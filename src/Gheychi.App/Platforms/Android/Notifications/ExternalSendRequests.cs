@@ -1,12 +1,18 @@
 using Android.Content;
+using Android.Telecom;
 
 namespace Gheychi.App.Platforms.Android.Notifications;
 
 /// <summary>
 /// What another app asked for: a conversation with a number (a contact's "message" button, an sms: link), a text to
-/// send somewhere (the share sheet), or both (a number and the text to start it with).
+/// send somewhere (the share sheet), or both (a number and the text to start it with), plus any SIM hint passed by the dialer.
 /// </summary>
-public sealed record ExternalSendRequest(string? Address, string? Text)
+public sealed record ExternalSendRequest(
+    string? Address,
+    string? Text,
+    int SubId = 0,
+    int SlotIndex = 0,
+    string? PhoneAccountId = null)
 {
     public bool HasAddress => !string.IsNullOrWhiteSpace(Address);
 }
@@ -80,10 +86,11 @@ public static class ExternalSendRequests
 
         var address = specific.TrimStart('/').Split(',', ';').Select(Uri.UnescapeDataString).FirstOrDefault(a => !string.IsNullOrWhiteSpace(a));
         var text = intent.GetCharSequenceExtra("sms_body")?.ToString() ?? intent.GetCharSequenceExtra(Intent.ExtraText)?.ToString() ?? BodyFrom(query);
+        var (subId, slotIndex, accountId) = ReadSimHint(intent, query);
 
         return string.IsNullOrWhiteSpace(address) && string.IsNullOrEmpty(text)
             ? null
-            : new ExternalSendRequest(address?.Trim(), text);
+            : new ExternalSendRequest(address?.Trim(), text, subId, slotIndex, accountId);
     }
 
     private static string? BodyFrom(string query)
@@ -105,8 +112,114 @@ public static class ExternalSendRequests
             text = intent.GetCharSequenceExtra(Intent.ExtraSubject)?.ToString();
 
         var address = intent.GetStringExtra("address");
+        var (subId, slotIndex, accountId) = ReadSimHint(intent, string.Empty);
         return string.IsNullOrEmpty(text) && string.IsNullOrWhiteSpace(address)
             ? null
-            : new ExternalSendRequest(address, text);
+            : new ExternalSendRequest(address, text, subId, slotIndex, accountId);
+    }
+
+    private static readonly string[] SubIdExtraKeys =
+    [
+        "android.telephony.extra.SUBSCRIPTION_INDEX",
+        "subscription",
+        "subscription_id",
+        "sub_id"
+    ];
+
+    private static readonly string[] ZeroBasedSlotExtraKeys =
+    [
+        "com.android.phone.extra.slot",
+        "slot",
+        "slot_id",
+        "sim_id",
+        "simSlot",
+        "sim_slot"
+    ];
+
+    private static (int SubId, int SlotIndex, string? PhoneAccountId) ReadSimHint(Intent intent, string query)
+    {
+        var subId = 0;
+        foreach (var key in SubIdExtraKeys)
+        {
+            var candidate = ReadIntExtra(intent, key);
+            if (candidate is > 0)
+            {
+                subId = candidate.Value;
+                break;
+            }
+        }
+
+        if (subId <= 0)
+        {
+            foreach (var key in new[] { "sub_id", "subscription", "subscription_id" })
+            {
+                if (QueryInt(query, key) is > 0 and var querySubId)
+                {
+                    subId = querySubId;
+                    break;
+                }
+            }
+        }
+
+        var slotIndex = 0;
+        foreach (var key in ZeroBasedSlotExtraKeys)
+        {
+            var candidate = ReadIntExtra(intent, key);
+            if (candidate is >= 0 and var rawSlot)
+            {
+                slotIndex = rawSlot + 1;
+                break;
+            }
+        }
+
+        string? accountId = null;
+        try
+        {
+#pragma warning disable CA1416
+            PhoneAccountHandle? handle = OperatingSystem.IsAndroidVersionAtLeast(33)
+                ? intent.GetParcelableExtra("android.telecom.extra.PHONE_ACCOUNT_HANDLE", Java.Lang.Class.FromType(typeof(PhoneAccountHandle))) as PhoneAccountHandle
+#pragma warning disable CA1422
+                : intent.GetParcelableExtra("android.telecom.extra.PHONE_ACCOUNT_HANDLE") as PhoneAccountHandle;
+#pragma warning restore CA1422
+#pragma warning restore CA1416
+            accountId = handle?.Id;
+        }
+        catch
+        {
+        }
+
+        return (subId, slotIndex, accountId);
+    }
+
+    private static int? ReadIntExtra(Intent intent, string key)
+    {
+        if (!intent.HasExtra(key))
+            return null;
+
+        var intValue = intent.GetIntExtra(key, -1);
+        if (intValue >= 0)
+            return intValue;
+
+        var longValue = intent.GetLongExtra(key, -1L);
+        if (longValue is >= 0 and <= int.MaxValue)
+            return (int)longValue;
+
+        return int.TryParse(intent.GetStringExtra(key), out var parsed) && parsed >= 0 ? parsed : null;
+    }
+
+    private static int? QueryInt(string query, string key)
+    {
+        if (string.IsNullOrEmpty(query))
+            return null;
+
+        foreach (var pair in query.Split('&'))
+        {
+            var equals = pair.IndexOf('=');
+            if (equals > 0 && pair[..equals].Equals(key, StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(Uri.UnescapeDataString(pair[(equals + 1)..]), out var value))
+                return value;
+        }
+
+        return null;
     }
 }

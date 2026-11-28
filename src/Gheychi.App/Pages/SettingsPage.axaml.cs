@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
@@ -13,7 +12,9 @@ using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
+#if SELF_UPDATE
 using Gheychi.Core.Updates;
+#endif
 
 namespace Gheychi.App.Pages;
 
@@ -27,13 +28,14 @@ public partial class SettingsPage : UserControl
     private const double ParallaxDip = 10;
     private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(180);
     private static readonly TimeSpan BackDuration = TimeSpan.FromMilliseconds(140);
-    private const string AuthorProfileUrl = "https://github.com/MahdiyarGHD";
 
     private readonly ISmsService? _sms;
     private readonly ISpamSettings? _spamSettings;
     private readonly ISpamModelUpdater? _models;
     private readonly SpamModelUpdates? _modelUpdates;
+#if SELF_UPDATE
     private readonly AppUpdates? _appUpdates;
+#endif
     private readonly SpamViewModel? _spam;
     private readonly IBlockedSenders? _blocked;
     private readonly Dictionary<SettingsScreenKind, SettingsScreen> _screens = new();
@@ -54,9 +56,11 @@ public partial class SettingsPage : UserControl
         _modelUpdates = services?.GetService<SpamModelUpdates>();
         if (_modelUpdates is not null)
             _modelUpdates.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(() => _ = ShowModelUpdateAsync());
+#if SELF_UPDATE
         _appUpdates = services?.GetService<AppUpdates>();
         if (_appUpdates is not null)
             _appUpdates.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowAboutHint);
+#endif
         _spam = services?.GetService<SpamViewModel>();
         if (_spam is not null)
             _spam.Changed += () => MainThread.BeginInvokeOnMainThread(UpdateSpamSummary);
@@ -290,42 +294,18 @@ public partial class SettingsPage : UserControl
 
     private void OnPrivacyTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Privacy);
 
-    private void OnHelpTapped(object? sender, TappedEventArgs e) => _ = HelpLink.OpenAsync();
+    private void OnHelpTapped(object? sender, TappedEventArgs e)
+    {
+#if !GOOGLE_PLAY
+        _ = HelpLink.OpenAsync();
+#endif
+    }
 
     private void OnAboutTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.About);
 
     private void OnCaughtTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Analytics);
 
     private void OnModelTileTapped(object? sender, TappedEventArgs e) => Open(SettingsScreenKind.Spam);
-
-    private async void OnCreditTapped(object? sender, TappedEventArgs e)
-    {
-        try
-        {
-            PulseHeart();
-            await Launcher.Default.OpenAsync(new Uri(AuthorProfileUrl));
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Opening the author's profile failed: {ex}");
-        }
-    }
-
-    // On the render thread, like the screen slides: grows to 1.35 in 110 ms, back in 160.
-    private void PulseHeart()
-    {
-        if (ElementComposition.GetElementVisual(CreditHeart) is not { } visual)
-            return;
-
-        visual.CenterPoint = new Vector3D(CreditHeart.Bounds.Width / 2, CreditHeart.Bounds.Height / 2, 0);
-        var animation = visual.Compositor.CreateVector3DKeyFrameAnimation();
-        animation.Target = "Scale";
-        animation.InsertKeyFrame(0f, new Vector3D(1, 1, 1));
-        animation.InsertKeyFrame(0.41f, new Vector3D(1.35, 1.35, 1), new CubicEaseOut());
-        animation.InsertKeyFrame(1f, new Vector3D(1, 1, 1), new CubicEaseIn());
-        animation.Duration = TimeSpan.FromMilliseconds(270);
-        visual.StartAnimation("Scale", animation);
-    }
 
     // ---- Status --------------------------------------------------------------------------------
 
@@ -446,7 +426,11 @@ public partial class SettingsPage : UserControl
     {
         var loc = LocalizationManager.Instance;
         var version = SettingsUi.Digits(AppInfo.Current.VersionString);
+#if SELF_UPDATE
         var update = _appUpdates?.GetAvailable() is not null;
+#else
+        const bool update = false;
+#endif
         AboutHint.Text = string.Format(loc[update ? "Settings_AboutUpdateHint" : "Settings_AboutHint"], version);
         AppUpdateDot.IsVisible = update;
     }

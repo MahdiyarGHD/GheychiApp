@@ -1,3 +1,4 @@
+#if SELF_UPDATE
 using Android.Content;
 using Gheychi.App.Platforms.Android.Services;
 
@@ -13,3 +14,4 @@ public class ApkInstallReceiver : BroadcastReceiver
             ApkInstaller.OnStatus(context, intent);
     }
 }
+#endif

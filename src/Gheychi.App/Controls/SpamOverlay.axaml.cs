@@ -171,10 +171,12 @@ public partial class SpamOverlay : UserControl
 
     private async void OnReportTapped(object? sender, TappedEventArgs e)
     {
+#if !GOOGLE_PLAY
         var item = _item;
         await CloseAsync();
         if (item is not null)
             await SpamReport.SubmitAsync(item.Message.Body, isSpam: false);
+#endif
     }
 
     private void OnRestoreTapped(object? sender, TappedEventArgs e) => _ = RestoreAsync(trustSender: false);

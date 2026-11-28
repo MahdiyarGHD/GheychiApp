@@ -19,7 +19,8 @@ public sealed record PreparedChatData(
     string StickyDate,
     int SimSlot,
     int? FirstUnreadIndex = null,
-    int RawCount = 0
+    int RawCount = 0,
+    int SimSubId = 0
 );
 
 public sealed class ChatViewModel : INotifyPropertyChanged
@@ -477,7 +478,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
                 SimSlot = slot,
                 CarrierName = carrier,
                 IsDualSim = isDual,
-                IsSelectionMode = _isSelectionMode
+                IsSelectionMode = offset > 0 && _isSelectionMode
             };
 
             newItems.Add(chatMsg);
@@ -493,11 +494,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
         var lastSep = newItems.OfType<DateSeparatorItem>().LastOrDefault();
         var sticky = lastSep?.Text ?? _dateFormatter.FormatStickyDate(now, now, culture);
-        // A conversation that has not used a SIM yet (a new one) starts on the default SIM from Settings.
-        var threadSlot = SlotOf(thread.SubId, slotMap) ?? SlotOf(Services.AppPreferences.DefaultSubId, slotMap) ?? 1;
+        // A thread opened externally or on a cold start can arrive with SubId=0 before inbox metadata loads:
+        // prefer the newest message's SIM in that thread before falling back to Settings' default SIM.
+        var messageSubId = rawMessages.LastOrDefault(m => m.SubId > 0)?.SubId ?? 0;
+        var effectiveSubId = thread.SubId > 0 ? thread.SubId : messageSubId;
+        var threadSlot = SlotOf(effectiveSubId, slotMap) ?? SlotOf(Services.AppPreferences.DefaultSubId, slotMap) ?? 1;
 
         // Reaction SMS are folded away, so paging has to count the provider rows that were read.
-        return new PreparedChatData(newItems, newMessages, sticky, threadSlot, firstUnreadIndex, SmsMessagePage.RawCountOf(rawMessages));
+        return new PreparedChatData(newItems, newMessages, sticky, threadSlot, firstUnreadIndex, SmsMessagePage.RawCountOf(rawMessages), effectiveSubId);
     }
 
     private Task<PreparedChatData?>? _prefetchTask;
@@ -521,6 +525,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         _firstPageApplied = false;
         FirstUnreadIndex = null;
         _simChosenForOpen = false;
+        ExitSelectionMode();
     }
 
     // Set when the chat was opened with a SIM the user picked (compose): the messages arriving after must not replace it.
@@ -674,7 +679,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged
 
     public void ApplyMessages(PreparedChatData data, int rawCount)
     {
-        var threadSubId = Thread.SubId > 0 ? Thread.SubId : 0;
+        var threadSubId = Thread.SubId > 0 ? Thread.SubId : data.SimSubId;
         if (!_simChosenForOpen)
             SelectSim(data.SimSlot, threadSubId);
 
@@ -690,6 +695,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged
         {
             if (item is ChatMessage msg)
             {
+                msg.IsSelectionMode = _isSelectionMode;
+                if (!_isSelectionMode)
+                    msg.IsSelected = false;
                 msg.IsDualSim = isDual;
                 var slot = ResolveSlot(msg.SubId, slotMap);
                 msg.SimSlot = slot;

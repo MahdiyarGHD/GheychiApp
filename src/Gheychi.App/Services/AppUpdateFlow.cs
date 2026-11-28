@@ -1,3 +1,4 @@
+#if SELF_UPDATE
 using Android.Content.PM;
 using Gheychi.App.Localization;
 using Gheychi.App.Platforms.Android.Notifications;
@@ -188,3 +189,4 @@ internal static class AppUpdateFlow
         Changed?.Invoke();
     }
 }
+#endif

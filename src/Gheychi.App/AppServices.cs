@@ -4,10 +4,12 @@ using Gheychi.Core.Notifications;
 using Gheychi.Core.Scheduling;
 using Gheychi.Core.Services;
 using Gheychi.Core.Spam;
+#if SELF_UPDATE
 using Gheychi.Core.Updates;
+using Gheychi.Infrastructure.Updates;
+#endif
 using Gheychi.Infrastructure.Data;
 using Gheychi.Infrastructure.Spam;
-using Gheychi.Infrastructure.Updates;
 
 namespace Gheychi.App;
 
@@ -54,7 +56,9 @@ internal static class AppServices
             new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
             Path.Combine(FileSystem.CacheDirectory, "updates")));
 #endif
+#if !GOOGLE_PLAY
         services.Singleton<ISpamReporter>(() => new GoogleFormSpamReporter(new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+#endif
         services.Singleton<ISpamModelUpdateState>(() => new Services.PreferencesSpamModelUpdateState());
         services.Singleton(() => new SpamModelUpdates(
             services.Get<ISpamModelSource>(),

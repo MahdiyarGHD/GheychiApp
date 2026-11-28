@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Gheychi.App.Gestures;
 using Gheychi.App.Localization;
 using Gheychi.App.ViewModels;
 using Gheychi.Core.Services;
@@ -15,6 +16,7 @@ public partial class ArchiveView : UserControl
     private MessagesViewModel? _vm;
     private bool _isSelectionMode;
     private bool _holdFired;
+    private bool _pressInBackEdge;
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
 
@@ -28,7 +30,11 @@ public partial class ArchiveView : UserControl
         Ui.RowPressEffect.Attach(ArchiveList, ArchiveHost);
 
         // Releasing a finger that held a row also reports a tap; the next press starts a new gesture.
-        ArchiveList.AddHandler(PointerPressedEvent, (_, _) => _holdFired = false, RoutingStrategies.Tunnel, handledEventsToo: true);
+        ArchiveList.AddHandler(PointerPressedEvent, (_, e) =>
+        {
+            _holdFired = false;
+            _pressInBackEdge = SystemEdgeGestures.IsInBackEdge(this, e.GetPosition(this));
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
         UpdateEmptyState();
     }
 
@@ -185,7 +191,7 @@ public partial class ArchiveView : UserControl
 
     private void OnListHolding(object? sender, HoldingRoutedEventArgs e)
     {
-        if (e.HoldingState != HoldingState.Started || (e.Source as StyledElement)?.DataContext is not ThreadItem thread)
+        if (e.HoldingState != HoldingState.Started || _pressInBackEdge || (e.Source as StyledElement)?.DataContext is not ThreadItem thread)
             return;
 
         _holdFired = true;

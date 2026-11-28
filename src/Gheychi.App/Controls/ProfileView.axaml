@@ -131,13 +131,14 @@
                             Background="{theme:AccentBrush Role=Soft, Light=#E0E1E3}">
                         <Panel>
                             <ui:Icon x:Name="AvatarIcon" Width="52" Height="52"
+                                     CenterGeometry="True"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
                                      Foreground="{theme:AccentBrush Role=Text}" />
-                            <TextBlock x:Name="AvatarInitials"
-                                       FontSize="40"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{theme:AccentBrush Role=Text}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                            <ui:AvatarText x:Name="AvatarInitials"
+                                           FontSize="40"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{theme:AccentBrush Role=Text}" />
                         </Panel>
                     </Border>
 

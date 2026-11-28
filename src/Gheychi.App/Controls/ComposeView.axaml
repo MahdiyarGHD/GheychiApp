@@ -29,13 +29,11 @@
                     <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
                         <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
                                 ui:AvatarPhoto.Address="{Binding PhotoAddress}"
-                                Background="{theme:AccentBrush Role=Soft}">
-                            <TextBlock Text="{Binding Initials, Mode=OneTime}"
-                                       FontSize="19"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
-                                       Foreground="{theme:AccentBrush Role=Text}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                                Background="{Binding AvatarBgColor, Mode=OneTime}">
+                            <ui:AvatarText Text="{Binding Initials, Mode=OneTime}"
+                                           FontSize="19"
+                                           FontFamily="{x:Static app:AppFonts.Bold}"
+                                           Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
@@ -60,10 +58,13 @@
                 <DataTemplate x:DataType="vm:ComposeRow">
                     <Grid Height="60" ColumnDefinitions="Auto,*" Background="Transparent">
                         <Border Width="44" Height="44" Margin="16,0,14,0" CornerRadius="22"
-                                Background="{theme:AccentBrush Role=Soft}">
+                                Background="{Binding AvatarBgColor, Mode=OneTime}">
                             <ui:Icon Data="{StaticResource Icon.Person}"
                                      Width="23" Height="23"
-                                     Foreground="{theme:AccentBrush Role=Text}" />
+                                     CenterGeometry="True"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
                         </Border>
                         <StackPanel Grid.Column="1" Margin="0,0,18,0" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Name, Mode=OneTime}"
@@ -149,10 +150,10 @@
                 Margin="14,0,14,14"
                 Padding="16,0,6,0"
                 Height="46"
-                BorderThickness="1.5"
-                BorderBrush="Transparent"
+                BorderThickness="1"
+                BorderBrush="{theme:ThemeBrush Light=#E2E4E8, Dark=Transparent}"
                 CornerRadius="23"
-                Background="{theme:ThemeBrush Light=#E8EAED, Dark=#1E1F22}">
+                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
                 <TextBlock Grid.Column="0"
                            Text="{loc:Translate Compose_To}"

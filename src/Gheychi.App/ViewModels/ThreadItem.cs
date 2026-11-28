@@ -17,9 +17,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
     private static readonly IBrush NameUnreadBrush = Palette.Pick("#000000", "#FFFFFF");
     private static readonly IBrush PreviewUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
     private static readonly IBrush TimeUnreadBrush = Palette.Pick("#1B1E24", "#F1F3F5");
-    private static readonly IBrush AvatarBgBrush = Palette.Accent(AccentRole.Soft);
-    private static readonly IBrush AvatarBgSelectedBrush = Palette.Accent(AccentRole.Solid);
-    private static readonly IBrush AvatarTextBrush = Palette.Accent(AccentRole.Text);
+    private static readonly IBrush AvatarBgSelectedBrush = AvatarPalette.SelectionAccentFill;
     private static readonly IBrush IconTintBrush = Palette.Pick("#393B3E", "#DDDEDF");
     private static readonly IBrush SelectedRowBrush = Palette.Accent(AccentRole.Solid, ThemeState.IsDark ? (byte)0x26 : (byte)0x14);
 
@@ -64,6 +62,19 @@ public sealed class ThreadItem : INotifyPropertyChanged
         {
             if (_isPinned == value) return;
             _isPinned = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ShowBadgeRow));
+        }
+    }
+
+    private bool _isMuted;
+    public bool IsMuted
+    {
+        get => _isMuted;
+        set
+        {
+            if (_isMuted == value) return;
+            _isMuted = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(ShowBadgeRow));
         }
@@ -127,8 +138,8 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public bool ShowIcon => HasIcon && !_isSelected;
     public bool ShowInitials => HasNoIcon && !_isSelected;
     public IBrush RowBackgroundColor => _isSelected ? SelectedRowBrush : Palette.Transparent;
-    /// <summary>The line under the time: the unread count, the pin, or both.</summary>
-    public bool ShowBadgeRow => _isUnread || _isPinned;
+    /// <summary>The line under the time: the mute icon, the unread count, the pin, or any combination.</summary>
+    public bool ShowBadgeRow => _isUnread || _isPinned || _isMuted;
     public string CountText => Count > 0 ? Count.ToString() : string.Empty;
     public Thickness PreviewMargin => HasFailed ? FailedPreviewMargin : default;
     public bool HasIcon => !string.IsNullOrEmpty(IconFile);
@@ -143,9 +154,13 @@ public sealed class ThreadItem : INotifyPropertyChanged
     public FontFamily NameFont => _isUnread ? AppFonts.Bold : AppFonts.Regular;
     public FontFamily PreviewFont => _isUnread ? AppFonts.Bold : AppFonts.Regular;
     public IBrush TimeColor => HasFailed ? DangerBrush : _isUnread ? TimeUnreadBrush : TimeNormalBrush;
+    private (IBrush Bg, IBrush Fg)? _avatarColors;
+    private (IBrush Bg, IBrush Fg) AvatarColors => _avatarColors ??= AvatarPalette.For(Phone, Name);
+
     public IBrush PreviewColor => HasFailed ? DangerBrush : _isUnread ? PreviewUnreadBrush : PreviewBrush;
-    public IBrush AvatarBgColor => IsSelected ? AvatarBgSelectedBrush : AvatarBgBrush;
-    public IBrush AvatarTextColor => AvatarTextBrush;
+    public IBrush AvatarBgColor => IsSelected ? AvatarBgSelectedBrush : AvatarColors.Bg;
+    public IBrush AvatarTextColor => AvatarColors.Fg;
+    public IBrush SelectionCheckColor => AvatarPalette.CutoutForeground;
 
     public bool HasSameContent(ThreadItem other) =>
         ThreadId == other.ThreadId &&
@@ -159,6 +174,7 @@ public sealed class ThreadItem : INotifyPropertyChanged
         HasFailed == other.HasFailed &&
         HasDraft == other.HasDraft &&
         IsPinned == other.IsPinned &&
+        IsMuted == other.IsMuted &&
         TotalCount == other.TotalCount &&
         Count == other.Count &&
         IsUnread == other.IsUnread;

@@ -20,10 +20,13 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <AvaloniaNameGeneratorBehavior>InitializeComponent</AvaloniaNameGeneratorBehavior>
 
-        <!-- The in-app updater (GitHub releases, REQUEST_INSTALL_PACKAGES). Pass -p:GheychiSelfUpdate=false for a
-             Google Play build: Play restricts that permission and updates the app itself. -->
+        <!-- The in-app updater (GitHub releases, APK download/install, UpdateCheckJob, REQUEST_INSTALL_PACKAGES).
+             Pass -p:GheychiSelfUpdate=false for a Google Play build: Play restricts self-updating and handles app updates itself.
+             The ML spam model updater remains enabled in both builds. -->
         <GheychiSelfUpdate Condition="'$(GheychiSelfUpdate)' == ''">true</GheychiSelfUpdate>
         <DefineConstants Condition="'$(GheychiSelfUpdate)' == 'true'">$(DefineConstants);SELF_UPDATE</DefineConstants>
+        <GheychiGooglePlayBuild Condition="'$(GheychiGooglePlayBuild)' == ''">false</GheychiGooglePlayBuild>
+        <DefineConstants Condition="'$(GheychiGooglePlayBuild)' == 'true'">$(DefineConstants);GOOGLE_PLAY</DefineConstants>
     </PropertyGroup>
 
     <!-- Full AOT: with profiled AOT only the startup path is precompiled and everything else (opening a chat, the

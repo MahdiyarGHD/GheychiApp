@@ -2,6 +2,7 @@ using Gheychi.App.Localization;
 using Gheychi.App.Ui;
 using Gheychi.Core.Spam;
 
+#if !GOOGLE_PLAY
 namespace Gheychi.App.Controls;
 
 /// <summary>A user's correction of the spam detector: from the Spam tab ("not spam") or a chat ("spam").</summary>
@@ -67,3 +68,4 @@ internal static class SpamReport
         MainThread.BeginInvokeOnMainThread(() => Ui.Toast.Show(result));
     }
 }
+#endif

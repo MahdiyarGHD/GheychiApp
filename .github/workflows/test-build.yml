@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - 'feat/migrate-to-avalonia'
+      - 'perf/**'
 
 permissions:
   contents: read
@@ -60,9 +61,28 @@ jobs:
           dotnet test tests/Gheychi.Core.Tests -c Release
           dotnet test tests/Gheychi.Infrastructure.Tests -c Release
 
+      - name: Publish Google Play AAB
+        run: |
+          rm -rf src/Gheychi.App/obj/Release src/Gheychi.App/bin/Release
+          dotnet publish "$APP_PROJECT" -c Release -f net10.0-android \
+            -p:AndroidPackageFormat=aab \
+            -p:GheychiSelfUpdate=false \
+            -p:GheychiGooglePlayBuild=true \
+            -p:ApplicationVersion=${{ github.run_number }} \
+            -p:InstallAndroidDependencies=true \
+            -p:AcceptAndroidSDKLicenses=True \
+            -p:AndroidSdkDirectory="${ANDROID_HOME}"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Gheychi-test-arm64
           path: src/Gheychi.App/bin/Release/net10.0-android/android-arm64/publish/*-Signed.apk
+          if-no-files-found: error
+
+      - name: Upload Play AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gheychi-test-play-aab
+          path: src/Gheychi.App/bin/Release/net10.0-android/publish/*-Signed.aab
           if-no-files-found: error

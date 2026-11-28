@@ -80,6 +80,9 @@ public partial class ChatView
 
     private void NoteKeyboard()
     {
+        if (MainView.Current?.CurrentKeyboardHeight is > 0 and var current)
+            _keyboardHeight = current;
+
         if (_inputPane is not { } pane || TopLevel.GetTopLevel(this) is not { } top)
             return;
 
@@ -87,7 +90,7 @@ public partial class ChatView
         {
             // The same reading MainView lifts the page by.
             var height = top.Bounds.Height - pane.OccludedRect.Top;
-            if (pane.OccludedRect.Height > 0 && height > 0 && height <= top.Bounds.Height * 0.6)
+            if (pane.OccludedRect.Height > 0 && height > 0 && height <= top.Bounds.Height * 0.85)
                 _keyboardHeight = height;
         }
         else if (top.InsetsManager is { DisplaysEdgeToEdge: true } insets)
@@ -127,7 +130,7 @@ public partial class ChatView
         if (!MessageEntry.IsFocused)
             MessageEntry.CaretIndex = MessageEntry.Text?.Length ?? 0;
 
-        if (_inputPane is { State: InputPaneState.Open })
+        if (_inputPane is { State: InputPaneState.Open } || (MainView.Current?.CurrentKeyboardHeight ?? 0) > 0)
         {
             // The panel waits for the keyboard to be gone: shown first, the box would be lifted by both.
             _emojiWaitsForKeyboardDown = true;
@@ -145,6 +148,7 @@ public partial class ChatView
                 SetKeyboard(false);
             ShowEmojiHost();
         }
+        MainView.Current?.RefreshKeyboardInsets();
     }
 
     /// <summary>Takes the panel away; with <paramref name="showKeyboard"/> the keyboard comes up in its place.</summary>
@@ -168,10 +172,12 @@ public partial class ChatView
         _emojiWaitsForKeyboardUp = true;
         MessageEntry.Focus();
         SetKeyboard(true);
+        MainView.Current?.RefreshKeyboardInsets();
         Fallback(() => _emojiWaitsForKeyboardUp, () =>
         {
             _emojiWaitsForKeyboardUp = false;
             HideEmojiHost();
+            MainView.Current?.RefreshKeyboardInsets();
         });
     }
 

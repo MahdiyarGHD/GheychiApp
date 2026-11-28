@@ -1,13 +1,12 @@
+#if SELF_UPDATE
 using System.Security.Cryptography;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Gheychi.App.Platforms.Android.Receivers;
 
-#if SELF_UPDATE
 // Only in builds that update themselves: Google Play restricts this permission, and Play updates its builds itself.
 [assembly: UsesPermission(global::Android.Manifest.Permission.RequestInstallPackages)]
-#endif
 
 namespace Gheychi.App.Platforms.Android.Services;
 
@@ -140,3 +139,4 @@ internal static class ApkInstaller
         ((Context?)Platform.CurrentActivity ?? context).StartActivity(confirm);
     }
 }
+#endif

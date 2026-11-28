@@ -28,7 +28,7 @@
 
                 <Border Classes="card">
                     <StackPanel>
-                        <Border Classes="row">
+                        <Border Classes="row" DoubleTapped="OnVersionDoubleTapped">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
                                 <TextBlock Text="{loc:Translate Settings_Version}" Classes="rowTitle" VerticalAlignment="Center" />
                                 <TextBlock x:Name="VersionValue" Grid.Column="1" Classes="valueChipLabel" />
@@ -72,6 +72,17 @@
                                     <TextBlock Text="{loc:Translate Settings_LicensesHint}" Classes="rowSubtitle" />
                                 </StackPanel>
                                 <ui:Icon Grid.Column="1" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                            </Grid>
+                        </Border>
+                        <Border Classes="divider" Margin="16,0" />
+                        <Border Classes="row" Tapped="OnPrivacyPolicyTapped">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{loc:Translate Settings_PrivacyPolicy}" Classes="rowTitle" />
+                                    <TextBlock Text="{loc:Translate Settings_PrivacyPolicyHint}" Classes="rowSubtitle" />
+                                </StackPanel>
+                                <ui:Icon Grid.Column="1" Data="{StaticResource Icon.OpenInNew}" Width="16" Height="16"
+                                         VerticalAlignment="Center" Foreground="#8A8F98" />
                             </Grid>
                         </Border>
                     </StackPanel>

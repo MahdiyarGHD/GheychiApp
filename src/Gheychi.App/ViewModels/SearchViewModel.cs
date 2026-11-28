@@ -148,13 +148,11 @@ public sealed class SearchResultItem
     private static readonly IBrush NameBrush = Palette.Pick("#2E3032", "#E8EAED");
     private static readonly IBrush TimeUnreadBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush TimeBrush = Palette.Pick("#74787D", "#8A8F98");
-    private static readonly IBrush AvatarBgBrush = Palette.Accent(AccentRole.Soft);
-    private static readonly IBrush AvatarTextBrush = Palette.Accent(AccentRole.Text);
     private static readonly IBrush MatchBgBrush = Palette.Pick("#ECE1D3", "#332E27");
     private static readonly IBrush MatchTextBrush = Palette.Pick("#665E53", "#DED3C5");
 
-    // Same as the search page background, so the chip reads as cut out of the avatar.
-    private static readonly IBrush RingBrush = Palette.Pick("#F1F3F4", "#121212");
+    // Same as the search results card background, so the chip reads as cut out of the avatar.
+    private static readonly IBrush RingBrush = Palette.Pick("#FFFFFF", "#1E1F22");
 
     private static string? _spamTag;
     private static string? _archivedTag;
@@ -201,10 +199,13 @@ public sealed class SearchResultItem
     public IBrush NameColor => NameBrush;
     public IBrush SimBadgeRingColor => RingBrush;
 
+    private (IBrush Bg, IBrush Fg)? _avatarColors;
+    private (IBrush Bg, IBrush Fg) AvatarColors => _avatarColors ??= AvatarPalette.For(Address, DisplayName);
+
     public IBrush TimeColor => IsUnread ? TimeUnreadBrush : TimeBrush;
 
-    public IBrush AvatarBgColor => AvatarBgBrush;
-    public IBrush AvatarTextColor => AvatarTextBrush;
+    public IBrush AvatarBgColor => AvatarColors.Bg;
+    public IBrush AvatarTextColor => AvatarColors.Fg;
     public IBrush MatchBgColor => MatchBgBrush;
     public IBrush MatchTextColor => MatchTextBrush;
 

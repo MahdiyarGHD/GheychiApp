@@ -114,7 +114,10 @@
                     <TextBlock Grid.Column="1" Text="{loc:Translate Spam_ActionRestoreTrust}" />
                 </Grid>
 
-                <Grid Classes="menuRow" ColumnDefinitions="Auto,*" Tapped="OnReportTapped">
+                <Grid Classes="menuRow"
+                      IsVisible="{x:Static app:AppBuildFeatures.FeedbackAndSpamReportingEnabled}"
+                      ColumnDefinitions="Auto,*"
+                      Tapped="OnReportTapped">
                     <ui:Icon Data="{StaticResource Icon.Report}" />
                     <TextBlock Grid.Column="1" Text="{loc:Translate Spam_ActionReportNotSpam}" />
                 </Grid>

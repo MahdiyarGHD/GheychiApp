@@ -157,17 +157,15 @@
                                                      Data="{Binding IconFile, Converter={x:Static ui:IconFileConverter.Instance}, Mode=OneTime}"
                                                      Width="27"
                                                      Height="27"
-                                                     Foreground="{theme:AccentBrush Role=Text}"
+                                                     CenterGeometry="True"
+                                                     Foreground="{Binding AvatarTextColor, Mode=OneTime}"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding Initials, Mode=OneTime}"
-                                                       IsVisible="{Binding ShowInitials}"
-                                                       Foreground="{Binding AvatarTextColor, Mode=OneTime}"
-                                                       FontSize="21"
-                                                       FontFamily="{x:Static app:AppFonts.Bold}"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"
-                                                       TextAlignment="Center" />
+                                            <ui:AvatarText Text="{Binding Initials, Mode=OneTime}"
+                                                           IsVisible="{Binding ShowInitials}"
+                                                           Foreground="{Binding AvatarTextColor, Mode=OneTime}"
+                                                           FontSize="21"
+                                                           FontFamily="{x:Static app:AppFonts.Bold}" />
                                         </Panel>
                                     </Border>
 

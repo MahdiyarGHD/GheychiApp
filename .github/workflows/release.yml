@@ -193,6 +193,107 @@ jobs:
           name: Gheychi-${{ steps.tag.outputs.version }}
           path: ${{ steps.apk.outputs.dir }}
 
+      - name: Decode Play signing keystore
+        id: play_keystore
+        shell: bash
+        env:
+          PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [[ -n "$PLAY_KEYSTORE_BASE64" ]]; then
+            path="$RUNNER_TEMP/play-upload.keystore"
+            echo "$PLAY_KEYSTORE_BASE64" | base64 --decode > "$path"
+            echo "path=$path" >> "$GITHUB_OUTPUT"
+            echo "mode=play" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$ANDROID_KEYSTORE_BASE64" ]]; then
+            echo "path=${{ steps.keystore.outputs.path }}" >> "$GITHUB_OUTPUT"
+            echo "mode=android" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Neither PLAY_KEYSTORE_BASE64 nor ANDROID_KEYSTORE_BASE64 is set. The Play AAB will be signed with the debug key and cannot be uploaded to Google Play."
+            echo "path=" >> "$GITHUB_OUTPUT"
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish Google Play AAB
+        id: play_aab
+        shell: bash
+        env:
+          KEYSTORE_PATH: ${{ steps.play_keystore.outputs.path }}
+          KEYSTORE_MODE: ${{ steps.play_keystore.outputs.mode }}
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # Clean the self-update build outputs so SELF_UPDATE is not left in compiled assemblies or manifest.
+          rm -rf src/Gheychi.App/obj/Release src/Gheychi.App/bin/Release
+
+          args=(
+            -c Release
+            -f net10.0-android
+            -p:AndroidPackageFormat=aab
+            -p:GheychiSelfUpdate=false
+            -p:GheychiGooglePlayBuild=true
+            -p:ApplicationDisplayVersion="${{ steps.tag.outputs.version }}"
+            -p:ApplicationVersion="${{ github.run_number }}"
+            -p:InstallAndroidDependencies=true
+            -p:AcceptAndroidSDKLicenses=True
+            -p:AndroidSdkDirectory="${ANDROID_HOME}"
+          )
+
+          if [[ "$KEYSTORE_MODE" == "play" ]]; then
+            args+=(
+              -p:AndroidKeyStore=true
+              -p:AndroidSigningKeyStore="$KEYSTORE_PATH"
+              -p:AndroidSigningStorePass=env:PLAY_KEYSTORE_PASSWORD
+              -p:AndroidSigningKeyAlias="$PLAY_KEY_ALIAS"
+              -p:AndroidSigningKeyPass=env:PLAY_KEY_PASSWORD
+            )
+          elif [[ "$KEYSTORE_MODE" == "android" ]]; then
+            args+=(
+              -p:AndroidKeyStore=true
+              -p:AndroidSigningKeyStore="$KEYSTORE_PATH"
+              -p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASSWORD
+              -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS"
+              -p:AndroidSigningKeyPass=env:ANDROID_KEY_PASSWORD
+            )
+          fi
+
+          dotnet publish "$APP_PROJECT" "${args[@]}"
+
+          version="${{ steps.tag.outputs.version }}"
+          bin=src/Gheychi.App/bin/Release/net10.0-android/publish
+          out="$RUNNER_TEMP/play"
+          mkdir -p "$out"
+
+          aab=$(ls "$bin"/*-Signed.aab 2>/dev/null | head -n 1 || true)
+          if [[ -z "$aab" ]]; then
+            aab=$(ls "$bin"/*.aab 2>/dev/null | head -n 1 || true)
+          fi
+          if [[ -z "$aab" ]]; then
+            echo "::error::No AAB found in $bin"
+            exit 1
+          fi
+
+          abis=$(zipinfo -1 "$aab" | { grep '^base/lib/' || true; } | cut -d/ -f3 | sort -u | xargs)
+          expected=$(for pair in $ANDROID_ABIS; do echo "${pair#*:}"; done | sort | xargs)
+          if [[ "$abis" != "$expected" ]]; then
+            echo "::error::Play AAB holds the ABIs '$abis', not '$expected'"
+            exit 1
+          fi
+
+          cp "$aab" "$out/Gheychi-$version-play.aab"
+          (cd "$out" && sha256sum "Gheychi-$version-play.aab" > "Gheychi-$version-play.aab.sha256")
+          echo "dir=$out" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Google Play AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gheychi-${{ steps.tag.outputs.version }}-play
+          path: ${{ steps.play_aab.outputs.dir }}
+
       - name: Publish GitHub release
         shell: bash
         env:

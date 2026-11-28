@@ -40,15 +40,15 @@
                     <DataTemplate x:DataType="vm:TrashRow">
                         <Grid MinHeight="76" Margin="16,6,10,6" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
                             <Border Width="44" Height="44" CornerRadius="22" VerticalAlignment="Center"
-                                    Background="{theme:AccentBrush Role=Soft}">
+                                    Background="{Binding AvatarBgColor, Mode=OneTime}">
                                 <Panel>
                                     <ui:Icon IsVisible="{Binding HasNoInitials}" Data="{StaticResource Icon.Person}"
-                                             Width="23" Height="23" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                             Foreground="{theme:AccentBrush Role=Text}" />
-                                    <TextBlock Text="{Binding Initials}" FontSize="19"
-                                               FontFamily="{x:Static app:AppFonts.Bold}"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Foreground="{theme:AccentBrush Role=Text}" />
+                                             Width="23" Height="23" CenterGeometry="True"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
+                                    <ui:AvatarText Text="{Binding Initials}" FontSize="19"
+                                                   FontFamily="{x:Static app:AppFonts.Bold}"
+                                                   Foreground="{Binding AvatarTextColor, Mode=OneTime}" />
                                 </Panel>
                             </Border>
                             <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">

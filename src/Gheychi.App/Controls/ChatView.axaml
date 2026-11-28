@@ -47,7 +47,7 @@
                                         BorderBrush="{Binding SearchStroke}"
                                         StrokeThickness="{Binding SearchStrokeThickness}"
                                         CornerRadius="16"
-                                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock Classes="body" Text="{Binding Body}"
                                        FontFamily="{x:Static app:AppFonts.Message}"
@@ -130,7 +130,7 @@
                                         BorderBrush="{Binding SearchStroke}"
                                         StrokeThickness="{Binding SearchStrokeThickness}"
                                         CornerRadius="16"
-                                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                                         HorizontalAlignment="Left">
                             <TextBlock Classes="body" FontSize="{StaticResource ChatBodySize}"
                                        TextWrapping="Wrap"
@@ -251,7 +251,7 @@
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
                                     <TextBlock Text="★"
                                                FontSize="11"
-                                               Foreground="#8F4205"
+                                               Foreground="{theme:ThemeBrush Light=#FFE082, Dark=#8F4205}"
                                                IsVisible="{Binding IsStarred}"
                                                VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Time}"
@@ -358,7 +358,7 @@
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
                                     <TextBlock Text="★"
                                                FontSize="11"
-                                               Foreground="#8F4205"
+                                               Foreground="{theme:ThemeBrush Light=#FFE082, Dark=#8F4205}"
                                                IsVisible="{Binding IsStarred}"
                                                VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding Time}"
@@ -678,39 +678,48 @@
                     <Border Grid.Column="1"
                             Width="48" Height="48"
                             CornerRadius="24"
-                            Background="{theme:AccentBrush Role=Soft}"
+                            Background="{Binding Thread.AvatarBgColor}"
                             ui:AvatarPhoto.Address="{Binding Thread.PhotoAddress}"
                             Tapped="OnHeaderTapped">
                         <Panel>
                             <ui:Icon IsVisible="{Binding Thread.HasIcon}"
                                      Data="{Binding Thread.IconFile, Converter={x:Static ui:IconFileConverter.Instance}}"
                                      Width="26" Height="26"
+                                     CenterGeometry="True"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center"
-                                     Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
-                            <TextBlock IsVisible="{Binding Thread.HasNoIcon}"
-                                       Text="{Binding Thread.Initials}"
-                                       Foreground="{theme:AccentBrush Role=Text}"
-                                       FontSize="17"
-                                       FontFamily="{x:Static app:AppFonts.Bold}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       TextAlignment="Center" />
+                                     Foreground="{Binding Thread.AvatarTextColor}" />
+                            <ui:AvatarText IsVisible="{Binding Thread.HasNoIcon}"
+                                           Text="{Binding Thread.Initials}"
+                                           Foreground="{Binding Thread.AvatarTextColor}"
+                                           FontSize="17"
+                                           FontFamily="{x:Static app:AppFonts.Bold}" />
                         </Panel>
                     </Border>
                     <!-- The number is in Details; the header is the name alone, like Google Messages -->
-                    <StackPanel Grid.Column="2"
-                                VerticalAlignment="Center"
-                                Background="Transparent"
-                                Tapped="OnHeaderTapped">
-                        <TextBlock Text="{Binding Thread.Name}"
+                    <Grid Grid.Column="2"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="6"
+                          VerticalAlignment="Center"
+                          Background="Transparent"
+                          Tapped="OnHeaderTapped">
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Thread.Name}"
                                    ui:TextDirection.KeepSide="True"
                                    Foreground="{theme:ThemeBrush Light=#000000, Dark=#FFFFFF}"
                                    FontSize="17"
                                    FontFamily="{x:Static app:AppFonts.Regular}"
                                    TextTrimming="CharacterEllipsis"
-                                   MaxLines="1" />
-                    </StackPanel>
+                                   MaxLines="1"
+                                   VerticalAlignment="Center" />
+                        <ui:Icon x:Name="HeaderMutedIcon"
+                                 Grid.Column="1"
+                                 IsVisible="{Binding Thread.IsMuted}"
+                                 Data="{StaticResource Icon.NotificationsOff}"
+                                 Width="16" Height="16"
+                                 Foreground="#8A8F98"
+                                 VerticalAlignment="Center" />
+                    </Grid>
                     <Panel Grid.Column="3"
                            Width="40" Height="40"
                            VerticalAlignment="Center"
@@ -835,7 +844,7 @@
                                 Padding="14,0,12,0"
                                 Height="40"
                                 CornerRadius="20"
-                                Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                                Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                                 VerticalAlignment="Center">
                             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
                                 <TextBox x:Name="SearchEntry"
@@ -967,7 +976,7 @@
                             VerticalAlignment="Bottom">
                     <Border Width="210" Height="42"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="180" Height="52"
                             CornerRadius="16"
@@ -975,7 +984,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="260" Height="46"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                     <Border Width="230" Height="42"
                             CornerRadius="16"
@@ -983,7 +992,7 @@
                             HorizontalAlignment="Right" />
                     <Border Width="160" Height="38"
                             CornerRadius="16"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                             HorizontalAlignment="Left" />
                 </StackPanel>
 
@@ -1070,7 +1079,7 @@
                 <Border IsVisible="{Binding Pending.HasScheduled}"
                         Padding="16,10"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                         Tapped="OnScheduledBarTapped">
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                         <ui:Icon Data="{StaticResource Icon.Snooze}" Width="18" Height="18"
@@ -1093,7 +1102,7 @@
                         IsVisible="False"
                         Padding="16,9"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                         Tapped="OnUnblockTapped">
                     <StackPanel Spacing="1" HorizontalAlignment="Center">
                         <TextBlock Text="{loc:Translate Chat_Unblock}"
@@ -1111,7 +1120,7 @@
                         IsVisible="False"
                         Padding="16,12"
                         CornerRadius="18"
-                        Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}">
+                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}">
                     <TextBlock Text="{loc:Translate Chat_NoReply}"
                                FontSize="13"
                                Foreground="#8A8F98"
@@ -1122,7 +1131,9 @@
                             Padding="12,0,4,0"
                             MinHeight="44"
                             CornerRadius="22"
-                            Background="{theme:ThemeBrush Light=#DFE3E8, Dark=#1C1F24}"
+                            BorderThickness="1"
+                            BorderBrush="{theme:ThemeBrush Light=#DFE3E8, Dark=Transparent}"
+                            Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1C1F24}"
                             VerticalAlignment="Center"
                             Tapped="OnInputBarTapped">
                         <Grid ColumnDefinitions="*,Auto">
@@ -1158,7 +1169,8 @@
                             </Border>
                         </Grid>
                     </Border>
-                    <Border Grid.Column="1"
+                    <Border x:Name="SimButton"
+                            Grid.Column="1"
                             Margin="6,0,0,0"
                             Width="40" Height="40"
                             CornerRadius="20"
@@ -1268,6 +1280,14 @@
                             <TextBlock x:Name="MenuArchiveLabel" Grid.Column="1" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
                         </Grid>
                     </Border>
+                    <Border x:Name="MenuMuteRow" Padding="12,11"
+                            Background="Transparent"
+                            Tapped="OnMenuMuteTapped">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <ui:Icon x:Name="MenuMuteIcon" Grid.Column="0" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                            <TextBlock x:Name="MenuMuteLabel" Grid.Column="1" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
                     <Border x:Name="MenuBlockRow" Padding="12,11"
                             Background="Transparent"
                             Tapped="OnMenuBlockTapped">
@@ -1292,15 +1312,17 @@
                             <TextBlock Grid.Column="1" Text="{loc:Translate Profile_SpamMessages}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
                         </Grid>
                     </Border>
-                    <Border Height="1" Margin="8,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
-                    <Border Padding="12,11"
-                            Background="Transparent"
-                            Tapped="OnMenuHelpTapped">
-                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                            <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Help}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
-                            <TextBlock Grid.Column="1" Text="{loc:Translate Help_Feedback}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
-                        </Grid>
-                    </Border>
+                    <StackPanel IsVisible="{x:Static app:AppBuildFeatures.FeedbackAndSpamReportingEnabled}">
+                        <Border Height="1" Margin="8,3" Background="{theme:ThemeBrush Light=#EEEFF0, Dark=#2A2E35}" />
+                        <Border Padding="12,11"
+                                Background="Transparent"
+                                Tapped="OnMenuHelpTapped">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <ui:Icon Grid.Column="0" Data="{StaticResource Icon.Help}" Width="18" Height="18" VerticalAlignment="Center" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" />
+                                <TextBlock Grid.Column="1" Text="{loc:Translate Help_Feedback}" FontSize="13" FontFamily="{x:Static app:AppFonts.Bold}" Foreground="{theme:ThemeBrush Light=#1B1E24, Dark=#E8EAED}" VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>
@@ -1483,6 +1505,7 @@
 
                             <!-- Report as spam: received messages only -->
                             <Grid x:Name="MenuReportRow"
+                                  IsVisible="{x:Static app:AppBuildFeatures.FeedbackAndSpamReportingEnabled}"
                                   ColumnDefinitions="10,Auto,10,*,10"
                                   RowDefinitions="8,Auto,8"
                                   Background="Transparent"

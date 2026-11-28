@@ -15,9 +15,13 @@ public sealed class Icon : Control
     public static readonly StyledProperty<IBrush?> ForegroundProperty =
         AvaloniaProperty.Register<Icon, IBrush?>(nameof(Foreground));
 
+    /// <summary>When true, centers the geometry's tight bounds inside the control instead of the 24x24 viewBox.</summary>
+    public static readonly StyledProperty<bool> CenterGeometryProperty =
+        AvaloniaProperty.Register<Icon, bool>(nameof(CenterGeometry));
+
     static Icon()
     {
-        AffectsRender<Icon>(DataProperty, ForegroundProperty);
+        AffectsRender<Icon>(DataProperty, ForegroundProperty, CenterGeometryProperty);
         IsHitTestVisibleProperty.OverrideDefaultValue<Icon>(false);
     }
 
@@ -67,6 +71,12 @@ public sealed class Icon : Control
         set => SetValue(ForegroundProperty, value);
     }
 
+    public bool CenterGeometry
+    {
+        get => GetValue(CenterGeometryProperty);
+        set => SetValue(CenterGeometryProperty, value);
+    }
+
     protected override Size MeasureOverride(Size availableSize) =>
         new(
             double.IsNaN(Width) ? Math.Min(ViewBox, availableSize.Width) : Width,
@@ -84,8 +94,19 @@ public sealed class Icon : Control
         if (scale <= 0)
             return;
 
-        var offsetX = (bounds.Width - ViewBox * scale) / 2;
-        var offsetY = (bounds.Height - ViewBox * scale) / 2;
+        double offsetX;
+        double offsetY;
+        if (CenterGeometry && data.Bounds is { Width: > 0, Height: > 0 } geo)
+        {
+            offsetX = (bounds.Width - geo.Width * scale) / 2 - geo.X * scale;
+            offsetY = (bounds.Height - geo.Height * scale) / 2 - geo.Y * scale;
+        }
+        else
+        {
+            offsetX = (bounds.Width - ViewBox * scale) / 2;
+            offsetY = (bounds.Height - ViewBox * scale) / 2;
+        }
+
         using (context.PushTransform(new Matrix(scale, 0, 0, scale, offsetX, offsetY)))
             context.DrawGeometry(brush, null, data);
     }

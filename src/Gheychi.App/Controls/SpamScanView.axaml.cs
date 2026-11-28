@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Gheychi.App;
 using Gheychi.App.Localization;
 using Gheychi.App.Ui;
 using Gheychi.App.ViewModels;
@@ -268,12 +269,18 @@ public partial class SpamScanView : UserControl
 
         var loc = LocalizationManager.Instance;
         var notSpam = loc["Scan_NotSpam"];
+#if !GOOGLE_PLAY
         var reportSpam = loc["Scan_ReportSpam"];
+#endif
 
         if (row.Item is { } item)
         {
             var delete = loc["Spam_ActionDelete"];
+#if GOOGLE_PLAY
+            var choice = await Dialogs.ActionSheetAsync(row.Sender, loc["Chat_Cancel"], delete, notSpam);
+#else
             var choice = await Dialogs.ActionSheetAsync(row.Sender, loc["Chat_Cancel"], delete, notSpam, reportSpam);
+#endif
             if (choice == notSpam)
             {
                 if (_spam is null || !await _spam.RestoreAsync(item, trustSender: false))
@@ -282,13 +289,17 @@ public partial class SpamScanView : UserControl
                     return;
                 }
 
+#if !GOOGLE_PLAY
                 if (await AskReportAsync())
                     await SpamReport.SubmitAsync(row.Body, isSpam: false);
+#endif
             }
+#if !GOOGLE_PLAY
             else if (choice == reportSpam)
             {
                 await SpamReport.SubmitAsync(row.Body, isSpam: true);
             }
+#endif
             else if (choice == delete && _spam is not null)
             {
                 await _spam.DeleteAsync(item);
@@ -299,35 +310,47 @@ public partial class SpamScanView : UserControl
 
         if (row.Kept)
         {
+#if !GOOGLE_PLAY
             // Already judged not spam; all that is left is reporting it.
             if (await Dialogs.ActionSheetAsync(row.Sender, loc["Chat_Cancel"], null, loc["Scan_ReportNotSpam"]) == loc["Scan_ReportNotSpam"])
                 await SpamReport.SubmitAsync(row.Body, isSpam: false);
+#endif
             return;
         }
 
         var trust = loc["Scan_TrustSender"];
+#if GOOGLE_PLAY
+        var picked = await Dialogs.ActionSheetAsync(row.Sender, loc["Chat_Cancel"], null, notSpam, trust);
+#else
         var picked = await Dialogs.ActionSheetAsync(row.Sender, loc["Chat_Cancel"], null, notSpam, reportSpam, trust);
+#endif
         if (picked == notSpam)
         {
             await _scan.MarkNotSpamAsync(row);
+#if !GOOGLE_PLAY
             if (await AskReportAsync())
                 await SpamReport.SubmitAsync(row.Body, isSpam: false);
+#endif
         }
+#if !GOOGLE_PLAY
         else if (picked == reportSpam)
         {
             await SpamReport.SubmitAsync(row.Body, isSpam: true);
         }
+#endif
         else if (picked == trust && _scan.GroupOf(row) is { } group)
         {
             _scan.TrustSender(group);
         }
     }
 
+#if !GOOGLE_PLAY
     private static Task<bool> AskReportAsync()
     {
         var loc = LocalizationManager.Instance;
         return Dialogs.AlertAsync(loc["Scan_NotSpam"], loc["Scan_NotSpamAsk"], loc["Scan_Report"], loc["Scan_NoReport"]);
     }
+#endif
 
     private async void OnHeaderActionTapped(object? sender, TappedEventArgs e)
     {
@@ -382,9 +405,15 @@ public partial class SpamScanView : UserControl
             if (choice == MoveChoice.Cancel)
                 return;
 
+#if !GOOGLE_PLAY
             var bodies = _scan.SelectedMessages.Select(m => m.Body).ToList();
+#endif
             var loc = LocalizationManager.Instance;
+#if GOOGLE_PLAY
+            var (result, _, changed) = await _scan.ApplyAsync();
+#else
             var (result, moved, changed) = await _scan.ApplyAsync();
+#endif
             switch (result)
             {
                 case ApplyResult.NotDefaultApp:
@@ -398,8 +427,10 @@ public partial class SpamScanView : UserControl
             Close();
             if (changed > 0)
                 Toast.Show(string.Format(loc["Scan_Changed"], LocalizedNumbers.Number(changed)));
+#if !GOOGLE_PLAY
             if (choice == MoveChoice.MoveAndReport && moved > 0)
                 _ = ReportAllAsync(bodies);
+#endif
         }
         catch (Exception ex)
         {
@@ -411,7 +442,9 @@ public partial class SpamScanView : UserControl
     {
         Cancel,
         Move,
+#if !GOOGLE_PLAY
         MoveAndReport
+#endif
     }
 
     private static Task<MoveChoice> ConfirmMoveAsync(int count, int threads, DateTime expires)
@@ -422,6 +455,7 @@ public partial class SpamScanView : UserControl
 
         return Sheet.ShowAsync<MoveChoice>(finish =>
         {
+#if !GOOGLE_PLAY
             var report = false;
             var glyph = new TextBlock { FontSize = 12, Foreground = Brushes.White, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
             var check = new Border { Width = 22, Height = 22, CornerRadius = new CornerRadius(11), BorderThickness = new Thickness(1.5), Child = glyph };
@@ -447,22 +481,30 @@ public partial class SpamScanView : UserControl
                 },
                 new Thickness(0, 4),
                 minHeight: 44);
+#endif
 
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right };
             buttons.Children.Add(Sheet.Button(loc["Chat_Cancel"], filled: false, () => finish(MoveChoice.Cancel), Sheet.Muted));
+#if GOOGLE_PLAY
+            buttons.Children.Add(Sheet.Button(loc["Scan_MoveConfirm"], filled: true, () => finish(MoveChoice.Move)));
+#else
             buttons.Children.Add(Sheet.Button(loc["Scan_MoveConfirm"], filled: true, () => finish(report ? MoveChoice.MoveAndReport : MoveChoice.Move)));
+#endif
 
             var body = new StackPanel { Margin = new Thickness(24, 22, 18, 14), Spacing = 10 };
             body.Children.Add(Sheet.Label(string.Format(loc["Scan_MoveTitle"], LocalizedNumbers.Number(count)), 18, Sheet.Ink, bold: true));
             body.Children.Add(Sheet.Label(string.Format(loc["Scan_MoveBody"], day), 14.5, Sheet.Soft));
             if (threads > 0)
                 body.Children.Add(Sheet.Label(string.Format(loc["Scan_MoveThreads"], LocalizedNumbers.Number(threads)), 14.5, Sheet.Soft));
+#if !GOOGLE_PLAY
             body.Children.Add(reportRow);
+#endif
             body.Children.Add(buttons);
             return body;
         }, MoveChoice.Cancel, centered: true);
     }
 
+#if !GOOGLE_PLAY
     // The form takes one message per post; numbers and links are masked by the reporter before anything is sent.
     private static async Task ReportAllAsync(IReadOnlyList<string> bodies)
     {
@@ -490,4 +532,5 @@ public partial class SpamScanView : UserControl
         var loc = LocalizationManager.Instance;
         MainThread.BeginInvokeOnMainThread(() => Toast.Show(loc[failed == 0 ? "Spam_ReportThanks" : "Spam_ReportFailed"]));
     }
+#endif
 }

@@ -53,6 +53,23 @@
                     </StackPanel>
                 </Border>
                 <TextBlock Text="{loc:Translate Settings_ClearSpamNote}" Classes="note" Margin="26,8,26,0" />
+
+                <Border Classes="card" Margin="16,18,16,0">
+                    <Border Classes="row" Tapped="OnPrivacyPolicyTapped">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Classes="badge">
+                                <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Shield}"
+                                         Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="{loc:Translate Settings_PrivacyPolicy}" Classes="rowTitle" />
+                                <TextBlock Text="{loc:Translate Settings_PrivacyPolicyHint}" Classes="rowSubtitle" />
+                            </StackPanel>
+                            <ui:Icon Grid.Column="2" Data="{StaticResource Icon.OpenInNew}" Width="16" Height="16"
+                                     VerticalAlignment="Center" Foreground="#8A8F98" />
+                        </Grid>
+                    </Border>
+                </Border>
             </StackPanel>
         </ScrollViewer>
     </Grid>

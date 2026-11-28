@@ -58,6 +58,7 @@ public partial class MainView : UserControl
 
     public MainView()
     {
+        StartupTiming.Mark("mainview.start");
         InitializeComponent();
         Current = this;
         // Insets are applied by ApplyInsets, which lets Root paint under the system bars.
@@ -73,6 +74,7 @@ public partial class MainView : UserControl
         AddHandler(PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(PointerCaptureLostEvent, OnPointerCaptureLost, RoutingStrategies.Tunnel, handledEventsToo: true);
+        StartupTiming.Mark("mainview.end");
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -108,7 +110,14 @@ public partial class MainView : UserControl
         if (_topLevel.InputPane is { } pane)
             pane.StateChanged += OnInsetsChanged;
         if (ContentView is { } content)
+        {
             content.LayoutChange += OnContentLayoutChanged;
+            if (content.ViewTreeObserver is { IsAlive: true } observer)
+            {
+                _globalLayoutListener ??= new GlobalLayoutListener(() => Dispatcher.UIThread.Post(ScheduleApplyInsets));
+                observer.AddOnGlobalLayoutListener(_globalLayoutListener);
+            }
+        }
         ApplyInsets();
 
         ChatLaunchRequests.Requested += OnChatLaunchRequested;
@@ -117,12 +126,16 @@ public partial class MainView : UserControl
         MainActivity.Resumed += OnAppResumed;
         SmsDeliverReceiver.SpamReceived += OnSpamArrived;
         // After the first frame: the badges build the update services (their HTTP clients) and read the database, and
-        // nothing of that is on screen yet.
-        _topLevel.RequestAnimationFrame(_ => Dispatcher.UIThread.Post(() =>
+        // nothing of that is on screen yet. Not RequestAnimationFrame: the first render it waits for comes before the
+        // surface exists, so that ran in the middle of the launch.
+        _ = MainActivity.FirstFrame.ContinueWith(_ => Dispatcher.UIThread.Post(() =>
         {
+            if (_topLevel is null)
+                return;
+
             SubscribeUpdates();
             OnAppResumed();
-        }, DispatcherPriority.Background));
+        }, DispatcherPriority.Background), TaskScheduler.Default);
 
         if (_detached)
         {
@@ -144,17 +157,23 @@ public partial class MainView : UserControl
 
     private void OnAppResumed()
     {
+#if SELF_UPDATE
         // Runs on the first frame and on every return to the app, so a tapped update notification is seen either way.
         if (AboutScreenRequests.Take())
         {
             Select(SettingsIndex);
             (_pages[SettingsIndex] as SettingsPage)?.OpenAbout();
         }
+#endif
+
+        // At launch the activity resumes before the first frame; the call queued in OnAttachedToVisualTree does the rest.
+        if (!MainActivity.FirstFrame.IsCompleted)
+            return;
 
         _ = Services.UpdateAutoCheck.RunAsync();
         _ = UpdateSpamBadgeAsync();
         // The keyboard and the bars may have changed while the app was away without a callback reaching it.
-        Dispatcher.UIThread.Post(ApplyInsets, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(ScheduleApplyInsets, DispatcherPriority.Background);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -175,7 +194,11 @@ public partial class MainView : UserControl
         }
 
         if (ContentView is { } content)
+        {
             content.LayoutChange -= OnContentLayoutChanged;
+            if (_globalLayoutListener is not null && content.ViewTreeObserver is { IsAlive: true } observer)
+                observer.RemoveOnGlobalLayoutListener(_globalLayoutListener);
+        }
         if (_topLevel is not null)
         {
             _topLevel.BackRequested -= OnBackRequested;
@@ -333,11 +356,16 @@ public partial class MainView : UserControl
     {
         try
         {
+            // Counted from the first frame: from the constructor, 600 ms ended inside the first render, and the Spam
+            // page was built on the UI thread before the inbox was on screen.
+            await MainActivity.FirstFrame;
             await Task.Delay(600);
             foreach (var index in (int[])[SpamIndex, SettingsIndex])
             {
                 await UserActivity.WaitForIdleAsync();
+                StartupTiming.Mark($"tab{index}.start");
                 _pages[index] ??= CreatePage(index);
+                StartupTiming.Mark($"tab{index}.end");
                 await Task.Delay(300);
             }
 
@@ -416,7 +444,16 @@ public partial class MainView : UserControl
 
     // ---- Keyboard and system bars --------------------------------------------------------------
 
-    private void OnInsetsChanged(object? sender, EventArgs e) => ApplyInsets();
+    private GlobalLayoutListener? _globalLayoutListener;
+    private int _insetSettleVersion;
+
+    /// <summary>Re-reads system bars and keyboard insets immediately and after any in-flight IME animation settles.</summary>
+    public void RefreshKeyboardInsets() => ScheduleApplyInsets();
+
+    /// <summary>Current keyboard lift applied to the root layout, in DIPs.</summary>
+    public double CurrentKeyboardHeight => Root.Padding.Bottom;
+
+    private void OnInsetsChanged(object? sender, EventArgs e) => ScheduleApplyInsets();
 
     private void OnScalingChanged(object? sender, EventArgs e) => ApplyInsets();
 
@@ -431,6 +468,8 @@ public partial class MainView : UserControl
         var at = new int[2];
         content.GetLocationInWindow(at);
         var scale = _topLevel.RenderScaling;
+        if (scale <= 0)
+            scale = 1;
         return new Thickness(
             at[0] / scale,
             at[1] / scale,
@@ -441,17 +480,63 @@ public partial class MainView : UserControl
     // Coming back to the app with the keyboard up, the pane can briefly report a rectangle that is not the keyboard (the
     // whole window, or one that starts at the top). Taken as the keyboard's room it left the page no height at all, with
     // only the tab bar showing at the top. The room is measured to the window's bottom edge, as the keyboard's rectangle
-    // may stop short of it (the navigation bar); a keyboard never takes most of the window.
+    // may stop short of it (the navigation bar); a genuinely full-screen bogus rect is rejected.
     private static double KeyboardHeight(Rect occluded, double windowHeight)
     {
         if (windowHeight <= 0 || occluded.Height <= 0)
             return 0;
 
         var height = windowHeight - occluded.Top;
-        return height > 0 && height <= windowHeight * 0.6 ? height : 0;
+        return height > 0 && height <= windowHeight * 0.85 ? height : 0;
     }
 
-    private void OnContentLayoutChanged(object? sender, global::Android.Views.View.LayoutChangeEventArgs e) => ApplyInsets();
+    private double ComputeKeyboardHeight(TopLevel topLevel, double viewBottomOffset)
+    {
+        var windowHeight = topLevel.Bounds.Height;
+        if (windowHeight <= 0)
+            return 0;
+
+        // On Android 11+ (API 30+), WindowInsets.Type.Ime() on DecorView tracks keyboard open/close and dynamic height
+        // changes (e.g. suggestion/clipboard toolbars) even when Avalonia's InputPane misses an update or reports 0.
+        if (OperatingSystem.IsAndroidVersionAtLeast(30)
+            && Platform.CurrentActivity?.Window?.DecorView?.RootWindowInsets is { } rootInsets)
+        {
+            var scale = topLevel.RenderScaling;
+            if (scale <= 0)
+                scale = 1;
+
+            var imeVisible = rootInsets.IsVisible(global::Android.Views.WindowInsets.Type.Ime());
+            var imeBottomPx = rootInsets.GetInsets(global::Android.Views.WindowInsets.Type.Ime()).Bottom;
+            if (imeVisible && imeBottomPx > 0)
+            {
+                var adjusted = Math.Max(0, imeBottomPx / scale - viewBottomOffset);
+                if (adjusted <= windowHeight * 0.85)
+                    return adjusted;
+            }
+            else if (!imeVisible && imeBottomPx <= 0)
+            {
+                return 0;
+            }
+        }
+
+        if (topLevel.InputPane is { State: InputPaneState.Open } pane)
+            return KeyboardHeight(pane.OccludedRect, windowHeight);
+
+        return 0;
+    }
+
+    private void OnContentLayoutChanged(object? sender, global::Android.Views.View.LayoutChangeEventArgs e) => ScheduleApplyInsets();
+
+    private void ScheduleApplyInsets()
+    {
+        ApplyInsets();
+        var version = ++_insetSettleVersion;
+        DispatcherTimer.RunOnce(() =>
+        {
+            if (version == _insetSettleVersion)
+                ApplyInsets();
+        }, TimeSpan.FromMilliseconds(140));
+    }
 
     private void ApplyInsets()
     {
@@ -459,28 +544,31 @@ public partial class MainView : UserControl
             return;
 
         var safe = _topLevel.InsetsManager?.SafeAreaPadding ?? default;
-        // Right after the app restarts itself the system can still be fitting the window around the bars while the
-        // insets are reported as well; what the view is already inset by is not applied a second time.
-        if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true)
-        {
-            var offset = ViewOffset();
-            safe = new Thickness(
-                Math.Max(0, safe.Left - offset.Left),
-                Math.Max(0, safe.Top - offset.Top),
-                Math.Max(0, safe.Right - offset.Right),
-                Math.Max(0, safe.Bottom - offset.Bottom));
-        }
+        var offset = ViewOffset();
+        // Right after the app restarts or when Android resizes ContentView for bars/IME, subtract whatever the view is already inset by.
+        safe = new Thickness(
+            Math.Max(0, safe.Left - offset.Left),
+            Math.Max(0, safe.Top - offset.Top),
+            Math.Max(0, safe.Right - offset.Right),
+            Math.Max(0, safe.Bottom - offset.Bottom));
 
-        var keyboard = 0.0;
-        // Where the window is not edge to edge (before Android 11) the system shrinks it for the keyboard itself.
-        if (_topLevel.InsetsManager?.DisplaysEdgeToEdge == true && _topLevel.InputPane is { State: InputPaneState.Open } pane)
-            keyboard = KeyboardHeight(pane.OccludedRect, _topLevel.Bounds.Height);
+        var keyboard = ComputeKeyboardHeight(_topLevel, Math.Max(0, offset.Bottom));
 
         // The keyboard covers the navigation bar, so while it is up it alone sets the bottom edge.
         _safeBottom = keyboard > 0 ? 0 : safe.Bottom;
-        Root.Padding = new Thickness(safe.Left, safe.Top, safe.Right, keyboard);
-        PageHost.Margin = new Thickness(0, 0, 0, _safeBottom);
-        OverlayHost.Margin = new Thickness(0, 0, 0, _safeBottom);
+        var rootPadding = new Thickness(safe.Left, safe.Top, safe.Right, keyboard);
+        var hostMargin = new Thickness(0, 0, 0, _safeBottom);
+        if (Root.Padding != rootPadding)
+            Root.Padding = rootPadding;
+        if (PageHost.Margin != hostMargin)
+            PageHost.Margin = hostMargin;
+        if (OverlayHost.Margin != hostMargin)
+            OverlayHost.Margin = hostMargin;
+    }
+
+    private sealed class GlobalLayoutListener(Action onLayout) : Java.Lang.Object, global::Android.Views.ViewTreeObserver.IOnGlobalLayoutListener
+    {
+        public void OnGlobalLayout() => onLayout();
     }
 
     // ---- Settings tab dot ----------------------------------------------------------------------
@@ -497,8 +585,10 @@ public partial class MainView : UserControl
             return;
 
         _subscribed = true;
+#if SELF_UPDATE
         if (services.GetService<AppUpdates>() is { } app)
             app.Changed += (_, _) => _ = UpdateBadgeAsync();
+#endif
         if (services.GetService<SpamModelUpdates>() is { } model)
             model.Changed += (_, _) => _ = UpdateBadgeAsync();
         _ = UpdateBadgeAsync();
@@ -536,7 +626,11 @@ public partial class MainView : UserControl
         try
         {
             var services = IPlatformApplication.Current?.Services;
+#if SELF_UPDATE
             var app = services?.GetService<AppUpdates>()?.GetAvailable() is not null;
+#else
+            const bool app = false;
+#endif
             var model = !app && services?.GetService<SpamModelUpdates>() is { } models
                 && await Task.Run(() => models.GetAvailableAsync()) is not null;
 

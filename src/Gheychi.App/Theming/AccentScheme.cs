@@ -154,7 +154,7 @@ public sealed class AccentScheme
                 softLight: Hex(100), softDark: Hex(800), strongLight: Hex(200), strongDark: Hex(700),
                 washLight: Hex(50), washDark: Hex(900), midLight: Hex(300), midDark: Hex(500),
                 deep: Hex(900), onSolid: Hex(100), onSolidBright: Hex(50),
-                bubbleLight: Hex(bubble), bubbleDark: Hex(bubble));
+                bubbleLight: Hex(solid), bubbleDark: Hex(bubble));
         }
         catch (Exception ex)
         {
@@ -178,8 +178,9 @@ public sealed class AccentScheme
         return steps[step > 0 ? steps.Length - 1 : 0];
     }
 
-    // The text on a sent message. The fill is light in both themes, so the text is the same in both.
+    // The text on a sent message: white on saturated solid bubbles in light mode, near-black on bright glow in dark mode.
     private const int BubbleInk = 0x1A1C1E;
+    private const int BubbleLightInk = 0xFFFFFF;
 
     // Room above the 4.5 that body text needs, so the muted tone can still reach it.
     private const double MinBubbleBody = 7;
@@ -259,15 +260,15 @@ public sealed class AccentScheme
         _onSolid = onSolid;
         _onSolidBright = onSolidBright;
 
-        // A sent message is the Strong tint in light and the Glow in dark unless a scheme chose its own tones. The time
-        // and ticks are the text tone moved toward the fill until it only just holds 4.5, the link is the accent's
-        // dark tone moved toward the text until it holds 4.5.
-        _bubbleLight = bubbleLight ?? strongLight;
+        // A sent message uses Solid with crisp white text in light mode (so it never washes out into gray) and Glow
+        // with near-black ink in dark mode. Muted time/ticks step from the bubble toward the text colour until they
+        // hold 4.5 contrast; links stay crisp white on light solid bubbles and darken toward ink on dark glow bubbles.
+        _bubbleLight = bubbleLight ?? solid;
         _bubbleDark = bubbleDark ?? glow;
         var (light, dark) = (Parse(_bubbleLight), Parse(_bubbleDark));
-        _mutedLight = Format(Toward(light, BubbleInk, light, MinMuted));
+        _mutedLight = Format(Toward(light, BubbleLightInk, light, MinMuted));
         _mutedDark = Format(Toward(dark, BubbleInk, dark, MinMuted));
-        _linkLight = Format(Toward(Parse(ink), BubbleInk, light, 4.5));
+        _linkLight = Format(BubbleLightInk);
         _linkDark = Format(Toward(Parse(ink), BubbleInk, dark, 4.5));
     }
 
@@ -294,7 +295,7 @@ public sealed class AccentScheme
         AccentRole.OnSolid => _onSolid,
         AccentRole.OnSolidBright => _onSolidBright,
         AccentRole.Bubble => dark ? _bubbleDark : _bubbleLight,
-        AccentRole.OnBubble => Format(BubbleInk),
+        AccentRole.OnBubble => Format(dark ? BubbleInk : BubbleLightInk),
         AccentRole.OnBubbleMuted => dark ? _mutedDark : _mutedLight,
         AccentRole.OnBubbleLink => dark ? _linkDark : _linkLight,
         _ => _solid

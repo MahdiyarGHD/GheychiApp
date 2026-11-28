@@ -296,20 +296,22 @@
                                 <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
                             </Grid>
                         </Border>
-                        <Border Classes="divider" />
-                        <Border Classes="row" Tapped="OnHelpTapped">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                                <Border Classes="badge">
-                                    <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Help}"
-                                             Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
-                                </Border>
-                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{loc:Translate Help_Feedback}" Classes="rowTitle" />
-                                    <TextBlock Text="{loc:Translate Help_FeedbackHint}" Classes="rowSubtitle" />
-                                </StackPanel>
-                                <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
-                            </Grid>
-                        </Border>
+                        <StackPanel IsVisible="{x:Static local:AppBuildFeatures.FeedbackAndSpamReportingEnabled}">
+                            <Border Classes="divider" />
+                            <Border Classes="row" Tapped="OnHelpTapped">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                    <Border Classes="badge">
+                                        <ui:Icon Classes="badgeIcon" Data="{StaticResource Icon.Help}"
+                                                 Foreground="{theme:ThemeBrush Light=#393B3E, Dark=#DDDEDF}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{loc:Translate Help_Feedback}" Classes="rowTitle" />
+                                        <TextBlock Text="{loc:Translate Help_FeedbackHint}" Classes="rowSubtitle" />
+                                    </StackPanel>
+                                    <ui:Icon Grid.Column="2" Classes="chevron" Data="{StaticResource Icon.ChevronRight}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
@@ -329,26 +331,6 @@
                                TextWrapping="Wrap"
                                TextAlignment="Center" />
                 </StackPanel>
-
-                <Border Margin="0,22,0,0"
-                        Padding="14,7"
-                        HorizontalAlignment="Center"
-                        BorderThickness="1"
-                        BorderBrush="{theme:ThemeBrush Light=#DFE0E1, Dark=#2C2D2F}"
-                        CornerRadius="16"
-                        Background="{theme:ThemeBrush Light=#FFFFFF, Dark=#1E1F22}"
-                        Tapped="OnCreditTapped">
-                    <StackPanel Orientation="Horizontal" Spacing="5">
-                        <TextBlock Text="{loc:Translate Settings_CreditMadeWith}" FontSize="12" Foreground="#8A8F98" VerticalAlignment="Center" />
-                        <TextBlock x:Name="CreditHeart" Text="&#x1F49A;" FontSize="13" VerticalAlignment="Center" />
-                        <TextBlock Text="{loc:Translate Settings_CreditBy}" FontSize="12" Foreground="#8A8F98" VerticalAlignment="Center" />
-                        <TextBlock Text="MahdiyarGHD"
-                                   FontSize="12"
-                                   FontFamily="{x:Static local:AppFonts.Bold}"
-                                   Foreground="{theme:AccentBrush Role=Text}"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                </Border>
             </StackPanel>
         </ScrollViewer>
     </Grid>

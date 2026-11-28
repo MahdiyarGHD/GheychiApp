@@ -189,6 +189,12 @@
   <data name="Messages_Archive" xml:space="preserve">
     <value>بایگانی</value>
   </data>
+  <data name="Messages_Mute" xml:space="preserve">
+    <value>بی‌صدا کردن</value>
+  </data>
+  <data name="Messages_Unmute" xml:space="preserve">
+    <value>لغو بی‌صدا</value>
+  </data>
   <data name="Archive_Title" xml:space="preserve">
     <value>بایگانی‌شده</value>
   </data>
@@ -478,7 +484,7 @@
     <value>سفارشی</value>
   </data>
   <data name="Profile_Snooze" xml:space="preserve">
-    <value>بی‌صدا کردن موقت گفتگو</value>
+    <value>بی‌صدا کردن گفتگو</value>
   </data>
   <data name="Profile_SnoozeOff" xml:space="preserve">
     <value>غیرفعال</value>
@@ -703,7 +709,7 @@
     <value>حریم خصوصی و ذخیره‌سازی</value>
   </data>
   <data name="Settings_PrivacyHint" xml:space="preserve">
-    <value>فقط روی گوشی، پاک کردن داده‌ها</value>
+    <value>تشخیص روی گوشی، سیاست حریم خصوصی و داده‌ها</value>
   </data>
   <data name="Settings_About" xml:space="preserve">
     <value>درباره</value>
@@ -766,16 +772,10 @@
     <value>به‌روزرسانی انجام نشد. دوباره بزنید</value>
   </data>
   <data name="Settings_FooterTitle" xml:space="preserve">
-    <value>پردازش کامل روی گوشی</value>
+    <value>تشخیص هرزنامه روی گوشی</value>
   </data>
   <data name="Settings_FooterText" xml:space="preserve">
-    <value>پیام‌های شما هرگز از این گوشی خارج نمی‌شوند</value>
-  </data>
-  <data name="Settings_CreditMadeWith" xml:space="preserve">
-    <value>ساخته‌شده با</value>
-  </data>
-  <data name="Settings_CreditBy" xml:space="preserve">
-    <value>توسط</value>
+    <value>پیام‌ها روی گوشی می‌مانند، مگر این که خودتان گزارشی بفرستید</value>
   </data>
   <data name="Settings_Days" xml:space="preserve">
     <value>{0} روز</value>
@@ -895,10 +895,16 @@
     <value>زبان</value>
   </data>
   <data name="Settings_PrivacyCardTitle" xml:space="preserve">
-    <value>همه‌چیز روی همین گوشی می‌ماند</value>
+    <value>پیام‌ها روی همین گوشی می‌مانند</value>
   </data>
   <data name="Settings_PrivacyCardText" xml:space="preserve">
-    <value>هرزنامه با مدلی روی همین گوشی تشخیص داده می‌شود. پیام‌های شما هرگز بارگذاری نمی‌شوند.</value>
+    <value>هرزنامه با مدلی روی همین گوشی تشخیص داده می‌شود. هیچ پیامی از گوشی خارج نمی‌شود، مگر این که خودتان پس از ویرایش گزارشی بفرستید.</value>
+  </data>
+  <data name="Settings_PrivacyPolicy" xml:space="preserve">
+    <value>سیاست حریم خصوصی و امنیت داده‌ها</value>
+  </data>
+  <data name="Settings_PrivacyPolicyHint" xml:space="preserve">
+    <value>نحوه مدیریت پیام‌ها، گزارش‌ها و به‌روزرسانی‌ها</value>
   </data>
   <data name="Settings_SectionData" xml:space="preserve">
     <value>داده‌های ذخیره‌شده</value>

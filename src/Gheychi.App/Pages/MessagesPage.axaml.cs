@@ -42,6 +42,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     private long _lastTappedThreadId;
     private long _lastTappedThreadTick;
     private bool _holdFired;
+    private bool _pressInBackEdge;
     private bool _overlaysWarmedUp;
     private bool _earlyPreloadStarted;
     private bool _inboxShown;
@@ -95,7 +96,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
     {
         // Resolve the view model first: it starts loading the cached inbox on a worker thread while the XAML below is built.
         var viewModel = vm ?? IPlatformApplication.Current?.Services.GetService<MessagesViewModel>() ?? new MessagesViewModel();
+        Services.StartupTiming.Mark("messagespage.vm");
         InitializeComponent();
+        Services.StartupTiming.Mark("messagespage.xaml");
         DataContext = viewModel;
         viewModel.PreloadTargets = VisibleThreads;
         viewModel.FolderSwitching += () => ThreadsList.Opacity = 0;
@@ -115,6 +118,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         ThreadsList.AddHandler(PointerPressedEvent, (_, e) =>
         {
             _holdFired = false;
+            _pressInBackEdge = SystemEdgeGestures.IsInBackEdge(this, e.GetPosition(this));
             _toggleOnRelease = null;
             _selectedByHold = false;
             _reorder.OnPressed(e);
@@ -140,6 +144,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
                     RevealInbox();
             }, TimeSpan.FromSeconds(4));
         }
+
+        Services.StartupTiming.Mark("messagespage.end");
     }
 
     // ---- Overlay creation -----------------------------------------------------------------------
@@ -515,7 +521,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     private void OnThreadsHolding(object? sender, HoldingRoutedEventArgs e)
     {
-        if (e.HoldingState != HoldingState.Started || _animating || _reorder.IsBusy || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
+        if (e.HoldingState != HoldingState.Started || _pressInBackEdge || _animating || _reorder.IsBusy || !IsChatClosed || Vm == null || ThreadFrom(e) is not { } thread)
             return;
 
         // Avalonia cancels a started hold once the finger drifts 4 px, then reports the release, still inside the
@@ -627,6 +633,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
                 await CloseChatAsync();
             }
 
+            if (!IsSearchClosed)
+                ParkSearchOverlay();
+
             // Building the chat view is the slow part; the messages are being read meanwhile.
             _ = ChatOverlay;
 
@@ -696,7 +705,10 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             await DismissForExternalAsync();
 
             if (request.HasAddress)
-                await OpenConversationAsync(request.Address!, request.Text);
+            {
+                var sim = await ResolveExternalSimAsync(request);
+                await OpenConversationAsync(request.Address!, request.Text, sim);
+            }
             else if (!string.IsNullOrEmpty(request.Text))
                 await OpenShareAsync(request.Text);
         }
@@ -733,8 +745,48 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         UncoverInbox();
     }
 
+    private static async Task<SimCardInfo?> ResolveExternalSimAsync(ExternalSendRequest request)
+    {
+        if (SmsService is not { } sms
+            || (request.SubId <= 0 && request.SlotIndex <= 0 && string.IsNullOrWhiteSpace(request.PhoneAccountId)))
+            return null;
+
+        try
+        {
+            var sims = await sms.GetActiveSimsAsync();
+            if (sims.Count == 0)
+                return null;
+
+            if (request.SubId > 0)
+            {
+                if (sims.FirstOrDefault(s => s.SubId == request.SubId) is { } direct)
+                    return direct;
+
+                var slotMap = await sms.GetSimSlotMapAsync();
+                if (slotMap.TryGetValue(request.SubId, out var mappedSlot)
+                    && sims.FirstOrDefault(s => s.SlotIndex == mappedSlot) is { } mapped)
+                    return mapped;
+            }
+
+            if (int.TryParse(request.PhoneAccountId, out var accountSubId) && accountSubId > 0)
+            {
+                if (sims.FirstOrDefault(s => s.SubId == accountSubId) is { } byAccount)
+                    return byAccount;
+            }
+
+            if (request.SlotIndex > 0 && sims.FirstOrDefault(s => s.SlotIndex == request.SlotIndex) is { } bySlot)
+                return bySlot;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Resolving external SIM hint failed: {ex}");
+        }
+
+        return null;
+    }
+
     /// <summary>Opens the conversation with a number, with the text, if there is one, ready to send.</summary>
-    private async Task OpenConversationAsync(string number, string? text)
+    private async Task OpenConversationAsync(string number, string? text, SimCardInfo? sim = null)
     {
         // The names of the conversations come from the inbox; on a cold start it is not read yet.
         if (Vm is { } vm)
@@ -755,13 +807,13 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         {
             var context = Platform.AppContext;
             var name = await Task.Run(() => ConversationReader.ReadContactName(context, address));
-            thread = CreateNewThreadItem(threadId, new ComposeRecipient(address, name, null));
+            thread = CreateNewThreadItem(threadId, new ComposeRecipient(address, name, sim));
         }
 
-        await OpenThreadWithTextAsync(thread, text);
+        await OpenThreadWithTextAsync(thread, text, sim);
     }
 
-    private async Task OpenThreadWithTextAsync(ThreadItem thread, string? text)
+    private async Task OpenThreadWithTextAsync(ThreadItem thread, string? text, SimCardInfo? sim = null)
     {
         var wasUnread = thread.IsUnread;
         var unreadCount = thread.Count;
@@ -769,7 +821,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             thread.MarkAsRead();
 
         // Over the inbox that is still hidden behind a cold start, there is nothing to slide over.
-        await OpenChatAsync(thread, wasUnread, unreadCount, animate: InboxLayer.IsVisible);
+        await OpenChatAsync(thread, wasUnread, unreadCount, sim: sim, animate: InboxLayer.IsVisible);
 
         if (!string.IsNullOrEmpty(text) && _chatOverlay?.Vm is { } chat && chat.Thread.ThreadId == thread.ThreadId)
             chat.Draft = string.IsNullOrEmpty(chat.Draft) ? text : chat.Draft + "\n" + text;
@@ -930,6 +982,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         // Only what would change something: "mark as read" for a chat that is read already does nothing.
         menus.MarkReadItem.IsVisible = Vm?.AnySelectedUnread ?? false;
         menus.MarkUnreadItem.IsVisible = Vm?.AnySelectedRead ?? false;
+        menus.MuteItem.IsVisible = Vm?.AnySelectedNotMuted ?? false;
+        menus.UnmuteItem.IsVisible = Vm?.AnySelectedMuted ?? false;
         menus.SelectBoxOverlay.IsVisible = !menus.SelectBoxOverlay.IsVisible;
     }
 
@@ -947,6 +1001,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         menus.FolderItem.Tapped += OnAddToFolderTapped;
         menus.MarkReadItem.Tapped += OnMarkAsReadTapped;
         menus.MarkUnreadItem.Tapped += OnMarkAsUnreadTapped;
+        menus.MuteItem.Tapped += OnMuteTapped;
+        menus.UnmuteItem.Tapped += OnUnmuteTapped;
         menus.FolderMenuOverlay.Tapped += OnCloseFolderMenuTapped;
         menus.FolderMenu.Tapped += OnSelectBoxTapEater;
         menus.FolderMarkReadItem.Tapped += OnFolderMarkReadTapped;
@@ -1014,6 +1070,27 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             return;
 
         await Vm.MarkSelectedAsUnreadAsync();
+    }
+
+    private async void OnMuteTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        CloseSelectBox();
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        if (await MuteDialogs.AskDurationMillisAsync() is { } untilMillis)
+            await Vm.MuteSelectedAsync(untilMillis);
+    }
+
+    private async void OnUnmuteTapped(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+        CloseSelectBox();
+        if (Vm == null || Vm.SelectedCount == 0)
+            return;
+
+        await Vm.UnmuteSelectedAsync();
     }
 
     // ---- Folders --------------------------------------------------------------------------------
@@ -1115,6 +1192,9 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
 
     // ---- Chat -----------------------------------------------------------------------------------
 
+    private static readonly TimeSpan ChatOpenDuration = TimeSpan.FromMilliseconds(140);
+    private static readonly TimeSpan ChatCloseDuration = TimeSpan.FromMilliseconds(115);
+
     private double OverlayDistance =>
         MainView.Current is { Bounds.Height: > 0 } main ? main.Bounds.Height + 50 : 850;
 
@@ -1146,8 +1226,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             var cached = chat.PrepareForTransition(thread);
             if (sim is not null)
                 chat.Vm?.ChooseSim(sim.SlotIndex, sim.SubId);
-            var distance = OverlayDistance;
-            OverlayAnimator.SetTranslation(chat, 0, animate ? distance : 0);
+            var width = PageWidth;
+            OverlayAnimator.SetTranslation(chat, animate ? width : 0, 0);
             chat.IsVisible = true;
             ChatPresence.ChatOpened(thread.ThreadId);
 
@@ -1161,7 +1241,7 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             if (animate)
             {
                 await OverlayAnimator.SettleAsync();
-                await OverlayAnimator.SlideYAsync(chat, distance, 0, OverlayAnimator.OpenDuration, decelerate: true);
+                await OverlayAnimator.SlideXAsync(chat, width, 0, ChatOpenDuration, decelerate: true);
             }
 
             CoverInbox();
@@ -1205,6 +1285,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         }
     }
 
+    private bool HasFullOverlayUnderChat => !IsSearchClosed || !IsComposeClosed || !IsShareClosed;
+
     private async Task CloseChatAsync()
     {
         if (_animating)
@@ -1213,9 +1295,10 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         try
         {
             await ChatOverlay.Close();
-            UncoverInbox();
+            if (!HasFullOverlayUnderChat)
+                UncoverInbox();
 
-            await OverlayAnimator.SlideYAsync(ChatOverlay, 0, OverlayDistance, OverlayAnimator.CloseDuration, decelerate: false);
+            await OverlayAnimator.SlideXAsync(ChatOverlay, 0, PageWidth, ChatCloseDuration, decelerate: false);
             ParkChatOverlay();
 
             // Replies sent, messages read or deleted inside the chat are not in the list yet.
@@ -1229,7 +1312,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         catch (InvalidOperationException)
         {
             ParkChatOverlay();
-            UncoverInbox();
+            if (!HasFullOverlayUnderChat)
+                UncoverInbox();
         }
         finally
         {
@@ -1518,8 +1602,8 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
             };
         }
 
-        // The chat slides in over the results instead of waiting for them to slide away first; the
-        // search is parked under it afterwards, so closing the chat still returns to the inbox.
+        // The chat slides in over the results; search stays open underneath so going back returns
+        // to the preserved search query and results.
         SearchOverlay.UnfocusSearchInput();
 
         // A result that matched the message text opens its chat with the same search running, on that message,
@@ -1533,9 +1617,6 @@ public partial class MessagesPage : UserControl, IPageSwipeClient
         {
             System.Diagnostics.Debug.WriteLine($"Open chat from search failed: {ex}");
         }
-
-        if (!IsSearchClosed && !IsChatClosed)
-            ParkSearchOverlay();
     }
 
     // ---- Compose --------------------------------------------------------------------------------

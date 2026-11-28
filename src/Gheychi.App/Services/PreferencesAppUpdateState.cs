@@ -1,3 +1,4 @@
+#if SELF_UPDATE
 using Gheychi.Core.Updates;
 
 namespace Gheychi.App.Services;
@@ -55,3 +56,4 @@ public sealed class PreferencesAppUpdateState : IAppUpdateState
         }
     }
 }
+#endif

@@ -6,8 +6,10 @@ using Gheychi.App.Platforms.Android.Notifications;
 using Gheychi.App.Platforms.Android.Receivers;
 using Gheychi.App.Platforms.Android.Services;
 using Gheychi.App.Services;
+using Gheychi.App.Ui;
 using Gheychi.Core.Folders;
 using Gheychi.Core.Models;
+using Gheychi.Core.Notifications;
 using Gheychi.Core.Services;
 
 namespace Gheychi.App.ViewModels;
@@ -19,6 +21,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private readonly IDraftStore? _drafts;
     private readonly IPinStore? _pins;
     private readonly PreferencesFolderStore? _folders;
+    private readonly IThreadSettings? _threadSettings;
     private List<ThreadItem> _inboxAll = [];
     private string _activeFolderId = Folder.AllId;
     private int _barRefreshQueued;
@@ -48,6 +51,9 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         _drafts = IPlatformApplication.Current?.Services.GetService<IDraftStore>();
         _pins = IPlatformApplication.Current?.Services.GetService<IPinStore>();
         _folders = IPlatformApplication.Current?.Services.GetService<PreferencesFolderStore>();
+        _threadSettings = IPlatformApplication.Current?.Services.GetService<IThreadSettings>();
+        PreferencesThreadSettings.SnoozeChanged += threadId =>
+            MainThread.BeginInvokeOnMainThread(() => RefreshMuteState(threadId));
         if (AppPreferences.RememberLastFolder)
             _activeFolderId = AppPreferences.LastFolderId is { Length: > 0 } last ? last : Folder.AllId;
         if (_folders is not null)
@@ -225,7 +231,12 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     private Task<BuiltThreads> StartSnapshotLoad()
     {
         var snapshotPath = SnapshotPath;
-        return Task.Run(() => BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath)));
+        return Task.Run(() =>
+        {
+            var built = BuildItems(ThreadSnapshotStore.TryLoad(snapshotPath));
+            StartupTiming.Mark("snapshot.built");
+            return built;
+        });
     }
 
     public FastObservableCollection<ThreadItem> Threads { get; } = [];
@@ -259,6 +270,10 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
     public bool AnySelectedPinned => SelectedThreads.Any(t => t.IsPinned);
 
     public bool AnySelectedNotPinned => SelectedThreads.Any(t => !t.IsPinned);
+
+    public bool AnySelectedMuted => SelectedThreads.Any(t => t.IsMuted);
+
+    public bool AnySelectedNotMuted => SelectedThreads.Any(t => !t.IsMuted);
 
     /// <summary>How many rows are pinned: they are always the first ones of the list.</summary>
     public int PinnedCount => Threads.TakeWhile(t => t.IsPinned).Count();
@@ -299,6 +314,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(AnySelectedRead));
         OnPropertyChanged(nameof(AnySelectedPinned));
         OnPropertyChanged(nameof(AnySelectedNotPinned));
+        OnPropertyChanged(nameof(AnySelectedMuted));
+        OnPropertyChanged(nameof(AnySelectedNotMuted));
     }
 
     public Task<bool> UnarchiveThreadsAsync(IReadOnlyList<ThreadItem> threads)
@@ -451,6 +468,64 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
 
         ExitSelectionMode();
         return Task.CompletedTask;
+    }
+
+    public Task MuteSelectedAsync(long untilMillis) => SetSelectedMutedAsync(untilMillis);
+
+    public Task UnmuteSelectedAsync() => SetSelectedMutedAsync(0);
+
+    private Task SetSelectedMutedAsync(long untilMillis)
+    {
+        var selected = SelectedThreads;
+        if (selected.Count == 0 || _threadSettings is null)
+            return Task.CompletedTask;
+
+        var ids = selected.Select(t => t.ThreadId).Where(id => id > 0).ToList();
+        var muted = untilMillis > 0;
+        foreach (var thread in selected)
+        {
+            if (thread.ThreadId > 0)
+                _threadSettings.SetSnoozedUntil(thread.ThreadId, untilMillis);
+            thread.IsMuted = muted;
+        }
+
+        if (muted && ids.Count > 0)
+        {
+            _ = Task.Run(() =>
+            {
+                foreach (var id in ids)
+                    MessageNotifier.Cancel(Platform.AppContext, id);
+            });
+        }
+
+        ExitSelectionMode();
+        return Task.CompletedTask;
+    }
+
+    private void RefreshMuteState(long threadId)
+    {
+        if (threadId <= 0)
+            return;
+
+        var muted = MuteDialogs.IsMuted(_threadSettings, threadId);
+        foreach (var t in _inboxAll)
+        {
+            if (t.ThreadId == threadId)
+                t.IsMuted = muted;
+        }
+        foreach (var t in Threads)
+        {
+            if (t.ThreadId == threadId)
+                t.IsMuted = muted;
+        }
+        foreach (var t in ArchivedThreads)
+        {
+            if (t.ThreadId == threadId)
+                t.IsMuted = muted;
+        }
+
+        if (IsSelectionMode)
+            UpdateSelectedCount();
     }
 
     // Brings the list in line with the pins without reading anything: the pinned rows go to the top in their order, the
@@ -623,6 +698,8 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
         finally
         {
+            StartupTiming.Mark("inbox.cached");
+            StartupTiming.MarkGc("inbox.cached");
             _cachedInboxTried.TrySetResult();
         }
     }
@@ -640,11 +717,15 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
         }
 
         _initialized = true;
-        if (IPlatformApplication.Current?.Services.GetService<ITrashRepository>() is { } trash)
-            _ = Task.Run(() => trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now)));
 
         // Paint the last known inbox right away; the real query below refreshes it.
         await EnsureCachedInboxAsync();
+
+        // None of the rest is on the first frame, and the role and permission calls, the provider read and the trash
+        // clean-up took CPU (and GC pauses) from it. MainActivity bounds the wait, so it always comes.
+        await MainActivity.FirstFrame;
+        if (IPlatformApplication.Current?.Services.GetService<ITrashRepository>() is { } trash)
+            _ = Task.Run(() => trash.DeleteOlderThanAsync(TrashPolicy.Cutoff(DateTime.Now)));
 
         await _smsService.EnsureDefaultSmsAppAsync();
         var granted = await _smsService.EnsurePermissionsAsync();
@@ -765,6 +846,7 @@ public sealed class MessagesViewModel : INotifyPropertyChanged
                 HasDraft = t.HasDraft,
                 Timestamp = t.Timestamp,
                 IsPinned = !isArchived && pinned.Contains(t.ThreadId),
+                IsMuted = MuteDialogs.IsMuted(_threadSettings, t.ThreadId),
                 IsUnread = t.UnreadCount > 0,
                 HasFailed = t.HasFailed,
                 // The thread reader fills ContactName with the sender id itself for alphanumeric senders, so the

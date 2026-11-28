@@ -205,9 +205,13 @@ public partial class ProfileView : UserControl
         PhoneLabel.Text = _thread.Phone;
         PhoneLabel.IsVisible = !string.Equals(_thread.Name, _thread.Phone, StringComparison.Ordinal);
 
+        var (bg, fg) = AvatarPalette.For(_thread.Phone, _thread.Name);
+        AvatarCircle.Background = bg;
         AvatarIcon.Data = IconCatalog.Find(_thread.IconFile);
+        AvatarIcon.Foreground = fg;
         AvatarIcon.IsVisible = _thread.HasIcon;
         AvatarInitials.Text = _thread.Initials;
+        AvatarInitials.Foreground = fg;
         AvatarInitials.IsVisible = _thread.HasNoIcon;
         AvatarPhoto.SetAddress(AvatarCircle, _thread.PhotoAddress);
     }
@@ -620,17 +624,10 @@ public partial class ProfileView : UserControl
                 return;
             }
 
-            var loc = LocalizationManager.Instance;
-            var presets = SnoozeSchedule.Presets;
-            var labels = presets.Select(p => loc[SnoozeLabelKey(p)]).ToArray();
-
-            var choice = await Dialogs.ActionSheetAsync(
-                loc["Profile_SnoozeTitle"], loc["Chat_Cancel"], null, labels);
-            var index = Array.IndexOf(labels, choice);
-            if (index < 0)
+            if (await MuteDialogs.AskDurationMillisAsync() is not { } untilMillis)
                 return;
 
-            _settings.SetSnoozedUntil(_thread.ThreadId, SnoozeSchedule.UntilMillis(presets[index], DateTimeOffset.Now));
+            _settings.SetSnoozedUntil(_thread.ThreadId, untilMillis);
             UpdateSnooze();
 
             // What is already in the shade is quiet from now on too.
@@ -642,15 +639,6 @@ public partial class ProfileView : UserControl
             System.Diagnostics.Debug.WriteLine($"Snoozing the conversation failed: {ex}");
         }
     }
-
-    private static string SnoozeLabelKey(SnoozePreset preset) => preset switch
-    {
-        SnoozePreset.OneHour => "Snooze_OneHour",
-        SnoozePreset.EightHours => "Snooze_EightHours",
-        SnoozePreset.TomorrowMorning => "Snooze_TomorrowMorning",
-        SnoozePreset.OneWeek => "Snooze_OneWeek",
-        _ => "Snooze_Forever"
-    };
 
     // ---- Archive -------------------------------------------------------------------------------
 
